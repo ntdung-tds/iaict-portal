@@ -2,7 +2,7 @@ import Link from "next/link";
 import { mainNavigation } from "@/lib/public-content";
 
 const primaryItems = mainNavigation.slice(0, 4);
-const activityItems = mainNavigation.slice(4, 8);
+const moreItems = mainNavigation.slice(4);
 const contactItem = mainNavigation[8];
 
 export function SiteHeader() {
@@ -28,9 +28,9 @@ export function SiteHeader() {
             <Link href={item.href} key={item.href}>{item.label}</Link>
           ))}
           <details className="nav-dropdown">
-            <summary>Hoạt động</summary>
+            <summary>Hoạt động & Hợp tác</summary>
             <div className="nav-dropdown-panel">
-              {activityItems.map((item) => (
+              {moreItems.map((item) => (
                 <Link href={item.href} key={item.href}>{item.label}</Link>
               ))}
             </div>

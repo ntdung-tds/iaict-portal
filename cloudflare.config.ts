@@ -4,7 +4,7 @@ export default defineConfig({
   worker: defineWorker({
     name: "iaict-portal-staging",
     entrypoint: "vinext/server/fetch-handler",
-    compatibilityDate: "2026-10-13",
+    compatibilityDate: "2026-10-12",
     compatibilityFlags: ["nodejs_compat"],
     assets: {
       htmlHandling: "none",
