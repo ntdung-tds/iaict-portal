@@ -11,10 +11,11 @@
     "build": "vite build",
     "start": "vinext start",
     "check:vinext": "vinext check",
+    "verify:migrations": "node scripts/verify-migrations.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "verify": "npm run check:vinext && npm run typecheck && npm run test && npm run build",
+    "verify": "npm run verify:migrations && npm run check:vinext && npm run typecheck && npm run test && npm run build",
     "deploy:staging": "npx @vinext/cloudflare@latest deploy --env staging",
     "deploy:production": "npx @vinext/cloudflare@latest deploy --env production"
   },
