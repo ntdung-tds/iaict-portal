@@ -9,17 +9,18 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "vinext start",
+    "start": "vite preview",
     "check:vinext": "vinext check",
     "verify:migrations": "node scripts/verify-migrations.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "verify": "npm run verify:migrations && npm run check:vinext && npm run typecheck && npm run test && npm run build",
-    "deploy:staging": "npx @vinext/cloudflare@latest deploy --env staging",
-    "deploy:production": "npx @vinext/cloudflare@latest deploy --env production"
+    "deploy:staging": "vinext-cloudflare deploy --env staging --name iaict-portal-staging",
+    "deploy:production": "vinext-cloudflare deploy --env production --name iaict-portal"
   },
   "dependencies": {
+    "@vinext/cloudflare": "latest",
     "next": "^16.4.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -27,14 +28,16 @@
     "vinext": "^1.0.0"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "beta",
     "@playwright/test": "^1.64.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "latest",
     "@vitejs/plugin-rsc": "latest",
+    "cf": "latest",
     "typescript": "^7.0.2",
-    "vite": "^8.0.0",
+    "vite": "8.3.0",
     "vitest": "latest",
     "wrangler": "^4.149.0"
   }

@@ -11,10 +11,11 @@
 ## Quyết định
 
 1. Dùng Next.js 16 App Router làm API surface và vinext/Vite làm toolchain triển khai lên Cloudflare Workers.
-2. `GET /api/health` là liveness endpoint nhẹ, không fan-out tới dependency và luôn `Cache-Control: no-store`.
-3. Trang public tĩnh/ít biến động sẽ là ứng viên cho framework/CDN caching sau khi M0 xác nhận hành vi cache/hydration; admin, preview, form mutation và API nhạy cảm mặc định không cache.
-4. D1/R2/Queue/Turnstile/Access không được mô phỏng thành bằng chứng PASS. Mọi gate M0 cần chứng cứ trên tài nguyên Cloudflare staging thật.
-5. Không sửa hoặc tái diễn giải migrations 0001–0011 từ repo đặc tả. Việc đưa migrations vào repo triển khai sẽ là thao tác copy nguyên trạng có kiểm tra hash ở bước M0 tiếp theo.
+2. Dùng Cloudflare Vite plugin v2 + `cf` + `cloudflare.config.ts`, đồng bộ với `vinext init --platform=cloudflare` hiện hành. `wrangler` chỉ được giữ cho các QA/harness yêu cầu riêng của M0, không làm nguồn cấu hình deploy chính.
+3. `GET /api/health` là liveness endpoint nhẹ, không fan-out tới dependency và luôn `Cache-Control: no-store`.
+4. Trang public tĩnh/ít biến động sẽ là ứng viên cho framework/CDN caching sau khi M0 xác nhận hành vi cache/hydration; admin, preview, form mutation và API nhạy cảm mặc định không cache.
+5. D1/R2/Queue/Turnstile/Access không được mô phỏng thành bằng chứng PASS. Mọi gate M0 cần chứng cứ trên tài nguyên Cloudflare staging thật.
+6. Migrations 0001–0011 được copy byte-for-byte từ repo đặc tả và bị khóa SHA trong CI. Mọi thay đổi schema mới phải là migration forward-only mới.
 
 ## Hệ quả
 

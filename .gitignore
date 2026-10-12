@@ -3,6 +3,7 @@ node_modules/
 dist/
 .vinext/
 .wrangler/
+.cloudflare/
 playwright-report/
 test-results/
 .env
