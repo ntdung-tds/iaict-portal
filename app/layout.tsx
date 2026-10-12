@@ -3,12 +3,13 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://iaict.example"),
   title: {
     default: "IAICT — Viện Ứng dụng Công nghệ Thông tin và Truyền thông",
     template: "%s | IAICT",
   },
   description:
-    "Cổng thông tin điện tử IAICT — sản phẩm, nền tảng, giải pháp, chuyển giao công nghệ, đào tạo và các hoạt động của Viện.",
+    "Cổng thông tin điện tử IAICT — công nghệ, giải pháp, chuyển giao, đào tạo và các hoạt động của Viện.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
