@@ -1,0 +1,40 @@
+{
+  "name": "iaict-portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "vinext start",
+    "check:vinext": "vinext check",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "verify": "npm run check:vinext && npm run typecheck && npm run test && npm run build",
+    "deploy:staging": "npx @vinext/cloudflare@latest deploy --env staging",
+    "deploy:production": "npx @vinext/cloudflare@latest deploy --env production"
+  },
+  "dependencies": {
+    "next": "^16.4.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-server-dom-webpack": "^19.2.6",
+    "vinext": "^1.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "latest",
+    "@vitejs/plugin-rsc": "latest",
+    "typescript": "^7.0.2",
+    "vite": "^8.0.0",
+    "vitest": "latest",
+    "wrangler": "^4.149.0"
+  }
+}
