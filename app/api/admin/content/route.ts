@@ -1,27 +1,24 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE, verifyAdminSession } from "@/lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, verifyAdminSession, type AdminRole } from "@/lib/admin-auth";
 import {
   bodyFromPublication,
   estimateReadingTime,
   getCmsSnapshot,
   isPublicationPublic,
   persistCmsState,
+  type CmsInteraction,
   type CmsPublication,
+  type CmsPublicationVersion,
   type CmsState,
+  type CmsUserRole,
+  type CmsWorkflowAction,
 } from "@/lib/cms-store";
 import { publicationHtmlToPlainText, sanitizePublicationHtml } from "@/lib/content-html";
 import { getMediaSnapshot } from "@/lib/media-store";
 import type { PublicationType } from "@/lib/publications";
 
-type MutationAction =
-  | "save-draft"
-  | "submit-review"
-  | "return-draft"
-  | "schedule"
-  | "publish"
-  | "unpublish"
-  | "delete";
+type MutationAction = CmsWorkflowAction;
 
 type ContentInput = {
   id?: string;
@@ -44,6 +41,22 @@ type MutationRequest = {
   expectedRevision?: number;
   item?: ContentInput;
   id?: string;
+  feedback?: string;
+};
+
+const ROLE_ACTIONS: Record<AdminRole, Set<MutationAction>> = {
+  editor: new Set(["save-draft", "submit-review", "delete", "comment"]),
+  reviewer: new Set(["return-draft", "schedule", "publish", "comment"]),
+  superadmin: new Set([
+    "save-draft",
+    "submit-review",
+    "return-draft",
+    "schedule",
+    "publish",
+    "unpublish",
+    "delete",
+    "comment",
+  ]),
 };
 
 function json(data: unknown, status = 200) {
@@ -80,7 +93,7 @@ function publicDto(item: CmsPublication) {
   };
 }
 
-function statePayload(state: CmsState, storageReady: boolean, materialized = true) {
+function statePayload(state: CmsState, storageReady: boolean, materialized = true, session?: { username: string; role: AdminRole }) {
   return {
     revision: state.revision,
     updatedAt: state.updatedAt,
@@ -88,6 +101,7 @@ function statePayload(state: CmsState, storageReady: boolean, materialized = tru
     materialized,
     items: state.items.map(publicDto),
     audit: state.audit.slice(0, 50),
+    currentUser: session ? { username: session.username, role: session.role } : undefined,
   };
 }
 
@@ -115,12 +129,131 @@ function resolveMediaId(
   return existing?.[key] ?? origin?.[key];
 }
 
-export async function GET() {
+function hasPermission(role: AdminRole, action: MutationAction) {
+  return ROLE_ACTIONS[role].has(action);
+}
+
+function sameMinute(left: string, right: string) {
+  const a = Date.parse(left);
+  const b = Date.parse(right);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+  return Math.floor(a / 60000) === Math.floor(b / 60000);
+}
+
+function scheduleConflict(items: CmsPublication[], publishAt: string, ignoredIds: Set<string>) {
+  return items.find((item) => {
+    if (ignoredIds.has(item.id) || !item.publishAt) return false;
+    if (item.status !== "scheduled" && item.status !== "published") return false;
+    if (Date.parse(item.publishAt) <= Date.now()) return false;
+    return sameMinute(item.publishAt, publishAt);
+  });
+}
+
+function suggestedScheduleTimes(items: CmsPublication[], publishAt: string, ignoredIds: Set<string>) {
+  const base = Date.parse(publishAt);
+  if (!Number.isFinite(base)) return [];
+  const candidates = [30, 60, 90, 120, 150, 180]
+    .map((minutes) => new Date(base + minutes * 60000).toISOString())
+    .filter((candidate) => !scheduleConflict(items, candidate, ignoredIds));
+  return candidates.slice(0, 3);
+}
+
+function actionMessage(action: MutationAction, feedback: string, publishAt?: string) {
+  if (action === "save-draft") return feedback || "Đã lưu một phiên bản nháp mới.";
+  if (action === "submit-review") return feedback || "Đã gửi nội dung để duyệt.";
+  if (action === "return-draft") return feedback;
+  if (action === "schedule") return `${feedback ? `${feedback} · ` : ""}Đã duyệt và lên lịch xuất bản lúc ${publishAt ? new Date(publishAt).toLocaleString("vi-VN", { timeZone: "Asia/Bangkok" }) : "thời điểm đã chọn"}.`;
+  if (action === "publish") return feedback || "Đã duyệt và xuất bản nội dung.";
+  if (action === "unpublish") return feedback || "Đã gỡ nội dung khỏi trạng thái công khai.";
+  if (action === "delete") return feedback || "Đã xóa nội dung chưa công khai.";
+  return feedback;
+}
+
+function appendInteraction(
+  interactions: CmsInteraction[],
+  input: {
+    publicationId: string;
+    actor: string;
+    role: CmsUserRole;
+    action: MutationAction;
+    message: string;
+    versionId?: string;
+    at: string;
+  },
+) {
+  return [
+    {
+      id: crypto.randomUUID(),
+      at: input.at,
+      actor: input.actor,
+      role: input.role,
+      publicationId: input.publicationId,
+      kind: input.action === "comment" ? "comment" as const : "action" as const,
+      action: input.action,
+      message: input.message,
+      versionId: input.versionId,
+    },
+    ...interactions,
+  ].slice(0, 1000);
+}
+
+function appendVersion(
+  versions: CmsPublicationVersion[],
+  publication: CmsPublication,
+  actor: string,
+  role: CmsUserRole,
+  action: Exclude<MutationAction, "comment">,
+  at: string,
+) {
+  const previous = versions.filter((version) => version.publicationId === publication.id);
+  const nextNumber = previous.reduce((max, version) => Math.max(max, version.number), 0) + 1;
+  const version: CmsPublicationVersion = {
+    id: crypto.randomUUID(),
+    publicationId: publication.id,
+    number: nextNumber,
+    at,
+    actor,
+    role,
+    action,
+    snapshot: publication,
+  };
+
+  const next = [version, ...versions];
+  const counts = new Map<string, number>();
+  return {
+    version,
+    versions: next.filter((entry) => {
+      const count = counts.get(entry.publicationId) ?? 0;
+      if (count >= 30) return false;
+      counts.set(entry.publicationId, count + 1);
+      return true;
+    }),
+  };
+}
+
+export async function GET(request: Request) {
   const session = await requireAdmin();
   if (!session) return json({ error: "UNAUTHORIZED" }, 401);
 
   const snapshot = await getCmsSnapshot();
-  return json(statePayload(snapshot.state, snapshot.storageReady, snapshot.materialized));
+  const url = new URL(request.url);
+  const publicationId = url.searchParams.get("publicationId");
+
+  if (publicationId) {
+    const interactions = snapshot.state.interactions
+      .filter((entry) => entry.publicationId === publicationId)
+      .sort((a, b) => b.at.localeCompare(a.at));
+    const versions = snapshot.state.versions
+      .filter((entry) => entry.publicationId === publicationId)
+      .sort((a, b) => b.number - a.number)
+      .map((entry) => ({
+        ...entry,
+        snapshot: publicDto(entry.snapshot),
+      }));
+    return json({ publicationId, interactions, versions, currentUser: { username: session.username, role: session.role } });
+  }
+
+  return json(statePayload(snapshot.state, snapshot.storageReady, snapshot.materialized, session));
 }
 
 export async function POST(request: Request) {
@@ -134,6 +267,12 @@ export async function POST(request: Request) {
     return json({ error: "INVALID_JSON" }, 400);
   }
 
+  const action = payload.action;
+  if (!action) return json({ error: "MISSING_ACTION" }, 400);
+  if (!hasPermission(session.role, action)) {
+    return json({ error: "FORBIDDEN_ACTION", message: "Tài khoản hiện tại không có quyền thực hiện thao tác này." }, 403);
+  }
+
   const [snapshot, mediaSnapshot] = await Promise.all([getCmsSnapshot(), getMediaSnapshot()]);
   if (!snapshot.storageReady) return json({ error: "STORAGE_NOT_CONFIGURED" }, 503);
 
@@ -143,39 +282,88 @@ export async function POST(request: Request) {
       {
         error: "REVISION_CONFLICT",
         message: "Dữ liệu đã thay đổi ở phiên làm việc khác. Hãy tải lại trước khi tiếp tục.",
-        ...statePayload(current, true, snapshot.materialized),
+        ...statePayload(current, true, snapshot.materialized, session),
       },
       409,
     );
   }
 
-  const action = payload.action;
-  if (!action) return json({ error: "MISSING_ACTION" }, 400);
+  const feedback = payload.feedback?.trim() ?? "";
+  if (action === "return-draft" && !feedback) {
+    return json({ error: "RETURN_REASON_REQUIRED", message: "Khi trả lại nội dung, bắt buộc nhập lý do hoặc yêu cầu chỉnh sửa." }, 400);
+  }
+  if (action === "comment" && !feedback) {
+    return json({ error: "COMMENT_REQUIRED", message: "Nội dung phản hồi không được để trống." }, 400);
+  }
 
   const now = new Date().toISOString();
   let items = [...current.items];
+  let versions = [...current.versions];
+  let interactions = [...current.interactions];
   let auditTitle = "";
   let auditPublicationId = "";
+  let auditVersionId: string | undefined;
+  let publishAtForMessage: string | undefined;
 
-  if (action === "delete") {
+  if (action === "comment") {
+    const target = items.find((item) => item.id === payload.id);
+    if (!target) return json({ error: "NOT_FOUND" }, 404);
+    auditTitle = target.title;
+    auditPublicationId = target.id;
+    interactions = appendInteraction(interactions, {
+      publicationId: target.id,
+      actor: session.username,
+      role: session.role,
+      action,
+      message: feedback,
+      at: now,
+    });
+  } else if (action === "delete") {
     const target = items.find((item) => item.id === payload.id);
     if (!target) return json({ error: "NOT_FOUND" }, 404);
     if (isPublicationPublic(target)) {
       return json({ error: "PUBLIC_DELETE_BLOCKED", message: "Hãy gỡ xuất bản hoặc hủy lịch trước khi xóa." }, 409);
     }
-    items = items.filter((item) => item.id !== target.id);
+    if (session.role === "editor" && target.status !== "draft") {
+      return json({ error: "EDITOR_DELETE_BLOCKED", message: "Biên tập viên chỉ được xóa nội dung đang ở trạng thái nháp." }, 403);
+    }
     auditTitle = target.title;
     auditPublicationId = target.id;
+    const versionResult = appendVersion(versions, target, session.username, session.role, action, now);
+    versions = versionResult.versions;
+    auditVersionId = versionResult.version.id;
+    interactions = appendInteraction(interactions, {
+      publicationId: target.id,
+      actor: session.username,
+      role: session.role,
+      action,
+      message: actionMessage(action, feedback),
+      versionId: auditVersionId,
+      at: now,
+    });
+    items = items.filter((item) => item.id !== target.id);
   } else if (action === "unpublish" || action === "return-draft") {
     const target = items.find((item) => item.id === payload.id);
     if (!target) return json({ error: "NOT_FOUND" }, 404);
-    items = items.map((item) =>
-      item.id === target.id
-        ? { ...item, status: "draft" as const, publishAt: undefined, updatedAt: now }
-        : item,
-    );
+    if (action === "return-draft" && session.role === "reviewer" && target.status !== "review" && target.status !== "scheduled") {
+      return json({ error: "INVALID_REVIEW_STATE", message: "Người duyệt chỉ có thể trả lại nội dung đang chờ duyệt hoặc đã lên lịch." }, 409);
+    }
+    const updated: CmsPublication = { ...target, status: "draft", publishAt: undefined, updatedAt: now };
+    items = items.map((item) => item.id === target.id ? updated : item);
     auditTitle = target.title;
     auditPublicationId = target.id;
+    const versionResult = appendVersion(versions, updated, session.username, session.role, action, now);
+    versions = versionResult.versions;
+    auditVersionId = versionResult.version.id;
+    interactions = appendInteraction(interactions, {
+      publicationId: target.id,
+      actor: session.username,
+      role: session.role,
+      action,
+      message: actionMessage(action, feedback),
+      versionId: auditVersionId,
+      at: now,
+    });
   } else {
     const input = payload.item ?? {};
     const title = input.title?.trim() ?? "";
@@ -192,20 +380,34 @@ export async function POST(request: Request) {
       ? items.find((item) => item.status === "published" && item.slug === input.originSlug)
       : undefined;
 
-    const conflict = items.find(
+    if (session.role === "reviewer" && (action === "schedule" || action === "publish") && existing?.status !== "review") {
+      return json({ error: "REVIEW_REQUIRED", message: "Người duyệt chỉ được duyệt nội dung đang ở trạng thái Chờ duyệt." }, 409);
+    }
+
+    const slugConflict = items.find(
       (item) =>
         (item.status === "published" || item.status === "scheduled") &&
         item.slug === slug &&
         item.id !== existing?.id &&
         item.id !== origin?.id,
     );
-    if ((action === "publish" || action === "schedule") && conflict) {
+    if ((action === "publish" || action === "schedule") && slugConflict) {
       return json({ error: "SLUG_CONFLICT", message: "Slug này đang được một bài đã xuất bản hoặc đã lên lịch sử dụng." }, 409);
+    }
+
+    let requestedPublishAt: string | undefined;
+    if (input.publishAt) {
+      const parsed = Date.parse(input.publishAt);
+      if (!Number.isFinite(parsed)) {
+        return json({ error: "INVALID_PUBLISH_TIME", message: "Ngày và giờ xuất bản không hợp lệ." }, 400);
+      }
+      requestedPublishAt = new Date(parsed).toISOString();
     }
 
     let scheduledPublishAt: string | undefined;
     if (action === "schedule") {
-      const parsedSchedule = input.publishAt ? Date.parse(input.publishAt) : Number.NaN;
+      const scheduleSource = requestedPublishAt ?? existing?.publishAt;
+      const parsedSchedule = scheduleSource ? Date.parse(scheduleSource) : Number.NaN;
       if (!Number.isFinite(parsedSchedule)) {
         return json({ error: "SCHEDULE_REQUIRED", message: "Cần chọn ngày và giờ xuất bản hợp lệ." }, 400);
       }
@@ -213,6 +415,20 @@ export async function POST(request: Request) {
         return json({ error: "SCHEDULE_MUST_BE_FUTURE", message: "Thời điểm lên lịch phải ở tương lai." }, 400);
       }
       scheduledPublishAt = new Date(parsedSchedule).toISOString();
+      const ignoredIds = new Set([existing?.id, origin?.id].filter(Boolean) as string[]);
+      const conflict = scheduleConflict(items, scheduledPublishAt, ignoredIds);
+      if (conflict) {
+        return json({
+          error: "SCHEDULE_CONFLICT",
+          message: `Khung giờ này đã được duyệt cho “${conflict.title}”. Hãy chọn thời điểm khác.`,
+          conflict: { id: conflict.id, title: conflict.title, publishAt: conflict.publishAt },
+          suggestedTimes: suggestedScheduleTimes(items, scheduledPublishAt, ignoredIds),
+        }, 409);
+      }
+    }
+
+    if (action === "submit-review" && requestedPublishAt && Date.parse(requestedPublishAt) <= Date.now()) {
+      return json({ error: "PROPOSED_TIME_MUST_BE_FUTURE", message: "Thời gian đề xuất xuất bản phải ở tương lai." }, 400);
     }
 
     const coverMediaId = resolveMediaId(input, "coverMediaId", existing, origin);
@@ -249,7 +465,9 @@ export async function POST(request: Request) {
         ? now
         : action === "schedule"
           ? scheduledPublishAt
-          : existing?.publishAt;
+          : action === "submit-review"
+            ? requestedPublishAt ?? existing?.publishAt
+            : existing?.publishAt;
     const publishedAt = publishAt
       ? dateInBangkok(publishAt)
       : existing?.publishedAt ?? origin?.publishedAt ?? dateInBangkok(now);
@@ -277,23 +495,33 @@ export async function POST(request: Request) {
       updatedAt: now,
     };
 
-    if (action === "publish" && nextItem.originSlug) {
-      items = items.filter(
-        (item) =>
-          item.id === nextItem.id ||
-          !(item.status === "published" && item.slug === nextItem.originSlug),
-      );
+    if ((action === "publish" || action === "schedule") && nextItem.originSlug) {
+      if (action === "publish") {
+        items = items.filter(
+          (item) => item.id === nextItem.id || !(item.status === "published" && item.slug === nextItem.originSlug),
+        );
+      }
     }
 
     const existingIndex = items.findIndex((item) => item.id === nextItem.id);
-    if (existingIndex >= 0) {
-      items[existingIndex] = nextItem;
-    } else {
-      items.unshift(nextItem);
-    }
+    if (existingIndex >= 0) items[existingIndex] = nextItem;
+    else items.unshift(nextItem);
 
     auditTitle = nextItem.title;
     auditPublicationId = nextItem.id;
+    publishAtForMessage = nextItem.publishAt;
+    const versionResult = appendVersion(versions, nextItem, session.username, session.role, action, now);
+    versions = versionResult.versions;
+    auditVersionId = versionResult.version.id;
+    interactions = appendInteraction(interactions, {
+      publicationId: nextItem.id,
+      actor: session.username,
+      role: session.role,
+      action,
+      message: actionMessage(action, feedback, publishAtForMessage),
+      versionId: auditVersionId,
+      at: now,
+    });
   }
 
   const nextState: CmsState = {
@@ -301,17 +529,22 @@ export async function POST(request: Request) {
     revision: current.revision + 1,
     updatedAt: now,
     items,
+    versions,
+    interactions,
     audit: [
       {
         id: crypto.randomUUID(),
         at: now,
         actor: session.username,
+        role: session.role,
         action,
         publicationId: auditPublicationId,
         title: auditTitle,
+        message: feedback || undefined,
+        versionId: auditVersionId,
       },
       ...current.audit,
-    ].slice(0, 100),
+    ].slice(0, 300),
   };
 
   try {
@@ -320,5 +553,5 @@ export async function POST(request: Request) {
     return json({ error: "STORAGE_WRITE_FAILED" }, 503);
   }
 
-  return json(statePayload(nextState, true));
+  return json(statePayload(nextState, true, true, session));
 }
