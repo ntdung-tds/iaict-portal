@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE, verifyAdminSession, type AdminRole } from "@/lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, validateAdminSession, type AdminRole, type AdminSession } from "@/lib/admin-auth";
+import { listReviewTargets } from "@/lib/admin-users";
 import {
   bodyFromPublication,
   estimateReadingTime,
@@ -42,6 +43,7 @@ type MutationRequest = {
   item?: ContentInput;
   id?: string;
   feedback?: string;
+  reviewerId?: string;
 };
 
 const ROLE_ACTIONS: Record<AdminRole, Set<MutationAction>> = {
@@ -71,7 +73,7 @@ function json(data: unknown, status = 200) {
 
 async function requireAdmin() {
   const cookieStore = await cookies();
-  return verifyAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  return validateAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
 }
 
 function slugify(value: string) {
@@ -93,15 +95,31 @@ function publicDto(item: CmsPublication) {
   };
 }
 
-function statePayload(state: CmsState, storageReady: boolean, materialized = true, session?: { username: string; role: AdminRole }) {
+function itemsForSession(state: CmsState, session?: AdminSession) {
+  if (!session || session.role !== "reviewer") return state.items;
+  return state.items.filter((item) => {
+    if (item.status === "review") return item.reviewerId === session.userId;
+    if (item.status === "scheduled") return item.reviewerId === session.userId;
+    return item.status === "published";
+  });
+}
+
+function statePayload(state: CmsState, storageReady: boolean, materialized = true, session?: AdminSession) {
   return {
     revision: state.revision,
     updatedAt: state.updatedAt,
     storageReady,
     materialized,
-    items: state.items.map(publicDto),
+    items: itemsForSession(state, session).map(publicDto),
     audit: state.audit.slice(0, 50),
-    currentUser: session ? { username: session.username, role: session.role } : undefined,
+    currentUser: session
+      ? {
+          userId: session.userId,
+          username: session.username,
+          displayName: session.displayName,
+          role: session.role,
+        }
+      : undefined,
   };
 }
 
@@ -133,6 +151,10 @@ function hasPermission(role: AdminRole, action: MutationAction) {
   return ROLE_ACTIONS[role].has(action);
 }
 
+function reviewerCanAct(session: AdminSession, target: CmsPublication) {
+  return session.role !== "reviewer" || target.reviewerId === session.userId;
+}
+
 function sameMinute(left: string, right: string) {
   const a = Date.parse(left);
   const b = Date.parse(right);
@@ -158,9 +180,9 @@ function suggestedScheduleTimes(items: CmsPublication[], publishAt: string, igno
     .slice(0, 3);
 }
 
-function actionMessage(action: MutationAction, feedback: string, publishAt?: string) {
+function actionMessage(action: MutationAction, feedback: string, publishAt?: string, reviewerName?: string) {
   if (action === "save-draft") return feedback || "Đã lưu một phiên bản nháp mới.";
-  if (action === "submit-review") return feedback || "Đã gửi nội dung để duyệt.";
+  if (action === "submit-review") return feedback || `Đã gửi nội dung cho ${reviewerName || "người duyệt"} duyệt.`;
   if (action === "return-draft") return feedback;
   if (action === "schedule") return `${feedback ? `${feedback} · ` : ""}Đã duyệt và lên lịch xuất bản lúc ${publishAt ? new Date(publishAt).toLocaleString("vi-VN", { timeZone: "Asia/Bangkok" }) : "thời điểm đã chọn"}.`;
   if (action === "publish") return feedback || "Đã duyệt và xuất bản nội dung.";
@@ -239,6 +261,10 @@ export async function GET(request: Request) {
   const publicationId = url.searchParams.get("publicationId");
 
   if (publicationId) {
+    const target = snapshot.state.items.find((item) => item.id === publicationId);
+    if (session.role === "reviewer" && target && !reviewerCanAct(session, target) && target.status !== "published") {
+      return json({ error: "FORBIDDEN_REVIEW" }, 403);
+    }
     const interactions = snapshot.state.interactions
       .filter((entry) => entry.publicationId === publicationId)
       .sort((a, b) => b.at.localeCompare(a.at));
@@ -249,7 +275,17 @@ export async function GET(request: Request) {
         ...entry,
         snapshot: publicDto(entry.snapshot),
       }));
-    return json({ publicationId, interactions, versions, currentUser: { username: session.username, role: session.role } });
+    return json({
+      publicationId,
+      interactions,
+      versions,
+      currentUser: {
+        userId: session.userId,
+        username: session.username,
+        displayName: session.displayName,
+        role: session.role,
+      },
+    });
   }
 
   return json(statePayload(snapshot.state, snapshot.storageReady, snapshot.materialized, session));
@@ -272,7 +308,11 @@ export async function POST(request: Request) {
     return json({ error: "FORBIDDEN_ACTION", message: "Tài khoản hiện tại không có quyền thực hiện thao tác này." }, 403);
   }
 
-  const [snapshot, mediaSnapshot] = await Promise.all([getCmsSnapshot(), getMediaSnapshot()]);
+  const [snapshot, mediaSnapshot, reviewTargets] = await Promise.all([
+    getCmsSnapshot(),
+    getMediaSnapshot(),
+    listReviewTargets(),
+  ]);
   if (!snapshot.storageReady) return json({ error: "STORAGE_NOT_CONFIGURED" }, 503);
 
   const current = snapshot.state;
@@ -295,7 +335,18 @@ export async function POST(request: Request) {
     return json({ error: "COMMENT_REQUIRED", message: "Nội dung phản hồi không được để trống." }, 400);
   }
 
+  let selectedReviewer = action === "submit-review"
+    ? reviewTargets.find((user) => user.id === payload.reviewerId && user.active)
+    : undefined;
+  if (action === "submit-review" && !selectedReviewer) {
+    return json({ error: "REVIEWER_REQUIRED", message: "Hãy chọn một Người duyệt hoặc Quản trị cấp cao đang hoạt động để nhận bài." }, 400);
+  }
+  if (action === "submit-review" && selectedReviewer?.id === session.userId) {
+    return json({ error: "SELF_REVIEW_NOT_ALLOWED", message: "Không thể gửi bài cho chính tài khoản đang thao tác duyệt." }, 400);
+  }
+
   const now = new Date().toISOString();
+  const actorName = session.displayName || session.username;
   let items = [...current.items];
   let versions = [...current.versions];
   let interactions = [...current.interactions];
@@ -306,11 +357,12 @@ export async function POST(request: Request) {
   if (action === "comment") {
     const target = items.find((item) => item.id === payload.id);
     if (!target) return json({ error: "NOT_FOUND" }, 404);
+    if (!reviewerCanAct(session, target)) return json({ error: "FORBIDDEN_REVIEW", message: "Bài này không được giao cho tài khoản duyệt hiện tại." }, 403);
     auditTitle = target.title;
     auditPublicationId = target.id;
     interactions = appendInteraction(interactions, {
       publicationId: target.id,
-      actor: session.username,
+      actor: actorName,
       role: session.role,
       action,
       message: feedback,
@@ -327,12 +379,12 @@ export async function POST(request: Request) {
     }
     auditTitle = target.title;
     auditPublicationId = target.id;
-    const versionResult = appendVersion(versions, target, session.username, session.role, action, now);
+    const versionResult = appendVersion(versions, target, actorName, session.role, action, now);
     versions = versionResult.versions;
     auditVersionId = versionResult.version.id;
     interactions = appendInteraction(interactions, {
       publicationId: target.id,
-      actor: session.username,
+      actor: actorName,
       role: session.role,
       action,
       message: actionMessage(action, feedback),
@@ -343,6 +395,7 @@ export async function POST(request: Request) {
   } else if (action === "unpublish" || action === "return-draft") {
     const target = items.find((item) => item.id === payload.id);
     if (!target) return json({ error: "NOT_FOUND" }, 404);
+    if (!reviewerCanAct(session, target)) return json({ error: "FORBIDDEN_REVIEW", message: "Bài này không được giao cho tài khoản duyệt hiện tại." }, 403);
     if (action === "return-draft" && session.role === "reviewer" && target.status !== "review" && target.status !== "scheduled") {
       return json({ error: "INVALID_REVIEW_STATE", message: "Người duyệt chỉ có thể trả lại nội dung đang chờ duyệt hoặc đã lên lịch." }, 409);
     }
@@ -350,12 +403,12 @@ export async function POST(request: Request) {
     items = items.map((item) => item.id === target.id ? updated : item);
     auditTitle = target.title;
     auditPublicationId = target.id;
-    const versionResult = appendVersion(versions, updated, session.username, session.role, action, now);
+    const versionResult = appendVersion(versions, updated, actorName, session.role, action, now);
     versions = versionResult.versions;
     auditVersionId = versionResult.version.id;
     interactions = appendInteraction(interactions, {
       publicationId: target.id,
-      actor: session.username,
+      actor: actorName,
       role: session.role,
       action,
       message: actionMessage(action, feedback),
@@ -381,8 +434,13 @@ export async function POST(request: Request) {
     if (session.role === "editor" && existing && existing.status !== "draft" && (action === "save-draft" || action === "submit-review")) {
       return json({ error: "EDITOR_STATE_LOCKED", message: "Nội dung đã rời trạng thái nháp. Biên tập viên cần chờ phản hồi hoặc quyết định của người duyệt." }, 409);
     }
-    if (session.role === "reviewer" && (action === "schedule" || action === "publish") && existing?.status !== "review") {
-      return json({ error: "REVIEW_REQUIRED", message: "Người duyệt chỉ được duyệt nội dung đang ở trạng thái Chờ duyệt." }, 409);
+    if (session.role === "reviewer" && (action === "schedule" || action === "publish")) {
+      if (existing?.status !== "review") {
+        return json({ error: "REVIEW_REQUIRED", message: "Người duyệt chỉ được duyệt nội dung đang ở trạng thái Chờ duyệt." }, 409);
+      }
+      if (!reviewerCanAct(session, existing)) {
+        return json({ error: "FORBIDDEN_REVIEW", message: "Bài này đang được giao cho người duyệt khác." }, 403);
+      }
     }
 
     const slugConflict = items.find(
@@ -466,9 +524,7 @@ export async function POST(request: Request) {
         ? now
         : action === "schedule"
           ? scheduledPublishAt
-          : action === "submit-review"
-            ? requestedPublishAt ?? existing?.publishAt
-            : requestedPublishAt ?? existing?.publishAt;
+          : requestedPublishAt ?? existing?.publishAt;
     const publishedAt = publishAt
       ? dateInBangkok(publishAt)
       : existing?.publishedAt ?? origin?.publishedAt ?? dateInBangkok(now);
@@ -492,6 +548,10 @@ export async function POST(request: Request) {
       contentHtml,
       coverMediaId,
       ogMediaId,
+      reviewerId: action === "submit-review" ? selectedReviewer?.id : existing?.reviewerId,
+      reviewerName: action === "submit-review" ? selectedReviewer?.displayName : existing?.reviewerName,
+      submittedBy: action === "submit-review" ? actorName : existing?.submittedBy,
+      submittedAt: action === "submit-review" ? now : existing?.submittedAt,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
@@ -508,15 +568,15 @@ export async function POST(request: Request) {
 
     auditTitle = nextItem.title;
     auditPublicationId = nextItem.id;
-    const versionResult = appendVersion(versions, nextItem, session.username, session.role, action, now);
+    const versionResult = appendVersion(versions, nextItem, actorName, session.role, action, now);
     versions = versionResult.versions;
     auditVersionId = versionResult.version.id;
     interactions = appendInteraction(interactions, {
       publicationId: nextItem.id,
-      actor: session.username,
+      actor: actorName,
       role: session.role,
       action,
-      message: actionMessage(action, feedback, nextItem.publishAt),
+      message: actionMessage(action, feedback, nextItem.publishAt, nextItem.reviewerName),
       versionId: auditVersionId,
       at: now,
     });
