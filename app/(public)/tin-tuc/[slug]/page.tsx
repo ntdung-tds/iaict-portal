@@ -17,6 +17,8 @@ export async function generateMetadata({ params }: PublicationPageProps): Promis
   const publication = await getPublishedPublication(slug);
   if (!publication) return { title: "Không tìm thấy bài viết" };
 
+  const socialImage = publication.ogImage ?? publication.coverImage;
+
   return {
     title: publication.title,
     description: publication.excerpt,
@@ -29,6 +31,13 @@ export async function generateMetadata({ params }: PublicationPageProps): Promis
       publishedTime: `${publication.publishedAt}T00:00:00+07:00`,
       section: publication.category,
       tags: publication.keywords,
+      ...(socialImage ? { images: [{ url: socialImage.src, alt: socialImage.alt }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: publication.title,
+      description: publication.excerpt,
+      ...(socialImage ? { images: [socialImage.src] } : {}),
     },
   };
 }
@@ -67,6 +76,13 @@ export default async function PublicationPage({ params }: PublicationPageProps) 
             <p className="publication-excerpt">{publication.excerpt}</p>
           </div>
         </header>
+
+        {publication.coverImage ? (
+          <figure className="shell publication-cover-image">
+            <img src={publication.coverImage.src} alt={publication.coverImage.alt} loading="eager" />
+            {publication.coverImage.caption ? <figcaption>{publication.coverImage.caption}</figcaption> : null}
+          </figure>
+        ) : null}
 
         <div className="shell publication-layout">
           <aside className="publication-rail">
@@ -116,6 +132,7 @@ export default async function PublicationPage({ params }: PublicationPageProps) 
             <div className="publication-related-grid">
               {related.map((item) => (
                 <Link href={`/tin-tuc/${item.slug}`} key={item.slug}>
+                  {item.coverImage ? <img className="publication-related-thumb" src={item.coverImage.src} alt={item.coverImage.alt} loading="lazy" /> : null}
                   <span>{item.category}</span>
                   <h3>{item.title}</h3>
                   <p>{item.excerpt}</p>
