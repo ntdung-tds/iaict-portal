@@ -68,8 +68,8 @@ export function PublicationMediaFields({ coverMediaId, ogMediaId, onChange }: Pu
   }
 
   function clear(which: Target) {
-    if (which === "cover") onChange({ coverMediaId: undefined, ogMediaId });
-    else onChange({ coverMediaId, ogMediaId: undefined });
+    if (which === "cover") onChange({ coverMediaId: "", ogMediaId });
+    else onChange({ coverMediaId, ogMediaId: "" });
   }
 
   function preview(asset: MediaAsset | undefined, which: Target) {
