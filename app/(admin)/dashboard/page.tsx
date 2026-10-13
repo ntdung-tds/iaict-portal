@@ -1,10 +1,27 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ADMIN_SESSION_COOKIE, validateAdminSession } from "../../../lib/admin-auth";
+import { getNotificationInbox } from "../../../lib/admin-notifications";
 import { getCmsSnapshot, isPublicationPublic, toPublicPublication } from "../../../lib/cms-store";
 import { getPublicationTypeLabel } from "../../../lib/publications";
 import { formatPublicationDate } from "../../../lib/publication-date";
 
+function notificationKindLabel(kind: "review-request" | "returned" | "scheduled" | "published" | "comment" | "upcoming") {
+  if (kind === "review-request") return "Duyệt bài";
+  if (kind === "returned") return "Trả lại";
+  if (kind === "scheduled") return "Đã lên lịch";
+  if (kind === "published") return "Đã xuất bản";
+  if (kind === "comment") return "Phản hồi";
+  return "Sắp xuất bản";
+}
+
 export default async function DashboardPage() {
-  const snapshot = await getCmsSnapshot();
+  const cookieStore = await cookies();
+  const session = await validateAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!session) redirect("/admin-login");
+
+  const [snapshot, inbox] = await Promise.all([getCmsSnapshot(), getNotificationInbox(session)]);
   const publicItems = snapshot.state.items
     .filter((item) => isPublicationPublic(item))
     .map((item) => toPublicPublication(item))
@@ -13,6 +30,7 @@ export default async function DashboardPage() {
   const review = snapshot.state.items.filter((item) => item.status === "review");
   const scheduled = snapshot.state.items.filter((item) => item.status === "scheduled");
   const featured = publicItems.find((item) => item.featured) ?? publicItems[0];
+  const inboxPreview = inbox.items.filter((item) => item.unread || item.level !== "info").slice(0, 3);
 
   return (
     <div className="admin-page">
@@ -53,6 +71,28 @@ export default async function DashboardPage() {
         <article className="admin-metric-card">
           <span>04 / Drafts</span><strong>{drafts.length}</strong><p>Bản nháp trong CMS</p><i>Chưa công khai</i>
         </article>
+      </section>
+
+      <section className="admin-dashboard-inbox">
+        <div className="admin-dashboard-inbox-head">
+          <div><span>Personal work queue</span><h2>Hộp công việc · {inbox.unreadCount} chưa đọc</h2></div>
+          <Link href="/dashboard/thong-bao">Mở hộp việc →</Link>
+        </div>
+        {inboxPreview.length ? (
+          <div className="admin-dashboard-inbox-list">
+            {inboxPreview.map((item) => (
+              <Link href={item.href} key={item.id}>
+                <span>{notificationKindLabel(item.kind)}{item.unread ? " · Mới" : ""}</span>
+                <strong>{item.publicationTitle}</strong>
+                <p>{item.title}</p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="admin-notification-empty">
+            <span>✓</span><strong>Hiện không có việc cần chú ý</strong><p>Workflow mới sẽ tự xuất hiện tại đây.</p>
+          </div>
+        )}
       </section>
 
       <section className="admin-grid admin-grid-main">
@@ -104,6 +144,7 @@ export default async function DashboardPage() {
             <div><span>Xác thực quản trị</span><b className="is-live">Đang hoạt động</b></div>
             <div><span>Kho nội dung Vercel Blob</span><b className={snapshot.storageReady ? "is-live" : "is-pending"}>{snapshot.storageReady ? "Đang hoạt động" : "Chưa kết nối"}</b></div>
             <div><span>Workflow & lịch xuất bản</span><b className="is-live">Đang hoạt động</b></div>
+            <div><span>Thông báo & hộp việc</span><b className="is-live">Đang hoạt động</b></div>
             <div><span>Thư viện Media</span><b className="is-live">Đang hoạt động</b></div>
           </div>
         </aside>
