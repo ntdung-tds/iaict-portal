@@ -1,18 +1,18 @@
 import Link from "next/link";
-import { getCmsSnapshot, toPublicPublication } from "../../../lib/cms-store";
+import { getCmsSnapshot, isPublicationPublic, toPublicPublication } from "../../../lib/cms-store";
 import { getPublicationTypeLabel } from "../../../lib/publications";
 import { formatPublicationDate } from "../../../lib/publication-date";
 
 export default async function DashboardPage() {
   const snapshot = await getCmsSnapshot();
-  const published = snapshot.state.items
-    .filter((item) => item.status === "published")
+  const publicItems = snapshot.state.items
+    .filter((item) => isPublicationPublic(item))
     .map((item) => toPublicPublication(item))
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   const drafts = snapshot.state.items.filter((item) => item.status === "draft");
-  const eventCount = published.filter((item) => item.type === "event").length;
-  const noticeCount = published.filter((item) => item.type === "notice").length;
-  const featured = published.find((item) => item.featured) ?? published[0];
+  const review = snapshot.state.items.filter((item) => item.status === "review");
+  const scheduled = snapshot.state.items.filter((item) => item.status === "scheduled");
+  const featured = publicItems.find((item) => item.featured) ?? publicItems[0];
 
   return (
     <div className="admin-page">
@@ -20,7 +20,7 @@ export default async function DashboardPage() {
         <div>
           <p>Dashboard / Tổng quan</p>
           <h1>Trung tâm điều phối nội dung IAICT</h1>
-          <span>Theo dõi nội dung công khai, bản nháp, workflow biên tập và trạng thái kho CMS tập trung.</span>
+          <span>Theo dõi nội dung công khai, bản nháp, chờ duyệt, lịch xuất bản và trạng thái kho CMS tập trung.</span>
         </div>
         <div className="admin-page-actions">
           <Link className="admin-button admin-button-secondary" href="/">Xem website</Link>
@@ -42,16 +42,16 @@ export default async function DashboardPage() {
 
       <section className="admin-metric-grid" aria-label="Tổng quan nội dung">
         <article className="admin-metric-card admin-metric-card-primary">
-          <span>01 / Published</span><strong>{published.length}</strong><p>Nội dung đang xuất bản</p><i>Public newsroom</i>
+          <span>01 / Public</span><strong>{publicItems.length}</strong><p>Nội dung đang công khai</p><i>Newsroom & search</i>
         </article>
         <article className="admin-metric-card">
-          <span>02 / Drafts</span><strong>{drafts.length}</strong><p>Bản nháp trong CMS</p><i>Chưa công khai</i>
+          <span>02 / Review</span><strong>{review.length}</strong><p>Nội dung chờ duyệt</p><i>Editorial review</i>
         </article>
         <article className="admin-metric-card">
-          <span>03 / Events</span><strong>{eventCount}</strong><p>Sự kiện đã xuất bản</p><i>Verified schedule only</i>
+          <span>03 / Scheduled</span><strong>{scheduled.length}</strong><p>Nội dung đã lên lịch</p><i>Automatic publishing</i>
         </article>
         <article className="admin-metric-card">
-          <span>04 / Notices</span><strong>{noticeCount}</strong><p>Thông báo công khai</p><i>IAICT notices</i>
+          <span>04 / Drafts</span><strong>{drafts.length}</strong><p>Bản nháp trong CMS</p><i>Chưa công khai</i>
         </article>
       </section>
 
@@ -62,7 +62,7 @@ export default async function DashboardPage() {
             <Link href="/dashboard/noi-dung">Xem toàn bộ →</Link>
           </div>
           <div className="admin-content-list">
-            {published.slice(0, 5).map((item, index) => (
+            {publicItems.slice(0, 5).map((item, index) => (
               <article key={item.slug}>
                 <b>{String(index + 1).padStart(2, "0")}</b>
                 <div>
@@ -91,10 +91,10 @@ export default async function DashboardPage() {
         <div className="admin-panel">
           <div className="admin-panel-head compact"><div><span>Editorial workflow</span><h2>Luồng biên tập</h2></div></div>
           <div className="admin-workflow">
-            <div><b>01</b><strong>Nháp</strong><span>Biên tập nội dung và metadata</span></div><i aria-hidden="true">→</i>
-            <div><b>02</b><strong>Rà soát</strong><span>Kiểm chứng nguồn và phạm vi công khai</span></div><i aria-hidden="true">→</i>
-            <div><b>03</b><strong>Xuất bản</strong><span>Đưa bài ra newsroom và chỉ mục</span></div><i aria-hidden="true">→</i>
-            <div><b>04</b><strong>Gỡ / cập nhật</strong><span>Quản lý vòng đời nội dung</span></div>
+            <div><b>01</b><strong>Nháp</strong><span>Biên tập nội dung, ảnh và metadata</span></div><i aria-hidden="true">→</i>
+            <div><b>02</b><strong>Xem trước</strong><span>Kiểm tra bố cục trước khi công khai</span></div><i aria-hidden="true">→</i>
+            <div><b>03</b><strong>Chờ duyệt</strong><span>Rà soát nội dung và phạm vi công khai</span></div><i aria-hidden="true">→</i>
+            <div><b>04</b><strong>Lên lịch / Xuất bản</strong><span>Đưa bài ra newsroom đúng thời điểm</span></div>
           </div>
         </div>
 
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
           <div className="admin-infra-list">
             <div><span>Xác thực quản trị</span><b className="is-live">Đang hoạt động</b></div>
             <div><span>Kho nội dung Vercel Blob</span><b className={snapshot.storageReady ? "is-live" : "is-pending"}>{snapshot.storageReady ? "Đang hoạt động" : "Chưa kết nối"}</b></div>
-            <div><span>Audit log nội dung</span><b className="is-live">Đang hoạt động</b></div>
+            <div><span>Workflow & lịch xuất bản</span><b className="is-live">Đang hoạt động</b></div>
             <div><span>Thư viện Media</span><b className="is-live">Đang hoạt động</b></div>
           </div>
         </aside>
