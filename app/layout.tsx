@@ -7,6 +7,7 @@ import "./project-v4.css";
 import "./home-v7.css";
 import "./home-v72.css";
 import "./home-v73.css";
+import "./home-v74.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
