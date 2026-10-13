@@ -187,8 +187,21 @@ export async function POST(request: Request) {
   if (body.action === "delete") {
     const cms = await getCmsSnapshot();
     const usedBy = cms.state.items
-      .filter((item) => typeof item.contentHtml === "string" && item.contentHtml.includes(asset.publicUrl))
-      .map((item) => ({ title: item.title, status: item.status, slug: item.slug }));
+      .filter((item) =>
+        (typeof item.contentHtml === "string" && item.contentHtml.includes(asset.publicUrl)) ||
+        item.coverMediaId === asset.id ||
+        item.ogMediaId === asset.id,
+      )
+      .map((item) => ({
+        title: item.title,
+        status: item.status,
+        slug: item.slug,
+        usage: [
+          typeof item.contentHtml === "string" && item.contentHtml.includes(asset.publicUrl) ? "Nội dung bài" : null,
+          item.coverMediaId === asset.id ? "Ảnh đại diện" : null,
+          item.ogMediaId === asset.id ? "OpenGraph" : null,
+        ].filter(Boolean),
+      }));
 
     if (usedBy.length) {
       return json(
