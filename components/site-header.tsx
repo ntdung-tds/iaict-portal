@@ -10,8 +10,8 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="topline">
         <div className="shell topline-inner">
-          <span>Cổng thông tin điện tử IAICT</span>
-          <span className="status-dot">FULL DEMO · PREVIEW</span>
+          <span>Cổng thông tin điện tử · IAICT</span>
+          <span className="status-dot">Ứng dụng công nghệ · Chuyển giao · Đào tạo</span>
         </div>
       </div>
       <div className="shell brand-row">
@@ -39,7 +39,7 @@ export function SiteHeader() {
 
         <div className="header-actions">
           <Link className="search-link" href="/tim-kiem" aria-label="Tìm kiếm">Tìm kiếm</Link>
-          <Link className="header-cta" href={contactItem.href}>Đề nghị tư vấn</Link>
+          <Link className="header-cta" href={contactItem.href}>Liên hệ hợp tác</Link>
           <details className="mobile-menu">
             <summary aria-label="Mở menu">Menu</summary>
             <nav aria-label="Điều hướng di động">
