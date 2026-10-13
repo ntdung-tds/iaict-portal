@@ -5,6 +5,7 @@ export default async function DashboardContentPage() {
   const snapshot = await getCmsSnapshot();
   const items: AdminContentItem[] = snapshot.state.items.map((item) => ({
     ...item,
+    featured: Boolean(item.featured),
     body: bodyFromPublication(item),
   }));
 
