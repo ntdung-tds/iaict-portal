@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { DataPlaceholder } from "@/components/data-placeholder";
+import { getPublishedPublications } from "@/lib/cms-store";
+import { formatPublicationDate } from "@/lib/publication-date";
 import {
   intentCards,
   pillars,
@@ -22,7 +24,11 @@ const projectCapabilities = [
   "Sẵn sàng mở rộng theo mô hình ứng dụng thực tế",
 ];
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const latestPublications = (await getPublishedPublications()).slice(0, 3);
+
   return (
     <main id="main-content" className="premium-home">
       <section className="hero hero-premium">
@@ -257,12 +263,24 @@ export default function HomePage() {
       <section className="section premium-editorial-section">
         <div className="shell editorial-grid premium-editorial-grid">
           <div className="editorial-intro">
-            <p className="kicker">Dữ liệu có kiểm soát</p>
-            <h2>Nội dung công khai phải đi cùng bằng chứng và nguồn dữ liệu rõ ràng</h2>
-            <p>Website được thiết kế để kết nối dần với CMS, dữ liệu dự án, chuyên gia, đối tác, tin tức và sự kiện thay vì hard-code thông tin chưa được xác minh.</p>
+            <p className="kicker">Thông tin mới từ IAICT</p>
+            <h2>Nội dung công khai được xuất bản trực tiếp từ CMS</h2>
+            <p>Tin hoạt động, góc nhìn chuyên môn và thông báo mới nhất được đồng bộ từ cùng một nguồn nội dung dùng cho newsroom, tìm kiếm và metadata.</p>
+            <Link className="text-link" href="/tin-tuc">Xem toàn bộ tin tức →</Link>
           </div>
-          <div className="editorial-placeholders">
-            <DataPlaceholder label="CMS / Articles" title="Tin tức & sự kiện chính thức" description="Nội dung sẽ được xuất bản qua quy trình biên tập và phân loại." />
+          <div className="editorial-placeholders home-latest-publications">
+            {latestPublications.length ? latestPublications.map((item) => (
+              <Link className="home-latest-publication" href={`/tin-tuc/${item.slug}`} key={item.slug}>
+                {item.coverImage ? <img src={item.coverImage.src} alt={item.coverImage.alt} loading="lazy" /> : <div className="home-latest-publication-fallback" aria-hidden="true">IAICT</div>}
+                <div>
+                  <span>{item.category} · {formatPublicationDate(item.publishedAt)}</span>
+                  <strong>{item.title}</strong>
+                  <p>{item.excerpt}</p>
+                </div>
+              </Link>
+            )) : (
+              <DataPlaceholder label="CMS / Articles" title="Tin tức & sự kiện chính thức" description="Nội dung sẽ được xuất bản qua quy trình biên tập và phân loại." />
+            )}
             <DataPlaceholder label="CMS / Experts" title="Chuyên gia & giảng viên" description="Chỉ hiển thị hồ sơ và thông tin được phép công khai." />
           </div>
         </div>
