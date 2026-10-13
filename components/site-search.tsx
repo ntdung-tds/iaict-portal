@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { publications } from "@/lib/publications";
 
 type SearchItem = {
   title: string;
@@ -11,7 +12,7 @@ type SearchItem = {
   keywords: string;
 };
 
-const searchIndex: SearchItem[] = [
+const baseSearchIndex: SearchItem[] = [
   { title: "Giới thiệu IAICT", summary: "Định hướng nghiên cứu ứng dụng, bốn trụ cột năng lực và cách IAICT tiếp cận một bài toán triển khai.", href: "/gioi-thieu", category: "Thông tin", keywords: "viện giới thiệu nghiên cứu ứng dụng công nghệ chuyển giao academy technology solutions" },
   { title: "Sản phẩm & Nền tảng", summary: "Các nhóm nền tảng, IoT, AI, dữ liệu, truy xuất nguồn gốc và quản lý vòng đời.", href: "/san-pham-nen-tang", category: "Sản phẩm", keywords: "phần mềm nền tảng sản phẩm iot ai dữ liệu truy xuất vòng đời" },
   { title: "IoT & Quan trắc", summary: "Kết nối thiết bị, cảm biến và dữ liệu hiện trường về hệ thống quản lý tập trung.", href: "/san-pham-nen-tang#iot-quan-trac", category: "Sản phẩm", keywords: "iot cảm biến quan trắc 4g gateway hiện trường dữ liệu thiết bị" },
@@ -28,6 +29,15 @@ const searchIndex: SearchItem[] = [
   { title: "Liên hệ & Hợp tác", summary: "Trao đổi nhu cầu tư vấn, triển khai, chuyển giao, đào tạo và hợp tác dự án.", href: "/lien-he", category: "Thông tin", keywords: "liên hệ hợp tác tư vấn dự án đào tạo chuyển giao" },
 ];
 
+const publicationSearchIndex: SearchItem[] = publications.map((item) => ({
+  title: item.title,
+  summary: item.excerpt,
+  href: `/tin-tuc/${item.slug}`,
+  category: item.category.includes("Đào tạo") ? "Đào tạo" : item.category.includes("Dự án") ? "Dự án" : "Thông tin",
+  keywords: `${item.keywords.join(" ")} ${item.category}`,
+}));
+
+const searchIndex: SearchItem[] = [...baseSearchIndex, ...publicationSearchIndex];
 const filters = ["Tất cả", "Sản phẩm", "Giải pháp", "Đào tạo", "Dự án", "Thông tin"] as const;
 const suggestions = ["AI & Dữ liệu", "IoT & Quan trắc", "Trâm Rừng", "Đào tạo cơ quan nhà nước"];
 
@@ -46,12 +56,10 @@ export function SiteSearch() {
 
   const results = useMemo(() => {
     const needle = normalize(query);
-
     return searchIndex.filter((item) => {
       const matchesFilter = filter === "Tất cả" || item.category === filter;
       if (!matchesFilter) return false;
       if (!needle) return true;
-
       return normalize(`${item.title} ${item.summary} ${item.keywords} ${item.category}`).includes(needle);
     });
   }, [filter, query]);
@@ -73,11 +81,7 @@ export function SiteSearch() {
             aria-label="Từ khóa tìm kiếm"
             autoComplete="off"
           />
-          {query ? (
-            <button type="button" className="site-search-clear" onClick={() => setQuery("")}>
-              Xóa
-            </button>
-          ) : null}
+          {query ? <button type="button" className="site-search-clear" onClick={() => setQuery("")}>Xóa</button> : null}
         </div>
       </form>
 
@@ -113,21 +117,14 @@ export function SiteSearch() {
           <span>{hasSearchIntent ? "Kết quả phù hợp" : "Khám phá nội dung"}</span>
           <strong>{results.length.toString().padStart(2, "0")}</strong>
         </div>
-        <p>
-          {hasSearchIntent
-            ? "Kết quả được tìm trong chỉ mục nội dung công khai chính của IAICT."
-            : "Có thể nhập từ khóa hoặc chọn một nhóm nội dung để thu hẹp kết quả."}
-        </p>
+        <p>{hasSearchIntent ? "Kết quả được tìm trong các trang và bài viết công khai của IAICT." : "Có thể nhập từ khóa hoặc chọn một nhóm nội dung để thu hẹp kết quả."}</p>
       </div>
 
       {results.length ? (
         <div className="site-search-results">
           {results.map((item, index) => (
             <Link href={item.href} key={`${item.href}-${item.title}`} className="site-search-result-card">
-              <div className="site-search-result-meta">
-                <span>{item.category}</span>
-                <b>{String(index + 1).padStart(2, "0")}</b>
-              </div>
+              <div className="site-search-result-meta"><span>{item.category}</span><b>{String(index + 1).padStart(2, "0")}</b></div>
               <h2>{item.title}</h2>
               <p>{item.summary}</p>
               <strong>Xem nội dung <i aria-hidden="true">→</i></strong>
@@ -138,14 +135,12 @@ export function SiteSearch() {
         <div className="site-search-empty">
           <span>Không tìm thấy kết quả phù hợp</span>
           <p>Thử từ khóa ngắn hơn, bỏ dấu hoặc chọn lại nhóm nội dung.</p>
-          <button type="button" onClick={() => { setQuery(""); setFilter("Tất cả"); }}>
-            Đặt lại tìm kiếm
-          </button>
+          <button type="button" onClick={() => { setQuery(""); setFilter("Tất cả"); }}>Đặt lại tìm kiếm</button>
         </div>
       )}
 
       <p className="site-search-note">
-        Chỉ mục hiện bao phủ các trang và nhóm nội dung công khai chính. Khi kho bài viết và tài liệu được mở rộng, lớp tìm kiếm này có thể tiếp tục đồng bộ với nguồn dữ liệu nội dung tập trung.
+        Chỉ mục tìm kiếm hiện bao phủ các trang chính và kho bài viết công khai. Cấu trúc này có thể đồng bộ trực tiếp với CMS khi nguồn nội dung tập trung được đưa vào vận hành.
       </p>
     </div>
   );

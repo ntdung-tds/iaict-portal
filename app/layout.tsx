@@ -5,6 +5,7 @@ import "./premium.css";
 import "./category-premium.css";
 import "./public-pages-premium.css";
 import "./search-training-premium.css";
+import "./publications-premium.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://iaict-demo.vercel.app";
 const siteTitle = "IAICT — Viện Ứng dụng Công nghệ Thông tin và Truyền thông";

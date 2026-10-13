@@ -1,23 +1,23 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import {
+  featuredPublication,
+  formatPublicationDate,
+  getPublicationTypeLabel,
+  publications,
+} from "@/lib/publications";
 import { newsCategories } from "@/lib/public-content";
 
-export const metadata: Metadata = { title: "Tin tức" };
+export const metadata: Metadata = {
+  title: "Tin tức & Sự kiện",
+  description: "Tin hoạt động IAICT, góc nhìn chuyên môn, thông báo, dự án ứng dụng và các sự kiện được công bố chính thức.",
+};
 
-const editorialStreams = [
-  { code: "NEWS", title: "Tin hoạt động Viện", text: "Các hoạt động, chương trình và thông tin do IAICT công bố." },
-  { code: "EVENT", title: "Sự kiện & Hội thảo", text: "Lịch, nội dung và thông tin liên quan đến các sự kiện chuyên môn." },
-  { code: "INSIGHT", title: "Khoa học, công nghệ & chuyển đổi số", text: "Nội dung chuyên môn theo các lĩnh vực IAICT quan tâm và triển khai." },
-];
-
-const officialSources = [
-  { title: "Bộ Khoa học và Công nghệ", text: "Nguồn tham khảo chính thống về khoa học, công nghệ, đổi mới sáng tạo và chuyển đổi số." },
-  { title: "Cổng Thông tin điện tử Chính phủ", text: "Nguồn tham khảo chính thống cho thông tin điều hành, chính sách và hoạt động Chính phủ." },
-];
+const remainingPublications = publications.filter((item) => item.slug !== featuredPublication.slug);
 
 export default function NewsPage() {
   return (
-    <main id="main-content" className="news-page">
+    <main id="main-content" className="news-page news-live-page">
       <section className="news-hero">
         <div className="news-hero-grid" aria-hidden="true" />
         <div className="shell news-hero-inner">
@@ -25,31 +25,89 @@ export default function NewsPage() {
             <div className="news-breadcrumb"><Link href="/">IAICT</Link><span>/</span><b>Tin tức</b></div>
             <p className="kicker">Tin tức & Sự kiện</p>
             <h1>Kênh thông tin chính thức của IAICT</h1>
-            <p className="page-lead">Theo dõi hoạt động của Viện, các chương trình chuyên môn, sự kiện, hội thảo và nội dung tham khảo từ những nguồn chính thống.</p>
+            <p className="page-lead">Theo dõi hoạt động của Viện, dự án ứng dụng, chương trình đào tạo, góc nhìn chuyên môn và các thông báo được công bố chính thức.</p>
           </div>
           <aside className="news-hero-panel">
             <span>Editorial principles</span>
             <strong>Rõ nguồn. Đúng ngữ cảnh. Có kiểm chứng.</strong>
-            <p>Nội dung xuất bản được tổ chức theo chuyên mục và nguồn, giúp người đọc phân biệt thông tin của IAICT với nội dung tham khảo bên ngoài.</p>
+            <p>Nội dung IAICT được tách rõ với nguồn tham khảo bên ngoài. Các sự kiện chỉ xuất hiện khi lịch và thông tin tổ chức đã được xác nhận.</p>
           </aside>
         </div>
       </section>
 
-      <section className="section news-stream-section">
+      <section className="section news-featured-live-section">
+        <div className="shell news-featured-live-grid">
+          <Link href={`/tin-tuc/${featuredPublication.slug}`} className="news-featured-live-card">
+            <div className="news-live-visual" aria-hidden="true">
+              <span>IAICT / FIELD DATA</span>
+              <strong>01 → 04</strong>
+              <div><i>Hiện trường</i><i>Gateway</i><i>Data Core</i><i>Nền tảng</i></div>
+            </div>
+            <div className="news-featured-live-copy">
+              <div className="news-live-meta">
+                <span>{getPublicationTypeLabel(featuredPublication.type)}</span>
+                <span>{formatPublicationDate(featuredPublication.publishedAt)}</span>
+                <span>{featuredPublication.readingTime}</span>
+              </div>
+              <p className="kicker">Nổi bật</p>
+              <h2>{featuredPublication.title}</h2>
+              <p>{featuredPublication.excerpt}</p>
+              <strong>Đọc bài viết <i aria-hidden="true">→</i></strong>
+            </div>
+          </Link>
+
+          <aside className="news-live-sidebar">
+            <p className="kicker">Mới cập nhật</p>
+            {remainingPublications.slice(0, 3).map((item, index) => (
+              <Link href={`/tin-tuc/${item.slug}`} key={item.slug}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <div>
+                  <b>{item.category}</b>
+                  <strong>{item.title}</strong>
+                  <small>{formatPublicationDate(item.publishedAt)}</small>
+                </div>
+              </Link>
+            ))}
+          </aside>
+        </div>
+      </section>
+
+      <section className="section section-tint news-library-live-section">
         <div className="shell">
           <div className="news-section-heading">
-            <div><p className="kicker">Luồng nội dung</p><h2>Ba dòng thông tin chính</h2></div>
-            <p>Thiết kế để tin tức hỗ trợ việc hiểu năng lực và hoạt động của Viện, nhưng không lấn át sản phẩm, giải pháp và đào tạo.</p>
+            <div><p className="kicker">Kho nội dung</p><h2>Tin, góc nhìn và thông báo</h2></div>
+            <p>Mỗi nội dung có URL riêng, metadata riêng và cấu trúc sẵn sàng để chuyển sang nguồn CMS mà không thay đổi trải nghiệm phía người dùng.</p>
           </div>
-          <div className="news-stream-grid">
-            {editorialStreams.map((stream, index) => (
-              <article key={stream.code}>
-                <div className="news-stream-top"><span>{stream.code}</span><i>{String(index + 1).padStart(2, "0")}</i></div>
-                <h3>{stream.title}</h3>
-                <p>{stream.text}</p>
-                <b>Nội dung đang được cập nhật</b>
-              </article>
+          <div className="news-library-live-grid">
+            {remainingPublications.map((item, index) => (
+              <Link className="news-library-live-card" href={`/tin-tuc/${item.slug}`} key={item.slug}>
+                <div className="news-live-meta">
+                  <span>{getPublicationTypeLabel(item.type)}</span>
+                  <span>{formatPublicationDate(item.publishedAt)}</span>
+                </div>
+                <span className="news-library-live-index">{String(index + 1).padStart(2, "0")}</span>
+                <h3>{item.title}</h3>
+                <p>{item.excerpt}</p>
+                <div className="news-library-live-footer"><b>{item.category}</b><i aria-hidden="true">↗</i></div>
+              </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section news-event-ready-section">
+        <div className="shell news-event-ready-grid">
+          <div>
+            <p className="kicker">Sự kiện & Hội thảo</p>
+            <h2>Lịch sự kiện chỉ hiển thị khi thông tin đã được xác nhận</h2>
+            <p>Hệ thống nội dung đã hỗ trợ loại “Sự kiện”. Khi có lịch chính thức, thông tin thời gian, địa điểm, hình thức và đăng ký sẽ được xuất bản tại đây và có thể đồng thời xuất hiện trên trang chủ.</p>
+          </div>
+          <div className="news-event-ready-card">
+            <span>Event publishing flow</span>
+            <div><b>01</b><strong>Xác nhận lịch</strong></div>
+            <div><b>02</b><strong>Xuất bản thông tin</strong></div>
+            <div><b>03</b><strong>Đăng ký / liên hệ</strong></div>
+            <div><b>04</b><strong>Cập nhật sau sự kiện</strong></div>
           </div>
         </div>
       </section>
@@ -65,30 +123,9 @@ export default function NewsPage() {
         </div>
       </section>
 
-      <section className="section official-source-section">
-        <div className="shell official-source-grid">
-          <div className="official-source-copy">
-            <p className="kicker">Nguồn tham khảo chính thống</p>
-            <h2>Mở rộng góc nhìn nhưng vẫn giữ rõ nguồn thông tin</h2>
-            <p>Khu vực này được chuẩn bị để kết nối các luồng thông tin từ nguồn chính thống. Nội dung bên ngoài sẽ luôn được nhận diện rõ, không trình bày như nội dung do IAICT tự công bố.</p>
-            <Link className="text-link" href="/tim-kiem">Tìm kiếm nội dung →</Link>
-          </div>
-          <div className="official-source-cards">
-            {officialSources.map((source, index) => (
-              <article key={source.title}>
-                <span>Source {String(index + 1).padStart(2, "0")}</span>
-                <h3>{source.title}</h3>
-                <p>{source.text}</p>
-                <b>Khu vực kết nối nguồn</b>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="section section-compact news-final-section">
         <div className="shell news-final-card">
-          <div><p className="kicker kicker-light">Thông tin & Hợp tác</p><h2>Có thông tin cần trao đổi với IAICT?</h2><p>Liên hệ Viện để trao đổi về hoạt động, sự kiện, chương trình chuyên môn hoặc cơ hội hợp tác.</p></div>
+          <div><p className="kicker kicker-light">Thông tin & Hợp tác</p><h2>Có nội dung hoặc chương trình cần trao đổi với IAICT?</h2><p>Liên hệ Viện để trao đổi về hoạt động, sự kiện, chương trình chuyên môn hoặc cơ hội hợp tác.</p></div>
           <Link className="button button-light" href="/lien-he">Liên hệ IAICT</Link>
         </div>
       </section>
