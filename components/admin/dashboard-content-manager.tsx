@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { PublicationMediaFields } from "@/components/admin/publication-media-fields";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
 type ContentType = "news" | "insight" | "notice" | "event";
@@ -20,6 +21,8 @@ export type AdminContentItem = {
   body: string;
   keywords: string[];
   featured: boolean;
+  coverMediaId?: string;
+  ogMediaId?: string;
   status: ContentStatus;
   createdAt: string;
   updatedAt: string;
@@ -36,6 +39,8 @@ type EditorState = {
   body: string;
   keywords: string;
   featured: boolean;
+  coverMediaId?: string;
+  ogMediaId?: string;
 };
 
 type MutationResponse = {
@@ -135,6 +140,8 @@ export function DashboardContentManager({
       body: item.body,
       keywords: item.keywords.join(", "),
       featured: item.featured,
+      coverMediaId: item.coverMediaId,
+      ogMediaId: item.ogMediaId,
     });
     setNotice(null);
   }
@@ -154,6 +161,8 @@ export function DashboardContentManager({
         .map((value) => value.trim())
         .filter(Boolean),
       featured: current.featured,
+      coverMediaId: current.coverMediaId,
+      ogMediaId: current.ogMediaId,
     };
   }
 
@@ -214,6 +223,8 @@ export function DashboardContentManager({
             body: saved.body,
             keywords: saved.keywords.join(", "),
             featured: saved.featured,
+            coverMediaId: saved.coverMediaId,
+            ogMediaId: saved.ogMediaId,
           });
         }
         setNotice("Đã lưu bản nháp vào kho CMS.");
@@ -329,6 +340,14 @@ export function DashboardContentManager({
               <textarea rows={4} value={editor.excerpt} onChange={(event) => setEditor({ ...editor, excerpt: event.target.value })} placeholder="Nội dung tóm tắt hiển thị ở danh sách và metadata" />
             </label>
 
+            <div className="admin-field admin-field-wide">
+              <PublicationMediaFields
+                coverMediaId={editor.coverMediaId}
+                ogMediaId={editor.ogMediaId}
+                onChange={(media) => setEditor({ ...editor, ...media })}
+              />
+            </div>
+
             <div className="admin-field admin-field-wide admin-rich-field">
               <span>Nội dung chi tiết</span>
               <RichTextEditor value={editor.body} onChange={(body) => setEditor({ ...editor, body })} />
@@ -363,7 +382,7 @@ export function DashboardContentManager({
             <article className="admin-content-row" key={item.id}>
               <div className="admin-content-title-cell">
                 <b>{String(index + 1).padStart(2, "0")}</b>
-                <div><strong>{item.title}</strong><span>{item.category}{item.featured ? " · Nổi bật" : ""}</span></div>
+                <div><strong>{item.title}</strong><span>{item.category}{item.featured ? " · Nổi bật" : ""}{item.coverMediaId ? " · Có ảnh" : ""}</span></div>
               </div>
               <span>{typeLabel(item.type)}</span>
               <span className={`admin-status-pill ${item.status === "draft" ? "is-draft" : "is-published"}`}>{item.status === "draft" ? "Bản nháp" : "Đã xuất bản"}</span>
