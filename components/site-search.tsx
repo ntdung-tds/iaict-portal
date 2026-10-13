@@ -9,6 +9,10 @@ type SearchPublication = {
   excerpt: string;
   category: string;
   keywords: string[];
+  coverImage?: {
+    src: string;
+    alt: string;
+  };
 };
 
 type SearchItem = {
@@ -17,6 +21,10 @@ type SearchItem = {
   href: string;
   category: "Sản phẩm" | "Giải pháp" | "Đào tạo" | "Dự án" | "Thông tin";
   keywords: string;
+  image?: {
+    src: string;
+    alt: string;
+  };
 };
 
 const baseSearchIndex: SearchItem[] = [
@@ -65,6 +73,7 @@ export function SiteSearch({ publications }: { publications: SearchPublication[]
       href: `/tin-tuc/${item.slug}`,
       category: categoryForPublication(item),
       keywords: `${item.keywords.join(" ")} ${item.category}`,
+      image: item.coverImage,
     }));
     return [...baseSearchIndex, ...publicationSearchIndex];
   }, [publications]);
@@ -113,9 +122,12 @@ export function SiteSearch({ publications }: { publications: SearchPublication[]
       {results.length ? (
         <div className="site-search-results">
           {results.map((item, index) => (
-            <Link href={item.href} key={`${item.href}-${item.title}`} className="site-search-result-card">
-              <div className="site-search-result-meta"><span>{item.category}</span><b>{String(index + 1).padStart(2, "0")}</b></div>
-              <h2>{item.title}</h2><p>{item.summary}</p><strong>Xem nội dung <i aria-hidden="true">→</i></strong>
+            <Link href={item.href} key={`${item.href}-${item.title}`} className={`site-search-result-card${item.image ? " has-image" : ""}`}>
+              {item.image ? <img className="site-search-result-thumb" src={item.image.src} alt={item.image.alt} loading="lazy" /> : null}
+              <div className="site-search-result-content">
+                <div className="site-search-result-meta"><span>{item.category}</span><b>{String(index + 1).padStart(2, "0")}</b></div>
+                <h2>{item.title}</h2><p>{item.summary}</p><strong>Xem nội dung <i aria-hidden="true">→</i></strong>
+              </div>
             </Link>
           ))}
         </div>
