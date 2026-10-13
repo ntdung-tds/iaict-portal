@@ -7,7 +7,7 @@ export default async function DashboardPage() {
   const snapshot = await getCmsSnapshot();
   const published = snapshot.state.items
     .filter((item) => item.status === "published")
-    .map(toPublicPublication)
+    .map((item) => toPublicPublication(item))
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   const drafts = snapshot.state.items.filter((item) => item.status === "draft");
   const eventCount = published.filter((item) => item.type === "event").length;
@@ -104,7 +104,7 @@ export default async function DashboardPage() {
             <div><span>Xác thực quản trị</span><b className="is-live">Đang hoạt động</b></div>
             <div><span>Kho nội dung Vercel Blob</span><b className={snapshot.storageReady ? "is-live" : "is-pending"}>{snapshot.storageReady ? "Đang hoạt động" : "Chưa kết nối"}</b></div>
             <div><span>Audit log nội dung</span><b className="is-live">Đang hoạt động</b></div>
-            <div><span>Thư viện media</span><b className="is-pending">Bước tiếp theo</b></div>
+            <div><span>Thư viện Media</span><b className="is-live">Đang hoạt động</b></div>
           </div>
         </aside>
       </section>
