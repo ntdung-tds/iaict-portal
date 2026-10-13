@@ -1,0 +1,46 @@
+/* IAICT homepage V7.2 — remove empty visual space without overloading copy */
+
+/* Lead need card: use the open desktop area as a compact roadmap visual. */
+.homeV7-needCard:first-child{position:relative;padding-right:228px!important}
+.homeV7-needCard:first-child::before{content:"";position:absolute;z-index:0;right:34px;top:100px;width:158px;height:144px;border:1px solid rgba(95,211,194,.25);border-radius:22px;background:radial-gradient(circle at 50% 50%,rgba(100,231,208,.2) 0 5px,transparent 6px),radial-gradient(circle at 18% 22%,rgba(100,231,208,.75) 0 4px,transparent 5px),radial-gradient(circle at 82% 28%,rgba(100,231,208,.58) 0 4px,transparent 5px),radial-gradient(circle at 74% 78%,rgba(100,231,208,.42) 0 4px,transparent 5px),linear-gradient(90deg,transparent 49.5%,rgba(133,227,211,.13) 50%,transparent 50.5%),linear-gradient(transparent 49.5%,rgba(133,227,211,.13) 50%,transparent 50.5%),rgba(5,43,52,.18);box-shadow:inset 0 0 0 8px rgba(255,255,255,.018),0 18px 42px rgba(3,28,36,.12);pointer-events:none}
+.homeV7-needCard:first-child::after{content:"MAP  →  PRIORITY  →  ROADMAP";position:absolute;z-index:1;right:45px;top:260px;width:136px;color:#99d8ce;font-size:8px;font-weight:850;line-height:1.45;letter-spacing:.08em;text-align:center;pointer-events:none}
+.homeV7-needCard:first-child>*,.homeV7-knowledgeLead>*{position:relative;z-index:2}
+
+/* Knowledge lead: replace the oversized blank upper half with an editorial data-governance visual. */
+.homeV7-knowledgeLead{position:relative;overflow:hidden;justify-content:flex-start!important;min-height:500px!important;padding-top:244px!important;background:linear-gradient(145deg,#f3f8f6,#e9f3f0)!important}
+.homeV7-knowledgeLead::before{content:"";position:absolute;z-index:0;left:28px;right:28px;top:28px;height:176px;border:1px solid #d5e6e2;border-radius:22px;background:radial-gradient(circle at 18% 50%,#0d8d83 0 7px,rgba(13,141,131,.12) 8px 18px,transparent 19px),radial-gradient(circle at 50% 50%,#0d8d83 0 7px,rgba(13,141,131,.12) 8px 18px,transparent 19px),radial-gradient(circle at 82% 50%,#0d8d83 0 7px,rgba(13,141,131,.12) 8px 18px,transparent 19px),linear-gradient(90deg,transparent 17%,rgba(13,141,131,.34) 17.2% 49%,transparent 49.2% 51%,rgba(13,141,131,.34) 51.2% 82%,transparent 82.2%),linear-gradient(rgba(13,141,131,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(13,141,131,.045) 1px,transparent 1px),rgba(255,255,255,.66);background-size:auto,auto,auto,auto,26px 26px,26px 26px,auto;box-shadow:0 18px 44px rgba(28,67,70,.065);pointer-events:none}
+.homeV7-knowledgeLead::after{content:"DATA                         AI                         REVIEW";position:absolute;z-index:1;left:58px;right:58px;top:142px;color:#627f83;font-size:9px;font-weight:900;letter-spacing:.08em;word-spacing:10px;text-align:center;pointer-events:none}
+.homeV7-knowledgeLead h3{margin-top:16px!important}
+.homeV7-knowledgeLead p{max-width:700px}
+
+/* Gallery: give every capability card a technical visual field, not a flat color block. */
+.homeV7-galleryCard{isolation:isolate;background-color:#0b3544!important}
+.homeV7-galleryCard::before{z-index:0!important;inset:0!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:radial-gradient(circle at 78% 20%,rgba(94,230,204,.25),transparent 26%),linear-gradient(120deg,transparent 45%,rgba(255,255,255,.035) 45.5%,transparent 46%),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px)!important;background-size:auto,auto,42px 42px,42px 42px!important;opacity:1!important}
+.homeV7-galleryCard::after{content:"";position:absolute;z-index:0;right:28px;top:28px;width:86px;height:86px;border:1px solid rgba(121,235,215,.25);border-radius:50%;box-shadow:0 0 0 14px rgba(121,235,215,.035),0 0 0 30px rgba(121,235,215,.02);pointer-events:none}
+.homeV7-galleryCard:nth-child(2)::after{border-radius:18px;transform:rotate(8deg)}
+.homeV7-galleryCard:nth-child(3)::after{border-style:dashed;box-shadow:inset 0 0 0 18px rgba(121,235,215,.03)}
+.homeV7-galleryCard:nth-child(4)::after{width:118px;height:68px;border-radius:18px;transform:rotate(-5deg)}
+.homeV7-galleryCard>*{position:relative;z-index:2}
+
+/* Journey cards already say enough; reduce dead height and use a phase rail instead of adding prose. */
+.homeV7-journeyStep{min-height:225px!important;padding-bottom:24px!important}
+.homeV7-journeyStep::after{content:"";position:absolute;left:0;right:24px;bottom:0;height:3px;background:linear-gradient(90deg,#0c8a86,rgba(12,138,134,.08) 72%,transparent)}
+
+/* The secondary knowledge cards are compact editorial entries; don't stretch them unnecessarily. */
+.homeV7-knowledgeCard:not(.homeV7-knowledgeLead){min-height:190px!important}
+
+@media(max-width:1080px){
+  .homeV7-needCard:first-child{padding-right:36px!important;padding-top:210px!important}
+  .homeV7-needCard:first-child::before{left:36px;right:36px;top:34px;width:auto;height:136px}
+  .homeV7-needCard:first-child::after{left:50px;right:50px;top:178px;width:auto}
+  .homeV7-knowledgeLead{padding-top:228px!important}
+}
+@media(max-width:760px){
+  .homeV7-needCard:first-child{padding-top:180px!important}
+  .homeV7-needCard:first-child::before{left:28px;right:28px;top:28px;height:118px}
+  .homeV7-needCard:first-child::after{top:154px}
+  .homeV7-knowledgeLead{min-height:0!important;padding-top:202px!important}
+  .homeV7-knowledgeLead::before{left:22px;right:22px;top:22px;height:145px}
+  .homeV7-knowledgeLead::after{left:38px;right:38px;top:125px;font-size:8px}
+  .homeV7-journeyStep{min-height:0!important;padding-bottom:28px!important}
+}
