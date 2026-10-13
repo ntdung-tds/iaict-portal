@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "iaict-portal",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "APP_ENV": "production",
+    "IAICT_ADMIN_USERNAME": "admin",
+    "IAICT_ADMIN_ROLE": "superadmin"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
