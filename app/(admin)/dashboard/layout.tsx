@@ -8,6 +8,7 @@ import "../../dashboard.css";
 import "../../admin-auth.css";
 import "../../admin-editor.css";
 import "../../admin-media.css";
+import "../../admin-workflow.css";
 
 export const metadata: Metadata = {
   title: "Dashboard quản trị",
