@@ -33,6 +33,10 @@ export type CmsPublication = Publication & {
   coverMediaId?: string;
   ogMediaId?: string;
   publishAt?: string;
+  reviewerId?: string;
+  reviewerName?: string;
+  submittedBy?: string;
+  submittedAt?: string;
   id: string;
   status: CmsPublicationStatus;
   createdAt: string;
@@ -220,6 +224,10 @@ export function toPublicPublication(
     updatedAt: _updatedAt,
     originSlug: _originSlug,
     publishAt: _publishAt,
+    reviewerId: _reviewerId,
+    reviewerName: _reviewerName,
+    submittedBy: _submittedBy,
+    submittedAt: _submittedAt,
     coverMediaId,
     ogMediaId,
     ...publication
