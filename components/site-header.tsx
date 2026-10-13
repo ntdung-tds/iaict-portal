@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { mainNavigation } from "@/lib/public-content";
+import styles from "./site-chrome.module.css";
 
 const primaryItems = mainNavigation.slice(0, 4);
 const moreItems = mainNavigation.slice(4);
@@ -7,29 +8,30 @@ const contactItem = mainNavigation[8];
 
 export function SiteHeader() {
   return (
-    <header className="site-header">
-      <div className="topline">
-        <div className="shell topline-inner">
+    <header className={styles.header}>
+      <div className={styles.topline}>
+        <div className={`shell ${styles.toplineInner}`}>
           <span>Cổng thông tin điện tử · IAICT</span>
-          <span className="status-dot">Ứng dụng công nghệ · Chuyển giao · Đào tạo</span>
+          <span>Ứng dụng công nghệ · Chuyển giao · Đào tạo</span>
         </div>
       </div>
-      <div className="shell brand-row">
-        <Link className="brand" href="/" aria-label="IAICT - Trang chủ">
-          <span className="brand-mark" aria-hidden="true">IA</span>
+
+      <div className={`shell ${styles.brandRow}`}>
+        <Link className={styles.brand} href="/" aria-label="IAICT - Trang chủ">
+          <span className={styles.brandMark} aria-hidden="true">IA</span>
           <span>
             <strong>IAICT</strong>
             <small>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</small>
           </span>
         </Link>
 
-        <nav className="desktop-nav" aria-label="Điều hướng chính">
+        <nav className={styles.desktopNav} aria-label="Điều hướng chính">
           {primaryItems.map((item) => (
             <Link href={item.href} key={item.href}>{item.label}</Link>
           ))}
-          <details className="nav-dropdown">
+          <details className={styles.dropdown}>
             <summary>Hoạt động & Hợp tác</summary>
-            <div className="nav-dropdown-panel">
+            <div className={styles.dropdownPanel}>
               {moreItems.map((item) => (
                 <Link href={item.href} key={item.href}>{item.label}</Link>
               ))}
@@ -37,10 +39,10 @@ export function SiteHeader() {
           </details>
         </nav>
 
-        <div className="header-actions">
-          <Link className="search-link" href="/tim-kiem" aria-label="Tìm kiếm">Tìm kiếm</Link>
-          <Link className="header-cta" href={contactItem.href}>Liên hệ hợp tác</Link>
-          <details className="mobile-menu">
+        <div className={styles.actions}>
+          <Link className={styles.search} href="/tim-kiem" aria-label="Tìm kiếm">Tìm kiếm</Link>
+          <Link className={styles.cta} href={contactItem.href}>Liên hệ hợp tác</Link>
+          <details className={styles.mobileMenu}>
             <summary aria-label="Mở menu">Menu</summary>
             <nav aria-label="Điều hướng di động">
               {mainNavigation.map((item) => (
