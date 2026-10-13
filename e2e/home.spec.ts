@@ -116,3 +116,22 @@ test("V12 mobile navigation closes with Escape and marks the current page", asyn
   await page.goto("/");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
 });
+
+test("public search supports Vietnamese, filters, empty state and shareable queries", async ({ page }) => {
+  await page.goto("/tim-kiem?q=tram%20rung");
+  const search = page.locator(".public-search");
+  await expect(search).toHaveAttribute("data-ready", "true");
+  await expect(search.locator('.public-search-results a[href="/du-an/tram-rung"]')).toBeVisible();
+  await search.getByRole("button", { name: "Xóa tìm kiếm & bộ lọc" }).click();
+  await search.getByRole("group", { name: "Lọc nhóm nội dung" }).getByRole("button", { name: "Đào tạo", exact: true }).click();
+  await expect(search.locator(".public-search-results article>span").first()).toHaveText("Đào tạo");
+  await search.getByRole("button", { name: "Xóa tìm kiếm & bộ lọc" }).click();
+  await search.getByLabel("Tìm trong nội dung IAICT").fill("zzzzkhongco");
+  await search.getByRole("button", { name: "Tìm kiếm", exact: false }).first().click();
+  await expect(search.getByText("Chưa tìm thấy nội dung phù hợp.")).toBeVisible();
+  await expect(page).toHaveURL(/q=zzzzkhongco/);
+  await search.getByRole("button", { name: "Xem tất cả nội dung" }).click();
+  await expect(search.locator(".public-search-results article")).toHaveCount(17);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
+});

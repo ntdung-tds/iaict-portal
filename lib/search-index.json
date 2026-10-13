@@ -1,0 +1,121 @@
+[
+  {
+    "title": "IAICT Technology",
+    "summary": "Sản phẩm, nền tảng, IoT, AI, dữ liệu và phần mềm.",
+    "href": "/san-pham-nen-tang",
+    "category": "Công nghệ",
+    "keywords": ""
+  },
+  {
+    "title": "IAICT Solutions",
+    "summary": "Tư vấn, thiết kế, tích hợp, triển khai và vận hành.",
+    "href": "/giai-phap-dich-vu",
+    "category": "Giải pháp",
+    "keywords": ""
+  },
+  {
+    "title": "IAICT Transfer",
+    "summary": "Nghiên cứu ứng dụng, thử nghiệm, hoàn thiện và chuyển giao.",
+    "href": "/chuyen-giao-cong-nghe",
+    "category": "Giải pháp",
+    "keywords": ""
+  },
+  {
+    "title": "IAICT Academy",
+    "summary": "Đào tạo, tập huấn và bồi dưỡng năng lực số.",
+    "href": "/dao-tao-tap-huan",
+    "category": "Đào tạo",
+    "keywords": "khóa học tập huấn kỹ năng số"
+  },
+  {
+    "title": "Tư vấn chuyển đổi số",
+    "summary": "Khảo sát bài toán và lựa chọn lộ trình phù hợp.",
+    "href": "/giai-phap-dich-vu",
+    "category": "Giải pháp",
+    "keywords": ""
+  },
+  {
+    "title": "Xây dựng nền tảng",
+    "summary": "Phát triển nền tảng và phần mềm theo yêu cầu.",
+    "href": "/san-pham-nen-tang",
+    "category": "Công nghệ",
+    "keywords": ""
+  },
+  {
+    "title": "AI & Dữ liệu",
+    "summary": "Ứng dụng AI, dữ liệu và tự động hóa vào công việc.",
+    "href": "/san-pham-nen-tang#ai-du-lieu",
+    "category": "Công nghệ",
+    "keywords": ""
+  },
+  {
+    "title": "IoT & Quan trắc",
+    "summary": "Thu thập, kết nối và khai thác dữ liệu hiện trường.",
+    "href": "/san-pham-nen-tang#iot-quan-trac",
+    "category": "Công nghệ",
+    "keywords": ""
+  },
+  {
+    "title": "Chuyển giao công nghệ",
+    "summary": "Thử nghiệm, hoàn thiện và làm chủ giải pháp.",
+    "href": "/chuyen-giao-cong-nghe",
+    "category": "Giải pháp",
+    "keywords": ""
+  },
+  {
+    "title": "Đào tạo & Tập huấn",
+    "summary": "Chương trình theo nhóm đối tượng và nhu cầu thực tế.",
+    "href": "/dao-tao-tap-huan",
+    "category": "Đào tạo",
+    "keywords": "khóa học tập huấn kỹ năng số"
+  },
+  {
+    "title": "Tổ chức lớp cho cơ quan",
+    "summary": "Khung chương trình dành cho cơ quan nhà nước.",
+    "href": "/dao-tao-tap-huan/co-quan-nha-nuoc",
+    "category": "Đào tạo",
+    "keywords": "khóa học tập huấn kỹ năng số"
+  },
+  {
+    "title": "Hợp tác dự án",
+    "summary": "Trao đổi nhu cầu nghiên cứu, triển khai và đồng hành.",
+    "href": "/lien-he",
+    "category": "Về Viện",
+    "keywords": ""
+  },
+  {
+    "title": "Trâm Rừng — IoT và dữ liệu hiện trường",
+    "summary": "Khám phá dự án, kiến trúc cảm biến, kết nối 4G, server và cơ sở dữ liệu.",
+    "href": "/du-an/tram-rung",
+    "category": "Dự án",
+    "keywords": "rừng sensor gateway quan trắc nông lâm nghiệp"
+  },
+  {
+    "title": "Dự án tiêu biểu",
+    "summary": "Các mô hình ứng dụng và hướng tiếp cận triển khai của IAICT.",
+    "href": "/du-an",
+    "category": "Dự án",
+    "keywords": "nghiên cứu thử nghiệm"
+  },
+  {
+    "title": "Giới thiệu IAICT",
+    "summary": "Viện Ứng dụng Công nghệ Thông tin và Truyền thông; công nghệ, giải pháp, chuyển giao và đào tạo.",
+    "href": "/gioi-thieu",
+    "category": "Về Viện",
+    "keywords": "giới thiệu viện"
+  },
+  {
+    "title": "Tin tức & Tri thức",
+    "summary": "Thông tin hoạt động, góc nhìn chuyên môn và các chủ đề công nghệ.",
+    "href": "/tin-tuc",
+    "category": "Tri thức",
+    "keywords": "sự kiện hội thảo tin tức"
+  },
+  {
+    "title": "Liên hệ & Hợp tác",
+    "summary": "Đầu mối trao đổi về nhu cầu công nghệ, đào tạo và hợp tác dự án với IAICT.",
+    "href": "/lien-he",
+    "category": "Về Viện",
+    "keywords": "địa chỉ Hà Nội Tôn Thất Thuyết tư vấn"
+  }
+]

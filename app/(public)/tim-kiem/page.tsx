@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { PublicSearch } from "@/components/public-search";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Tìm kiếm",
-  description: "Khám phá nội dung IAICT theo nhu cầu, năng lực và nhóm chủ đề trong khi tìm kiếm toàn văn đang được hoàn thiện.",
+  description: "Tìm kiếm nội dung IAICT theo từ khóa, năng lực, dự án và nhóm chủ đề.",
 };
 
 const quickPaths = [
@@ -23,7 +24,7 @@ export default function SearchPage() {
           <div>
             <p className="v9-kicker">IAICT / DISCOVERY</p>
             <h1>Tìm đúng năng lực, không chỉ tìm từ khóa.</h1>
-            <p className="v9-lead">Trong khi tìm kiếm toàn văn đang được hoàn thiện, trang này đóng vai trò bản đồ khám phá: đi từ nhu cầu đến đúng nhóm nội dung, giải pháp, dự án hoặc chương trình đào tạo.</p>
+            <p className="v9-lead">Tìm sản phẩm, giải pháp, dự án và chương trình đào tạo trong nội dung IAICT đang công khai. Bắt đầu bằng một từ khóa hoặc chọn nhóm chủ đề phù hợp.</p>
           </div>
           <aside className="v9-signal" aria-label="Các cách khám phá nội dung IAICT">
             <div><small>BY NEED</small><strong>Theo nhu cầu</strong><span>Bắt đầu từ bài toán cần giải quyết.</span></div>
@@ -37,24 +38,10 @@ export default function SearchPage() {
       <section className="v9-section">
         <div className="shell">
           <div className="v9-section-head">
-            <div><p className="v9-kicker">DISCOVERY HUB</p><h2>Khám phá theo chủ đề ngay cả khi chưa cần gõ từ khóa.</h2></div>
-            <p>Các lối đi dưới đây đưa người dùng trực tiếp đến đúng nhóm nội dung thay vì để một ô tìm kiếm chưa có dữ liệu tạo ra trải nghiệm rỗng.</p>
+            <div><p className="v9-kicker">DISCOVERY HUB</p><h2>Bạn đang tìm nội dung nào?</h2></div>
+            <p>Tìm nhanh theo tên hoặc mô tả, sau đó lọc kết quả theo nhóm nội dung.</p>
           </div>
-          <div className="v9-discovery">
-            <div className="v9-search-panel">
-              <label htmlFor="search-preview">Tìm kiếm toàn văn</label>
-              <div className="v9-search-box">
-                <input id="search-preview" type="search" placeholder="Nhập sản phẩm, giải pháp, khóa học..." disabled aria-describedby="search-note" />
-                <button type="button" disabled>Tìm kiếm</button>
-              </div>
-              <p className="v9-search-note" id="search-note">Chức năng tìm kiếm toàn văn sẽ được bật khi chỉ mục nội dung chính thức sẵn sàng. Trong thời gian này, có thể dùng các lối khám phá bên cạnh để đi thẳng đến nội dung cần tìm.</p>
-            </div>
-            <div className="v9-paths">
-              {quickPaths.slice(0, 4).map(([no, title, body, href]) => (
-                <Link className="v9-path" href={href} key={title}><span>{no}</span><strong>{title}</strong><small>{body}</small></Link>
-              ))}
-            </div>
-          </div>
+          <PublicSearch />
         </div>
       </section>
 
@@ -78,3 +65,4 @@ export default function SearchPage() {
     </main>
   );
 }
+
