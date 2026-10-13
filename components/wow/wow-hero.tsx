@@ -39,6 +39,8 @@ const topicLabels = ["Công nghệ ứng dụng", "AI & Dữ liệu", "IoT & Hi�
 
 export function WowHero() {
   const [active, setActive] = useState(0);
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const [playing, setPlaying] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -97,13 +99,14 @@ export function WowHero() {
           {slides.map((item, index) => (
             <button
               key={item.kicker}
+              disabled={!ready}
               className={`${styles.dot} ${index === active ? styles.dotActive : ""}`}
               aria-label={topicLabels[index]}
               aria-pressed={index === active}
               onClick={() => { setActive(index); setPlaying(false); }}
             ><span>{String(index + 1).padStart(2, "0")}</span><strong>{topicLabels[index]}</strong></button>
           ))}
-          <button type="button" className="v12-play" onClick={() => setPlaying(!playing)} aria-pressed={playing} aria-label="Tự động chuyển nội dung">{playing ? "Ⅱ Tạm dừng" : "▷ Tự động"}</button>
+          <button type="button" disabled={!ready} className="v12-play" onClick={() => setPlaying(!playing)} aria-pressed={playing} aria-label="Tự động chuyển nội dung">{playing ? "Ⅱ Tạm dừng" : "▷ Tự động"}</button>
         </div>
       </div>
     </section>

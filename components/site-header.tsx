@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { mainNavigation } from "@/lib/public-content";
 import styles from "./site-chrome.module.css";
 
@@ -14,11 +14,13 @@ const contactItem = mainNavigation.find((item) => item.href === "/lien-he") ?? {
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const headerRef = useRef<HTMLElement>(null);
   const current = (href: string) => pathname === href || (href !== "/" && pathname?.startsWith(href + "/"));
   const closeMenus = () => headerRef.current?.querySelectorAll("details[open]").forEach(el => el.removeAttribute("open"));
   return (
-    <header ref={headerRef} className={`${styles.header} v12-header`}
+    <header data-interactive={ready} ref={headerRef} className={`${styles.header} v12-header`}
       onKeyDown={event => { if (event.key === "Escape") { const open = headerRef.current?.querySelector("details[open]"); closeMenus(); (open?.querySelector("summary") as HTMLElement | null)?.focus(); } }}
       onClick={event => { if ((event.target as HTMLElement).closest("a")) closeMenus(); }}>
       <div className={styles.topline}>

@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  page.on("pageerror", error => console.error("Browser error:", error.message));
+});
+
 const publicRoutes = [
   "/",
   "/gioi-thieu",
@@ -101,6 +105,7 @@ test("V12 topic controls and service disclosures work", async ({ page }) => {
 test("V12 mobile navigation closes with Escape and marks the current page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/gioi-thieu");
+  await expect(page.locator("header[data-interactive]")).toHaveAttribute("data-interactive", "true");
   const toggle = page.getByLabel("Mở menu", { exact: true });
   await toggle.click();
   const nav = page.getByRole("navigation", { name: "Điều hướng di động" });
