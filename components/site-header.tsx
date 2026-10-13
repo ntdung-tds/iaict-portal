@@ -11,7 +11,7 @@ export function SiteHeader() {
       <div className="topline">
         <div className="shell topline-inner">
           <span>Cổng thông tin điện tử IAICT</span>
-          <span className="status-dot">Hệ thống đang hoàn thiện M0</span>
+          <span className="status-dot">FULL DEMO · PREVIEW</span>
         </div>
       </div>
       <div className="shell brand-row">
