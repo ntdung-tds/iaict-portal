@@ -1,0 +1,99 @@
+/* IAICT homepage V7.4 — densify the two remaining sparse Knowledge cards */
+
+/* Shared treatment: cards should read as compact editorial modules, not tall empty posters. */
+.homeV7-knowledgeCard:nth-child(2),
+.homeV7-knowledgeCard:nth-child(3){
+  position:relative;
+  overflow:hidden;
+  align-self:start;
+  min-height:300px!important;
+  padding:148px 30px 28px!important;
+  background:linear-gradient(180deg,#ffffff 0%,#f7fbfa 100%)!important;
+}
+.homeV7-knowledgeCard:nth-child(2)>*,
+.homeV7-knowledgeCard:nth-child(3)>*{position:relative;z-index:2}
+.homeV7-knowledgeCard:nth-child(2) h3,
+.homeV7-knowledgeCard:nth-child(3) h3{margin-top:8px!important;max-width:560px}
+.homeV7-knowledgeCard:nth-child(2) p,
+.homeV7-knowledgeCard:nth-child(3) p{max-width:590px;margin-bottom:18px!important}
+.homeV7-knowledgeCard:nth-child(2)>small,
+.homeV7-knowledgeCard:nth-child(3)>small{
+  display:block;
+  margin-top:18px!important;
+  padding-top:14px;
+  border-top:1px solid #d9e6e3;
+  color:#6b858b!important;
+  letter-spacing:.08em;
+}
+
+/* Card 02 — Current state → Standardize → Digitize */
+.homeV7-knowledgeCard:nth-child(2)::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:28px;right:28px;top:26px;height:92px;
+  border:1px solid #d5e5e1;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 14% 50%,#0b8b80 0 7px,rgba(11,139,128,.12) 8px 18px,transparent 19px),
+    radial-gradient(circle at 50% 50%,#0b8b80 0 7px,rgba(11,139,128,.12) 8px 18px,transparent 19px),
+    radial-gradient(circle at 86% 50%,#0b8b80 0 7px,rgba(11,139,128,.12) 8px 18px,transparent 19px),
+    linear-gradient(90deg,transparent 14%,rgba(11,139,128,.30) 14.3% 49%,transparent 49.3% 50.7%,rgba(11,139,128,.30) 51% 86%,transparent 86.3%),
+    linear-gradient(135deg,#f3f9f7,#edf6f3);
+  box-shadow:0 16px 34px rgba(21,73,70,.05);
+}
+.homeV7-knowledgeCard:nth-child(2)::after{
+  content:"HIỆN TRẠNG     →     CHUẨN HÓA     →     SỐ HÓA";
+  position:absolute;
+  z-index:1;
+  left:42px;right:42px;top:91px;
+  color:#55767a;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.075em;
+  text-align:center;
+  pointer-events:none;
+}
+
+/* Card 03 — Sensor → Edge → Server → Value */
+.homeV7-knowledgeCard:nth-child(3)::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:28px;right:28px;top:26px;height:92px;
+  border:1px solid #d5e5e1;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 10% 50%,#0c7e89 0 6px,rgba(12,126,137,.11) 7px 16px,transparent 17px),
+    radial-gradient(circle at 36% 50%,#0c7e89 0 6px,rgba(12,126,137,.11) 7px 16px,transparent 17px),
+    radial-gradient(circle at 64% 50%,#0c7e89 0 6px,rgba(12,126,137,.11) 7px 16px,transparent 17px),
+    radial-gradient(circle at 90% 50%,#0c7e89 0 6px,rgba(12,126,137,.11) 7px 16px,transparent 17px),
+    linear-gradient(90deg,transparent 10%,rgba(12,126,137,.28) 10.3% 35%,transparent 35.3% 36.7%,rgba(12,126,137,.28) 37% 63%,transparent 63.3% 64.7%,rgba(12,126,137,.28) 65% 90%,transparent 90.3%),
+    linear-gradient(135deg,#f2f8f8,#edf5f4);
+  box-shadow:0 16px 34px rgba(20,66,75,.05);
+}
+.homeV7-knowledgeCard:nth-child(3)::after{
+  content:"SENSOR     →     EDGE     →     SERVER     →     VALUE";
+  position:absolute;
+  z-index:1;
+  left:38px;right:38px;top:91px;
+  color:#55757b;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.07em;
+  text-align:center;
+  pointer-events:none;
+}
+
+@media(max-width:1080px){
+  .homeV7-knowledgeCard:nth-child(2),
+  .homeV7-knowledgeCard:nth-child(3){min-height:280px!important;padding-top:142px!important}
+}
+@media(max-width:760px){
+  .homeV7-knowledgeCard:nth-child(2),
+  .homeV7-knowledgeCard:nth-child(3){min-height:0!important;padding:132px 24px 26px!important}
+  .homeV7-knowledgeCard:nth-child(2)::before,
+  .homeV7-knowledgeCard:nth-child(3)::before{left:22px;right:22px;top:22px;height:82px}
+  .homeV7-knowledgeCard:nth-child(2)::after,
+  .homeV7-knowledgeCard:nth-child(3)::after{left:30px;right:30px;top:80px;font-size:8px;letter-spacing:.045em}
+}
