@@ -2,9 +2,11 @@ import Link from "next/link";
 import { mainNavigation } from "@/lib/public-content";
 import styles from "./site-chrome.module.css";
 
-const primaryItems = mainNavigation.slice(0, 4);
-const moreItems = mainNavigation.slice(4);
-const contactItem = mainNavigation[8];
+const primaryHrefs = ["/gioi-thieu", "/giai-phap-dich-vu", "/san-pham-nen-tang", "/dao-tao-tap-huan"];
+const moreHrefs = ["/chuyen-giao-cong-nghe", "/du-an", "/tin-tuc"];
+const primaryItems = mainNavigation.filter((item) => primaryHrefs.includes(item.href));
+const moreItems = mainNavigation.filter((item) => moreHrefs.includes(item.href));
+const contactItem = mainNavigation.find((item) => item.href === "/lien-he") ?? { label: "Liên hệ & Hợp tác", href: "/lien-he" };
 
 export function SiteHeader() {
   return (
@@ -12,7 +14,7 @@ export function SiteHeader() {
       <div className={styles.topline}>
         <div className={`shell ${styles.toplineInner}`}>
           <span>Cổng thông tin điện tử · IAICT</span>
-          <span>Ứng dụng công nghệ · Chuyển giao · Đào tạo</span>
+          <span>Công nghệ · Giải pháp · Chuyển giao · Đào tạo</span>
         </div>
       </div>
 
@@ -30,7 +32,7 @@ export function SiteHeader() {
             <Link href={item.href} key={item.href}>{item.label}</Link>
           ))}
           <details className={styles.dropdown}>
-            <summary>Hoạt động & Hợp tác</summary>
+            <summary>Khám phá</summary>
             <div className={styles.dropdownPanel}>
               {moreItems.map((item) => (
                 <Link href={item.href} key={item.href}>{item.label}</Link>
