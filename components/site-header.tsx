@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useRef } from "react";
 import { mainNavigation } from "@/lib/public-content";
 import styles from "./site-chrome.module.css";
 
@@ -9,8 +13,14 @@ const moreItems = mainNavigation.filter((item) => moreHrefs.includes(item.href))
 const contactItem = mainNavigation.find((item) => item.href === "/lien-he") ?? { label: "Liên hệ & Hợp tác", href: "/lien-he" };
 
 export function SiteHeader() {
+  const pathname = usePathname();
+  const headerRef = useRef<HTMLElement>(null);
+  const current = (href: string) => pathname === href || (href !== "/" && pathname?.startsWith(href + "/"));
+  const closeMenus = () => headerRef.current?.querySelectorAll("details[open]").forEach(el => el.removeAttribute("open"));
   return (
-    <header className={styles.header}>
+    <header ref={headerRef} className={`${styles.header} v12-header`}
+      onKeyDown={event => { if (event.key === "Escape") { const open = headerRef.current?.querySelector("details[open]"); closeMenus(); (open?.querySelector("summary") as HTMLElement | null)?.focus(); } }}
+      onClick={event => { if ((event.target as HTMLElement).closest("a")) closeMenus(); }}>
       <div className={styles.topline}>
         <div className={`shell ${styles.toplineInner}`}>
           <span>Cổng thông tin điện tử · IAICT</span>
@@ -29,13 +39,13 @@ export function SiteHeader() {
 
         <nav className={styles.desktopNav} aria-label="Điều hướng chính">
           {primaryItems.map((item) => (
-            <Link href={item.href} key={item.href}>{item.label}</Link>
+            <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined}>{item.label}</Link>
           ))}
           <details className={styles.dropdown}>
             <summary>Khám phá</summary>
             <div className={styles.dropdownPanel}>
               {moreItems.map((item) => (
-                <Link href={item.href} key={item.href}>{item.label}</Link>
+                <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined}>{item.label}</Link>
               ))}
             </div>
           </details>
@@ -46,9 +56,9 @@ export function SiteHeader() {
           <Link className={styles.cta} href={contactItem.href}>Liên hệ hợp tác</Link>
           <details className={styles.mobileMenu}>
             <summary aria-label="Mở menu">Menu</summary>
-            <nav aria-label="Điều hướng di động">
+            <nav aria-label="Điều hướng di động"><span className="v12-menu-label">KHÁM PHÁ IAICT</span>
               {mainNavigation.map((item) => (
-                <Link href={item.href} key={item.href}>{item.label}</Link>
+                <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined}>{item.label}</Link>
               ))}
               <Link href="/tim-kiem">Tìm kiếm</Link>
             </nav>
@@ -58,3 +68,4 @@ export function SiteHeader() {
     </header>
   );
 }
+

@@ -12,6 +12,7 @@ import "./home-v75.css";
 import "./wow-v9.css";
 import "./wow-v10.css";
 import "./wow-v11.css";
+import "./wow-v12.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],

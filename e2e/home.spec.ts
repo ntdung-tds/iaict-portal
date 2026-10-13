@@ -80,3 +80,34 @@ test("health endpoint is live and no-store", async ({ request }) => {
   expect(response.headers()["cache-control"]).toContain("no-store");
   expect(await response.json()).toMatchObject({ status: "ok" });
 });
+
+
+test("V12 topic controls and service disclosures work", async ({ page }) => {
+  await page.goto("/");
+  const topics = page.getByRole("group", { name: "Chuyển nội dung giới thiệu" });
+  await topics.getByRole("button", { name: "AI & Dữ liệu", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Biến dữ liệu thành năng lực ra quyết định.");
+  await expect(topics.getByRole("button", { name: "AI & Dữ liệu", exact: true })).toHaveAttribute("aria-pressed", "true");
+  const automatic = topics.getByRole("button", { name: "Tự động chuyển nội dung" });
+  await automatic.click();
+  await expect(automatic).toHaveAttribute("aria-pressed", "true");
+  await topics.getByRole("button", { name: "IoT & Hiện trường" }).click();
+  await expect(automatic).toHaveAttribute("aria-pressed", "false");
+  await page.locator(".v12-service-details summary").first().click();
+  await expect(page.locator(".v12-service-details").first()).toHaveAttribute("open", "");
+  await expect(page.locator(".v12-service-details").first().getByText("Bản đồ ưu tiên · lộ trình · tiêu chí đánh giá")).toBeVisible();
+});
+
+test("V12 mobile navigation closes with Escape and marks the current page", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/gioi-thieu");
+  const toggle = page.getByLabel("Mở menu", { exact: true });
+  await toggle.click();
+  const nav = page.getByRole("navigation", { name: "Điều hướng di động" });
+  await expect(nav).toBeVisible();
+  await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute("href", "/gioi-thieu");
+  await toggle.press("Escape");
+  await expect(nav).not.toBeVisible();
+  await page.goto("/");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
+});

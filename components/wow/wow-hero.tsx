@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import styles from "./wow.module.css";
+import { CapabilityNetwork } from "./capability-network";
 
 const slides = [
   {
@@ -34,23 +35,29 @@ const slides = [
   },
 ];
 
-const orbitLabels = ["AI", "IoT", "DATA", "DX"];
+const topicLabels = ["Công nghệ ứng dụng", "AI & Dữ liệu", "IoT & Hiện trường"];
 
 export function WowHero() {
   const [active, setActive] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!playing || hovered || focused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => {
       setActive((current) => (current + 1) % slides.length);
     }, 7600);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [playing, hovered, focused]);
 
   const slide = slides[active];
 
   return (
-    <section className={`${styles.wowHero} v11-hero`} aria-label="IAICT - năng lực và định hướng">
+    <section className={`${styles.wowHero} v11-hero`} aria-label="IAICT - năng lực và định hướng"
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
       <div className={`${styles.heroAtmosphere} v11-hero-atmosphere`} aria-hidden="true">
         <span className={styles.glowA} />
         <span className={styles.glowB} />
@@ -81,53 +88,22 @@ export function WowHero() {
           </div>
         </div>
 
-        <aside className={`${styles.nexus} v11-visual`} aria-label="Mô hình năng lực IAICT">
-          <div className={`${styles.nexusTop} v11-visual-top`}>
-            <div>
-              <small>IAICT / Capability Nexus</small>
-              <strong>{slide.focus}</strong>
-            </div>
-            <span className={styles.liveSignal}>Connected</span>
-          </div>
-
-          <div className={`${styles.nexusStage} v11-visual-stage`}>
-            <div className={styles.orbitOuter} aria-hidden="true" />
-            <div className={styles.orbitMiddle} aria-hidden="true" />
-            <div className={styles.orbitInner} aria-hidden="true" />
-
-            <div className={`${styles.nexusCore} v11-visual-core`}>
-              <span>IAICT</span>
-              <strong>APPLIED</strong>
-              <small>technology</small>
-            </div>
-
-            {orbitLabels.map((label, index) => (
-              <div className={`${styles.orbitNode} v11-visual-node ${styles[`orbitNode${index + 1}`]}`} key={label}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <strong>{label}</strong>
-              </div>
-            ))}
-          </div>
-
-          <div className={`${styles.nexusFooter} v11-visual-footer`}>
-            <span>{slide.signal}</span>
-            <div className={styles.signalBars} aria-hidden="true"><i /><i /><i /><i /></div>
-          </div>
-        </aside>
+        <CapabilityNetwork />
       </div>
 
       <div className={`shell ${styles.heroRail} v11-rail`}>
         <div className={`${styles.heroRailText} v11-rail-text`}>Research · Application · Integration · Transfer · Training</div>
-        <div className={`${styles.dots} v11-tabs`} role="group" aria-label="Chuyển nội dung giới thiệu">
+        <div className="v12-topics" role="group" aria-label="Chuyển nội dung giới thiệu">
           {slides.map((item, index) => (
             <button
               key={item.kicker}
               className={`${styles.dot} ${index === active ? styles.dotActive : ""}`}
-              aria-label={`Nội dung ${index + 1}`}
+              aria-label={topicLabels[index]}
               aria-pressed={index === active}
-              onClick={() => setActive(index)}
-            ><span>{String(index + 1).padStart(2, "0")}</span></button>
+              onClick={() => { setActive(index); setPlaying(false); }}
+            ><span>{String(index + 1).padStart(2, "0")}</span><strong>{topicLabels[index]}</strong></button>
           ))}
+          <button type="button" className="v12-play" onClick={() => setPlaying(!playing)} aria-pressed={playing} aria-label="Tự động chuyển nội dung">{playing ? "Ⅱ Tạm dừng" : "▷ Tự động"}</button>
         </div>
       </div>
     </section>

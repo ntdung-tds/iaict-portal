@@ -123,22 +123,21 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className={`${styles.needsGrid} v11-needs`}>
-            {needs.map((item, index) => (
-              <Link className={`${styles.needCard} homeV7-needCard v11-need ${index === 0 ? styles.needCardLead : ""}`} href={item.href} key={item.title}>
-                <div className={styles.needTop}><span>{item.no}</span><small>{item.meta}</small></div>
-                <div>
-                  <h3>{item.title}</h3>
+          <div className="v12-services">
+            {needs.map((item) => (
+              <article className="v12-service" key={item.no}>
+                <span className="v12-service-no">{item.no}</span>
+                <div className="v12-service-copy">
+                  <span className="v12-service-meta">{item.meta}</span>
+                  <h3><Link href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link></h3>
                   <p>{item.body}</p>
-                  <p className="homeV7-needNarrative">{item.narrative}</p>
-                  <ul className="homeV7-needPoints">
-                    {item.points.map((point) => <li key={point}>{point}</li>)}
-                  </ul>
-                  <div className="homeV7-needMeta"><small>Đầu ra gợi ý</small><strong>{item.output}</strong></div>
-                  <div className="homeV7-needTags">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+                  <details className="v12-service-details">
+                    <summary>Hướng tiếp cận & đầu ra</summary>
+                    <div><p>{item.narrative}</p><ul>{item.points.map(point => <li key={point}>{point}</li>)}</ul><strong>{item.output}</strong></div>
+                  </details>
                 </div>
-                <b aria-hidden="true">↗</b>
-              </Link>
+                <div className="v12-service-tags">{item.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
+              </article>
             ))}
           </div>
         </div>
