@@ -10,6 +10,7 @@ import {
   type CmsState,
 } from "@/lib/cms-store";
 import { publicationHtmlToPlainText, sanitizePublicationHtml } from "@/lib/content-html";
+import { getMediaSnapshot } from "@/lib/media-store";
 import type { PublicationType } from "@/lib/publications";
 
 type MutationAction = "save-draft" | "publish" | "unpublish" | "delete";
@@ -25,6 +26,8 @@ type ContentInput = {
   body?: string;
   keywords?: string[];
   featured?: boolean;
+  coverMediaId?: string;
+  ogMediaId?: string;
 };
 
 type MutationRequest = {
@@ -98,7 +101,7 @@ export async function POST(request: Request) {
     return json({ error: "INVALID_JSON" }, 400);
   }
 
-  const snapshot = await getCmsSnapshot();
+  const [snapshot, mediaSnapshot] = await Promise.all([getCmsSnapshot(), getMediaSnapshot()]);
   if (!snapshot.storageReady) return json({ error: "STORAGE_NOT_CONFIGURED" }, 503);
 
   const current = snapshot.state;
@@ -165,6 +168,16 @@ export async function POST(request: Request) {
       return json({ error: "SLUG_CONFLICT", message: "Slug này đang được một bài đã xuất bản sử dụng." }, 409);
     }
 
+    const coverMediaId = input.coverMediaId ?? existing?.coverMediaId ?? origin?.coverMediaId;
+    const ogMediaId = input.ogMediaId ?? existing?.ogMediaId ?? origin?.ogMediaId;
+    const mediaIds = new Set(mediaSnapshot.state.items.map((item) => item.id));
+    if (coverMediaId && !mediaIds.has(coverMediaId)) {
+      return json({ error: "COVER_MEDIA_NOT_FOUND", message: "Ảnh đại diện không còn tồn tại trong Thư viện Media." }, 409);
+    }
+    if (ogMediaId && !mediaIds.has(ogMediaId)) {
+      return json({ error: "OG_MEDIA_NOT_FOUND", message: "Ảnh OpenGraph không còn tồn tại trong Thư viện Media." }, 409);
+    }
+
     const rawBody =
       typeof input.body === "string"
         ? input.body
@@ -199,6 +212,8 @@ export async function POST(request: Request) {
       keywords: Array.isArray(input.keywords) ? input.keywords.map((value) => value.trim()).filter(Boolean) : [],
       sections: [],
       contentHtml,
+      coverMediaId,
+      ogMediaId,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
