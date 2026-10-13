@@ -5,6 +5,7 @@ import {
   bodyFromPublication,
   estimateReadingTime,
   getCmsSnapshot,
+  isPublicationPublic,
   persistCmsState,
   type CmsPublication,
   type CmsState,
@@ -13,7 +14,14 @@ import { publicationHtmlToPlainText, sanitizePublicationHtml } from "@/lib/conte
 import { getMediaSnapshot } from "@/lib/media-store";
 import type { PublicationType } from "@/lib/publications";
 
-type MutationAction = "save-draft" | "publish" | "unpublish" | "delete";
+type MutationAction =
+  | "save-draft"
+  | "submit-review"
+  | "return-draft"
+  | "schedule"
+  | "publish"
+  | "unpublish"
+  | "delete";
 
 type ContentInput = {
   id?: string;
@@ -26,8 +34,9 @@ type ContentInput = {
   body?: string;
   keywords?: string[];
   featured?: boolean;
-  coverMediaId?: string;
-  ogMediaId?: string;
+  coverMediaId?: string | null;
+  ogMediaId?: string | null;
+  publishAt?: string;
 };
 
 type MutationRequest = {
@@ -82,6 +91,30 @@ function statePayload(state: CmsState, storageReady: boolean, materialized = tru
   };
 }
 
+function dateInBangkok(iso: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(iso));
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
+function resolveMediaId(
+  input: ContentInput,
+  key: "coverMediaId" | "ogMediaId",
+  existing?: CmsPublication,
+  origin?: CmsPublication,
+) {
+  if (Object.prototype.hasOwnProperty.call(input, key)) {
+    const value = input[key];
+    return typeof value === "string" && value.trim() ? value.trim() : undefined;
+  }
+  return existing?.[key] ?? origin?.[key];
+}
+
 export async function GET() {
   const session = await requireAdmin();
   if (!session) return json({ error: "UNAUTHORIZED" }, 401);
@@ -127,17 +160,19 @@ export async function POST(request: Request) {
   if (action === "delete") {
     const target = items.find((item) => item.id === payload.id);
     if (!target) return json({ error: "NOT_FOUND" }, 404);
-    if (target.status === "published") {
-      return json({ error: "PUBLISHED_DELETE_BLOCKED", message: "Hãy gỡ xuất bản trước khi xóa." }, 409);
+    if (isPublicationPublic(target)) {
+      return json({ error: "PUBLIC_DELETE_BLOCKED", message: "Hãy gỡ xuất bản hoặc hủy lịch trước khi xóa." }, 409);
     }
     items = items.filter((item) => item.id !== target.id);
     auditTitle = target.title;
     auditPublicationId = target.id;
-  } else if (action === "unpublish") {
+  } else if (action === "unpublish" || action === "return-draft") {
     const target = items.find((item) => item.id === payload.id);
     if (!target) return json({ error: "NOT_FOUND" }, 404);
     items = items.map((item) =>
-      item.id === target.id ? { ...item, status: "draft" as const, updatedAt: now } : item,
+      item.id === target.id
+        ? { ...item, status: "draft" as const, publishAt: undefined, updatedAt: now }
+        : item,
     );
     auditTitle = target.title;
     auditPublicationId = target.id;
@@ -159,17 +194,29 @@ export async function POST(request: Request) {
 
     const conflict = items.find(
       (item) =>
-        item.status === "published" &&
+        (item.status === "published" || item.status === "scheduled") &&
         item.slug === slug &&
         item.id !== existing?.id &&
         item.id !== origin?.id,
     );
-    if (action === "publish" && conflict) {
-      return json({ error: "SLUG_CONFLICT", message: "Slug này đang được một bài đã xuất bản sử dụng." }, 409);
+    if ((action === "publish" || action === "schedule") && conflict) {
+      return json({ error: "SLUG_CONFLICT", message: "Slug này đang được một bài đã xuất bản hoặc đã lên lịch sử dụng." }, 409);
     }
 
-    const coverMediaId = input.coverMediaId ?? existing?.coverMediaId ?? origin?.coverMediaId;
-    const ogMediaId = input.ogMediaId ?? existing?.ogMediaId ?? origin?.ogMediaId;
+    let scheduledPublishAt: string | undefined;
+    if (action === "schedule") {
+      const parsedSchedule = input.publishAt ? Date.parse(input.publishAt) : Number.NaN;
+      if (!Number.isFinite(parsedSchedule)) {
+        return json({ error: "SCHEDULE_REQUIRED", message: "Cần chọn ngày và giờ xuất bản hợp lệ." }, 400);
+      }
+      if (parsedSchedule <= Date.now()) {
+        return json({ error: "SCHEDULE_MUST_BE_FUTURE", message: "Thời điểm lên lịch phải ở tương lai." }, 400);
+      }
+      scheduledPublishAt = new Date(parsedSchedule).toISOString();
+    }
+
+    const coverMediaId = resolveMediaId(input, "coverMediaId", existing, origin);
+    const ogMediaId = resolveMediaId(input, "ogMediaId", existing, origin);
     const mediaIds = new Set(mediaSnapshot.state.items.map((item) => item.id));
     if (coverMediaId && !mediaIds.has(coverMediaId)) {
       return json({ error: "COVER_MEDIA_NOT_FOUND", message: "Ảnh đại diện không còn tồn tại trong Thư viện Media." }, 409);
@@ -189,22 +236,34 @@ export async function POST(request: Request) {
     const contentHtml = sanitizePublicationHtml(rawBody.trim());
     const excerpt = input.excerpt?.trim() || existing?.excerpt || origin?.excerpt || "";
     const id = existing?.id ?? `cms:${crypto.randomUUID()}`;
-    const publishedAt =
+    const nextStatus =
       action === "publish"
-        ? existing?.status === "published"
-          ? existing.publishedAt
-          : new Date().toISOString().slice(0, 10)
-        : existing?.publishedAt ?? origin?.publishedAt ?? new Date().toISOString().slice(0, 10);
+        ? "published"
+        : action === "schedule"
+          ? "scheduled"
+          : action === "submit-review"
+            ? "review"
+            : "draft";
+    const publishAt =
+      action === "publish"
+        ? now
+        : action === "schedule"
+          ? scheduledPublishAt
+          : existing?.publishAt;
+    const publishedAt = publishAt
+      ? dateInBangkok(publishAt)
+      : existing?.publishedAt ?? origin?.publishedAt ?? dateInBangkok(now);
 
     const nextItem: CmsPublication = {
       id,
       originSlug: input.originSlug ?? existing?.originSlug,
-      status: action === "publish" ? "published" : "draft",
+      status: nextStatus,
       title,
       slug,
       category: input.category?.trim() || "Tin hoạt động Viện",
       type,
       publishedAt,
+      publishAt,
       readingTime: estimateReadingTime(`${excerpt} ${publicationHtmlToPlainText(contentHtml)}`),
       excerpt,
       lede: excerpt,
