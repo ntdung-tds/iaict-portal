@@ -1,11 +1,27 @@
 import { get, put } from "@vercel/blob";
+import { getMediaSnapshot } from "@/lib/media-store";
+import type { MediaAsset } from "@/lib/media-types";
 import { publications as repositoryPublications, type Publication } from "@/lib/publications";
 
 export type CmsPublicationStatus = "draft" | "published";
-export type PublicCmsPublication = Publication & { contentHtml?: string };
+
+export type PublicationMedia = {
+  mediaId: string;
+  src: string;
+  alt: string;
+  caption: string;
+};
+
+export type PublicCmsPublication = Publication & {
+  contentHtml?: string;
+  coverImage?: PublicationMedia;
+  ogImage?: PublicationMedia;
+};
 
 export type CmsPublication = Publication & {
   contentHtml?: string;
+  coverMediaId?: string;
+  ogMediaId?: string;
   id: string;
   status: CmsPublicationStatus;
   createdAt: string;
@@ -70,6 +86,16 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#039;");
 }
 
+function mediaReference(asset: MediaAsset | undefined): PublicationMedia | undefined {
+  if (!asset) return undefined;
+  return {
+    mediaId: asset.id,
+    src: asset.publicUrl,
+    alt: asset.alt,
+    caption: asset.caption,
+  };
+}
+
 export function isCmsStorageConfigured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
@@ -122,23 +148,37 @@ export async function persistCmsState(state: CmsState) {
   });
 }
 
-export function toPublicPublication(item: CmsPublication): PublicCmsPublication {
+export function toPublicPublication(
+  item: CmsPublication,
+  mediaById: Map<string, MediaAsset> = new Map(),
+): PublicCmsPublication {
   const {
     id: _id,
     status: _status,
     createdAt: _createdAt,
     updatedAt: _updatedAt,
     originSlug: _originSlug,
+    coverMediaId,
+    ogMediaId,
     ...publication
   } = item;
-  return publication;
+
+  const coverImage = coverMediaId ? mediaReference(mediaById.get(coverMediaId)) : undefined;
+  const ogImage = ogMediaId ? mediaReference(mediaById.get(ogMediaId)) : undefined;
+
+  return {
+    ...publication,
+    ...(coverImage ? { coverImage } : {}),
+    ...(ogImage ? { ogImage } : {}),
+  };
 }
 
 export async function getPublishedPublications(): Promise<PublicCmsPublication[]> {
-  const snapshot = await getCmsSnapshot();
+  const [snapshot, mediaSnapshot] = await Promise.all([getCmsSnapshot(), getMediaSnapshot()]);
+  const mediaById = new Map(mediaSnapshot.state.items.map((asset) => [asset.id, asset]));
   return snapshot.state.items
     .filter((item) => item.status === "published")
-    .map(toPublicPublication)
+    .map((item) => toPublicPublication(item, mediaById))
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
@@ -147,7 +187,7 @@ export async function getPublishedPublication(slug: string): Promise<PublicCmsPu
   return publications.find((item) => item.slug === slug);
 }
 
-export function bodyFromPublication(item: PublicCmsPublication) {
+export function bodyFromPublication(item: Publication & { contentHtml?: string }) {
   if (typeof item.contentHtml === "string") return item.contentHtml;
 
   return item.sections
