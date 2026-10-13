@@ -1,0 +1,225 @@
+.admin-status-filter {
+  min-height: 42px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #d8e1ea;
+  border-radius: 10px;
+  background: #fff;
+  color: #29445f;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.admin-content-summary-workflow {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(260px, 1.7fr);
+}
+
+.admin-schedule-panel {
+  margin: 20px 0;
+  overflow: hidden;
+  border: 1px solid #dce5ee;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff, #f8fbff);
+}
+
+.admin-schedule-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e3e9ef;
+}
+
+.admin-schedule-head span {
+  display: block;
+  margin-bottom: 4px;
+  color: #5b78a0;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.admin-schedule-head h2 {
+  margin: 0;
+  color: #173654;
+  font-size: 1.05rem;
+}
+
+.admin-schedule-head small { color: #7f90a3; font-weight: 700; }
+
+.admin-schedule-list { display: grid; }
+
+.admin-schedule-list article {
+  display: grid;
+  grid-template-columns: minmax(150px, .55fr) minmax(0, 1.8fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.admin-schedule-list article:last-child { border-bottom: 0; }
+.admin-schedule-list time { color: #173f8f; font-size: .78rem; font-weight: 900; }
+.admin-schedule-list strong { display: block; color: #1f344b; font-size: .84rem; }
+.admin-schedule-list span { display: block; margin-top: 4px; color: #8190a0; font-size: .7rem; }
+.admin-schedule-list button {
+  border: 0;
+  background: transparent;
+  color: #245bc0;
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-workflow-rail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e4e9ef;
+  background: #f8fafe;
+  color: #516b87;
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.admin-workflow-rail span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-workflow-rail b {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e8effd;
+  color: #174da8;
+  font-size: .62rem;
+}
+
+.admin-workflow-rail i { color: #9cacbc; font-style: normal; }
+
+.admin-editor-actions-workflow {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-editor-secondary-actions,
+.admin-editor-primary-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-editor-primary-actions { margin-left: auto; }
+
+.admin-button-schedule {
+  border: 1px solid #ceb566;
+  background: #fff9e7;
+  color: #765900;
+}
+
+.admin-button-schedule:hover { background: #fff3c7; }
+
+.admin-status-pill.is-review {
+  background: #fff4d7;
+  color: #755300;
+}
+
+.admin-status-pill.is-scheduled {
+  background: #e8efff;
+  color: #174b9d;
+}
+
+.admin-status-pill.is-published {
+  background: #e7f7ef;
+  color: #11633f;
+}
+
+.admin-status-pill.is-draft {
+  background: #eef1f5;
+  color: #5d6977;
+}
+
+.admin-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(7, 18, 34, .78);
+  backdrop-filter: blur(8px);
+}
+
+.admin-preview-dialog {
+  width: min(1180px, 100%);
+  height: min(860px, calc(100vh - 56px));
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .32);
+}
+
+.admin-preview-dialog-head {
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #dfe6ed;
+  background: #f8fafc;
+}
+
+.admin-preview-dialog-head span {
+  display: block;
+  color: #6e83a0;
+  font-size: .6rem;
+  font-weight: 900;
+  letter-spacing: .13em;
+}
+
+.admin-preview-dialog-head strong { display: block; margin-top: 3px; color: #18344f; }
+.admin-preview-dialog-head button {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: #e9eef4;
+  color: #26415c;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.admin-preview-dialog iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #f3f6fa;
+}
+
+@media (max-width: 1100px) {
+  .admin-content-summary-workflow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-content-summary-workflow > p { grid-column: 1 / -1; }
+}
+
+@media (max-width: 760px) {
+  .admin-status-filter { width: 100%; }
+  .admin-schedule-list article { grid-template-columns: 1fr; gap: 6px; }
+  .admin-schedule-list button { justify-self: start; padding: 0; }
+  .admin-workflow-rail { align-items: flex-start; flex-direction: column; }
+  .admin-workflow-rail i { display: none; }
+  .admin-editor-primary-actions { margin-left: 0; }
+  .admin-preview-overlay { padding: 0; }
+  .admin-preview-dialog { width: 100%; height: 100vh; border-radius: 0; }
+}
