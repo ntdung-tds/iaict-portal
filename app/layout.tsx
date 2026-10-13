@@ -32,11 +32,9 @@ export const metadata: Metadata = {
   creator: "IAICT",
   publisher: "IAICT",
   category: "Technology",
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "vi_VN",
-    url: "/",
     siteName: "IAICT",
     title: siteTitle,
     description: siteDescription,
