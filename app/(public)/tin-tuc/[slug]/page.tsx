@@ -2,11 +2,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
-  formatPublicationDate,
   getPublication,
   getPublicationTypeLabel,
   publications,
 } from "@/lib/publications";
+import { formatPublicationDate } from "@/lib/publication-date";
 
 type PublicationPageProps = {
   params: Promise<{ slug: string }>;

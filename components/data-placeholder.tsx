@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { formatPublicationDate, publications } from "@/lib/publications";
+import { publications } from "@/lib/publications";
+import { formatPublicationDate } from "@/lib/publication-date";
 
 type DataPlaceholderProps = {
   label: string;

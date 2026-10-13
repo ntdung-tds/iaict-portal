@@ -2,10 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import {
   featuredPublication,
-  formatPublicationDate,
   getPublicationTypeLabel,
   publications,
 } from "@/lib/publications";
+import { formatPublicationDate } from "@/lib/publication-date";
 import { newsCategories } from "@/lib/public-content";
 
 export const metadata: Metadata = {
