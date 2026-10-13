@@ -1,0 +1,48 @@
+/* IAICT typography system — tuned for Vietnamese */
+:root {
+  --iaict-font-sans: var(--font-be-vietnam-pro), "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
+}
+
+html {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--iaict-font-sans);
+  font-feature-settings: "kern" 1, "liga" 1;
+  font-kerning: normal;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--iaict-font-sans);
+  font-kerning: normal;
+  text-wrap: balance;
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+/* Vietnamese diacritics need more breathing room than aggressive display tracking. */
+h1 { letter-spacing: -0.032em; }
+h2 { letter-spacing: -0.024em; }
+h3 { letter-spacing: -0.014em; }
+
+@media (max-width: 720px) {
+  h1 { letter-spacing: -0.024em; }
+  h2 { letter-spacing: -0.018em; }
+}
