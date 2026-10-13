@@ -2,7 +2,7 @@ name: portal-ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, ui-wow-production]
   pull_request:
 
 permissions:
