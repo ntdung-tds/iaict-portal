@@ -335,7 +335,7 @@ export async function POST(request: Request) {
     return json({ error: "COMMENT_REQUIRED", message: "Nội dung phản hồi không được để trống." }, 400);
   }
 
-  let selectedReviewer = action === "submit-review"
+  const selectedReviewer = action === "submit-review"
     ? reviewTargets.find((user) => user.id === payload.reviewerId && user.active)
     : undefined;
   if (action === "submit-review" && !selectedReviewer) {
@@ -430,6 +430,31 @@ export async function POST(request: Request) {
     const origin = input.originSlug
       ? items.find((item) => item.status === "published" && item.slug === input.originSlug)
       : undefined;
+
+    if (input.originSlug && !existing && !origin) {
+      return json({ error: "REVISION_ORIGIN_NOT_FOUND", message: "Không còn tìm thấy bản đang công khai để tạo bản chỉnh sửa. Hãy tải lại danh sách nội dung." }, 409);
+    }
+
+    if (input.originSlug && !existing) {
+      const activeRevision = items.find(
+        (item) => item.status !== "published" && item.originSlug === input.originSlug,
+      );
+      if (activeRevision) {
+        return json(
+          {
+            error: "ACTIVE_REVISION_EXISTS",
+            message: `Bài này đã có một bản chỉnh sửa đang hoạt động (${activeRevision.status === "review" ? "Chờ duyệt" : activeRevision.status === "scheduled" ? "Đã lên lịch" : "Bản nháp"}). Hãy mở bản đó thay vì tạo thêm bản sửa song song.`,
+            activeRevision: {
+              id: activeRevision.id,
+              title: activeRevision.title,
+              status: activeRevision.status,
+              reviewerName: activeRevision.reviewerName,
+            },
+          },
+          409,
+        );
+      }
+    }
 
     if (session.role === "editor" && existing && existing.status !== "draft" && (action === "save-draft" || action === "submit-review")) {
       return json({ error: "EDITOR_STATE_LOCKED", message: "Nội dung đã rời trạng thái nháp. Biên tập viên cần chờ phản hồi hoặc quyết định của người duyệt." }, 409);
