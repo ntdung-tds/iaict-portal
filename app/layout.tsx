@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import "./premium.css";
 import "./category-premium.css";
+import "./public-pages-premium.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://iaict.example"),
