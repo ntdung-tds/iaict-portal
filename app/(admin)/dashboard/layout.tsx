@@ -4,12 +4,14 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { ADMIN_SESSION_COOKIE, validateAdminSession } from "../../../lib/admin-auth";
+import { getNotificationInbox } from "../../../lib/admin-notifications";
 import "../../dashboard.css";
 import "../../admin-auth.css";
 import "../../admin-editor.css";
 import "../../admin-media.css";
 import "../../admin-workflow.css";
 import "../../admin-users.css";
+import "../../admin-notifications.css";
 
 export const metadata: Metadata = {
   title: "Dashboard quản trị",
@@ -24,12 +26,13 @@ const primaryNav = [
   { href: "/dashboard", label: "Tổng quan", code: "01" },
   { href: "/dashboard/noi-dung", label: "Nội dung", code: "02" },
   { href: "/dashboard/thu-vien", label: "Thư viện Media", code: "03" },
+  { href: "/dashboard/thong-bao", label: "Hộp công việc", code: "04", notifications: true },
 ];
 
 const upcomingNav = [
-  { label: "Sự kiện", code: "05" },
-  { label: "Dự án", code: "06" },
-  { label: "Chuyên gia", code: "07" },
+  { label: "Sự kiện", code: "06" },
+  { label: "Dự án", code: "07" },
+  { label: "Chuyên gia", code: "08" },
 ];
 
 function roleLabel(role: "editor" | "reviewer" | "superadmin") {
@@ -43,8 +46,9 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
   const session = await validateAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
   if (!session) redirect("/admin-login");
 
+  const inbox = await getNotificationInbox(session);
   const nav = session.role === "superadmin"
-    ? [...primaryNav, { href: "/dashboard/nguoi-dung", label: "Người dùng & quyền", code: "04" }]
+    ? [...primaryNav, { href: "/dashboard/nguoi-dung", label: "Người dùng & quyền", code: "05", notifications: false }]
     : primaryNav;
 
   return (
@@ -63,10 +67,12 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
         <div className="admin-workspace-label">Workspace</div>
         <nav className="admin-nav" aria-label="Điều hướng dashboard">
           {nav.map((item) => (
-            <Link key={item.href} href={item.href}>
+            <Link className={item.notifications ? "admin-nav-notification-link" : undefined} key={item.href} href={item.href}>
               <span>{item.code}</span>
               <strong>{item.label}</strong>
-              <i aria-hidden="true">↗</i>
+              {item.notifications && inbox.unreadCount > 0 ? (
+                <em className={`admin-nav-badge${inbox.actionCount ? " is-alert" : ""}`}>{inbox.unreadCount > 99 ? "99+" : inbox.unreadCount}</em>
+              ) : <i aria-hidden="true">↗</i>}
             </Link>
           ))}
           {upcomingNav.map((item) => (
@@ -99,6 +105,7 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
             <strong>Không gian quản trị nội dung</strong>
           </div>
           <div className="admin-topbar-actions">
+            <Link href="/dashboard/thong-bao">Hộp việc{inbox.unreadCount ? ` (${inbox.unreadCount})` : ""}</Link>
             <Link href="/tin-tuc">Xem newsroom</Link>
             <span className="admin-auth-user">{session.displayName} · {roleLabel(session.role)}</span>
             <form action="/api/admin/logout" method="post">
