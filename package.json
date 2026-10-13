@@ -20,6 +20,7 @@
     "deploy:production": "vinext-cloudflare deploy --env production --name iaict-portal"
   },
   "dependencies": {
+    "@vercel/blob": "^2.6.1",
     "@vinext/cloudflare": "latest",
     "next": "^16.4.0",
     "react": "^19.2.6",

@@ -1,27 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type ContentType = "news" | "insight" | "notice" | "event";
 type ContentStatus = "published" | "draft";
 
-type ContentItem = {
+export type AdminContentItem = {
+  id: string;
+  originSlug?: string;
   slug: string;
   title: string;
   category: string;
   type: ContentType;
   publishedAt: string;
+  readingTime: string;
   excerpt: string;
+  body: string;
   keywords: string[];
   featured: boolean;
   status: ContentStatus;
-};
-
-type DraftItem = ContentItem & {
-  id: string;
+  createdAt: string;
   updatedAt: string;
-  originSlug?: string;
 };
 
 type EditorState = {
@@ -32,8 +32,19 @@ type EditorState = {
   category: string;
   type: ContentType;
   excerpt: string;
+  body: string;
   keywords: string;
   featured: boolean;
+};
+
+type MutationResponse = {
+  revision?: number;
+  updatedAt?: string;
+  storageReady?: boolean;
+  materialized?: boolean;
+  items?: AdminContentItem[];
+  error?: string;
+  message?: string;
 };
 
 const EMPTY_EDITOR: EditorState = {
@@ -42,11 +53,10 @@ const EMPTY_EDITOR: EditorState = {
   category: "Tin hoạt động Viện",
   type: "news",
   excerpt: "",
+  body: "",
   keywords: "",
   featured: false,
 };
-
-const STORAGE_KEY = "iaict-dashboard-local-drafts-v1";
 
 function typeLabel(type: ContentType) {
   if (type === "insight") return "Góc nhìn";
@@ -72,31 +82,29 @@ function slugify(value: string) {
     .slice(0, 90);
 }
 
-export function DashboardContentManager({ initialItems }: { initialItems: ContentItem[] }) {
+export function DashboardContentManager({
+  initialItems,
+  initialRevision,
+  storageReady,
+  materialized,
+}: {
+  initialItems: AdminContentItem[];
+  initialRevision: number;
+  storageReady: boolean;
+  materialized: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | ContentType>("all");
-  const [drafts, setDrafts] = useState<DraftItem[]>([]);
+  const [items, setItems] = useState<AdminContentItem[]>(initialItems);
+  const [revision, setRevision] = useState(initialRevision);
+  const [isMaterialized, setIsMaterialized] = useState(materialized);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setDrafts(JSON.parse(raw) as DraftItem[]);
-    } catch {
-      setDrafts([]);
-    }
-  }, []);
-
-  const combined = useMemo(() => {
-    const published: (ContentItem & { local?: boolean; updatedAt?: string; id?: string })[] = initialItems;
-    const local = drafts.map((item) => ({ ...item, local: true }));
-    return [...local, ...published];
-  }, [drafts, initialItems]);
+  const [busy, setBusy] = useState(false);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("vi");
-    return combined.filter((item) => {
+    return items.filter((item) => {
       if (typeFilter !== "all" && item.type !== typeFilter) return false;
       if (!normalized) return true;
       return [item.title, item.category, item.excerpt, item.slug, ...item.keywords]
@@ -104,97 +112,124 @@ export function DashboardContentManager({ initialItems }: { initialItems: Conten
         .toLocaleLowerCase("vi")
         .includes(normalized);
     });
-  }, [combined, query, typeFilter]);
+  }, [items, query, typeFilter]);
+
+  const publishedCount = items.filter((item) => item.status === "published").length;
+  const draftCount = items.filter((item) => item.status === "draft").length;
 
   function startNew() {
     setEditor({ ...EMPTY_EDITOR });
     setNotice(null);
   }
 
-  function editPublished(item: ContentItem) {
+  function editItem(item: AdminContentItem) {
     setEditor({
-      originSlug: item.slug,
+      id: item.status === "draft" ? item.id : undefined,
+      originSlug: item.status === "published" ? item.slug : item.originSlug,
       title: item.title,
       slug: item.slug,
       category: item.category,
       type: item.type,
       excerpt: item.excerpt,
+      body: item.body,
       keywords: item.keywords.join(", "),
       featured: item.featured,
     });
     setNotice(null);
   }
 
-  function editDraft(item: DraftItem) {
-    setEditor({
-      id: item.id,
-      originSlug: item.originSlug,
-      title: item.title,
-      slug: item.slug,
-      category: item.category,
-      type: item.type,
-      excerpt: item.excerpt,
-      keywords: item.keywords.join(", "),
-      featured: item.featured,
-    });
-    setNotice(null);
-  }
-
-  function persistDrafts(next: DraftItem[]) {
-    setDrafts(next);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  }
-
-  function saveDraft() {
-    if (!editor || !editor.title.trim()) {
-      setNotice("Cần nhập tiêu đề trước khi lưu bản nháp.");
-      return;
-    }
-
-    const now = new Date().toISOString();
-    const id = editor.id ?? `draft-${Date.now()}`;
-    const item: DraftItem = {
-      id,
-      originSlug: editor.originSlug,
-      title: editor.title.trim(),
-      slug: editor.slug.trim() || slugify(editor.title),
-      category: editor.category.trim() || "Chưa phân loại",
-      type: editor.type,
-      publishedAt: now.slice(0, 10),
-      excerpt: editor.excerpt.trim(),
-      keywords: editor.keywords
+  function editorPayload(current: EditorState) {
+    return {
+      id: current.id,
+      originSlug: current.originSlug,
+      title: current.title.trim(),
+      slug: current.slug.trim() || slugify(current.title),
+      category: current.category.trim() || "Tin hoạt động Viện",
+      type: current.type,
+      excerpt: current.excerpt.trim(),
+      body: current.body.trim(),
+      keywords: current.keywords
         .split(",")
         .map((value) => value.trim())
         .filter(Boolean),
-      featured: editor.featured,
-      status: "draft",
-      updatedAt: now,
+      featured: current.featured,
     };
-
-    const next = drafts.some((draft) => draft.id === id)
-      ? drafts.map((draft) => (draft.id === id ? item : draft))
-      : [item, ...drafts];
-
-    persistDrafts(next);
-    setEditor({
-      id,
-      originSlug: item.originSlug,
-      title: item.title,
-      slug: item.slug,
-      category: item.category,
-      type: item.type,
-      excerpt: item.excerpt,
-      keywords: item.keywords.join(", "),
-      featured: item.featured,
-    });
-    setNotice("Đã lưu bản nháp trên trình duyệt này. Chưa xuất bản ra website.");
   }
 
-  function removeDraft(id: string) {
-    const next = drafts.filter((item) => item.id !== id);
-    persistDrafts(next);
-    if (editor?.id === id) setEditor(null);
-    setNotice("Đã xóa bản nháp cục bộ.");
+  async function mutate(
+    action: "save-draft" | "publish" | "unpublish" | "delete",
+    options: { editor?: EditorState; id?: string },
+  ) {
+    if ((action === "save-draft" || action === "publish") && !options.editor?.title.trim()) {
+      setNotice("Cần nhập tiêu đề trước khi lưu.");
+      return;
+    }
+    if (!storageReady) {
+      setNotice("Kho lưu trữ CMS chưa sẵn sàng. Không có dữ liệu nào được ghi.");
+      return;
+    }
+
+    setBusy(true);
+    setNotice(null);
+    try {
+      const response = await fetch("/api/admin/content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          expectedRevision: revision,
+          item: options.editor ? editorPayload(options.editor) : undefined,
+          id: options.id,
+        }),
+      });
+      const data = (await response.json()) as MutationResponse;
+
+      if (data.items && typeof data.revision === "number") {
+        setItems(data.items);
+        setRevision(data.revision);
+        setIsMaterialized(Boolean(data.materialized ?? true));
+      }
+
+      if (!response.ok) {
+        setNotice(data.message ?? "Không thể ghi dữ liệu CMS. Vui lòng thử lại.");
+        return;
+      }
+
+      if (action === "save-draft") {
+        const saved = data.items?.find(
+          (item) =>
+            item.status === "draft" &&
+            item.slug === (options.editor?.slug || slugify(options.editor?.title ?? "")),
+        );
+        if (saved) {
+          setEditor({
+            id: saved.id,
+            originSlug: saved.originSlug,
+            title: saved.title,
+            slug: saved.slug,
+            category: saved.category,
+            type: saved.type,
+            excerpt: saved.excerpt,
+            body: saved.body,
+            keywords: saved.keywords.join(", "),
+            featured: saved.featured,
+          });
+        }
+        setNotice("Đã lưu bản nháp vào kho CMS.");
+      } else if (action === "publish") {
+        setEditor(null);
+        setNotice("Đã xuất bản. Newsroom công khai đọc trực tiếp từ kho CMS.");
+      } else if (action === "unpublish") {
+        setNotice("Đã gỡ xuất bản và chuyển nội dung về trạng thái nháp.");
+      } else {
+        if (editor?.id === options.id) setEditor(null);
+        setNotice("Đã xóa bản nháp khỏi kho CMS.");
+      }
+    } catch {
+      setNotice("Không thể kết nối API CMS.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -221,25 +256,22 @@ export function DashboardContentManager({ initialItems }: { initialItems: Conten
             </button>
           ))}
         </div>
-        <button className="admin-button admin-button-primary" type="button" onClick={startNew}>
+        <button className="admin-button admin-button-primary" type="button" onClick={startNew} disabled={busy}>
           + Tạo nội dung
         </button>
       </section>
 
       <section className="admin-content-summary">
-        <div>
-          <span>Đang hiển thị</span>
-          <strong>{filtered.length}</strong>
-        </div>
-        <div>
-          <span>Đã xuất bản</span>
-          <strong>{initialItems.length}</strong>
-        </div>
-        <div>
-          <span>Nháp cục bộ</span>
-          <strong>{drafts.length}</strong>
-        </div>
-        <p>Bản nháp chỉ tồn tại trên trình duyệt hiện tại cho đến khi database được kết nối.</p>
+        <div><span>Đang hiển thị</span><strong>{filtered.length}</strong></div>
+        <div><span>Đã xuất bản</span><strong>{publishedCount}</strong></div>
+        <div><span>Bản nháp</span><strong>{draftCount}</strong></div>
+        <p>
+          {storageReady
+            ? isMaterialized
+              ? `Vercel Blob đang hoạt động · revision ${revision}.`
+              : "Kho Blob đã sẵn sàng. Dữ liệu repository sẽ được materialize khi có thay đổi đầu tiên."
+            : "Kho lưu trữ CMS chưa được cấu hình; các thao tác ghi bị khóa."}
+        </p>
       </section>
 
       {notice ? <div className="admin-inline-notice" role="status">{notice}</div> : null}
@@ -248,8 +280,8 @@ export function DashboardContentManager({ initialItems }: { initialItems: Conten
         <section className="admin-editor-panel" aria-label="Trình biên tập nội dung">
           <div className="admin-editor-head">
             <div>
-              <span>{editor.id ? "LOCAL DRAFT" : editor.originSlug ? "EDIT COPY" : "NEW CONTENT"}</span>
-              <h2>{editor.id ? "Biên tập bản nháp" : editor.originSlug ? "Tạo bản nháp từ nội dung đã xuất bản" : "Tạo nội dung mới"}</h2>
+              <span>{editor.id ? "CMS DRAFT" : editor.originSlug ? "EDIT COPY" : "NEW CONTENT"}</span>
+              <h2>{editor.id ? "Biên tập bản nháp" : editor.originSlug ? "Biên tập từ nội dung đã xuất bản" : "Tạo nội dung mới"}</h2>
             </div>
             <button type="button" onClick={() => setEditor(null)} aria-label="Đóng trình biên tập">×</button>
           </div>
@@ -293,86 +325,62 @@ export function DashboardContentManager({ initialItems }: { initialItems: Conten
 
             <label className="admin-field admin-field-wide">
               <span>Mô tả ngắn</span>
-              <textarea
-                rows={4}
-                value={editor.excerpt}
-                onChange={(event) => setEditor({ ...editor, excerpt: event.target.value })}
-                placeholder="Nội dung tóm tắt hiển thị ở danh sách và metadata"
-              />
+              <textarea rows={4} value={editor.excerpt} onChange={(event) => setEditor({ ...editor, excerpt: event.target.value })} placeholder="Nội dung tóm tắt hiển thị ở danh sách và metadata" />
+            </label>
+
+            <label className="admin-field admin-field-wide">
+              <span>Nội dung chi tiết</span>
+              <textarea rows={12} value={editor.body} onChange={(event) => setEditor({ ...editor, body: event.target.value })} placeholder={'Viết nội dung bài. Dùng “## Tiêu đề mục” để tạo đề mục và “- ” để tạo gạch đầu dòng.'} />
             </label>
 
             <label className="admin-field admin-field-wide">
               <span>Từ khóa</span>
-              <input
-                value={editor.keywords}
-                onChange={(event) => setEditor({ ...editor, keywords: event.target.value })}
-                placeholder="AI, dữ liệu, IoT, đào tạo..."
-              />
+              <input value={editor.keywords} onChange={(event) => setEditor({ ...editor, keywords: event.target.value })} placeholder="AI, dữ liệu, IoT, đào tạo..." />
             </label>
 
             <label className="admin-check-field">
-              <input
-                type="checkbox"
-                checked={editor.featured}
-                onChange={(event) => setEditor({ ...editor, featured: event.target.checked })}
-              />
+              <input type="checkbox" checked={editor.featured} onChange={(event) => setEditor({ ...editor, featured: event.target.checked })} />
               <span>Đánh dấu nội dung nổi bật</span>
             </label>
           </div>
 
           <div className="admin-editor-actions">
             <div>
-              <button className="admin-button admin-button-primary" type="button" onClick={saveDraft}>Lưu bản nháp cục bộ</button>
-              <button className="admin-button admin-button-disabled" type="button" disabled title="Cần kết nối CMS và xác thực trước khi xuất bản">Xuất bản</button>
+              <button className="admin-button admin-button-secondary" type="button" disabled={busy} onClick={() => mutate("save-draft", { editor })}>{busy ? "Đang lưu..." : "Lưu bản nháp"}</button>
+              <button className="admin-button admin-button-primary" type="button" disabled={busy} onClick={() => mutate("publish", { editor })}>{busy ? "Đang xử lý..." : "Xuất bản"}</button>
             </div>
-            <small>Xuất bản thật sẽ được mở sau khi xác thực, database và audit log được kết nối.</small>
+            <small>Lưu nháp không thay đổi bài đang công khai. Xuất bản sẽ cập nhật newsroom ngay từ kho CMS.</small>
           </div>
         </section>
       ) : null}
 
       <section className="admin-content-table-panel">
-        <div className="admin-table-head">
-          <span>Nội dung</span>
-          <span>Loại</span>
-          <span>Trạng thái</span>
-          <span>Ngày</span>
-          <span>Thao tác</span>
-        </div>
-
+        <div className="admin-table-head"><span>Nội dung</span><span>Loại</span><span>Trạng thái</span><span>Ngày</span><span>Thao tác</span></div>
         <div className="admin-content-rows">
-          {filtered.map((item, index) => {
-            const isDraft = item.status === "draft";
-            const draft = isDraft ? drafts.find((entry) => entry.id === item.id) : undefined;
-            return (
-              <article className="admin-content-row" key={isDraft ? item.id : item.slug}>
-                <div className="admin-content-title-cell">
-                  <b>{String(index + 1).padStart(2, "0")}</b>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <span>{item.category}{item.featured ? " · Nổi bật" : ""}</span>
-                  </div>
-                </div>
-                <span>{typeLabel(item.type)}</span>
-                <span className={`admin-status-pill ${isDraft ? "is-draft" : "is-published"}`}>
-                  {isDraft ? "Nháp cục bộ" : "Đã xuất bản"}
-                </span>
-                <span>{isDraft && item.updatedAt ? `Sửa ${new Date(item.updatedAt).toLocaleDateString("vi-VN")}` : formatDate(item.publishedAt)}</span>
-                <div className="admin-row-actions">
-                  <button type="button" onClick={() => draft ? editDraft(draft) : editPublished(item as ContentItem)}>Biên tập</button>
-                  {!isDraft ? <Link href={`/tin-tuc/${item.slug}`}>Mở ↗</Link> : null}
-                  {isDraft && item.id ? <button className="danger" type="button" onClick={() => removeDraft(item.id!)}>Xóa</button> : null}
-                </div>
-              </article>
-            );
-          })}
+          {filtered.map((item, index) => (
+            <article className="admin-content-row" key={item.id}>
+              <div className="admin-content-title-cell">
+                <b>{String(index + 1).padStart(2, "0")}</b>
+                <div><strong>{item.title}</strong><span>{item.category}{item.featured ? " · Nổi bật" : ""}</span></div>
+              </div>
+              <span>{typeLabel(item.type)}</span>
+              <span className={`admin-status-pill ${item.status === "draft" ? "is-draft" : "is-published"}`}>{item.status === "draft" ? "Bản nháp" : "Đã xuất bản"}</span>
+              <span>{item.status === "draft" ? `Sửa ${new Date(item.updatedAt).toLocaleDateString("vi-VN")}` : formatDate(item.publishedAt)}</span>
+              <div className="admin-row-actions">
+                <button type="button" disabled={busy} onClick={() => editItem(item)}>Biên tập</button>
+                {item.status === "published" ? <Link href={`/tin-tuc/${item.slug}`}>Mở ↗</Link> : null}
+                {item.status === "published" ? (
+                  <button type="button" disabled={busy} onClick={() => mutate("unpublish", { id: item.id })}>Gỡ xuất bản</button>
+                ) : (
+                  <button className="danger" type="button" disabled={busy} onClick={() => mutate("delete", { id: item.id })}>Xóa</button>
+                )}
+              </div>
+            </article>
+          ))}
         </div>
 
         {filtered.length === 0 ? (
-          <div className="admin-empty-state">
-            <span>0 kết quả</span>
-            <strong>Không tìm thấy nội dung phù hợp.</strong>
-            <p>Thử đổi từ khóa hoặc loại nội dung.</p>
-          </div>
+          <div className="admin-empty-state"><span>0 kết quả</span><strong>Không tìm thấy nội dung phù hợp.</strong><p>Thử đổi từ khóa hoặc loại nội dung.</p></div>
         ) : null}
       </section>
     </div>

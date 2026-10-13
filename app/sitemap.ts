@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
 import { mainNavigation } from "@/lib/public-content";
-import { publications } from "@/lib/publications";
+import { getPublishedPublications } from "@/lib/cms-store";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://iaict-demo.vercel.app";
   const routes = Array.from(new Set([
     ...mainNavigation.map((item) => item.href),
@@ -10,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/tim-kiem",
   ]));
   const lastModified = new Date();
+  const publications = await getPublishedPublications();
 
   const coreRoutes: MetadataRoute.Sitemap = routes.map((route) => ({
     url: new URL(route, base).toString(),

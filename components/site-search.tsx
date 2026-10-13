@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { publications } from "@/lib/publications";
+
+type SearchPublication = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  keywords: string[];
+};
 
 type SearchItem = {
   title: string;
@@ -29,15 +36,6 @@ const baseSearchIndex: SearchItem[] = [
   { title: "Liên hệ & Hợp tác", summary: "Trao đổi nhu cầu tư vấn, triển khai, chuyển giao, đào tạo và hợp tác dự án.", href: "/lien-he", category: "Thông tin", keywords: "liên hệ hợp tác tư vấn dự án đào tạo chuyển giao" },
 ];
 
-const publicationSearchIndex: SearchItem[] = publications.map((item) => ({
-  title: item.title,
-  summary: item.excerpt,
-  href: `/tin-tuc/${item.slug}`,
-  category: item.category.includes("Đào tạo") ? "Đào tạo" : item.category.includes("Dự án") ? "Dự án" : "Thông tin",
-  keywords: `${item.keywords.join(" ")} ${item.category}`,
-}));
-
-const searchIndex: SearchItem[] = [...baseSearchIndex, ...publicationSearchIndex];
 const filters = ["Tất cả", "Sản phẩm", "Giải pháp", "Đào tạo", "Dự án", "Thông tin"] as const;
 const suggestions = ["AI & Dữ liệu", "IoT & Quan trắc", "Trâm Rừng", "Đào tạo cơ quan nhà nước"];
 
@@ -50,9 +48,26 @@ function normalize(value: string) {
     .trim();
 }
 
-export function SiteSearch() {
+function categoryForPublication(item: SearchPublication): SearchItem["category"] {
+  if (item.category.includes("Đào tạo")) return "Đào tạo";
+  if (item.category.includes("Dự án")) return "Dự án";
+  return "Thông tin";
+}
+
+export function SiteSearch({ publications }: { publications: SearchPublication[] }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<(typeof filters)[number]>("Tất cả");
+
+  const searchIndex = useMemo<SearchItem[]>(() => {
+    const publicationSearchIndex = publications.map((item) => ({
+      title: item.title,
+      summary: item.excerpt,
+      href: `/tin-tuc/${item.slug}`,
+      category: categoryForPublication(item),
+      keywords: `${item.keywords.join(" ")} ${item.category}`,
+    }));
+    return [...baseSearchIndex, ...publicationSearchIndex];
+  }, [publications]);
 
   const results = useMemo(() => {
     const needle = normalize(query);
@@ -62,7 +77,7 @@ export function SiteSearch() {
       if (!needle) return true;
       return normalize(`${item.title} ${item.summary} ${item.keywords} ${item.category}`).includes(needle);
     });
-  }, [filter, query]);
+  }, [filter, query, searchIndex]);
 
   const hasSearchIntent = query.trim().length > 0 || filter !== "Tất cả";
 
@@ -72,51 +87,26 @@ export function SiteSearch() {
         <label htmlFor="site-search-input">Từ khóa</label>
         <div className="site-search-input-row">
           <span aria-hidden="true">⌕</span>
-          <input
-            id="site-search-input"
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Ví dụ: AI, IoT, Trâm Rừng, đào tạo..."
-            aria-label="Từ khóa tìm kiếm"
-            autoComplete="off"
-          />
+          <input id="site-search-input" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Ví dụ: AI, IoT, Trâm Rừng, đào tạo..." aria-label="Từ khóa tìm kiếm" autoComplete="off" />
           {query ? <button type="button" className="site-search-clear" onClick={() => setQuery("")}>Xóa</button> : null}
         </div>
       </form>
 
       <div className="site-search-filters" aria-label="Lọc kết quả">
         {filters.map((item) => (
-          <button
-            type="button"
-            key={item}
-            className={filter === item ? "active" : ""}
-            onClick={() => setFilter(item)}
-            aria-pressed={filter === item}
-          >
-            {item}
-          </button>
+          <button type="button" key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)} aria-pressed={filter === item}>{item}</button>
         ))}
       </div>
 
       {!hasSearchIntent ? (
         <div className="site-search-suggestions">
           <span>Tìm nhanh</span>
-          <div>
-            {suggestions.map((item) => (
-              <button type="button" key={item} onClick={() => setQuery(item)}>
-                {item} <i aria-hidden="true">→</i>
-              </button>
-            ))}
-          </div>
+          <div>{suggestions.map((item) => <button type="button" key={item} onClick={() => setQuery(item)}>{item} <i aria-hidden="true">→</i></button>)}</div>
         </div>
       ) : null}
 
       <div className="site-search-results-head" aria-live="polite">
-        <div>
-          <span>{hasSearchIntent ? "Kết quả phù hợp" : "Khám phá nội dung"}</span>
-          <strong>{results.length.toString().padStart(2, "0")}</strong>
-        </div>
+        <div><span>{hasSearchIntent ? "Kết quả phù hợp" : "Khám phá nội dung"}</span><strong>{results.length.toString().padStart(2, "0")}</strong></div>
         <p>{hasSearchIntent ? "Kết quả được tìm trong các trang và bài viết công khai của IAICT." : "Có thể nhập từ khóa hoặc chọn một nhóm nội dung để thu hẹp kết quả."}</p>
       </div>
 
@@ -125,23 +115,15 @@ export function SiteSearch() {
           {results.map((item, index) => (
             <Link href={item.href} key={`${item.href}-${item.title}`} className="site-search-result-card">
               <div className="site-search-result-meta"><span>{item.category}</span><b>{String(index + 1).padStart(2, "0")}</b></div>
-              <h2>{item.title}</h2>
-              <p>{item.summary}</p>
-              <strong>Xem nội dung <i aria-hidden="true">→</i></strong>
+              <h2>{item.title}</h2><p>{item.summary}</p><strong>Xem nội dung <i aria-hidden="true">→</i></strong>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="site-search-empty">
-          <span>Không tìm thấy kết quả phù hợp</span>
-          <p>Thử từ khóa ngắn hơn, bỏ dấu hoặc chọn lại nhóm nội dung.</p>
-          <button type="button" onClick={() => { setQuery(""); setFilter("Tất cả"); }}>Đặt lại tìm kiếm</button>
-        </div>
+        <div className="site-search-empty"><span>Không tìm thấy kết quả phù hợp</span><p>Thử từ khóa ngắn hơn, bỏ dấu hoặc chọn lại nhóm nội dung.</p><button type="button" onClick={() => { setQuery(""); setFilter("Tất cả"); }}>Đặt lại tìm kiếm</button></div>
       )}
 
-      <p className="site-search-note">
-        Chỉ mục tìm kiếm hiện bao phủ các trang chính và kho bài viết công khai. Cấu trúc này có thể đồng bộ trực tiếp với CMS khi nguồn nội dung tập trung được đưa vào vận hành.
-      </p>
+      <p className="site-search-note">Chỉ mục tìm kiếm bao phủ các trang chính và toàn bộ bài viết đang được xuất bản từ CMS.</p>
     </div>
   );
 }

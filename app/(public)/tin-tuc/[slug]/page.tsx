@@ -1,24 +1,19 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  getPublication,
-  getPublicationTypeLabel,
-  publications,
-} from "@/lib/publications";
+import { getPublishedPublication, getPublishedPublications } from "@/lib/cms-store";
+import { getPublicationTypeLabel } from "@/lib/publications";
 import { formatPublicationDate } from "@/lib/publication-date";
 
 type PublicationPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return publications.map((item) => ({ slug: item.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PublicationPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const publication = getPublication(slug);
+  const publication = await getPublishedPublication(slug);
   if (!publication) return { title: "Không tìm thấy bài viết" };
 
   return {
@@ -39,7 +34,10 @@ export async function generateMetadata({ params }: PublicationPageProps): Promis
 
 export default async function PublicationPage({ params }: PublicationPageProps) {
   const { slug } = await params;
-  const publication = getPublication(slug);
+  const [publication, publications] = await Promise.all([
+    getPublishedPublication(slug),
+    getPublishedPublications(),
+  ]);
   if (!publication) notFound();
 
   const related = publications
@@ -86,9 +84,7 @@ export default async function PublicationPage({ params }: PublicationPageProps) 
                 {section.heading ? <h2>{section.heading}</h2> : null}
                 {section.paragraphs?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                 {section.bullets?.length ? (
-                  <ul>
-                    {section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
-                  </ul>
+                  <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
                 ) : null}
               </section>
             ))}
