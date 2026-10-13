@@ -1,0 +1,271 @@
+/* Project V4 — approved IAICT Trâm Rừng visual direction.
+   Keeps the semantic five-step flow in the homepage component while aligning
+   the source branch with the Pages demo: pale institutional canvas, technical
+   grid, light cards, deep navy copy and teal data connectors. */
+
+main [class*="projectSection"] {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 84% 12%, rgba(123, 205, 194, 0.14), transparent 27%),
+    radial-gradient(circle at 8% 84%, rgba(112, 151, 194, 0.09), transparent 30%),
+    linear-gradient(145deg, #f8f7f1 0%, #f2f6f7 56%, #f7faf9 100%) !important;
+}
+
+main [class*="projectSection"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(18, 66, 78, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18, 66, 78, 0.025) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 83%, transparent);
+}
+
+main [class*="projectSpotlight"] {
+  position: relative;
+  z-index: 1;
+  gap: 18px !important;
+  box-shadow: none !important;
+}
+
+main [class*="projectNarrative"],
+main [class*="architecture"] {
+  border: 1px solid rgba(118, 151, 157, 0.23) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 28px 80px rgba(28, 58, 65, 0.11) !important;
+}
+
+main [class*="projectNarrative"] {
+  position: relative;
+  overflow: hidden;
+  color: #173746 !important;
+  background: linear-gradient(152deg, #fbfdfb, #edf5f3) !important;
+}
+
+main [class*="projectNarrative"]::after {
+  content: "";
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  right: -190px;
+  bottom: -180px;
+  border: 1px solid rgba(19, 139, 124, 0.13);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 44px rgba(19, 139, 124, 0.025),
+    0 0 0 88px rgba(19, 139, 124, 0.018);
+  pointer-events: none;
+}
+
+main [class*="projectNarrative"] h2 {
+  position: relative;
+  z-index: 1;
+  color: #082c3b !important;
+}
+
+main [class*="projectNarrative"] p {
+  position: relative;
+  z-index: 1;
+  color: #58727d !important;
+}
+
+main [class*="projectNarrative"] [class*="projectIndex"] {
+  position: relative;
+  z-index: 1;
+  color: #789099 !important;
+}
+
+main [class*="projectNarrative"] [class*="projectIndex"] i {
+  background: linear-gradient(90deg, #7fc9bd, transparent) !important;
+}
+
+main [class*="projectFacts"] {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-color: #d7e5e3 !important;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+main [class*="projectFacts"] span {
+  border-color: #d7e5e3 !important;
+}
+
+main [class*="projectFacts"] small {
+  color: #84979e !important;
+}
+
+main [class*="projectFacts"] strong {
+  color: #163c48 !important;
+}
+
+main [class*="textAction"] {
+  position: relative;
+  z-index: 1;
+  color: #096f69 !important;
+}
+
+main [class*="architecture"] {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(235, 245, 247, 0.96)) !important;
+}
+
+main [class*="architecture"]::before {
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-image:
+    linear-gradient(rgba(26, 100, 108, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 100, 108, 0.045) 1px, transparent 1px) !important;
+  background-size: 32px 32px !important;
+  mask-image: linear-gradient(145deg, #000, rgba(0, 0, 0, 0.7) 60%, transparent 96%);
+  pointer-events: none;
+}
+
+main [class*="architecture"]::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 360px;
+  height: 360px;
+  right: -150px;
+  top: -170px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(62, 202, 180, 0.14), rgba(62, 202, 180, 0.035) 48%, transparent 70%);
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+main [class*="architectureTop"],
+main [class*="architectureNote"] {
+  border-color: #d5e4e5 !important;
+}
+
+main [class*="architectureTop"] strong {
+  color: #123845 !important;
+}
+
+main [class*="architectureTop"] > span,
+main [class*="architectureNote"] span {
+  color: #0b7d78 !important;
+}
+
+main [class*="flowVisual"] {
+  gap: 12px !important;
+  align-items: stretch !important;
+  padding: 48px 0 38px !important;
+}
+
+main [class*="flowLine"] {
+  top: 70px !important;
+  left: 8% !important;
+  right: 8% !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, #9bcfc7, #21ad9b, #9bcfc7) !important;
+  box-shadow: 0 0 12px rgba(33, 173, 155, 0.2);
+}
+
+main [class*="flowNode"] {
+  min-height: 190px;
+  padding: 18px 14px 16px;
+  border: 1px solid #d3e2e3;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(239, 247, 248, 0.94));
+  box-shadow: 0 14px 32px rgba(21, 64, 72, 0.075);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+main [class*="flowNode"]:hover {
+  transform: translateY(-5px);
+  border-color: #9fcfc9;
+  box-shadow: 0 20px 42px rgba(21, 64, 72, 0.12);
+}
+
+main [class*="flowNode"] > span {
+  color: #83979e !important;
+}
+
+main [class*="flowNode"] i {
+  width: 14px !important;
+  height: 14px !important;
+  margin: 14px auto 22px !important;
+  border: 3px solid #eef8f6 !important;
+  background: #21ad9b !important;
+  box-shadow:
+    0 0 0 5px rgba(33, 173, 155, 0.08),
+    0 0 18px rgba(33, 173, 155, 0.28) !important;
+  animation: project-v4-node 2.6s ease-in-out infinite;
+}
+
+main [class*="flowNode"] strong {
+  color: #0c3442 !important;
+  font-size: 13px !important;
+}
+
+main [class*="flowNode"] small {
+  color: #617982 !important;
+  font-size: 9px !important;
+  line-height: 1.5;
+}
+
+main [class*="architectureNote"] p {
+  color: #607981 !important;
+}
+
+@keyframes project-v4-node {
+  0%, 100% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+@media (max-width: 760px) {
+  main [class*="projectNarrative"],
+  main [class*="architecture"] {
+    border-radius: 20px !important;
+  }
+
+  main [class*="flowVisual"] {
+    gap: 0 !important;
+    padding: 28px 0 !important;
+  }
+
+  main [class*="flowLine"] {
+    left: 19px !important;
+    right: auto !important;
+    top: 34px !important;
+    bottom: 34px !important;
+    width: 1px !important;
+    height: auto !important;
+    background: linear-gradient(180deg, #9bcfc7, #21ad9b, #9bcfc7) !important;
+  }
+
+  main [class*="flowNode"] {
+    min-height: 0;
+    padding: 13px 12px;
+    border-radius: 14px;
+    text-align: left;
+  }
+
+  main [class*="flowNode"] i {
+    margin: 0 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main [class*="flowNode"] {
+    transition: none;
+  }
+
+  main [class*="flowNode"] i {
+    animation: none;
+  }
+}
