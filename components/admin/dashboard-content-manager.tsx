@@ -6,7 +6,8 @@ import { PublicationMediaFields } from "@/components/admin/publication-media-fie
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
 type ContentType = "news" | "insight" | "notice" | "event";
-type ContentStatus = "published" | "draft";
+type ContentStatus = "published" | "scheduled" | "review" | "draft";
+type MutationAction = "save-draft" | "submit-review" | "return-draft" | "schedule" | "publish" | "unpublish" | "delete";
 
 export type AdminContentItem = {
   id: string;
@@ -16,6 +17,7 @@ export type AdminContentItem = {
   category: string;
   type: ContentType;
   publishedAt: string;
+  publishAt?: string;
   readingTime: string;
   excerpt: string;
   body: string;
@@ -41,6 +43,7 @@ type EditorState = {
   featured: boolean;
   coverMediaId?: string;
   ogMediaId?: string;
+  publishAt: string;
 };
 
 type MutationResponse = {
@@ -62,6 +65,7 @@ const EMPTY_EDITOR: EditorState = {
   body: "",
   keywords: "",
   featured: false,
+  publishAt: "",
 };
 
 function typeLabel(type: ContentType) {
@@ -71,9 +75,34 @@ function typeLabel(type: ContentType) {
   return "Tin IAICT";
 }
 
+function statusLabel(status: ContentStatus) {
+  if (status === "review") return "Chờ duyệt";
+  if (status === "scheduled") return "Đã lên lịch";
+  if (status === "published") return "Đã xuất bản";
+  return "Bản nháp";
+}
+
 function formatDate(value: string) {
   const [year, month, day] = value.split("-");
   return `${day}/${month}/${year}`;
+}
+
+function formatDateTime(value?: string) {
+  if (!value) return "Chưa đặt lịch";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Chưa đặt lịch";
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function toDateTimeLocal(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function slugify(value: string) {
@@ -86,6 +115,25 @@ function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 90);
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function previewDocument(editor: EditorState) {
+  const title = escapeHtml(editor.title || "Tiêu đề bài viết");
+  const category = escapeHtml(editor.category || "Tin hoạt động Viện");
+  const excerpt = escapeHtml(editor.excerpt || "Mô tả ngắn của bài viết sẽ xuất hiện tại đây.");
+  const body = editor.body || "<p>Nội dung chi tiết sẽ xuất hiện tại đây.</p>";
+  return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+    *{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#18314d;font-family:Arial,sans-serif}main{max-width:980px;margin:0 auto;background:white;min-height:100vh}.hero{padding:64px 70px 52px;background:linear-gradient(135deg,#0d2f62,#153f96);color:white}.meta{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#b8d1ff}.hero h1{max-width:800px;margin:18px 0;font-size:46px;line-height:1.08}.hero p{max-width:760px;margin:0;color:#dce8ff;font-size:18px;line-height:1.65}.body{padding:52px 70px 80px;font-size:17px;line-height:1.75}.body h2{margin:42px 0 14px;font-size:28px;color:#102e55}.body h3{margin:32px 0 12px;font-size:22px}.body img{max-width:100%;height:auto}.body blockquote{margin:28px 0;padding:16px 22px;border-left:4px solid #2b65d9;background:#f5f8fe}.body table{width:100%;border-collapse:collapse}.body td,.body th{padding:10px;border:1px solid #dbe4ee}@media(max-width:700px){.hero,.body{padding-left:24px;padding-right:24px}.hero h1{font-size:34px}}
+  </style></head><body><main><section class="hero"><div class="meta">IAICT · ${category}</div><h1>${title}</h1><p>${excerpt}</p></section><article class="body">${body}</article></main></body></html>`;
 }
 
 export function DashboardContentManager({
@@ -101,10 +149,12 @@ export function DashboardContentManager({
 }) {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | ContentType>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | ContentStatus>("all");
   const [items, setItems] = useState<AdminContentItem[]>(initialItems);
   const [revision, setRevision] = useState(initialRevision);
   const [isMaterialized, setIsMaterialized] = useState(materialized);
   const [editor, setEditor] = useState<EditorState | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -112,25 +162,32 @@ export function DashboardContentManager({
     const normalized = query.trim().toLocaleLowerCase("vi");
     return items.filter((item) => {
       if (typeFilter !== "all" && item.type !== typeFilter) return false;
+      if (statusFilter !== "all" && item.status !== statusFilter) return false;
       if (!normalized) return true;
       return [item.title, item.category, item.excerpt, item.slug, ...item.keywords]
         .join(" ")
         .toLocaleLowerCase("vi")
         .includes(normalized);
     });
-  }, [items, query, typeFilter]);
+  }, [items, query, statusFilter, typeFilter]);
 
   const publishedCount = items.filter((item) => item.status === "published").length;
+  const scheduledItems = items
+    .filter((item) => item.status === "scheduled")
+    .sort((a, b) => (a.publishAt ?? "").localeCompare(b.publishAt ?? ""));
+  const reviewCount = items.filter((item) => item.status === "review").length;
   const draftCount = items.filter((item) => item.status === "draft").length;
+  const previewHtml = useMemo(() => editor ? previewDocument(editor) : "", [editor]);
 
   function startNew() {
     setEditor({ ...EMPTY_EDITOR });
+    setPreviewOpen(false);
     setNotice(null);
   }
 
   function editItem(item: AdminContentItem) {
     setEditor({
-      id: item.status === "draft" ? item.id : undefined,
+      id: item.status === "published" ? undefined : item.id,
       originSlug: item.status === "published" ? item.slug : item.originSlug,
       title: item.title,
       slug: item.slug,
@@ -142,7 +199,9 @@ export function DashboardContentManager({
       featured: item.featured,
       coverMediaId: item.coverMediaId,
       ogMediaId: item.ogMediaId,
+      publishAt: item.status === "scheduled" ? toDateTimeLocal(item.publishAt) : "",
     });
+    setPreviewOpen(false);
     setNotice(null);
   }
 
@@ -161,17 +220,40 @@ export function DashboardContentManager({
         .map((value) => value.trim())
         .filter(Boolean),
       featured: current.featured,
-      coverMediaId: current.coverMediaId,
-      ogMediaId: current.ogMediaId,
+      coverMediaId: current.coverMediaId ?? null,
+      ogMediaId: current.ogMediaId ?? null,
+      publishAt: current.publishAt ? new Date(current.publishAt).toISOString() : undefined,
+    };
+  }
+
+  function editorFromItem(item: AdminContentItem): EditorState {
+    return {
+      id: item.status === "published" ? undefined : item.id,
+      originSlug: item.status === "published" ? item.slug : item.originSlug,
+      title: item.title,
+      slug: item.slug,
+      category: item.category,
+      type: item.type,
+      excerpt: item.excerpt,
+      body: item.body,
+      keywords: item.keywords.join(", "),
+      featured: item.featured,
+      coverMediaId: item.coverMediaId,
+      ogMediaId: item.ogMediaId,
+      publishAt: item.status === "scheduled" ? toDateTimeLocal(item.publishAt) : "",
     };
   }
 
   async function mutate(
-    action: "save-draft" | "publish" | "unpublish" | "delete",
+    action: MutationAction,
     options: { editor?: EditorState; id?: string },
   ) {
-    if ((action === "save-draft" || action === "publish") && !options.editor?.title.trim()) {
+    if (["save-draft", "submit-review", "schedule", "publish"].includes(action) && !options.editor?.title.trim()) {
       setNotice("Cần nhập tiêu đề trước khi lưu.");
+      return;
+    }
+    if (action === "schedule" && !options.editor?.publishAt) {
+      setNotice("Cần chọn ngày và giờ trước khi lên lịch xuất bản.");
       return;
     }
     if (!storageReady) {
@@ -206,36 +288,29 @@ export function DashboardContentManager({
       }
 
       if (action === "save-draft") {
-        const saved = data.items?.find(
-          (item) =>
-            item.status === "draft" &&
-            item.slug === (options.editor?.slug || slugify(options.editor?.title ?? "")),
-        );
-        if (saved) {
-          setEditor({
-            id: saved.id,
-            originSlug: saved.originSlug,
-            title: saved.title,
-            slug: saved.slug,
-            category: saved.category,
-            type: saved.type,
-            excerpt: saved.excerpt,
-            body: saved.body,
-            keywords: saved.keywords.join(", "),
-            featured: saved.featured,
-            coverMediaId: saved.coverMediaId,
-            ogMediaId: saved.ogMediaId,
-          });
-        }
+        const expectedSlug = options.editor?.slug || slugify(options.editor?.title ?? "");
+        const saved = data.items?.find((item) => item.status === "draft" && item.slug === expectedSlug);
+        if (saved) setEditor(editorFromItem(saved));
         setNotice("Đã lưu bản nháp vào kho CMS.");
+      } else if (action === "submit-review") {
+        setEditor(null);
+        setPreviewOpen(false);
+        setNotice("Đã chuyển nội dung sang trạng thái Chờ duyệt.");
+      } else if (action === "schedule") {
+        setEditor(null);
+        setPreviewOpen(false);
+        setNotice("Đã lên lịch xuất bản. Nội dung sẽ tự công khai khi tới thời điểm đã đặt.");
       } else if (action === "publish") {
         setEditor(null);
+        setPreviewOpen(false);
         setNotice("Đã xuất bản. Newsroom công khai đọc trực tiếp từ kho CMS.");
       } else if (action === "unpublish") {
         setNotice("Đã gỡ xuất bản và chuyển nội dung về trạng thái nháp.");
+      } else if (action === "return-draft") {
+        setNotice("Đã hủy trạng thái hiện tại và đưa nội dung về bản nháp.");
       } else {
         if (editor?.id === options.id) setEditor(null);
-        setNotice("Đã xóa bản nháp khỏi kho CMS.");
+        setNotice("Đã xóa nội dung chưa công khai khỏi kho CMS.");
       }
     } catch {
       setNotice("Không thể kết nối API CMS.");
@@ -268,14 +343,27 @@ export function DashboardContentManager({
             </button>
           ))}
         </div>
+        <select
+          className="admin-status-filter"
+          aria-label="Lọc theo trạng thái"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value as "all" | ContentStatus)}
+        >
+          <option value="all">Mọi trạng thái</option>
+          <option value="draft">Bản nháp</option>
+          <option value="review">Chờ duyệt</option>
+          <option value="scheduled">Đã lên lịch</option>
+          <option value="published">Đã xuất bản</option>
+        </select>
         <button className="admin-button admin-button-primary" type="button" onClick={startNew} disabled={busy}>
           + Tạo nội dung
         </button>
       </section>
 
-      <section className="admin-content-summary">
-        <div><span>Đang hiển thị</span><strong>{filtered.length}</strong></div>
+      <section className="admin-content-summary admin-content-summary-workflow">
         <div><span>Đã xuất bản</span><strong>{publishedCount}</strong></div>
+        <div><span>Đã lên lịch</span><strong>{scheduledItems.length}</strong></div>
+        <div><span>Chờ duyệt</span><strong>{reviewCount}</strong></div>
         <div><span>Bản nháp</span><strong>{draftCount}</strong></div>
         <p>
           {storageReady
@@ -286,16 +374,38 @@ export function DashboardContentManager({
         </p>
       </section>
 
+      {scheduledItems.length ? (
+        <section className="admin-schedule-panel" aria-label="Lịch xuất bản">
+          <div className="admin-schedule-head">
+            <div><span>Publishing calendar</span><h2>Lịch xuất bản</h2></div>
+            <small>{scheduledItems.length} nội dung đã lên lịch</small>
+          </div>
+          <div className="admin-schedule-list">
+            {scheduledItems.map((item) => (
+              <article key={item.id}>
+                <time>{formatDateTime(item.publishAt)}</time>
+                <div><strong>{item.title}</strong><span>{item.category} · {typeLabel(item.type)}</span></div>
+                <button type="button" onClick={() => editItem(item)} disabled={busy}>Mở</button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {notice ? <div className="admin-inline-notice" role="status">{notice}</div> : null}
 
       {editor ? (
         <section className="admin-editor-panel" aria-label="Trình biên tập nội dung">
           <div className="admin-editor-head">
             <div>
-              <span>{editor.id ? "CMS DRAFT" : editor.originSlug ? "EDIT COPY" : "NEW CONTENT"}</span>
-              <h2>{editor.id ? "Biên tập bản nháp" : editor.originSlug ? "Biên tập từ nội dung đã xuất bản" : "Tạo nội dung mới"}</h2>
+              <span>{editor.id ? "CMS WORKING COPY" : editor.originSlug ? "EDIT COPY" : "NEW CONTENT"}</span>
+              <h2>{editor.id ? "Biên tập nội dung" : editor.originSlug ? "Biên tập từ nội dung đã xuất bản" : "Tạo nội dung mới"}</h2>
             </div>
-            <button type="button" onClick={() => setEditor(null)} aria-label="Đóng trình biên tập">×</button>
+            <button type="button" onClick={() => { setEditor(null); setPreviewOpen(false); }} aria-label="Đóng trình biên tập">×</button>
+          </div>
+
+          <div className="admin-workflow-rail" aria-label="Luồng biên tập">
+            <span><b>01</b> Nháp</span><i>→</i><span><b>02</b> Chờ duyệt</span><i>→</i><span><b>03</b> Lên lịch / Xuất bản</span>
           </div>
 
           <div className="admin-editor-grid">
@@ -359,20 +469,47 @@ export function DashboardContentManager({
               <input value={editor.keywords} onChange={(event) => setEditor({ ...editor, keywords: event.target.value })} placeholder="AI, dữ liệu, IoT, đào tạo..." />
             </label>
 
+            <label className="admin-field">
+              <span>Ngày & giờ xuất bản</span>
+              <input
+                type="datetime-local"
+                value={editor.publishAt}
+                onChange={(event) => setEditor({ ...editor, publishAt: event.target.value })}
+              />
+              <small className="admin-field-help">Chỉ dùng khi chọn “Lên lịch”.</small>
+            </label>
+
             <label className="admin-check-field">
               <input type="checkbox" checked={editor.featured} onChange={(event) => setEditor({ ...editor, featured: event.target.checked })} />
               <span>Đánh dấu nội dung nổi bật</span>
             </label>
           </div>
 
-          <div className="admin-editor-actions">
-            <div>
-              <button className="admin-button admin-button-secondary" type="button" disabled={busy} onClick={() => mutate("save-draft", { editor })}>{busy ? "Đang lưu..." : "Lưu bản nháp"}</button>
-              <button className="admin-button admin-button-primary" type="button" disabled={busy} onClick={() => mutate("publish", { editor })}>{busy ? "Đang xử lý..." : "Xuất bản"}</button>
+          <div className="admin-editor-actions admin-editor-actions-workflow">
+            <div className="admin-editor-secondary-actions">
+              <button className="admin-button admin-button-secondary" type="button" disabled={busy} onClick={() => setPreviewOpen(true)}>Xem trước</button>
+              <button className="admin-button admin-button-secondary" type="button" disabled={busy} onClick={() => mutate("save-draft", { editor })}>{busy ? "Đang lưu..." : "Lưu nháp"}</button>
+              <button className="admin-button admin-button-secondary" type="button" disabled={busy} onClick={() => mutate("submit-review", { editor })}>Gửi duyệt</button>
             </div>
-            <small>Lưu nháp không thay đổi bài đang công khai. Xuất bản sẽ cập nhật newsroom ngay từ kho CMS.</small>
+            <div className="admin-editor-primary-actions">
+              <button className="admin-button admin-button-schedule" type="button" disabled={busy} onClick={() => mutate("schedule", { editor })}>Lên lịch</button>
+              <button className="admin-button admin-button-primary" type="button" disabled={busy} onClick={() => mutate("publish", { editor })}>{busy ? "Đang xử lý..." : "Xuất bản ngay"}</button>
+            </div>
+            <small>Preview dùng chính nội dung chưa lưu. Lên lịch sẽ tự công khai bài khi tới thời điểm đã đặt.</small>
           </div>
         </section>
+      ) : null}
+
+      {previewOpen && editor ? (
+        <div className="admin-preview-overlay" role="dialog" aria-modal="true" aria-label="Xem trước bài viết">
+          <div className="admin-preview-dialog">
+            <div className="admin-preview-dialog-head">
+              <div><span>PREVIEW / UNSAVED</span><strong>Xem trước bài viết</strong></div>
+              <button type="button" onClick={() => setPreviewOpen(false)} aria-label="Đóng xem trước">×</button>
+            </div>
+            <iframe title="Xem trước bài viết" sandbox="" srcDoc={previewHtml} />
+          </div>
+        </div>
       ) : null}
 
       <section className="admin-content-table-panel">
@@ -385,13 +522,23 @@ export function DashboardContentManager({
                 <div><strong>{item.title}</strong><span>{item.category}{item.featured ? " · Nổi bật" : ""}{item.coverMediaId ? " · Có ảnh" : ""}</span></div>
               </div>
               <span>{typeLabel(item.type)}</span>
-              <span className={`admin-status-pill ${item.status === "draft" ? "is-draft" : "is-published"}`}>{item.status === "draft" ? "Bản nháp" : "Đã xuất bản"}</span>
-              <span>{item.status === "draft" ? `Sửa ${new Date(item.updatedAt).toLocaleDateString("vi-VN")}` : formatDate(item.publishedAt)}</span>
+              <span className={`admin-status-pill is-${item.status}`}>{statusLabel(item.status)}</span>
+              <span>
+                {item.status === "published"
+                  ? formatDate(item.publishedAt)
+                  : item.status === "scheduled"
+                    ? formatDateTime(item.publishAt)
+                    : item.status === "review"
+                      ? "Đang chờ duyệt"
+                      : `Sửa ${new Date(item.updatedAt).toLocaleDateString("vi-VN")}`}
+              </span>
               <div className="admin-row-actions">
                 <button type="button" disabled={busy} onClick={() => editItem(item)}>Biên tập</button>
                 {item.status === "published" ? <Link href={`/tin-tuc/${item.slug}`}>Mở ↗</Link> : null}
                 {item.status === "published" ? (
                   <button type="button" disabled={busy} onClick={() => mutate("unpublish", { id: item.id })}>Gỡ xuất bản</button>
+                ) : item.status === "scheduled" || item.status === "review" ? (
+                  <button type="button" disabled={busy} onClick={() => mutate("return-draft", { id: item.id })}>{item.status === "scheduled" ? "Hủy lịch" : "Trả nháp"}</button>
                 ) : (
                   <button className="danger" type="button" disabled={busy} onClick={() => mutate("delete", { id: item.id })}>Xóa</button>
                 )}
@@ -401,7 +548,7 @@ export function DashboardContentManager({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="admin-empty-state"><span>0 kết quả</span><strong>Không tìm thấy nội dung phù hợp.</strong><p>Thử đổi từ khóa hoặc loại nội dung.</p></div>
+          <div className="admin-empty-state"><span>0 kết quả</span><strong>Không tìm thấy nội dung phù hợp.</strong><p>Thử đổi từ khóa, loại hoặc trạng thái nội dung.</p></div>
         ) : null}
       </section>
     </div>
