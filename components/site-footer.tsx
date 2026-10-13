@@ -1,36 +1,49 @@
 import Link from "next/link";
 import { mainNavigation, pillars } from "@/lib/public-content";
+import styles from "./site-chrome.module.css";
 
 export function SiteFooter() {
   return (
-    <footer className="site-footer">
-      <div className="shell footer-grid">
+    <footer className={styles.footer}>
+      <div className={`shell ${styles.footerTop}`}>
         <div>
-          <strong className="footer-brand">IAICT</strong>
-          <p>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</p>
-          <p className="footer-muted">Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội</p>
+          <div className={styles.footerBrand}>
+            <span className={styles.footerBrandMark} aria-hidden="true">IA</span>
+            <strong>IAICT</strong>
+          </div>
+          <p className={styles.footerIntro}>Viện Ứng dụng Công nghệ Thông tin và Truyền thông — kết nối công nghệ, giải pháp, chuyển giao và đào tạo trong một hệ sinh thái thống nhất.</p>
+          <p className={styles.address}>Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội</p>
         </div>
+
         <div>
-          <span className="footer-label">Bốn trụ cột</span>
-          <div className="footer-links">
+          <span className={styles.footerLabel}>IAICT Ecosystem</span>
+          <div className={styles.footerLinks}>
             {pillars.map((item) => <Link href={item.href ?? "/"} key={item.title}>{item.title}</Link>)}
           </div>
         </div>
+
         <div>
-          <span className="footer-label">Điều hướng</span>
-          <div className="footer-links">
-            {mainNavigation.slice(1).map((item) => <Link href={item.href} key={item.href}>{item.label}</Link>)}
+          <span className={styles.footerLabel}>Điều hướng</span>
+          <div className={styles.footerLinks}>
+            {mainNavigation.slice(1, 6).map((item) => <Link href={item.href} key={item.href}>{item.label}</Link>)}
           </div>
         </div>
+
         <div>
-          <span className="footer-label">Hệ thống</span>
-          <div className="footer-links">
-            <Link href="/api/health">API Health</Link>
+          <span className={styles.footerLabel}>Khám phá</span>
+          <div className={styles.footerLinks}>
+            <Link href="/du-an">Dự án tiêu biểu</Link>
+            <Link href="/tin-tuc">Tin tức & Tri thức</Link>
             <Link href="/tim-kiem">Tìm kiếm</Link>
+            <Link href="/lien-he">Liên hệ & Hợp tác</Link>
           </div>
         </div>
       </div>
-      <div className="shell footer-bottom">© {new Date().getFullYear()} IAICT. Nội dung nghiệp vụ đang được kết nối với CMS.</div>
+
+      <div className={`shell ${styles.footerBottom}`}>
+        <span>© {new Date().getFullYear()} IAICT</span>
+        <span>Cổng thông tin điện tử · Viện Ứng dụng Công nghệ Thông tin và Truyền thông</span>
+      </div>
     </footer>
   );
 }
