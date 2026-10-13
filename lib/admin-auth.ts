@@ -3,8 +3,11 @@ import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 export const ADMIN_SESSION_COOKIE = "iaict_admin_session";
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 8;
 
+export type AdminRole = "editor" | "reviewer" | "superadmin";
+
 type SessionPayload = {
   username: string;
+  role?: AdminRole;
   exp: number;
 };
 
@@ -24,6 +27,15 @@ function sign(payload: string) {
   return createHmac("sha256", getSessionSecret()).update(payload).digest("base64url");
 }
 
+export function isAdminRole(value: unknown): value is AdminRole {
+  return value === "editor" || value === "reviewer" || value === "superadmin";
+}
+
+export function resolveAdminRole() : AdminRole {
+  const configured = process.env.IAICT_ADMIN_ROLE;
+  return isAdminRole(configured) ? configured : "superadmin";
+}
+
 export function isAdminAuthConfigured() {
   return Boolean(
     process.env.IAICT_ADMIN_USERNAME &&
@@ -41,6 +53,7 @@ export function createAdminSession(username: string) {
   if (!getSessionSecret()) throw new Error("Admin session secret is not configured");
   const payload: SessionPayload = {
     username,
+    role: resolveAdminRole(),
     exp: Math.floor(Date.now() / 1000) + ADMIN_SESSION_MAX_AGE,
   };
   const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
@@ -58,7 +71,10 @@ export function verifyAdminSession(token?: string | null) {
     const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as SessionPayload;
     if (!payload.username || !payload.exp || payload.exp <= Math.floor(Date.now() / 1000)) return null;
     if (!safeEqual(payload.username, process.env.IAICT_ADMIN_USERNAME ?? "")) return null;
-    return payload;
+    return {
+      ...payload,
+      role: isAdminRole(payload.role) ? payload.role : resolveAdminRole(),
+    };
   } catch {
     return null;
   }
