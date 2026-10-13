@@ -1,123 +1,180 @@
 import Link from "next/link";
-import { DataPlaceholder } from "@/components/data-placeholder";
-import { intentCards, pillars, productGroups, solutionGroups } from "@/lib/public-content";
+import { WowHero } from "@/components/wow/wow-hero";
+import styles from "@/components/wow/wow.module.css";
+import { intentCards, pillars } from "@/lib/public-content";
+
+const capabilities = [
+  "AI & DATA",
+  "IOT & MONITORING",
+  "DIGITAL TRANSFORMATION",
+  "TRACEABILITY",
+  "TECHNOLOGY TRANSFER",
+  "PUBLIC SECTOR TRAINING",
+];
+
+const journey = [
+  ["01", "DISCOVER", "Hiểu đúng bài toán", "Khảo sát nhu cầu, bối cảnh vận hành và tiêu chí thành công trước khi chọn công nghệ."],
+  ["02", "PROVE", "Thử nghiệm có tiêu chí", "Tạo PoC/demo để kiểm chứng khả năng triển khai và cách đo kết quả."],
+  ["03", "TRANSFER", "Chuẩn hóa & chuyển giao", "Đóng gói quy trình, tài liệu, cấu hình và năng lực vận hành cho đơn vị tiếp nhận."],
+  ["04", "SCALE", "Nhân rộng bền vững", "Mở rộng theo cụm, theo đơn vị hoặc theo địa bàn khi dữ liệu và mô hình đã đủ tin cậy."],
+];
+
+const knowledge = [
+  ["AI & Công vụ", "AI có kiểm soát trong môi trường công vụ", "Gắn AI với quy trình, dữ liệu và cơ chế kiểm tra thay vì chỉ sử dụng như công cụ hỏi đáp."],
+  ["Chuyển đổi số", "Tái thiết kế quy trình trước khi số hóa", "Số hóa quy trình chưa tốt chỉ làm tăng tốc một quy trình chưa tốt."],
+  ["IoT", "Từ sensor đến dữ liệu có giá trị", "Giá trị không nằm ở cảm biến riêng lẻ mà ở chuỗi thu thập, kiểm tra, lưu trữ và khai thác."],
+  ["Academy", "Năng lực AI theo vị trí việc làm", "Đào tạo theo nhiệm vụ và tình huống thực tế thay vì chỉ học công cụ."],
+];
 
 export default function HomePage() {
   return (
     <main id="main-content">
-      <section className="hero">
-        <div className="shell hero-grid">
-          <div className="hero-copy">
-            <p className="kicker">Công nghệ • Giải pháp • Chuyển giao • Đào tạo</p>
-            <h1>Từ bài toán thực tế đến giải pháp số có thể triển khai.</h1>
-            <p className="lead">Cổng thông tin giúp cơ quan, tổ chức và doanh nghiệp nhanh chóng tìm đúng năng lực, giải pháp và chương trình phù hợp tại IAICT.</p>
-            <div className="hero-actions">
-              <Link className="button button-primary" href="/giai-phap-dich-vu">Khám phá giải pháp</Link>
-              <Link className="button button-secondary" href="/lien-he">Đề nghị tư vấn</Link>
-            </div>
-            <div className="hero-pillars" aria-label="Bốn trụ cột IAICT">
-              {pillars.map((pillar) => <span key={pillar.title}>{pillar.title.replace("IAICT ", "")}</span>)}
-            </div>
-          </div>
-          <aside className="hero-visual" aria-label="Chu trình triển khai IAICT">
-            <div className="orbit orbit-one" aria-hidden="true" />
-            <div className="orbit orbit-two" aria-hidden="true" />
-            <div className="hero-visual-core">
-              <span>IAICT</span>
-              <strong>Ứng dụng</strong>
-              <small>nghiên cứu → triển khai</small>
-            </div>
-            <div className="hero-node node-a">AI</div>
-            <div className="hero-node node-b">IoT</div>
-            <div className="hero-node node-c">Data</div>
-            <div className="hero-node node-d">DX</div>
-          </aside>
-        </div>
-      </section>
+      <WowHero />
 
-      <section className="section" aria-labelledby="intent-title">
+      <div className={styles.capabilityBar} aria-label="Năng lực nổi bật">
+        <div className={`shell ${styles.capabilityInner}`}>
+          {capabilities.map((item) => <span key={item}>{item}</span>)}
+        </div>
+      </div>
+
+      <section className={styles.section} aria-labelledby="needs-title">
         <div className="shell">
-          <div className="section-heading">
-            <div><p className="kicker">Đi theo nhu cầu</p><h2 id="intent-title">Bạn đang cần gì?</h2></div>
-            <p>Chọn theo bài toán trước, sau đó đi đến nhóm sản phẩm, giải pháp, chuyển giao hoặc đào tạo phù hợp.</p>
+          <div className={styles.heading}>
+            <div><p className={styles.label}>Đi từ bài toán</p><h2 id="needs-title">Bạn đang cần giải quyết điều gì?</h2></div>
+            <p>Bản demo tổ chức nội dung theo nhu cầu người dùng trước, sau đó mới dẫn đến công nghệ, giải pháp, chuyển giao hoặc đào tạo.</p>
           </div>
-          <div className="intent-grid">
-            {intentCards.map((item, index) => (
-              <Link className="intent-card" href={item.href ?? "/"} key={item.title}>
+          <div className={styles.problemGrid}>
+            {intentCards.slice(0, 4).map((item, index) => (
+              <Link className={styles.problemCard} href={item.href ?? "/"} key={item.title}>
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <h3>{item.title}</h3>
                 <p>{item.summary}</p>
-                <b aria-hidden="true">→</b>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="section section-tint" aria-labelledby="products-title">
+      <section className={styles.sectionDark} aria-labelledby="ecosystem-title">
         <div className="shell">
-          <div className="section-heading">
-            <div><p className="kicker">IAICT Technology</p><h2 id="products-title">Sản phẩm & Nền tảng</h2></div>
-            <Link className="text-link" href="/san-pham-nen-tang">Xem toàn bộ nhóm sản phẩm →</Link>
+          <div className={styles.heading}>
+            <div><p className={styles.label}>IAICT Ecosystem</p><h2 id="ecosystem-title">Bốn trụ cột, một hành trình triển khai.</h2></div>
+            <p>Technology, Solutions, Transfer và Academy được kết nối thành một chu trình thay vì các mảng hoạt động rời rạc.</p>
           </div>
-          <div className="compact-card-grid">
-            {productGroups.slice(0, 6).map((item) => <article className="compact-card" key={item.title}><span>Technology</span><h3>{item.title}</h3><p>{item.summary}</p></article>)}
+          <div className={styles.ecosystemGrid}>
+            {pillars.map((pillar, index) => (
+              <Link href={pillar.href ?? "/"} className={styles.ecosystemCard} key={pillar.title}>
+                <span>0{index + 1}</span>
+                <h3>{pillar.title}</h3>
+                <p>{pillar.summary}</p>
+                <b>Khám phá →</b>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="section" aria-labelledby="solutions-title">
-        <div className="shell split-heading">
-          <div><p className="kicker">IAICT Solutions</p><h2 id="solutions-title">Giải pháp & Dịch vụ</h2><p className="body-copy">Tiếp cận theo phạm vi công việc, từ khảo sát và thiết kế đến tích hợp, triển khai và vận hành.</p><Link className="text-link" href="/giai-phap-dich-vu">Khám phá năng lực triển khai →</Link></div>
-          <div className="service-list">{solutionGroups.map((item, index) => <div key={item.title}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item.title}</strong></div>)}</div>
+      <section className={styles.sectionTint} aria-labelledby="project-title">
+        <div className={`shell ${styles.projectSpotlight}`}>
+          <div className={styles.projectCopy}>
+            <p className={styles.label}>IAICT Project Lab · Case study</p>
+            <h2 id="project-title">Trâm Rừng · Từ cảm biến ngoài trời đến dữ liệu có giá trị.</h2>
+            <p>Mô hình trình bày hành trình dữ liệu từ hiện trường về hệ thống số. Nội dung kỹ thuật trên bản demo được mô tả ở mức kiến trúc, không thay thế hồ sơ triển khai chính thức.</p>
+            <ul>
+              <li>Thiết bị và cảm biến vận hành ngoài trời.</li>
+              <li>Kết nối 4G linh hoạt theo điều kiện hiện trường.</li>
+              <li>UPS/nguồn dự phòng để tăng tính liên tục.</li>
+              <li>Server và cơ sở dữ liệu là trung tâm lưu trữ, khai thác.</li>
+            </ul>
+            <Link className={styles.primaryAction} href="/du-an/tram-rung">Mở case study Trâm Rừng</Link>
+          </div>
+          <div className={styles.architecture} aria-label="Luồng dữ liệu Trâm Rừng">
+            <div className={styles.architectureTop}><span>DATA FLOW</span><small>Kiến trúc minh họa</small></div>
+            <div className={styles.flow}>
+              <div>Sensor<small>Thu thập</small></div>
+              <div>Edge<small>Kiểm tra</small></div>
+              <div>4G<small>Truyền dẫn</small></div>
+              <div>Server<small>Lưu trữ</small></div>
+              <div>Apps<small>Khai thác</small></div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="section academy-section" aria-labelledby="academy-title">
-        <div className="shell academy-grid">
-          <div className="academy-copy"><p className="kicker">IAICT Academy</p><h2 id="academy-title">Đào tạo & Tập huấn gắn với công việc thực tế</h2><p>Cấu trúc đào tạo được tổ chức theo đối tượng, mục tiêu, module, thời lượng, hình thức và lịch triển khai.</p><div className="hero-actions"><Link className="button button-primary" href="/dao-tao-tap-huan">Xem phân hệ đào tạo</Link><Link className="button button-ghost" href="/dao-tao-tap-huan/co-quan-nha-nuoc">Dành cho cơ quan nhà nước</Link></div></div>
-          <div className="academy-matrix" aria-label="Cấu trúc phân hệ đào tạo"><span>Đối tượng</span><span>Mục tiêu</span><span>Module</span><span>Thời lượng</span><span>Hình thức</span><span>Lịch / Session</span></div>
+      <section className={styles.section} aria-labelledby="journey-title">
+        <div className="shell">
+          <div className={styles.heading}>
+            <div><p className={styles.label}>IAICT Value Journey</p><h2 id="journey-title">Từ nhu cầu đến khả năng nhân rộng.</h2></div>
+            <p>Thay vì dùng một timeline lịch sử chưa được xác minh, bản demo mô tả hành trình tạo giá trị có thể áp dụng cho từng dự án.</p>
+          </div>
+          <div className={styles.journeyGrid}>
+            {journey.map(([no, key, title, body]) => (
+              <article className={styles.journeyCard} key={key}>
+                <span>{no} · {key}</span><h3>{title}</h3><p>{body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.sectionTint} aria-labelledby="people-title">
+        <div className={`shell ${styles.twoCol}`}>
+          <div className={styles.expertPanel}>
+            <p className={styles.label}>People & Expertise</p>
+            <h3 id="people-title">Hiển thị năng lực trước, hồ sơ cá nhân sau khi xác minh.</h3>
+            <p>Ở giai đoạn demo, hệ thống mô tả nhóm chuyên môn. Tên, chức danh, ảnh và đối tác chỉ xuất hiện khi có dữ liệu được duyệt.</p>
+            <div className={styles.expertList}>
+              <div><strong>AI & Dữ liệu</strong><span>Phân tích · GenAI · workflow</span></div>
+              <div><strong>IoT & Hệ thống</strong><span>Sensor · edge · integration</span></div>
+              <div><strong>Chuyển đổi số</strong><span>Quy trình · dữ liệu · vận hành</span></div>
+            </div>
+          </div>
+          <div className={styles.mapPanel}>
+            <p className={styles.label}>Deployment Canvas</p>
+            <h3>Thiết kế để có thể triển khai theo cụm và mở rộng.</h3>
+            <p>Bản đồ bên dưới là minh họa trải nghiệm, không phải bản đồ các điểm IAICT đã triển khai thực tế.</p>
+            <div className={styles.map} aria-label="Bản đồ minh họa khả năng nhân rộng">
+              <i className={`${styles.mapNode} ${styles.mapNorth}`} />
+              <i className={`${styles.mapNode} ${styles.mapCentral}`} />
+              <i className={`${styles.mapNode} ${styles.mapSouth}`} />
+              <span className={styles.mapCaption}>DEMO CANVAS · Thử nghiệm → Chuẩn hóa → Nhân rộng → Quản trị tập trung</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.sectionDark} aria-labelledby="gallery-title">
+        <div className="shell">
+          <div className={styles.heading}>
+            <div><p className={styles.label}>Project Gallery</p><h2 id="gallery-title">Không gian trực quan cho dự án và năng lực.</h2></div>
+            <p>Các khối hình hiện là visual demo. Khi có ảnh thật, media library sẽ thay trực tiếp mà không cần đổi bố cục.</p>
+          </div>
+          <div className={styles.gallery}>
+            <div className={styles.galleryCard}><span>Project Lab</span><strong>Trâm Rừng · IoT hiện trường</strong></div>
+            <div className={styles.galleryCard}><span>Technology</span><strong>IoT & Quan trắc</strong></div>
+            <div className={styles.galleryCard}><span>Data</span><strong>Truy xuất & vòng đời</strong></div>
+            <div className={styles.galleryCard}><span>Academy</span><strong>AI, dữ liệu và năng lực số cho khu vực công</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="knowledge-title">
+        <div className="shell">
+          <div className={styles.heading}>
+            <div><p className={styles.label}>Knowledge Stream</p><h2 id="knowledge-title">Nội dung chuyên môn có cấu trúc.</h2></div>
+            <p>Giai đoạn sau, khu vực này sẽ lấy bài viết thật từ CMS. Hiện các tiêu đề là mẫu nội dung minh họa cho trải nghiệm.</p>
+          </div>
+          <div className={styles.stream}>
+            {knowledge.map(([tag, title, body]) => <article className={styles.streamCard} key={title}><span>{tag}</span><h3>{title}</h3><p>{body}</p></article>)}
+          </div>
         </div>
       </section>
 
       <section className="section section-compact">
-        <div className="shell government-banner">
-          <div><p className="kicker">Dành cho cơ quan nhà nước</p><h2>Khung đào tạo theo cấp và nhóm vị trí công việc</h2><p>Hỗ trợ định hướng chương trình cho cấp tỉnh, sở/ban/ngành, xã/phường, đơn vị sự nghiệp và các nhóm lãnh đạo/chuyên viên.</p></div>
-          <Link className="button button-light" href="/dao-tao-tap-huan/co-quan-nha-nuoc">Khám phá chương trình</Link>
+        <div className="shell final-cta final-cta-strong">
+          <div><p className="kicker">Full Demo / Provider-neutral</p><h2>Trải nghiệm trước. Chốt hạ tầng sau.</h2><p>Bản Vercel này là môi trường để khách hàng duyệt đầy đủ UX, nội dung và nghiệp vụ trước khi quyết định phương án production.</p></div>
+          <Link className="button button-primary" href="/lien-he">Liên hệ & Hợp tác</Link>
         </div>
-      </section>
-
-      <section className="section section-tint" aria-labelledby="projects-title">
-        <div className="shell three-column-section">
-          <div><p className="kicker">Dự án tiêu biểu</p><h2 id="projects-title">Từ mô hình ứng dụng đến khả năng nhân rộng</h2><Link className="text-link" href="/du-an">Xem dự án →</Link></div>
-          <DataPlaceholder label="CMS / Projects" title="Dữ liệu dự án đang được kết nối" description="Chỉ hiển thị dự án đã được xác minh và xuất bản qua quy trình biên tập." />
-          <DataPlaceholder label="Media / Evidence" title="Không dùng số liệu hoặc thành tích giả" description="Media, kết quả và case study sẽ lấy từ nguồn dữ liệu chính thức." />
-        </div>
-      </section>
-
-      <section className="section" aria-labelledby="capability-title">
-        <div className="shell">
-          <div className="section-heading"><div><p className="kicker">Năng lực công nghệ</p><h2 id="capability-title">Bốn trụ cột, một chu trình triển khai</h2></div><p>Kết nối công nghệ, giải pháp, chuyển giao và đào tạo thay vì tách rời từng hoạt động.</p></div>
-          <div className="pillar-grid">{pillars.map((item) => <Link className="pillar-card" href={item.href ?? "/"} key={item.title}><h3>{item.title}</h3><p>{item.summary}</p><span>Khám phá →</span></Link>)}</div>
-        </div>
-      </section>
-
-      <section className="section section-tint">
-        <div className="shell editorial-grid">
-          <div><p className="kicker">Chuyên gia / Giảng viên</p><h2>Năng lực con người được xuất bản có kiểm soát</h2><DataPlaceholder label="CMS / Experts" title="Danh sách chuyên gia sẽ hiển thị từ CMS" description="Chỉ công bố hồ sơ và thông tin liên hệ được phép công khai." /></div>
-          <div><p className="kicker">Đối tác</p><h2>Hợp tác dựa trên thông tin đã xác minh</h2><DataPlaceholder label="CMS / Partners" title="Danh sách đối tác chưa được hard-code" description="Logo và thông tin đối tác chỉ xuất hiện sau khi được xác minh và phê duyệt." /></div>
-        </div>
-      </section>
-
-      <section className="section" aria-labelledby="news-title">
-        <div className="shell">
-          <div className="section-heading"><div><p className="kicker">Tin tức & Sự kiện</p><h2 id="news-title">Kênh thông tin chính thức</h2></div><Link className="text-link" href="/tin-tuc">Đến trang Tin tức →</Link></div>
-          <div className="news-placeholder-grid"><DataPlaceholder label="CMS / Articles" title="4–6 bài chọn lọc trên trang chủ" description="Tin tức không lấn át sản phẩm, giải pháp và đào tạo." /><DataPlaceholder label="CMS / Events" title="Sự kiện và hội thảo" description="Lịch sự kiện sẽ được đồng bộ từ thực thể nội dung chính thức." /></div>
-        </div>
-      </section>
-
-      <section className="section section-compact">
-        <div className="shell final-cta final-cta-strong"><div><p className="kicker">Bắt đầu từ nhu cầu</p><h2>Trao đổi bài toán với IAICT</h2><p>Chọn đúng hướng giải pháp trước khi đi sâu vào công nghệ.</p></div><Link className="button button-primary" href="/lien-he">Liên hệ & Hợp tác</Link></div>
       </section>
     </main>
   );
