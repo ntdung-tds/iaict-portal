@@ -50,30 +50,30 @@ export function WowHero() {
   const slide = slides[active];
 
   return (
-    <section className={styles.wowHero} aria-label="IAICT - năng lực và định hướng">
-      <div className={styles.heroAtmosphere} aria-hidden="true">
+    <section className={`${styles.wowHero} v11-hero`} aria-label="IAICT - năng lực và định hướng">
+      <div className={`${styles.heroAtmosphere} v11-hero-atmosphere`} aria-hidden="true">
         <span className={styles.glowA} />
         <span className={styles.glowB} />
         <span className={styles.gridFade} />
       </div>
 
-      <div className={`shell ${styles.heroShell}`}>
+      <div className={`shell ${styles.heroShell} v11-hero-grid`}>
         <div className={styles.heroCopy}>
-          <div className={styles.heroIndex}><span>IAICT</span><i /> <span>01 — 04</span></div>
-          <p className={styles.eyebrow}>{slide.kicker}</p>
+          <div className={`${styles.heroIndex} v11-overline`}><span>IAICT</span><i /> <span>{String(active + 1).padStart(2, "0")} / 03</span></div>
+          <p className={`${styles.eyebrow} v11-eyebrow`}>{slide.kicker}</p>
           <h1>{slide.title}</h1>
-          <p className={styles.heroLead}>{slide.lead}</p>
+          <p className={`${styles.heroLead} v11-lead`}>{slide.lead}</p>
 
           <div className={styles.heroActions}>
-            <Link className={styles.primaryAction} href={slide.primary.href}>
+            <Link className={`${styles.primaryAction} v11-primary`} href={slide.primary.href}>
               {slide.primary.label}<span aria-hidden="true">↗</span>
             </Link>
-            <Link className={styles.secondaryAction} href={slide.secondary.href}>
+            <Link className={`${styles.secondaryAction} v11-secondary`} href={slide.secondary.href}>
               {slide.secondary.label}
             </Link>
           </div>
 
-          <div className={styles.heroMeta} aria-label="Hệ sinh thái IAICT">
+          <div className={`${styles.heroMeta} v11-meta`} aria-label="Hệ sinh thái IAICT">
             <span>Technology</span>
             <span>Solutions</span>
             <span>Transfer</span>
@@ -81,8 +81,8 @@ export function WowHero() {
           </div>
         </div>
 
-        <aside className={styles.nexus} aria-label="Mô hình năng lực IAICT">
-          <div className={styles.nexusTop}>
+        <aside className={`${styles.nexus} v11-visual`} aria-label="Mô hình năng lực IAICT">
+          <div className={`${styles.nexusTop} v11-visual-top`}>
             <div>
               <small>IAICT / Capability Nexus</small>
               <strong>{slide.focus}</strong>
@@ -90,42 +90,41 @@ export function WowHero() {
             <span className={styles.liveSignal}>Connected</span>
           </div>
 
-          <div className={styles.nexusStage}>
+          <div className={`${styles.nexusStage} v11-visual-stage`}>
             <div className={styles.orbitOuter} aria-hidden="true" />
             <div className={styles.orbitMiddle} aria-hidden="true" />
             <div className={styles.orbitInner} aria-hidden="true" />
 
-            <div className={styles.nexusCore}>
+            <div className={`${styles.nexusCore} v11-visual-core`}>
               <span>IAICT</span>
               <strong>APPLIED</strong>
               <small>technology</small>
             </div>
 
             {orbitLabels.map((label, index) => (
-              <div className={`${styles.orbitNode} ${styles[`orbitNode${index + 1}`]}`} key={label}>
+              <div className={`${styles.orbitNode} v11-visual-node ${styles[`orbitNode${index + 1}`]}`} key={label}>
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <strong>{label}</strong>
               </div>
             ))}
           </div>
 
-          <div className={styles.nexusFooter}>
+          <div className={`${styles.nexusFooter} v11-visual-footer`}>
             <span>{slide.signal}</span>
             <div className={styles.signalBars} aria-hidden="true"><i /><i /><i /><i /></div>
           </div>
         </aside>
       </div>
 
-      <div className={`shell ${styles.heroRail}`}>
-        <div className={styles.heroRailText}>Research · Application · Integration · Transfer · Training</div>
-        <div className={styles.dots} role="tablist" aria-label="Chuyển nội dung giới thiệu">
+      <div className={`shell ${styles.heroRail} v11-rail`}>
+        <div className={`${styles.heroRailText} v11-rail-text`}>Research · Application · Integration · Transfer · Training</div>
+        <div className={`${styles.dots} v11-tabs`} role="group" aria-label="Chuyển nội dung giới thiệu">
           {slides.map((item, index) => (
             <button
               key={item.kicker}
               className={`${styles.dot} ${index === active ? styles.dotActive : ""}`}
               aria-label={`Nội dung ${index + 1}`}
-              aria-selected={index === active}
-              role="tab"
+              aria-pressed={index === active}
               onClick={() => setActive(index)}
             ><span>{String(index + 1).padStart(2, "0")}</span></button>
           ))}
@@ -134,3 +133,4 @@ export function WowHero() {
     </section>
   );
 }
+

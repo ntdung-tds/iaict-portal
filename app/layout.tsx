@@ -11,6 +11,7 @@ import "./home-v74.css";
 import "./home-v75.css";
 import "./wow-v9.css";
 import "./wow-v10.css";
+import "./wow-v11.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="vi" className={beVietnamPro.variable}>
-      <body>
+      <body className="iaict-v11">
         <a className="skip-link" href="#main-content">
           Bỏ qua điều hướng
         </a>
@@ -41,3 +42,4 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     </html>
   );
 }
+

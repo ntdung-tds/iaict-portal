@@ -86,10 +86,10 @@ export default function HomePage() {
     <main id="main-content">
       <WowHero />
 
-      <section className={styles.capabilityBar} aria-label="Năng lực nổi bật">
+      <section className={`${styles.capabilityBar} v11-capability`} aria-label="Năng lực nổi bật">
         <div className={`shell ${styles.capabilityInner}`}>
           {capabilities.map(([no, title, body]) => (
-            <div className={`${styles.capabilityItem} homeV7-capabilityItem`} key={title}>
+            <div className={`${styles.capabilityItem} homeV7-capabilityItem v11-capability-item`} key={title}>
               <span>{no}</span>
               <strong>{title}</strong>
               <small>{body}</small>
@@ -98,9 +98,21 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="v11-entry" aria-label="Khám phá theo nhu cầu">
+        <div className="shell">
+          <div className="v11-entry-label"><strong>Khám phá IAICT theo nhu cầu của bạn</strong><span>Công nghệ phù hợp. Lộ trình rõ ràng.</span></div>
+          <div className="v11-entry-grid">
+            <Link href="/san-pham-nen-tang#ai-du-lieu"><span className="v11-icon" aria-hidden="true">AI</span><span><strong>AI & Dữ liệu</strong><small>Ứng dụng vào công việc</small></span><span aria-hidden="true">↗</span></Link>
+            <Link href="/san-pham-nen-tang#iot-quan-trac"><span className="v11-icon" aria-hidden="true">IoT</span><span><strong>IoT & Quan trắc</strong><small>Kết nối dữ liệu hiện trường</small></span><span aria-hidden="true">↗</span></Link>
+            <Link href="/giai-phap-dich-vu"><span className="v11-icon" aria-hidden="true">DX</span><span><strong>Giải pháp số</strong><small>Thiết kế theo nhu cầu</small></span><span aria-hidden="true">↗</span></Link>
+            <Link href="/dao-tao-tap-huan"><span className="v11-icon" aria-hidden="true">ED</span><span><strong>Đào tạo & Tập huấn</strong><small>Nâng cao năng lực đội ngũ</small></span><span aria-hidden="true">↗</span></Link>
+          </div>
+        </div>
+      </section>
+
       <section className={styles.sectionIntro} aria-labelledby="needs-title">
         <div className="shell">
-          <div className={styles.editorialHeading}>
+          <div className={`${styles.editorialHeading} v11-heading`}>
             <div>
               <p className={styles.label}>From problem to capability</p>
               <h2 id="needs-title">Bài toán đúng trước.<br />Công nghệ sau.</h2>
@@ -111,9 +123,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className={styles.needsGrid}>
+          <div className={`${styles.needsGrid} v11-needs`}>
             {needs.map((item, index) => (
-              <Link className={`${styles.needCard} homeV7-needCard ${index === 0 ? styles.needCardLead : ""}`} href={item.href} key={item.title}>
+              <Link className={`${styles.needCard} homeV7-needCard v11-need ${index === 0 ? styles.needCardLead : ""}`} href={item.href} key={item.title}>
                 <div className={styles.needTop}><span>{item.no}</span><small>{item.meta}</small></div>
                 <div>
                   <h3>{item.title}</h3>
@@ -195,7 +207,7 @@ export default function HomePage() {
 
       <section className={styles.journeySection} aria-labelledby="journey-title">
         <div className="shell">
-          <div className={styles.editorialHeading}>
+          <div className={`${styles.editorialHeading} v11-heading`}>
             <div><p className={styles.label}>IAICT Method</p><h2 id="journey-title">Từ nhu cầu đến<br />khả năng nhân rộng.</h2></div>
             <div className={styles.headingSide}><span className={styles.headingRule} /><p>Một dự án công nghệ chỉ hoàn chỉnh khi có thể đi qua đủ các lớp: hiểu bài toán, thiết kế, kiểm chứng, chuyển giao và mở rộng.</p></div>
           </div>
@@ -230,7 +242,7 @@ export default function HomePage() {
 
       <section className={styles.gallerySection} aria-labelledby="gallery-title">
         <div className="shell">
-          <div className={styles.editorialHeading}>
+          <div className={`${styles.editorialHeading} v11-heading`}>
             <div><p className={styles.label}>Capability Spaces</p><h2 id="gallery-title">Từ hiện trường<br />đến hệ thống số.</h2></div>
             <div className={styles.headingSide}><span className={styles.headingRule} /><p>Các không gian năng lực được tổ chức để người xem hiểu mối liên hệ giữa công nghệ, dữ liệu, vận hành và chuyển giao.</p></div>
           </div>
@@ -277,3 +289,4 @@ export default function HomePage() {
     </main>
   );
 }
+
