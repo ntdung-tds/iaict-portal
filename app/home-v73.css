@@ -1,0 +1,98 @@
+/* IAICT homepage V7.3 — tighten empty blocks called out in review */
+
+/* Closing CTA: keep the poster scale, but give the copy a deliberate inner margin. */
+[class*="closingSection"] [class*="closingInner"]{
+  padding:58px clamp(42px,5.2vw,76px)!important;
+  box-sizing:border-box;
+}
+[class*="closingSection"] [class*="closingInner"]>div:first-child{padding-left:0!important}
+[class*="closingSection"] [class*="closingAction"]{padding-right:0!important}
+[class*="closingSection"] [class*="closingAction"] p{max-width:680px;font-size:15px!important;line-height:1.76!important}
+[class*="closingSection"] [class*="closingAction"] a{margin-top:20px!important}
+
+/* Knowledge card 02: use the open area for a compact process model instead of blank paper. */
+.homeV7-knowledgeCard:nth-child(2){
+  position:relative;
+  overflow:hidden;
+  min-height:285px!important;
+  padding-top:132px!important;
+  background:linear-gradient(180deg,#fff 0%,#f8fbfa 100%)!important;
+}
+.homeV7-knowledgeCard:nth-child(2)::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:28px;
+  right:28px;
+  top:28px;
+  height:74px;
+  border:1px solid #d8e6e3;
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 13% 50%,#0c8b80 0 6px,rgba(12,139,128,.12) 7px 15px,transparent 16px),
+    radial-gradient(circle at 50% 50%,#0c8b80 0 6px,rgba(12,139,128,.12) 7px 15px,transparent 16px),
+    radial-gradient(circle at 87% 50%,#0c8b80 0 6px,rgba(12,139,128,.12) 7px 15px,transparent 16px),
+    linear-gradient(90deg,transparent 13%,rgba(12,139,128,.28) 13.2% 49%,transparent 49.2% 50.8%,rgba(12,139,128,.28) 51% 87%,transparent 87.2%),
+    rgba(244,249,247,.9);
+  pointer-events:none;
+}
+.homeV7-knowledgeCard:nth-child(2)::after{
+  content:"HIỆN TRẠNG     →     CHUẨN HÓA     →     SỐ HÓA";
+  position:absolute;
+  z-index:1;
+  left:42px;
+  right:42px;
+  top:82px;
+  color:#5d797e;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-align:center;
+  pointer-events:none;
+}
+.homeV7-knowledgeCard:nth-child(2)>*{position:relative;z-index:2}
+.homeV7-knowledgeCard:nth-child(2) h3{margin-top:8px!important}
+.homeV7-knowledgeCard:nth-child(2) p{max-width:620px}
+
+/* Journey: reduce dead section height and make the bottom of every phase informative. */
+[class*="journeySection"]{padding-top:92px!important;padding-bottom:94px!important}
+[class*="journeySection"] [class*="editorialHeading"]{margin-bottom:40px!important}
+.homeV7-journeyStep{
+  min-height:238px!important;
+  padding-bottom:72px!important;
+}
+.homeV7-journeyStep::after{
+  position:absolute!important;
+  left:0!important;
+  right:22px!important;
+  bottom:18px!important;
+  height:auto!important;
+  padding-top:10px;
+  border-top:1px solid #d8e4e3;
+  background:none!important;
+  color:#6a8289;
+  font-size:10px;
+  font-weight:750;
+  line-height:1.45;
+  letter-spacing:.015em;
+}
+.homeV7-journeyStep:nth-child(1)::after{content:"Đầu ra · hiện trạng · điểm nghẽn · phạm vi"}
+.homeV7-journeyStep:nth-child(2)::after{content:"Đầu ra · kiến trúc · backlog · tiêu chí đo"}
+.homeV7-journeyStep:nth-child(3)::after{content:"Đầu ra · PoC · đánh giá · điều chỉnh"}
+.homeV7-journeyStep:nth-child(4)::after{content:"Đầu ra · tài liệu · đào tạo · bàn giao"}
+.homeV7-journeyStep:nth-child(5)::after{content:"Đầu ra · chuẩn mở rộng · roadmap"}
+
+@media(max-width:1080px){
+  [class*="closingSection"] [class*="closingInner"]{padding:48px 44px!important}
+  .homeV7-knowledgeCard:nth-child(2){min-height:270px!important}
+  [class*="journeySection"]{padding-top:82px!important;padding-bottom:84px!important}
+}
+@media(max-width:760px){
+  [class*="closingSection"] [class*="closingInner"]{padding:34px 26px 38px!important}
+  .homeV7-knowledgeCard:nth-child(2){min-height:0!important;padding-top:122px!important}
+  .homeV7-knowledgeCard:nth-child(2)::before{left:22px;right:22px;top:22px;height:68px}
+  .homeV7-knowledgeCard:nth-child(2)::after{left:28px;right:28px;top:73px;font-size:8px}
+  [class*="journeySection"]{padding-top:72px!important;padding-bottom:74px!important}
+  [class*="journeySection"] [class*="editorialHeading"]{margin-bottom:30px!important}
+  .homeV7-journeyStep{min-height:0!important;padding-bottom:70px!important}
+}
