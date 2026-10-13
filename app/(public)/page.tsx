@@ -17,6 +17,10 @@ const needs = [
     no: "01",
     title: "Chuyển đổi số có trọng tâm",
     body: "Bắt đầu từ quy trình, dữ liệu và bài toán vận hành; lựa chọn công nghệ sau khi đã xác định rõ mục tiêu.",
+    narrative: "Phù hợp với đơn vị đang có nhiều nhu cầu hoặc sáng kiến rời rạc nhưng chưa có thứ tự ưu tiên, tiêu chí đo và lộ trình triển khai thống nhất.",
+    points: ["Rà soát quy trình, dữ liệu và hệ thống hiện có", "Xác định điểm nghẽn và nhóm ưu tiên", "Chia lộ trình theo giai đoạn và khả năng tiếp nhận"],
+    output: "Bản đồ ưu tiên · lộ trình · tiêu chí đánh giá",
+    tags: ["Roadmap", "Process", "Governance"],
     href: "/giai-phap-dich-vu",
     meta: "Strategy / Process / Data",
   },
@@ -24,6 +28,10 @@ const needs = [
     no: "02",
     title: "AI & dữ liệu cho công việc thực",
     body: "Tổ chức dữ liệu, xây dựng luồng xử lý và ứng dụng AI theo từng nhiệm vụ thay vì triển khai công nghệ rời rạc.",
+    narrative: "Trọng tâm là dữ liệu đầu vào, quyền truy cập, cách kiểm tra kết quả và vị trí AI tham gia vào quy trình — không chỉ dừng ở một chatbot độc lập.",
+    points: ["Chuẩn hóa nguồn dữ liệu và luồng xử lý", "Gắn AI với nhiệm vụ, vai trò và quyền truy cập", "Thiết kế cơ chế kiểm tra và phản hồi đầu ra"],
+    output: "Luồng dữ liệu · nguyên mẫu AI · tiêu chí kiểm soát",
+    tags: ["AI", "Data", "Workflow"],
     href: "/san-pham-nen-tang#ai-du-lieu",
     meta: "AI / Data / Workflow",
   },
@@ -31,6 +39,10 @@ const needs = [
     no: "03",
     title: "IoT & dữ liệu hiện trường",
     body: "Kết nối cảm biến, gateway, truyền dẫn, server và cơ sở dữ liệu thành một chuỗi vận hành có thể kiểm soát.",
+    narrative: "Thiết kế ưu tiên dữ liệu đến được server ổn định, có thể kiểm tra và lưu trữ có cấu trúc trước khi bổ sung các lớp phân tích hoặc tự động hóa.",
+    points: ["Cảm biến, gateway, nguồn và kết nối phù hợp hiện trường", "Luồng dữ liệu từ thiết bị về server/CSDL", "Giám sát trạng thái và hỗ trợ vận hành"],
+    output: "Kiến trúc IoT · luồng dữ liệu · cấu hình vận hành",
+    tags: ["Sensor", "Edge", "Server"],
     href: "/san-pham-nen-tang#iot-quan-trac",
     meta: "Sensor / Edge / Server",
   },
@@ -38,6 +50,10 @@ const needs = [
     no: "04",
     title: "Chuyển giao & nâng cao năng lực",
     body: "Đưa kết quả thử nghiệm thành quy trình, tài liệu, cấu hình và năng lực để đơn vị tiếp nhận có thể vận hành lâu dài.",
+    narrative: "Một dự án chỉ thực sự hoàn thành khi người tiếp nhận hiểu cách cấu hình, vận hành, xử lý tình huống và tiếp tục phát triển hệ thống sau bàn giao.",
+    points: ["Chuẩn hóa tài liệu và cấu hình bàn giao", "Đào tạo theo vai trò và nhiệm vụ thực tế", "Hỗ trợ sau tiếp nhận và mở rộng khi cần"],
+    output: "Tài liệu · đào tạo · cơ chế hỗ trợ sau bàn giao",
+    tags: ["Transfer", "Academy", "Support"],
     href: "/chuyen-giao-cong-nghe",
     meta: "Transfer / Academy",
   },
@@ -73,7 +89,7 @@ export default function HomePage() {
       <section className={styles.capabilityBar} aria-label="Năng lực nổi bật">
         <div className={`shell ${styles.capabilityInner}`}>
           {capabilities.map(([no, title, body]) => (
-            <div className={styles.capabilityItem} key={title}>
+            <div className={`${styles.capabilityItem} homeV7-capabilityItem`} key={title}>
               <span>{no}</span>
               <strong>{title}</strong>
               <small>{body}</small>
@@ -97,11 +113,17 @@ export default function HomePage() {
 
           <div className={styles.needsGrid}>
             {needs.map((item, index) => (
-              <Link className={`${styles.needCard} ${index === 0 ? styles.needCardLead : ""}`} href={item.href} key={item.title}>
+              <Link className={`${styles.needCard} homeV7-needCard ${index === 0 ? styles.needCardLead : ""}`} href={item.href} key={item.title}>
                 <div className={styles.needTop}><span>{item.no}</span><small>{item.meta}</small></div>
                 <div>
                   <h3>{item.title}</h3>
                   <p>{item.body}</p>
+                  <p className="homeV7-needNarrative">{item.narrative}</p>
+                  <ul className="homeV7-needPoints">
+                    {item.points.map((point) => <li key={point}>{point}</li>)}
+                  </ul>
+                  <div className="homeV7-needMeta"><small>Đầu ra gợi ý</small><strong>{item.output}</strong></div>
+                  <div className="homeV7-needTags">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
                 </div>
                 <b aria-hidden="true">↗</b>
               </Link>
@@ -120,7 +142,7 @@ export default function HomePage() {
 
           <div className={styles.ecosystemStack}>
             {pillars.map((pillar, index) => (
-              <Link href={pillar.href ?? "/"} className={styles.ecosystemRow} key={pillar.title}>
+              <Link href={pillar.href ?? "/"} className={`${styles.ecosystemRow} homeV7-ecosystemRow`} key={pillar.title}>
                 <span className={styles.ecosystemNo}>{String(index + 1).padStart(2, "0")}</span>
                 <div><small>IAICT / {index === 0 ? "Technology" : index === 1 ? "Solutions" : index === 2 ? "Transfer" : "Academy"}</small><h3>{pillar.title}</h3></div>
                 <p>{pillar.summary}</p>
@@ -131,7 +153,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.projectSection} aria-labelledby="project-title">
+      <section className={`${styles.projectSection} homeV7-project`} aria-labelledby="project-title">
         <div className={`shell ${styles.projectSpotlight}`}>
           <div className={styles.projectNarrative}>
             <div className={styles.projectIndex}><span>PROJECT / 01</span><i /><span>FIELD SYSTEMS</span></div>
@@ -179,7 +201,7 @@ export default function HomePage() {
           </div>
           <div className={styles.journeyLine}>
             {journey.map(([no, key, title, body]) => (
-              <article className={styles.journeyStep} key={key}>
+              <article className={`${styles.journeyStep} homeV7-journeyStep`} key={key}>
                 <div><span>{no}</span><i /></div>
                 <small>{key}</small>
                 <h3>{title}</h3>
@@ -200,7 +222,7 @@ export default function HomePage() {
           </div>
           <div className={styles.expertiseList}>
             {expertise.map(([no, title, body]) => (
-              <article key={title}><span>{no}</span><div><h3>{title}</h3><p>{body}</p></div></article>
+              <article className="homeV7-expertiseCard" key={title}><span>{no}</span><div><h3>{title}</h3><p>{body}</p></div></article>
             ))}
           </div>
         </div>
@@ -213,10 +235,10 @@ export default function HomePage() {
             <div className={styles.headingSide}><span className={styles.headingRule} /><p>Các không gian năng lực được tổ chức để người xem hiểu mối liên hệ giữa công nghệ, dữ liệu, vận hành và chuyển giao.</p></div>
           </div>
           <div className={styles.gallery}>
-            <Link href="/du-an/tram-rung" className={`${styles.galleryCard} ${styles.galleryLead}`}><span>01 / PROJECT</span><strong>Trâm Rừng</strong><small>IoT ngoài trời · dữ liệu hiện trường · server</small><b>↗</b></Link>
-            <Link href="/san-pham-nen-tang#iot-quan-trac" className={styles.galleryCard}><span>02 / TECHNOLOGY</span><strong>IoT & Quan trắc</strong><small>Sensor · edge · connectivity</small><b>↗</b></Link>
-            <Link href="/san-pham-nen-tang#ai-du-lieu" className={styles.galleryCard}><span>03 / DATA</span><strong>AI & Dữ liệu</strong><small>Workflow · analytics · intelligence</small><b>↗</b></Link>
-            <Link href="/dao-tao-tap-huan" className={`${styles.galleryCard} ${styles.galleryWide}`}><span>04 / ACADEMY</span><strong>Năng lực số cho tổ chức</strong><small>AI · dữ liệu · kỹ năng số · chuyển giao</small><b>↗</b></Link>
+            <Link href="/du-an/tram-rung" className={`${styles.galleryCard} ${styles.galleryLead} homeV7-galleryCard homeV7-galleryLead`}><span>01 / PROJECT</span><strong>Trâm Rừng</strong><small>IoT ngoài trời · dữ liệu hiện trường · server</small><b>↗</b></Link>
+            <Link href="/san-pham-nen-tang#iot-quan-trac" className={`${styles.galleryCard} homeV7-galleryCard`}><span>02 / TECHNOLOGY</span><strong>IoT & Quan trắc</strong><small>Sensor · edge · connectivity</small><b>↗</b></Link>
+            <Link href="/san-pham-nen-tang#ai-du-lieu" className={`${styles.galleryCard} homeV7-galleryCard`}><span>03 / DATA</span><strong>AI & Dữ liệu</strong><small>Workflow · analytics · intelligence</small><b>↗</b></Link>
+            <Link href="/dao-tao-tap-huan" className={`${styles.galleryCard} ${styles.galleryWide} homeV7-galleryCard`}><span>04 / ACADEMY</span><strong>Năng lực số cho tổ chức</strong><small>AI · dữ liệu · kỹ năng số · chuyển giao</small><b>↗</b></Link>
           </div>
         </div>
       </section>
@@ -229,7 +251,7 @@ export default function HomePage() {
           </div>
           <div className={styles.knowledgeGrid}>
             {knowledge.map(([tag, title, body], index) => (
-              <article className={`${styles.knowledgeCard} ${index === 0 ? styles.knowledgeLead : ""}`} key={title}>
+              <article className={`${styles.knowledgeCard} homeV7-knowledgeCard ${index === 0 ? `${styles.knowledgeLead} homeV7-knowledgeLead` : ""}`} key={title}>
                 <span>{tag}</span>
                 <h3>{title}</h3>
                 <p>{body}</p>
