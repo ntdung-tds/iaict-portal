@@ -10,6 +10,13 @@ type ContentStatus = "published" | "scheduled" | "review" | "draft";
 type AdminRole = "editor" | "reviewer" | "superadmin";
 type MutationAction = "save-draft" | "submit-review" | "return-draft" | "schedule" | "publish" | "unpublish" | "delete" | "comment";
 
+type ReviewTarget = {
+  id: string;
+  username: string;
+  displayName: string;
+  role: "reviewer" | "superadmin";
+};
+
 export type AdminContentItem = {
   id: string;
   originSlug?: string;
@@ -19,6 +26,10 @@ export type AdminContentItem = {
   type: ContentType;
   publishedAt: string;
   publishAt?: string;
+  reviewerId?: string;
+  reviewerName?: string;
+  submittedBy?: string;
+  submittedAt?: string;
   readingTime: string;
   excerpt: string;
   body: string;
@@ -47,6 +58,10 @@ type EditorState = {
   coverMediaId?: string;
   ogMediaId?: string;
   publishAt: string;
+  reviewerId?: string;
+  reviewerName?: string;
+  submittedBy?: string;
+  submittedAt?: string;
 };
 
 type MutationResponse = {
@@ -193,12 +208,14 @@ export function DashboardContentManager({
   storageReady,
   materialized,
   currentUser,
+  reviewTargets,
 }: {
   initialItems: AdminContentItem[];
   initialRevision: number;
   storageReady: boolean;
   materialized: boolean;
-  currentUser: { username: string; role: AdminRole };
+  currentUser: { userId: string; username: string; displayName: string; role: AdminRole };
+  reviewTargets: ReviewTarget[];
 }) {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | ContentType>("all");
@@ -215,29 +232,35 @@ export function DashboardContentManager({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [scheduleSuggestions, setScheduleSuggestions] = useState<string[]>([]);
 
+  const isEditor = currentUser.role === "editor";
+  const isReviewer = currentUser.role === "reviewer";
+  const isSuperadmin = currentUser.role === "superadmin";
+  const availableReviewTargets = useMemo(
+    () => reviewTargets.filter((target) => target.id !== currentUser.userId),
+    [currentUser.userId, reviewTargets],
+  );
+
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("vi");
     return items.filter((item) => {
+      if (isReviewer && (item.status === "review" || item.status === "scheduled") && item.reviewerId !== currentUser.userId) return false;
       if (typeFilter !== "all" && item.type !== typeFilter) return false;
       if (statusFilter !== "all" && item.status !== statusFilter) return false;
       if (!normalized) return true;
-      return [item.title, item.category, item.excerpt, item.slug, ...item.keywords]
+      return [item.title, item.category, item.excerpt, item.slug, item.reviewerName ?? "", ...item.keywords]
         .join(" ")
         .toLocaleLowerCase("vi")
         .includes(normalized);
     });
-  }, [items, query, statusFilter, typeFilter]);
+  }, [currentUser.userId, isReviewer, items, query, statusFilter, typeFilter]);
 
   const publishedCount = items.filter((item) => item.status === "published").length;
   const scheduledItems = items
-    .filter((item) => item.status === "scheduled")
+    .filter((item) => item.status === "scheduled" && (!isReviewer || item.reviewerId === currentUser.userId))
     .sort((a, b) => (a.publishAt ?? "").localeCompare(b.publishAt ?? ""));
-  const reviewCount = items.filter((item) => item.status === "review").length;
+  const reviewCount = items.filter((item) => item.status === "review" && (!isReviewer || item.reviewerId === currentUser.userId)).length;
   const draftCount = items.filter((item) => item.status === "draft").length;
   const previewHtml = useMemo(() => previewState ? previewDocument(previewState) : "", [previewState]);
-  const isEditor = currentUser.role === "editor";
-  const isReviewer = currentUser.role === "reviewer";
-  const isSuperadmin = currentUser.role === "superadmin";
 
   async function loadHistory(publicationId: string) {
     setHistoryLoading(true);
@@ -261,7 +284,8 @@ export function DashboardContentManager({
   }
 
   function startNew() {
-    setEditor({ ...EMPTY_EDITOR });
+    const defaultReviewer = availableReviewTargets.length === 1 ? availableReviewTargets[0] : undefined;
+    setEditor({ ...EMPTY_EDITOR, reviewerId: defaultReviewer?.id, reviewerName: defaultReviewer?.displayName });
     setPreviewState(null);
     setFeedback("");
     setHistory(null);
@@ -286,6 +310,10 @@ export function DashboardContentManager({
       coverMediaId: item.coverMediaId,
       ogMediaId: item.ogMediaId,
       publishAt: toDateTimeLocal(item.publishAt),
+      reviewerId: item.reviewerId,
+      reviewerName: item.reviewerName,
+      submittedBy: item.submittedBy,
+      submittedAt: item.submittedAt,
     };
   }
 
@@ -327,6 +355,10 @@ export function DashboardContentManager({
       setNotice("Cần nhập tiêu đề trước khi lưu.");
       return;
     }
+    if (action === "submit-review" && !options.editor?.reviewerId) {
+      setNotice("Hãy chọn người nhận duyệt trước khi gửi.");
+      return;
+    }
     if (action === "schedule" && !options.editor?.publishAt) {
       setNotice("Cần chọn ngày và giờ trước khi duyệt & lên lịch xuất bản.");
       return;
@@ -358,6 +390,7 @@ export function DashboardContentManager({
           item: options.editor ? editorPayload(options.editor) : undefined,
           id: options.id,
           feedback: actionFeedback || undefined,
+          reviewerId: action === "submit-review" ? options.editor?.reviewerId : undefined,
         }),
       });
       const data = (await response.json()) as MutationResponse;
@@ -384,9 +417,10 @@ export function DashboardContentManager({
         }
         setNotice("Đã lưu bản nháp và tạo một phiên bản lịch sử mới.");
       } else if (action === "submit-review") {
+        const target = availableReviewTargets.find((candidate) => candidate.id === options.editor?.reviewerId);
         setEditor(null);
         setHistory(null);
-        setNotice("Đã gửi duyệt. Thời gian xuất bản đang là đề xuất và chỉ được kích hoạt sau khi người có quyền duyệt chấp thuận.");
+        setNotice(`Đã gửi duyệt${target ? ` cho ${target.displayName}` : ""}. Lịch xuất bản vẫn chỉ là đề xuất cho tới khi được duyệt.`);
       } else if (action === "schedule") {
         setEditor(null);
         setHistory(null);
@@ -418,10 +452,13 @@ export function DashboardContentManager({
   }
 
   const activeHistoryId = editor?.id ?? editor?.sourceId;
-  const canEditContent = !isReviewer || editor?.status === "review";
-  const canSubmitReview = isEditor && editor?.status === "draft";
-  const canApprove = (isReviewer || isSuperadmin) && (isSuperadmin || editor?.status === "review");
-  const canReturn = (isReviewer || isSuperadmin) && (editor?.status === "review" || editor?.status === "scheduled");
+  const assignedToCurrentReviewer = !isReviewer || editor?.reviewerId === currentUser.userId;
+  const canEditContent = !isReviewer || (editor?.status === "review" && assignedToCurrentReviewer);
+  const canSubmitReview = (isEditor || isSuperadmin) && editor?.status === "draft";
+  const canApprove = isSuperadmin || (isReviewer && editor?.status === "review" && assignedToCurrentReviewer);
+  const canReturn = isSuperadmin
+    ? editor?.status === "review" || editor?.status === "scheduled"
+    : isReviewer && assignedToCurrentReviewer && (editor?.status === "review" || editor?.status === "scheduled");
 
   return (
     <div className="admin-content-manager">
@@ -429,14 +466,14 @@ export function DashboardContentManager({
         <div>
           <span>QUYỀN PHIÊN LÀM VIỆC</span>
           <strong>{roleLabel(currentUser.role)}</strong>
-          <p>{currentUser.username}</p>
+          <p>{currentUser.displayName} · @{currentUser.username}</p>
         </div>
         <p>
           {isEditor
-            ? "Có thể viết, lưu nháp, đề xuất lịch và gửi duyệt. Không thể tự duyệt hoặc kích hoạt lịch xuất bản."
+            ? "Có thể viết, lưu nháp, đề xuất lịch và gửi bài tới một người duyệt cụ thể. Không thể tự duyệt hoặc kích hoạt lịch xuất bản."
             : isReviewer
-              ? "Có thể phản hồi, trả lại, duyệt & lên lịch hoặc duyệt & xuất bản nội dung đang chờ duyệt."
-              : "Có toàn quyền. Có thể bỏ qua bước duyệt để lên lịch hoặc xuất bản trực tiếp; mọi thao tác vẫn được ghi lịch sử."}
+              ? "Chỉ nhận và duyệt các bài được giao trực tiếp cho tài khoản này; có thể phản hồi, trả lại, duyệt & lên lịch hoặc xuất bản."
+              : "Có toàn quyền. Có thể gửi xin duyệt cho người khác hoặc bỏ qua bước duyệt để lên lịch/xuất bản trực tiếp; mọi thao tác đều được ghi lịch sử."}
         </p>
       </section>
 
@@ -445,7 +482,7 @@ export function DashboardContentManager({
           <span aria-hidden="true">⌕</span>
           <input
             aria-label="Tìm nội dung"
-            placeholder="Tìm theo tiêu đề, chuyên mục, từ khóa..."
+            placeholder="Tìm theo tiêu đề, chuyên mục, người duyệt, từ khóa..."
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
@@ -484,7 +521,7 @@ export function DashboardContentManager({
       <section className="admin-content-summary admin-content-summary-workflow">
         <div><span>Đã xuất bản</span><strong>{publishedCount}</strong></div>
         <div><span>Đã lên lịch</span><strong>{scheduledItems.length}</strong></div>
-        <div><span>Chờ duyệt</span><strong>{reviewCount}</strong></div>
+        <div><span>{isReviewer ? "Chờ tôi duyệt" : "Chờ duyệt"}</span><strong>{reviewCount}</strong></div>
         <div><span>Bản nháp</span><strong>{draftCount}</strong></div>
         <p>
           {storageReady
@@ -505,7 +542,7 @@ export function DashboardContentManager({
             {scheduledItems.map((item) => (
               <article key={item.id}>
                 <time>{formatDateTime(item.publishAt)}</time>
-                <div><strong>{item.title}</strong><span>{item.category} · {typeLabel(item.type)}</span></div>
+                <div><strong>{item.title}</strong><span>{item.category} · {typeLabel(item.type)}{item.reviewerName ? ` · Duyệt: ${item.reviewerName}` : ""}</span></div>
                 <button type="button" onClick={() => editItem(item)} disabled={busy}>Mở</button>
               </article>
             ))}
@@ -521,12 +558,13 @@ export function DashboardContentManager({
             <div>
               <span>{editor.id ? `CMS / ${statusLabel(editor.status).toUpperCase()}` : editor.originSlug ? "EDIT COPY" : "NEW CONTENT"}</span>
               <h2>{editor.originSlug && !editor.id ? "Biên tập từ nội dung đã xuất bản" : editor.id ? "Xử lý nội dung" : "Tạo nội dung mới"}</h2>
+              {editor.reviewerName ? <small className="admin-assignment-line">Người duyệt: {editor.reviewerName}{editor.submittedBy ? ` · Gửi bởi ${editor.submittedBy}` : ""}</small> : null}
             </div>
             <button type="button" onClick={() => { setEditor(null); setPreviewState(null); setHistory(null); }} aria-label="Đóng trình biên tập">×</button>
           </div>
 
           <div className="admin-workflow-rail" aria-label="Luồng biên tập">
-            <span><b>01</b> Nháp</span><i>→</i><span><b>02</b> Gửi duyệt</span><i>→</i><span><b>03</b> Duyệt lịch / xuất bản</span><i>→</i><span><b>04</b> Công khai</span>
+            <span><b>01</b> Nháp</span><i>→</i><span><b>02</b> Giao người duyệt</span><i>→</i><span><b>03</b> Duyệt lịch / xuất bản</span><i>→</i><span><b>04</b> Công khai</span>
           </div>
 
           <div className="admin-editor-grid">
@@ -595,6 +633,26 @@ export function DashboardContentManager({
               <input disabled={!canEditContent} value={editor.keywords} onChange={(event) => setEditor({ ...editor, keywords: event.target.value })} placeholder="AI, dữ liệu, IoT, đào tạo..." />
             </label>
 
+            {(isEditor || isSuperadmin) && editor.status === "draft" ? (
+              <label className="admin-field">
+                <span>Gửi duyệt cho</span>
+                <select
+                  value={editor.reviewerId ?? ""}
+                  onChange={(event) => {
+                    const reviewerId = event.target.value || undefined;
+                    const target = availableReviewTargets.find((candidate) => candidate.id === reviewerId);
+                    setEditor({ ...editor, reviewerId, reviewerName: target?.displayName });
+                  }}
+                >
+                  <option value="">— Chọn người nhận duyệt —</option>
+                  {availableReviewTargets.map((target) => (
+                    <option key={target.id} value={target.id}>{target.displayName} · {roleLabel(target.role)}</option>
+                  ))}
+                </select>
+                <small className="admin-field-help">Bài Chờ duyệt chỉ xuất hiện trong hộp duyệt của người được chọn. Quản trị cấp cao vẫn có quyền can thiệp khi cần.</small>
+              </label>
+            ) : null}
+
             <label className="admin-field">
               <span>{isEditor ? "Thời gian đề xuất xuất bản" : "Ngày & giờ xuất bản"}</span>
               <input
@@ -649,7 +707,7 @@ export function DashboardContentManager({
                 <button className="admin-button admin-button-secondary" type="button" disabled={busy} onClick={() => mutate("save-draft", { editor })}>{busy ? "Đang lưu..." : "Lưu nháp"}</button>
               ) : null}
               {canSubmitReview ? (
-                <button className="admin-button admin-button-primary" type="button" disabled={busy} onClick={() => mutate("submit-review", { editor })}>Gửi duyệt</button>
+                <button className="admin-button admin-button-primary" type="button" disabled={busy || !editor.reviewerId} onClick={() => mutate("submit-review", { editor })}>Gửi duyệt{editor.reviewerName ? ` → ${editor.reviewerName}` : ""}</button>
               ) : null}
               {canReturn ? (
                 <button className="admin-button admin-button-return" type="button" disabled={busy || !feedback.trim()} onClick={() => mutate("return-draft", { id: editor.id ?? editor.sourceId })}>Trả lại kèm lý do</button>
@@ -665,10 +723,10 @@ export function DashboardContentManager({
             </div>
             <small>
               {isSuperadmin
-                ? "Quản trị cấp cao có thể bỏ qua bước duyệt. Hệ thống vẫn ghi rõ người thực hiện và phiên bản đã xuất bản."
+                ? "Quản trị cấp cao có thể gửi bài cho người khác duyệt hoặc bỏ qua bước duyệt. Hệ thống vẫn ghi rõ người thực hiện và phiên bản đã xuất bản."
                 : isEditor
-                  ? "Biên tập viên chỉ đề xuất lịch; bài chỉ được lên lịch hoặc xuất bản sau khi người có quyền duyệt chấp thuận."
-                  : "Người duyệt có thể giữ hoặc điều chỉnh lịch đề xuất trước khi duyệt."}
+                  ? "Biên tập viên chọn người nhận duyệt và chỉ đề xuất lịch; bài chỉ lên lịch/xuất bản sau khi được chấp thuận."
+                  : "Người duyệt chỉ xử lý các bài được giao cho mình và có thể giữ hoặc điều chỉnh lịch đề xuất trước khi duyệt."}
             </small>
           </div>
 
@@ -726,7 +784,7 @@ export function DashboardContentManager({
             <article className="admin-content-row" key={item.id}>
               <div className="admin-content-title-cell">
                 <b>{String(index + 1).padStart(2, "0")}</b>
-                <div><strong>{item.title}</strong><span>{item.category}{item.featured ? " · Nổi bật" : ""}{item.coverMediaId ? " · Có ảnh" : ""}</span></div>
+                <div><strong>{item.title}</strong><span>{item.category}{item.featured ? " · Nổi bật" : ""}{item.coverMediaId ? " · Có ảnh" : ""}{item.reviewerName && item.status === "review" ? ` · → ${item.reviewerName}` : ""}</span></div>
               </div>
               <span>{typeLabel(item.type)}</span>
               <span className={`admin-status-pill is-${item.status}`}>{statusLabel(item.status)}</span>
@@ -736,7 +794,7 @@ export function DashboardContentManager({
                   : item.status === "scheduled"
                     ? formatDateTime(item.publishAt)
                     : item.status === "review"
-                      ? item.publishAt ? `Đề xuất ${formatDateTime(item.publishAt)}` : "Đang chờ duyệt"
+                      ? item.publishAt ? `Đề xuất ${formatDateTime(item.publishAt)}` : `Chờ ${item.reviewerName ?? "duyệt"}`
                       : `Sửa ${new Date(item.updatedAt).toLocaleDateString("vi-VN")}`}
               </span>
               <div className="admin-row-actions">
@@ -754,7 +812,7 @@ export function DashboardContentManager({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="admin-empty-state"><span>0 kết quả</span><strong>Không tìm thấy nội dung phù hợp.</strong><p>Thử đổi từ khóa, loại hoặc trạng thái nội dung.</p></div>
+          <div className="admin-empty-state"><span>0 kết quả</span><strong>{isReviewer ? "Không có bài nào đang chờ tài khoản này duyệt." : "Không tìm thấy nội dung phù hợp."}</strong><p>Thử đổi từ khóa, loại hoặc trạng thái nội dung.</p></div>
         ) : null}
       </section>
     </div>
