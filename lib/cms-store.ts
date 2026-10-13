@@ -54,6 +54,7 @@ export type CmsSnapshot = {
 };
 
 const CMS_PATHNAME = "cms/publications.json";
+const VALID_STATUSES: readonly CmsPublicationStatus[] = ["draft", "review", "scheduled", "published"];
 
 function repositorySeed(): CmsState {
   const now = new Date().toISOString();
@@ -98,15 +99,19 @@ function mediaReference(asset: MediaAsset | undefined): PublicationMedia | undef
   };
 }
 
+function effectiveStatus(item: CmsPublication, now = Date.now()): CmsPublicationStatus {
+  const status = VALID_STATUSES.includes(item.status) ? item.status : "draft";
+  if (status !== "scheduled" || !item.publishAt) return status;
+  const scheduledAt = Date.parse(item.publishAt);
+  return Number.isFinite(scheduledAt) && scheduledAt <= now ? "published" : "scheduled";
+}
+
 export function isCmsStorageConfigured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
 export function isPublicationPublic(item: CmsPublication, now = Date.now()) {
-  if (item.status === "published") return true;
-  if (item.status !== "scheduled" || !item.publishAt) return false;
-  const scheduledAt = Date.parse(item.publishAt);
-  return Number.isFinite(scheduledAt) && scheduledAt <= now;
+  return effectiveStatus(item, now) === "published";
 }
 
 export async function getCmsSnapshot(): Promise<CmsSnapshot> {
@@ -130,14 +135,13 @@ export async function getCmsSnapshot(): Promise<CmsSnapshot> {
       return { state: fallback, storageReady: true, materialized: false };
     }
 
+    const now = Date.now();
     return {
       state: {
         ...parsed,
         items: parsed.items.map((item) => ({
           ...item,
-          status: (["draft", "review", "scheduled", "published"] as const).includes(item.status as CmsPublicationStatus)
-            ? item.status
-            : "draft",
+          status: effectiveStatus(item, now),
         })),
         audit: Array.isArray(parsed.audit) ? parsed.audit : [],
       },
@@ -192,16 +196,15 @@ export function toPublicPublication(
 export async function getPublishedPublications(): Promise<PublicCmsPublication[]> {
   const [snapshot, mediaSnapshot] = await Promise.all([getCmsSnapshot(), getMediaSnapshot()]);
   const mediaById = new Map(mediaSnapshot.state.items.map((asset) => [asset.id, asset]));
-  const now = Date.now();
-  const publicItems = snapshot.state.items.filter((item) => isPublicationPublic(item, now));
+  const publicItems = snapshot.state.items.filter((item) => isPublicationPublic(item));
   const replacedOriginSlugs = new Set(
     publicItems
-      .filter((item) => item.status === "scheduled" && item.originSlug)
+      .filter((item) => item.originSlug)
       .map((item) => item.originSlug as string),
   );
 
   const visible = publicItems.filter(
-    (item) => !(item.status === "published" && replacedOriginSlugs.has(item.slug)),
+    (item) => !(replacedOriginSlugs.has(item.slug) && !item.originSlug),
   );
 
   return visible
