@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE,
+  authenticateAdminUser,
   createAdminSession,
   isAdminAuthConfigured,
-  verifyAdminCredentials,
 } from "../../../../lib/admin-auth";
 
 export async function POST(request: Request) {
@@ -15,15 +15,16 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const username = String(form.get("username") ?? "").trim();
   const password = String(form.get("password") ?? "");
+  const principal = await authenticateAdminUser(username, password);
 
-  if (!verifyAdminCredentials(username, password)) {
+  if (!principal) {
     return NextResponse.redirect(new URL("/admin-login?error=credentials", request.url), 303);
   }
 
   const response = NextResponse.redirect(new URL("/dashboard", request.url), 303);
   response.cookies.set({
     name: ADMIN_SESSION_COOKIE,
-    value: createAdminSession(username),
+    value: createAdminSession(principal),
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
