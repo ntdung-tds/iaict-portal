@@ -1,54 +1,48 @@
 # IAICT Portal
 
-Cổng thông tin điện tử IAICT triển khai theo đặc tả **v3.4.3.11 FINAL HANDOFF — FROZEN — M0 REQUIRED**.
+Cổng thông tin điện tử IAICT — Viện Ứng dụng Công nghệ Thông tin và Truyền thông.
 
 ## Trạng thái hiện tại
 
-Baseline kỹ thuật đã được dựng cho **Next.js 16 App Router + vinext/Vite + Cloudflare Vite plugin v2**, hướng tới Cloudflare Workers. Repo hiện có:
+Giao diện public đã được nâng cấp theo hệ thiết kế institutional-tech, bao gồm:
 
-- giao diện trang chủ responsive để kiểm chứng App Router/hydration;
-- `GET /api/health` dạng liveness nhẹ, `no-store`;
-- Vitest contract test và Playwright smoke test;
-- GitHub Actions kiểm tra migration integrity, vinext, TypeScript, unit test và production build;
-- `cloudflare.config.ts` theo toolchain Cloudflare/vinext hiện hành;
-- canonical D1 migrations `0001`–`0011`, byte-for-byte từ repo đặc tả và được khóa SHA trong CI;
-- workflow deploy staging thủ công;
-- ADR kiến trúc, M0 runbook và sổ bằng chứng M0.
+- Trang chủ
+- Giới thiệu
+- Sản phẩm & Nền tảng
+- Giải pháp & Dịch vụ
+- Chuyển giao công nghệ
+- Đào tạo & Tập huấn
+- Dự án tiêu biểu
+- Tin tức & Sự kiện
+- Liên hệ & Hợp tác
 
-**M0 Cloudflare vẫn PENDING.** Local/CI build không được coi là bằng chứng M0 hoặc production readiness.
+Hệ thống vẫn giữ nguyên nguyên tắc evidence-first: không công bố số liệu, thành tích hoặc hồ sơ đối tác/chuyên gia chưa được xác minh.
 
-## Chạy local
+## Công nghệ
+
+- Next.js 16
+- React 19
+- TypeScript
+- Vite / vinext
+- Cloudflare target
+- Vercel production preview
+
+## Phát triển
 
 ```bash
 npm install
 npm run dev
 ```
 
-Kiểm tra đầy đủ baseline:
+## Kiểm tra
 
 ```bash
-npm run verify
-```
-
-E2E local:
-
-```bash
-npx playwright install chromium
+npm run typecheck
+npm run test
+npm run build
 npm run test:e2e
 ```
 
-## Staging Cloudflare
+## Môi trường Node
 
-Worker staging mặc định là `iaict-portal-staging`. Không commit Cloudflare token/account credentials. Xem `docs/M0_RUNBOOK.md` trước khi chạy workflow `deploy-staging`.
-
-## Milestone tiếp theo
-
-1. Deploy baseline lên Cloudflare staging thật và ghi evidence `/api/health`.
-2. Tạo/cấu hình các tài nguyên staging cần thiết cho D1, R2, Queue, Turnstile và Access.
-3. Apply migrations `0001`–`0011` lên **D1 remote staging** và thực hiện các bài test/rollback theo đặc tả.
-4. Hoàn tất toàn bộ gate trong `qa/M0_EVIDENCE.md`.
-5. Chỉ sau M0 mới mở rộng sâu M1: Access/RBAC/CSRF, CMS/admin foundation, lead inbox, outbox/Queue, media publication, logging và search services.
-
-## Nguyên tắc
-
-Không hard-code dữ liệu nghiệp vụ đáng lẽ thuộc CMS/DB. Không ghi secrets/PII vào repo, log hoặc evidence. Không tự đánh dấu M0 PASS nếu chưa có bằng chứng staging thật. Không sửa migrations `0001`–`0011`; mọi thay đổi schema mới phải là forward-only migration mới.
+Dự án ghim Node.js 22.x để đồng bộ với môi trường build và tránh tự động nhảy major runtime ngoài ý muốn.
