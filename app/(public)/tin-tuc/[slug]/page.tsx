@@ -18,6 +18,8 @@ export async function generateMetadata({ params }: PublicationPageProps): Promis
   if (!publication) return { title: "Không tìm thấy bài viết" };
 
   const socialImage = publication.ogImage ?? publication.coverImage;
+  const socialImageUrl = socialImage?.src ?? "/opengraph-image";
+  const socialImageAlt = socialImage?.alt ?? "IAICT — Công nghệ, Giải pháp, Chuyển giao, Đào tạo";
 
   return {
     title: publication.title,
@@ -31,13 +33,13 @@ export async function generateMetadata({ params }: PublicationPageProps): Promis
       publishedTime: `${publication.publishedAt}T00:00:00+07:00`,
       section: publication.category,
       tags: publication.keywords,
-      ...(socialImage ? { images: [{ url: socialImage.src, alt: socialImage.alt }] } : {}),
+      images: [{ url: socialImageUrl, alt: socialImageAlt }],
     },
     twitter: {
       card: "summary_large_image",
       title: publication.title,
       description: publication.excerpt,
-      ...(socialImage ? { images: [socialImage.src] } : {}),
+      images: [socialImageUrl],
     },
   };
 }
