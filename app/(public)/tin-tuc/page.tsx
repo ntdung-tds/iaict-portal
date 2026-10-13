@@ -42,10 +42,16 @@ export default async function NewsPage() {
         <section className="section news-featured-live-section">
           <div className="shell news-featured-live-grid">
             <Link href={`/tin-tuc/${featuredPublication.slug}`} className="news-featured-live-card">
-              <div className="news-live-visual" aria-hidden="true">
-                <span>IAICT / KNOWLEDGE</span>
-                <strong>01 → 04</strong>
-                <div><i>Nghiên cứu</i><i>Thử nghiệm</i><i>Triển khai</i><i>Chuyển giao</i></div>
+              <div className={`news-live-visual${featuredPublication.coverImage ? " has-image" : ""}`}>
+                {featuredPublication.coverImage ? (
+                  <img src={featuredPublication.coverImage.src} alt={featuredPublication.coverImage.alt} loading="eager" />
+                ) : (
+                  <>
+                    <span>IAICT / KNOWLEDGE</span>
+                    <strong>01 → 04</strong>
+                    <div><i>Nghiên cứu</i><i>Thử nghiệm</i><i>Triển khai</i><i>Chuyển giao</i></div>
+                  </>
+                )}
               </div>
               <div className="news-featured-live-copy">
                 <div className="news-live-meta">
@@ -64,7 +70,7 @@ export default async function NewsPage() {
               <p className="kicker">Mới cập nhật</p>
               {remainingPublications.slice(0, 3).map((item, index) => (
                 <Link href={`/tin-tuc/${item.slug}`} key={item.slug}>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  {item.coverImage ? <img className="news-sidebar-thumb" src={item.coverImage.src} alt={item.coverImage.alt} loading="lazy" /> : <span>{String(index + 1).padStart(2, "0")}</span>}
                   <div>
                     <b>{item.category}</b>
                     <strong>{item.title}</strong>
@@ -95,6 +101,7 @@ export default async function NewsPage() {
             <div className="news-library-live-grid">
               {remainingPublications.map((item, index) => (
                 <Link className="news-library-live-card" href={`/tin-tuc/${item.slug}`} key={item.slug}>
+                  {item.coverImage ? <img className="news-library-thumb" src={item.coverImage.src} alt={item.coverImage.alt} loading="lazy" /> : null}
                   <div className="news-live-meta">
                     <span>{getPublicationTypeLabel(item.type)}</span>
                     <span>{formatPublicationDate(item.publishedAt)}</span>
