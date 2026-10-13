@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE, verifyAdminSession } from "@/lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, validateAdminSession } from "@/lib/admin-auth";
 import { getCmsSnapshot } from "@/lib/cms-store";
 import {
   deleteMediaBlob,
@@ -26,7 +26,7 @@ function json(data: unknown, status = 200) {
 
 async function requireAdmin() {
   const cookieStore = await cookies();
-  return verifyAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  return validateAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
 }
 
 function payload(state: MediaState, storageReady: boolean, materialized = true) {
@@ -54,6 +54,9 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await requireAdmin();
   if (!session) return json({ error: "UNAUTHORIZED" }, 401);
+  if (session.role === "reviewer") {
+    return json({ error: "FORBIDDEN", message: "Người duyệt có quyền xem thư viện nhưng không thay đổi Media." }, 403);
+  }
 
   const contentType = request.headers.get("content-type") ?? "";
 
