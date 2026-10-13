@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 import "./typography.css";
+import "./project-v4.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
