@@ -152,10 +152,10 @@ function scheduleConflict(items: CmsPublication[], publishAt: string, ignoredIds
 function suggestedScheduleTimes(items: CmsPublication[], publishAt: string, ignoredIds: Set<string>) {
   const base = Date.parse(publishAt);
   if (!Number.isFinite(base)) return [];
-  const candidates = [30, 60, 90, 120, 150, 180]
+  return [30, 60, 90, 120, 150, 180]
     .map((minutes) => new Date(base + minutes * 60000).toISOString())
-    .filter((candidate) => !scheduleConflict(items, candidate, ignoredIds));
-  return candidates.slice(0, 3);
+    .filter((candidate) => !scheduleConflict(items, candidate, ignoredIds))
+    .slice(0, 3);
 }
 
 function actionMessage(action: MutationAction, feedback: string, publishAt?: string) {
@@ -217,7 +217,6 @@ function appendVersion(
     action,
     snapshot: publication,
   };
-
   const next = [version, ...versions];
   const counts = new Map<string, number>();
   return {
@@ -303,7 +302,6 @@ export async function POST(request: Request) {
   let auditTitle = "";
   let auditPublicationId = "";
   let auditVersionId: string | undefined;
-  let publishAtForMessage: string | undefined;
 
   if (action === "comment") {
     const target = items.find((item) => item.id === payload.id);
@@ -380,6 +378,9 @@ export async function POST(request: Request) {
       ? items.find((item) => item.status === "published" && item.slug === input.originSlug)
       : undefined;
 
+    if (session.role === "editor" && existing && existing.status !== "draft" && (action === "save-draft" || action === "submit-review")) {
+      return json({ error: "EDITOR_STATE_LOCKED", message: "Nội dung đã rời trạng thái nháp. Biên tập viên cần chờ phản hồi hoặc quyết định của người duyệt." }, 409);
+    }
     if (session.role === "reviewer" && (action === "schedule" || action === "publish") && existing?.status !== "review") {
       return json({ error: "REVIEW_REQUIRED", message: "Người duyệt chỉ được duyệt nội dung đang ở trạng thái Chờ duyệt." }, 409);
     }
@@ -467,7 +468,7 @@ export async function POST(request: Request) {
           ? scheduledPublishAt
           : action === "submit-review"
             ? requestedPublishAt ?? existing?.publishAt
-            : existing?.publishAt;
+            : requestedPublishAt ?? existing?.publishAt;
     const publishedAt = publishAt
       ? dateInBangkok(publishAt)
       : existing?.publishedAt ?? origin?.publishedAt ?? dateInBangkok(now);
@@ -495,12 +496,10 @@ export async function POST(request: Request) {
       updatedAt: now,
     };
 
-    if ((action === "publish" || action === "schedule") && nextItem.originSlug) {
-      if (action === "publish") {
-        items = items.filter(
-          (item) => item.id === nextItem.id || !(item.status === "published" && item.slug === nextItem.originSlug),
-        );
-      }
+    if (action === "publish" && nextItem.originSlug) {
+      items = items.filter(
+        (item) => item.id === nextItem.id || !(item.status === "published" && item.slug === nextItem.originSlug),
+      );
     }
 
     const existingIndex = items.findIndex((item) => item.id === nextItem.id);
@@ -509,7 +508,6 @@ export async function POST(request: Request) {
 
     auditTitle = nextItem.title;
     auditPublicationId = nextItem.id;
-    publishAtForMessage = nextItem.publishAt;
     const versionResult = appendVersion(versions, nextItem, session.username, session.role, action, now);
     versions = versionResult.versions;
     auditVersionId = versionResult.version.id;
@@ -518,7 +516,7 @@ export async function POST(request: Request) {
       actor: session.username,
       role: session.role,
       action,
-      message: actionMessage(action, feedback, publishAtForMessage),
+      message: actionMessage(action, feedback, nextItem.publishAt),
       versionId: auditVersionId,
       at: now,
     });
