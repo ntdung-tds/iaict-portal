@@ -67,6 +67,17 @@ test("search index includes publication content", async ({ page }) => {
   await expect(page.getByRole("link", { name: /Trâm Rừng: từ dữ liệu hiện trường/ })).toBeVisible();
 });
 
+test("dashboard exposes the admin preview workspace without indexing it", async ({ page }) => {
+  await page.goto("/dashboard");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Trung tâm điều phối nội dung IAICT");
+  await expect(page.getByText("PREVIEW MODE", { exact: true })).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+
+  await page.goto("/dashboard/noi-dung");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Quản lý nội dung");
+  await expect(page.getByRole("button", { name: "+ Tạo nội dung" })).toBeVisible();
+});
+
 test("all public routes respond successfully", async ({ request }) => {
   for (const route of publicRoutes) {
     const response = await request.get(route);
