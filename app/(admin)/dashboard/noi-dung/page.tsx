@@ -49,7 +49,7 @@ export default async function DashboardContentPage() {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
-          role: user.role,
+          role: user.role as "reviewer" | "superadmin",
         }))}
       />
     </div>
