@@ -7,6 +7,7 @@ import { ADMIN_SESSION_COOKIE, verifyAdminSession } from "../../../lib/admin-aut
 import "../../dashboard.css";
 import "../../admin-auth.css";
 import "../../admin-editor.css";
+import "../../admin-media.css";
 
 export const metadata: Metadata = {
   title: "Dashboard quản trị",
@@ -20,13 +21,13 @@ export const metadata: Metadata = {
 const primaryNav = [
   { href: "/dashboard", label: "Tổng quan", code: "01" },
   { href: "/dashboard/noi-dung", label: "Nội dung", code: "02" },
+  { href: "/dashboard/thu-vien", label: "Thư viện Media", code: "03" },
 ];
 
 const upcomingNav = [
-  { label: "Sự kiện", code: "03" },
-  { label: "Dự án", code: "04" },
-  { label: "Chuyên gia", code: "05" },
-  { label: "Thư viện", code: "06" },
+  { label: "Sự kiện", code: "04" },
+  { label: "Dự án", code: "05" },
+  { label: "Chuyên gia", code: "06" },
 ];
 
 export default async function DashboardLayout({ children }: Readonly<{ children: ReactNode }>) {

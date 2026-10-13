@@ -1,6 +1,7 @@
 import sanitizeHtml from "sanitize-html";
 
 const colorPattern = /^(?:#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%a-z]+\)|[a-z]+)$/i;
+const dimensionPattern = /^(?:auto|\d+(?:\.\d+)?(?:px|pt|em|rem|%))$/i;
 
 export function sanitizePublicationHtml(input: string) {
   return sanitizeHtml(input, {
@@ -8,6 +9,7 @@ export function sanitizePublicationHtml(input: string) {
       "p", "h2", "h3", "h4", "blockquote", "strong", "b", "em", "i", "u", "s",
       "ul", "ol", "li", "a", "br", "span", "div", "pre", "code", "hr", "font",
       "table", "thead", "tbody", "tfoot", "tr", "th", "td",
+      "figure", "figcaption", "img",
     ],
     allowedAttributes: {
       "*": ["style"],
@@ -15,6 +17,7 @@ export function sanitizePublicationHtml(input: string) {
       font: ["face", "size", "color"],
       th: ["colspan", "rowspan", "scope"],
       td: ["colspan", "rowspan"],
+      img: ["src", "alt", "title", "width", "height", "loading"],
     },
     allowedSchemes: ["http", "https", "mailto", "tel"],
     allowedStyles: {
@@ -27,6 +30,9 @@ export function sanitizePublicationHtml(input: string) {
         "text-align": [/^(?:left|center|right|justify|start|end)$/i],
         color: [colorPattern],
         "background-color": [colorPattern],
+        width: [dimensionPattern],
+        "max-width": [dimensionPattern],
+        height: [dimensionPattern],
       },
     },
     transformTags: {
@@ -35,6 +41,13 @@ export function sanitizePublicationHtml(input: string) {
         attribs: {
           ...attribs,
           ...(attribs.target === "_blank" ? { rel: "noopener noreferrer" } : {}),
+        },
+      }),
+      img: (tagName, attribs) => ({
+        tagName,
+        attribs: {
+          ...attribs,
+          loading: attribs.loading || "lazy",
         },
       }),
     },
