@@ -3,7 +3,17 @@ import { getMediaSnapshot } from "@/lib/media-store";
 import type { MediaAsset } from "@/lib/media-types";
 import { publications as repositoryPublications, type Publication } from "@/lib/publications";
 
+export type CmsUserRole = "editor" | "reviewer" | "superadmin";
 export type CmsPublicationStatus = "draft" | "review" | "scheduled" | "published";
+export type CmsWorkflowAction =
+  | "save-draft"
+  | "submit-review"
+  | "return-draft"
+  | "schedule"
+  | "publish"
+  | "unpublish"
+  | "delete"
+  | "comment";
 
 export type PublicationMedia = {
   mediaId: string;
@@ -34,9 +44,35 @@ export type CmsAuditEntry = {
   id: string;
   at: string;
   actor: string;
-  action: "save-draft" | "submit-review" | "return-draft" | "schedule" | "publish" | "unpublish" | "delete";
+  role?: CmsUserRole;
+  action: CmsWorkflowAction;
   publicationId: string;
   title: string;
+  message?: string;
+  versionId?: string;
+};
+
+export type CmsInteraction = {
+  id: string;
+  at: string;
+  actor: string;
+  role: CmsUserRole;
+  publicationId: string;
+  kind: "action" | "comment";
+  action: CmsWorkflowAction;
+  message: string;
+  versionId?: string;
+};
+
+export type CmsPublicationVersion = {
+  id: string;
+  publicationId: string;
+  number: number;
+  at: string;
+  actor: string;
+  role: CmsUserRole;
+  action: Exclude<CmsWorkflowAction, "comment">;
+  snapshot: CmsPublication;
 };
 
 export type CmsState = {
@@ -45,6 +81,8 @@ export type CmsState = {
   updatedAt: string;
   items: CmsPublication[];
   audit: CmsAuditEntry[];
+  interactions: CmsInteraction[];
+  versions: CmsPublicationVersion[];
 };
 
 export type CmsSnapshot = {
@@ -71,6 +109,8 @@ function repositorySeed(): CmsState {
       updatedAt: `${item.publishedAt}T00:00:00+07:00`,
     })),
     audit: [],
+    interactions: [],
+    versions: [],
   };
 }
 
@@ -144,6 +184,8 @@ export async function getCmsSnapshot(): Promise<CmsSnapshot> {
           status: effectiveStatus(item, now),
         })),
         audit: Array.isArray(parsed.audit) ? parsed.audit : [],
+        interactions: Array.isArray(parsed.interactions) ? parsed.interactions : [],
+        versions: Array.isArray(parsed.versions) ? parsed.versions : [],
       },
       storageReady: true,
       materialized: true,
