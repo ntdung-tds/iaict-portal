@@ -14,12 +14,23 @@ const publicRoutes = [
   "/tim-kiem",
 ];
 
-test("homepage exposes the IAICT solution-first baseline", async ({ page }) => {
+test("homepage exposes the premium IAICT solution-first experience", async ({ page }) => {
   await page.goto("/");
+
   await expect(page.getByRole("heading", { level: 1 })).toContainText("giải pháp số");
-  await expect(page.getByRole("heading", { name: "Bạn đang cần gì?" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Bạn đang cần giải quyết bài toán nào?" }),
+  ).toBeVisible();
+  await expect(page.getByText("IAICT Capability System", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Trâm Rừng — từ dữ liệu hiện trường đến nền tảng quản lý số",
+    }),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: "IAICT - Trang chủ" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Dành cho cơ quan nhà nước", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Dành cho cơ quan nhà nước", exact: true }),
+  ).toBeVisible();
 });
 
 test("all public routes respond successfully", async ({ request }) => {
