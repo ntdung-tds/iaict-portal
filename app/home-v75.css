@@ -1,0 +1,75 @@
+/* IAICT homepage V7.5 — professional Academy knowledge card */
+
+/* Card 04 — role-based AI capability: Role → Task → Practice → Evidence */
+.homeV7-knowledgeCard:nth-child(4){
+  position:relative;
+  overflow:hidden;
+  align-self:start;
+  min-height:305px!important;
+  padding:148px 30px 30px!important;
+  background:linear-gradient(180deg,#ffffff 0%,#f7fbfa 100%)!important;
+}
+.homeV7-knowledgeCard:nth-child(4)>*{position:relative;z-index:2}
+.homeV7-knowledgeCard:nth-child(4) h3{margin-top:8px!important;max-width:560px}
+.homeV7-knowledgeCard:nth-child(4) p{max-width:590px;margin-bottom:18px!important}
+.homeV7-knowledgeCard:nth-child(4)::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:28px;right:28px;top:26px;height:92px;
+  border:1px solid #d5e5e1;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 10% 50%,#0a887d 0 6px,rgba(10,136,125,.11) 7px 16px,transparent 17px),
+    radial-gradient(circle at 36% 50%,#0a887d 0 6px,rgba(10,136,125,.11) 7px 16px,transparent 17px),
+    radial-gradient(circle at 64% 50%,#0a887d 0 6px,rgba(10,136,125,.11) 7px 16px,transparent 17px),
+    radial-gradient(circle at 90% 50%,#0a887d 0 6px,rgba(10,136,125,.11) 7px 16px,transparent 17px),
+    linear-gradient(90deg,transparent 10%,rgba(10,136,125,.28) 10.3% 35%,transparent 35.3% 36.7%,rgba(10,136,125,.28) 37% 63%,transparent 63.3% 64.7%,rgba(10,136,125,.28) 65% 90%,transparent 90.3%),
+    linear-gradient(135deg,#f3f9f7,#edf6f3);
+  box-shadow:0 16px 34px rgba(21,73,70,.05);
+}
+.homeV7-knowledgeCard:nth-child(4)::after{
+  content:"VAI TRÒ     →     NHIỆM VỤ     →     THỰC HÀNH     →     ĐÁNH GIÁ";
+  position:absolute;
+  z-index:1;
+  left:38px;right:38px;top:91px;
+  color:#55767a;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-align:center;
+  pointer-events:none;
+}
+.homeV7-knowledgeCard:nth-child(4) p::after{
+  content:"• Xác định năng lực AI cần có theo từng vị trí việc làm\A• Thiết kế bài tập theo nhiệm vụ và tình huống thực tế\A• Đánh giá bằng sản phẩm công việc thay vì học lý thuyết đơn thuần";
+  display:block;
+  margin-top:15px;
+  padding-top:14px;
+  border-top:1px solid #d9e6e3;
+  color:#526f78;
+  font-size:11.5px;
+  line-height:1.58;
+  white-space:pre-line;
+}
+.homeV7-knowledgeCard:nth-child(4)>small{
+  display:block;
+  margin-top:16px!important;
+  padding-top:12px;
+  border-top:1px solid #d9e6e3;
+  color:#71888d!important;
+  font-size:9px!important;
+  font-weight:900;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.homeV7-knowledgeCard:nth-child(4)>small::before{content:"Trọng tâm · Role · Task · Practice · Evidence\A";white-space:pre-line}
+
+@media(max-width:1080px){
+  .homeV7-knowledgeCard:nth-child(4){min-height:290px!important;padding-top:142px!important}
+}
+@media(max-width:760px){
+  .homeV7-knowledgeCard:nth-child(4){min-height:0!important;padding:132px 24px 26px!important}
+  .homeV7-knowledgeCard:nth-child(4)::before{left:22px;right:22px;top:22px;height:82px}
+  .homeV7-knowledgeCard:nth-child(4)::after{left:28px;right:28px;top:80px;font-size:8px;letter-spacing:.035em}
+  .homeV7-knowledgeCard:nth-child(4) p::after{font-size:11px}
+}
