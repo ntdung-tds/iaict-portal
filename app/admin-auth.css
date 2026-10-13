@@ -1,0 +1,43 @@
+.admin-topbar-actions form {
+  margin: 0;
+}
+
+.admin-topbar-actions form button {
+  border: 0;
+  background: transparent;
+  color: #71839a;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+  padding: 6px 2px;
+}
+
+.admin-topbar-actions form button:hover {
+  color: #20364f;
+}
+
+.admin-auth-user {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid #dbe6f2;
+  border-radius: 999px;
+  background: #f7faff;
+  color: #3d536d;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.admin-secure-badge {
+  background: #e9fbf4 !important;
+  color: #15734f !important;
+  border-color: #c7efdf !important;
+}
+
+@media (max-width: 760px) {
+  .admin-auth-user {
+    display: none;
+  }
+}

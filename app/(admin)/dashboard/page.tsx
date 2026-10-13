@@ -30,11 +30,11 @@ export default function DashboardPage() {
 
       <section className="admin-preview-warning" role="status">
         <div>
-          <span>PREVIEW MODE</span>
-          <strong>Dashboard hiện chưa có tài khoản đăng nhập và database.</strong>
+          <span>SECURITY ONLINE</span>
+          <strong>Dashboard đã được bảo vệ bằng đăng nhập và session ký số.</strong>
         </div>
         <p>
-          Nội dung công khai vẫn lấy từ repository. Các bản nháp tạo trong dashboard chỉ được lưu cục bộ trên trình duyệt cho đến khi lớp CMS được kết nối.
+          Nội dung công khai hiện vẫn lấy từ repository. Bản nháp trong trình biên tập tiếp tục lưu cục bộ cho đến khi persistence adapter được kết nối với kho dữ liệu thật.
         </p>
       </section>
 
@@ -154,15 +154,15 @@ export default function DashboardPage() {
           <div className="admin-infra-list">
             <div>
               <span>Xác thực quản trị</span>
-              <b className="is-pending">Chưa kết nối</b>
+              <b className="is-live">Đang hoạt động</b>
             </div>
             <div>
               <span>Database nội dung</span>
-              <b className="is-pending">Chưa kết nối</b>
+              <b className="is-pending">Chờ kết nối</b>
             </div>
             <div>
               <span>Thư viện media</span>
-              <b className="is-pending">Chưa kết nối</b>
+              <b className="is-pending">Chờ kết nối</b>
             </div>
             <div>
               <span>Publications adapter</span>

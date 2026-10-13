@@ -20,7 +20,6 @@ const internalTerms = /\bM0\b|\bD1\b|hard-code|Turnstile|idempotency|notificatio
 
 test("homepage exposes the premium IAICT solution-first experience", async ({ page }) => {
   await page.goto("/");
-
   await expect(page.getByRole("heading", { level: 1 })).toContainText("giải pháp số");
   await expect(page.getByRole("heading", { name: "Bạn đang cần giải quyết bài toán nào?" })).toBeVisible();
   await expect(page.getByText("IAICT Capability System", { exact: true })).toBeVisible();
@@ -67,17 +66,6 @@ test("search index includes publication content", async ({ page }) => {
   await expect(page.getByRole("link", { name: /Trâm Rừng: từ dữ liệu hiện trường/ })).toBeVisible();
 });
 
-test("dashboard exposes the admin preview workspace without indexing it", async ({ page }) => {
-  await page.goto("/dashboard");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Trung tâm điều phối nội dung IAICT");
-  await expect(page.getByText("PREVIEW MODE", { exact: true })).toBeVisible();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-
-  await page.goto("/dashboard/noi-dung");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Quản lý nội dung");
-  await expect(page.getByRole("button", { name: "+ Tạo nội dung" })).toBeVisible();
-});
-
 test("all public routes respond successfully", async ({ request }) => {
   for (const route of publicRoutes) {
     const response = await request.get(route);
@@ -94,4 +82,14 @@ test("sitemap contains publication URLs and health endpoint remains no-store", a
   expect(response.ok()).toBeTruthy();
   expect(response.headers()["cache-control"]).toContain("no-store");
   expect(await response.json()).toMatchObject({ status: "ok" });
+});
+
+test("admin surface is private and login page is noindex", async ({ request, page }) => {
+  const dashboard = await request.get("/dashboard", { maxRedirects: 0 });
+  expect([302, 303, 307, 308]).toContain(dashboard.status());
+  expect(dashboard.headers()["location"]).toContain("/admin-login");
+
+  await page.goto("/admin-login");
+  await expect(page.getByRole("heading", { name: "Đăng nhập quản trị" })).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 });

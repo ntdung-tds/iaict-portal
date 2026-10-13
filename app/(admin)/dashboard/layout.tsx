@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { ADMIN_SESSION_COOKIE, verifyAdminSession } from "../../../lib/admin-auth";
 import "../../dashboard.css";
+import "../../admin-auth.css";
 
 export const metadata: Metadata = {
   title: "Dashboard quản trị",
@@ -24,7 +28,11 @@ const upcomingNav = [
   { label: "Thư viện", code: "06" },
 ];
 
-export default function DashboardLayout({ children }: Readonly<{ children: ReactNode }>) {
+export default async function DashboardLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const cookieStore = await cookies();
+  const session = verifyAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!session) redirect("/admin-login");
+
   return (
     <div className="admin-app">
       <aside className="admin-sidebar">
@@ -60,8 +68,8 @@ export default function DashboardLayout({ children }: Readonly<{ children: React
           <div className="admin-environment">
             <span className="admin-status-dot" aria-hidden="true"></span>
             <div>
-              <strong>Preview workspace</strong>
-              <small>Chưa kết nối xác thực / database</small>
+              <strong>Secured workspace</strong>
+              <small>Session quản trị đang hoạt động</small>
             </div>
           </div>
           <Link className="admin-public-link" href="/">
@@ -78,7 +86,11 @@ export default function DashboardLayout({ children }: Readonly<{ children: React
           </div>
           <div className="admin-topbar-actions">
             <Link href="/tin-tuc">Xem newsroom</Link>
-            <span className="admin-preview-badge">PREVIEW</span>
+            <span className="admin-auth-user">{session.username}</span>
+            <form action="/api/admin/logout" method="post">
+              <button type="submit">Đăng xuất</button>
+            </form>
+            <span className="admin-preview-badge admin-secure-badge">SECURE</span>
           </div>
         </header>
         <main id="main-content" className="admin-main">
