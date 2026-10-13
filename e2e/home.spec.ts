@@ -26,7 +26,7 @@ test("homepage exposes the premium IAICT solution-first experience", async ({ pa
   await expect(page.getByRole("heading", { name: "Trâm Rừng — từ dữ liệu hiện trường đến nền tảng quản lý số" })).toBeVisible();
   await expect(page.getByRole("link", { name: "IAICT - Trang chủ" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Dành cho cơ quan nhà nước", exact: true })).toBeVisible();
-  await expect(page.getByText("IAICT / Newsroom", { exact: true })).toBeVisible();
+  await expect(page.getByText("Thông tin mới từ IAICT", { exact: true })).toBeVisible();
 });
 
 test("core institutional pages expose public-facing content", async ({ page }) => {
@@ -42,7 +42,7 @@ test("core institutional pages expose public-facing content", async ({ page }) =
 
   await page.goto("/lien-he");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Bắt đầu từ bài toán");
-  await expect(page.getByText("Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội")).toBeVisible();
+  await expect(page.locator("#main-content").getByText("Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội", { exact: true })).toBeVisible();
 });
 
 test("publication pages render structured content and metadata", async ({ page }) => {
