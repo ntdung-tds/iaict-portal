@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import "../../rich-content.css";
 
 export default function PublicLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (

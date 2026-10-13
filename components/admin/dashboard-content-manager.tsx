@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
 type ContentType = "news" | "insight" | "notice" | "event";
 type ContentStatus = "published" | "draft";
@@ -328,10 +329,11 @@ export function DashboardContentManager({
               <textarea rows={4} value={editor.excerpt} onChange={(event) => setEditor({ ...editor, excerpt: event.target.value })} placeholder="Nội dung tóm tắt hiển thị ở danh sách và metadata" />
             </label>
 
-            <label className="admin-field admin-field-wide">
+            <div className="admin-field admin-field-wide admin-rich-field">
               <span>Nội dung chi tiết</span>
-              <textarea rows={12} value={editor.body} onChange={(event) => setEditor({ ...editor, body: event.target.value })} placeholder={'Viết nội dung bài. Dùng “## Tiêu đề mục” để tạo đề mục và “- ” để tạo gạch đầu dòng.'} />
-            </label>
+              <RichTextEditor value={editor.body} onChange={(body) => setEditor({ ...editor, body })} />
+              <small className="admin-field-help">Soạn thảo trực quan hoặc chuyển sang HTML Code để kiểm soát trực tiếp mã của bài viết.</small>
+            </div>
 
             <label className="admin-field admin-field-wide">
               <span>Từ khóa</span>

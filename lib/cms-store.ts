@@ -2,8 +2,10 @@ import { get, put } from "@vercel/blob";
 import { publications as repositoryPublications, type Publication } from "@/lib/publications";
 
 export type CmsPublicationStatus = "draft" | "published";
+export type PublicCmsPublication = Publication & { contentHtml?: string };
 
 export type CmsPublication = Publication & {
+  contentHtml?: string;
   id: string;
   status: CmsPublicationStatus;
   createdAt: string;
@@ -59,6 +61,15 @@ function isCmsState(value: unknown): value is CmsState {
   return candidate.schemaVersion === 1 && typeof candidate.revision === "number" && Array.isArray(candidate.items);
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export function isCmsStorageConfigured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
@@ -111,7 +122,7 @@ export async function persistCmsState(state: CmsState) {
   });
 }
 
-export function toPublicPublication(item: CmsPublication): Publication {
+export function toPublicPublication(item: CmsPublication): PublicCmsPublication {
   const {
     id: _id,
     status: _status,
@@ -123,7 +134,7 @@ export function toPublicPublication(item: CmsPublication): Publication {
   return publication;
 }
 
-export async function getPublishedPublications(): Promise<Publication[]> {
+export async function getPublishedPublications(): Promise<PublicCmsPublication[]> {
   const snapshot = await getCmsSnapshot();
   return snapshot.state.items
     .filter((item) => item.status === "published")
@@ -131,20 +142,28 @@ export async function getPublishedPublications(): Promise<Publication[]> {
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
-export async function getPublishedPublication(slug: string): Promise<Publication | undefined> {
+export async function getPublishedPublication(slug: string): Promise<PublicCmsPublication | undefined> {
   const publications = await getPublishedPublications();
   return publications.find((item) => item.slug === slug);
 }
 
-export function bodyFromPublication(item: Publication) {
-  const sections = item.sections.flatMap((section) => {
-    const parts: string[] = [];
-    if (section.heading) parts.push(`## ${section.heading}`);
-    if (section.paragraphs?.length) parts.push(...section.paragraphs);
-    if (section.bullets?.length) parts.push(...section.bullets.map((bullet) => `- ${bullet}`));
-    return parts;
-  });
-  return sections.join("\n\n");
+export function bodyFromPublication(item: PublicCmsPublication) {
+  if (typeof item.contentHtml === "string") return item.contentHtml;
+
+  return item.sections
+    .map((section) => {
+      const parts: string[] = [];
+      if (section.heading) parts.push(`<h2>${escapeHtml(section.heading)}</h2>`);
+      if (section.paragraphs?.length) {
+        parts.push(...section.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`));
+      }
+      if (section.bullets?.length) {
+        parts.push(`<ul>${section.bullets.map((bullet) => `<li>${escapeHtml(bullet)}</li>`).join("")}</ul>`);
+      }
+      return parts.join("\n");
+    })
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 export function sectionsFromBody(body: string) {

@@ -6,10 +6,10 @@ import {
   estimateReadingTime,
   getCmsSnapshot,
   persistCmsState,
-  sectionsFromBody,
   type CmsPublication,
   type CmsState,
 } from "@/lib/cms-store";
+import { publicationHtmlToPlainText, sanitizePublicationHtml } from "@/lib/content-html";
 import type { PublicationType } from "@/lib/publications";
 
 type MutationAction = "save-draft" | "publish" | "unpublish" | "delete";
@@ -165,8 +165,15 @@ export async function POST(request: Request) {
       return json({ error: "SLUG_CONFLICT", message: "Slug này đang được một bài đã xuất bản sử dụng." }, 409);
     }
 
-    const body = input.body?.trim() ?? "";
-    const sections = body ? sectionsFromBody(body) : existing?.sections ?? origin?.sections ?? [];
+    const rawBody =
+      typeof input.body === "string"
+        ? input.body
+        : existing
+          ? bodyFromPublication(existing)
+          : origin
+            ? bodyFromPublication(origin)
+            : "";
+    const contentHtml = sanitizePublicationHtml(rawBody.trim());
     const excerpt = input.excerpt?.trim() || existing?.excerpt || origin?.excerpt || "";
     const id = existing?.id ?? `cms:${crypto.randomUUID()}`;
     const publishedAt =
@@ -185,12 +192,13 @@ export async function POST(request: Request) {
       category: input.category?.trim() || "Tin hoạt động Viện",
       type,
       publishedAt,
-      readingTime: estimateReadingTime(`${excerpt} ${body}`),
+      readingTime: estimateReadingTime(`${excerpt} ${publicationHtmlToPlainText(contentHtml)}`),
       excerpt,
       lede: excerpt,
       featured: Boolean(input.featured),
       keywords: Array.isArray(input.keywords) ? input.keywords.map((value) => value.trim()).filter(Boolean) : [],
-      sections,
+      sections: [],
+      contentHtml,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };

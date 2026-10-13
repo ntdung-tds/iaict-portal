@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublishedPublication, getPublishedPublications } from "@/lib/cms-store";
+import { sanitizePublicationHtml } from "@/lib/content-html";
 import { getPublicationTypeLabel } from "@/lib/publications";
 import { formatPublicationDate } from "@/lib/publication-date";
 
@@ -44,6 +45,9 @@ export default async function PublicationPage({ params }: PublicationPageProps) 
     .filter((item) => item.slug !== publication.slug)
     .filter((item) => item.category === publication.category || item.type === publication.type)
     .slice(0, 3);
+  const richContent = typeof publication.contentHtml === "string"
+    ? sanitizePublicationHtml(publication.contentHtml)
+    : null;
 
   return (
     <main id="main-content" className="publication-page">
@@ -79,15 +83,19 @@ export default async function PublicationPage({ params }: PublicationPageProps) 
 
           <div className="publication-body">
             <p className="publication-lede">{publication.lede}</p>
-            {publication.sections.map((section, index) => (
-              <section key={`${publication.slug}-${index}`}>
-                {section.heading ? <h2>{section.heading}</h2> : null}
-                {section.paragraphs?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-                {section.bullets?.length ? (
-                  <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
-                ) : null}
-              </section>
-            ))}
+            {richContent !== null ? (
+              <div className="publication-rich-content" dangerouslySetInnerHTML={{ __html: richContent }} />
+            ) : (
+              publication.sections.map((section, index) => (
+                <section key={`${publication.slug}-${index}`}>
+                  {section.heading ? <h2>{section.heading}</h2> : null}
+                  {section.paragraphs?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                  {section.bullets?.length ? (
+                    <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
+                  ) : null}
+                </section>
+              ))
+            )}
 
             <div className="publication-endnote">
               <span>IAICT</span>

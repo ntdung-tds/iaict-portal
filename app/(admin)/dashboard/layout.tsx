@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { ADMIN_SESSION_COOKIE, verifyAdminSession } from "../../../lib/admin-auth";
 import "../../dashboard.css";
 import "../../admin-auth.css";
+import "../../admin-editor.css";
 
 export const metadata: Metadata = {
   title: "Dashboard quản trị",

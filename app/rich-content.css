@@ -1,0 +1,113 @@
+.publication-rich-content {
+  color: #26384d;
+  font-size: 1rem;
+  line-height: 1.78;
+}
+
+.publication-rich-content > *:first-child { margin-top: 0; }
+.publication-rich-content > *:last-child { margin-bottom: 0; }
+
+.publication-rich-content h2,
+.publication-rich-content h3,
+.publication-rich-content h4 {
+  color: #10263f;
+  letter-spacing: -0.025em;
+}
+
+.publication-rich-content h2 {
+  margin: 38px 0 14px;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  line-height: 1.22;
+}
+
+.publication-rich-content h3 {
+  margin: 30px 0 12px;
+  font-size: 1.3rem;
+  line-height: 1.3;
+}
+
+.publication-rich-content h4 {
+  margin: 24px 0 10px;
+  font-size: 1.08rem;
+}
+
+.publication-rich-content p { margin: 0 0 18px; }
+
+.publication-rich-content ul,
+.publication-rich-content ol {
+  margin: 0 0 22px;
+  padding-left: 28px;
+}
+
+.publication-rich-content li { margin: 7px 0; }
+
+.publication-rich-content blockquote {
+  margin: 26px 0;
+  padding: 18px 22px;
+  border-left: 4px solid #2e66d7;
+  border-radius: 0 10px 10px 0;
+  background: #f4f7fc;
+  color: #455e77;
+}
+
+.publication-rich-content a {
+  color: #1d5fd3;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.publication-rich-content hr {
+  margin: 34px 0;
+  border: 0;
+  border-top: 1px solid #dce5ee;
+}
+
+.publication-rich-content pre {
+  overflow-x: auto;
+  margin: 24px 0;
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: #0b1827;
+  color: #e7eff8;
+  font: 0.86rem/1.7 "Courier New", Consolas, monospace;
+}
+
+.publication-rich-content code {
+  padding: 0.12em 0.35em;
+  border-radius: 5px;
+  background: #eef3f9;
+  font-family: "Courier New", Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.publication-rich-content pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.publication-rich-content table {
+  width: 100%;
+  margin: 24px 0;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.publication-rich-content th,
+.publication-rich-content td {
+  padding: 11px 13px;
+  border: 1px solid #dbe4ed;
+  text-align: left;
+  vertical-align: top;
+}
+
+.publication-rich-content th {
+  background: #f1f5fa;
+  color: #17304d;
+}
+
+@media (max-width: 640px) {
+  .publication-rich-content { font-size: 0.96rem; }
+  .publication-rich-content table { display: block; overflow-x: auto; }
+}
