@@ -1,12 +1,24 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { DashboardContentManager, type AdminContentItem } from "../../../../components/admin/dashboard-content-manager";
-import { ADMIN_SESSION_COOKIE, verifyAdminSession } from "../../../../lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, validateAdminSession } from "../../../../lib/admin-auth";
+import { listReviewTargets } from "../../../../lib/admin-users";
 import { bodyFromPublication, getCmsSnapshot } from "../../../../lib/cms-store";
 
 export default async function DashboardContentPage() {
-  const [snapshot, cookieStore] = await Promise.all([getCmsSnapshot(), cookies()]);
-  const session = verifyAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
-  const items: AdminContentItem[] = snapshot.state.items.map((item) => ({
+  const cookieStore = await cookies();
+  const session = await validateAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!session) redirect("/admin-login");
+
+  const [snapshot, reviewTargets] = await Promise.all([getCmsSnapshot(), listReviewTargets()]);
+  const visibleItems = session.role === "reviewer"
+    ? snapshot.state.items.filter((item) => {
+        if (item.status === "review" || item.status === "scheduled") return item.reviewerId === session.userId;
+        return item.status === "published";
+      })
+    : snapshot.state.items;
+
+  const items: AdminContentItem[] = visibleItems.map((item) => ({
     ...item,
     featured: Boolean(item.featured),
     body: bodyFromPublication(item),
@@ -18,7 +30,7 @@ export default async function DashboardContentPage() {
         <div>
           <p>Dashboard / Nội dung</p>
           <h1>Quản lý nội dung</h1>
-          <span>Biên tập, phản hồi, phê duyệt, lên lịch và truy vết phiên bản từ một workflow thống nhất.</span>
+          <span>Biên tập, giao người duyệt, phản hồi, phê duyệt, lên lịch và truy vết phiên bản từ một workflow thống nhất.</span>
         </div>
       </section>
 
@@ -28,9 +40,17 @@ export default async function DashboardContentPage() {
         storageReady={snapshot.storageReady}
         materialized={snapshot.materialized}
         currentUser={{
-          username: session?.username ?? "admin",
-          role: session?.role ?? "superadmin",
+          userId: session.userId,
+          username: session.username,
+          displayName: session.displayName,
+          role: session.role,
         }}
+        reviewTargets={reviewTargets.map((user) => ({
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName,
+          role: user.role,
+        }))}
       />
     </div>
   );
