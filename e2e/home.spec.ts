@@ -22,6 +22,12 @@ const categoryRoutes = [
   ["/dao-tao-tap-huan", "Đào tạo & Tập huấn"],
 ] as const;
 
+const institutionalRoutes = [
+  ["/gioi-thieu", /Từ nghiên cứu ứng dụng đến năng lực triển khai/i],
+  ["/lien-he", /Bắt đầu từ bài toán cần giải quyết/i],
+  ["/tin-tuc", /Tin tức, hoạt động và góc nhìn chuyên môn/i],
+] as const;
+
 test("homepage exposes the current IAICT applied-technology baseline", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByLabel("IAICT - năng lực và định hướng")).toBeVisible();
@@ -36,6 +42,14 @@ test("V6 category landings expose their primary capability entry point", async (
     await page.goto(route);
     await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
     await expect(page.getByRole("link", { name: /Khám phá năng lực/i })).toHaveAttribute("href", "#capabilities");
+  }
+});
+
+test("V8 institutional landings expose their public-facing narrative", async ({ page }) => {
+  for (const [route, title] of institutionalRoutes) {
+    await page.goto(route);
+    await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+    await expect(page.getByRole("link", { name: "IAICT - Trang chủ" })).toBeVisible();
   }
 });
 
