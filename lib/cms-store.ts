@@ -3,7 +3,7 @@ import { getMediaSnapshot } from "@/lib/media-store";
 import type { MediaAsset } from "@/lib/media-types";
 import { publications as repositoryPublications, type Publication } from "@/lib/publications";
 
-export type CmsPublicationStatus = "draft" | "published";
+export type CmsPublicationStatus = "draft" | "review" | "scheduled" | "published";
 
 export type PublicationMedia = {
   mediaId: string;
@@ -22,6 +22,7 @@ export type CmsPublication = Publication & {
   contentHtml?: string;
   coverMediaId?: string;
   ogMediaId?: string;
+  publishAt?: string;
   id: string;
   status: CmsPublicationStatus;
   createdAt: string;
@@ -33,7 +34,7 @@ export type CmsAuditEntry = {
   id: string;
   at: string;
   actor: string;
-  action: "save-draft" | "publish" | "unpublish" | "delete";
+  action: "save-draft" | "submit-review" | "return-draft" | "schedule" | "publish" | "unpublish" | "delete";
   publicationId: string;
   title: string;
 };
@@ -64,6 +65,7 @@ function repositorySeed(): CmsState {
       ...item,
       id: `repo:${item.slug}`,
       status: "published" as const,
+      publishAt: `${item.publishedAt}T00:00:00+07:00`,
       createdAt: `${item.publishedAt}T00:00:00+07:00`,
       updatedAt: `${item.publishedAt}T00:00:00+07:00`,
     })),
@@ -100,6 +102,13 @@ export function isCmsStorageConfigured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
+export function isPublicationPublic(item: CmsPublication, now = Date.now()) {
+  if (item.status === "published") return true;
+  if (item.status !== "scheduled" || !item.publishAt) return false;
+  const scheduledAt = Date.parse(item.publishAt);
+  return Number.isFinite(scheduledAt) && scheduledAt <= now;
+}
+
 export async function getCmsSnapshot(): Promise<CmsSnapshot> {
   const fallback = repositorySeed();
   if (!isCmsStorageConfigured()) {
@@ -124,6 +133,12 @@ export async function getCmsSnapshot(): Promise<CmsSnapshot> {
     return {
       state: {
         ...parsed,
+        items: parsed.items.map((item) => ({
+          ...item,
+          status: (["draft", "review", "scheduled", "published"] as const).includes(item.status as CmsPublicationStatus)
+            ? item.status
+            : "draft",
+        })),
         audit: Array.isArray(parsed.audit) ? parsed.audit : [],
       },
       storageReady: true,
@@ -158,6 +173,7 @@ export function toPublicPublication(
     createdAt: _createdAt,
     updatedAt: _updatedAt,
     originSlug: _originSlug,
+    publishAt: _publishAt,
     coverMediaId,
     ogMediaId,
     ...publication
@@ -176,8 +192,19 @@ export function toPublicPublication(
 export async function getPublishedPublications(): Promise<PublicCmsPublication[]> {
   const [snapshot, mediaSnapshot] = await Promise.all([getCmsSnapshot(), getMediaSnapshot()]);
   const mediaById = new Map(mediaSnapshot.state.items.map((asset) => [asset.id, asset]));
-  return snapshot.state.items
-    .filter((item) => item.status === "published")
+  const now = Date.now();
+  const publicItems = snapshot.state.items.filter((item) => isPublicationPublic(item, now));
+  const replacedOriginSlugs = new Set(
+    publicItems
+      .filter((item) => item.status === "scheduled" && item.originSlug)
+      .map((item) => item.originSlug as string),
+  );
+
+  const visible = publicItems.filter(
+    (item) => !(item.status === "published" && replacedOriginSlugs.has(item.slug)),
+  );
+
+  return visible
     .map((item) => toPublicPublication(item, mediaById))
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
