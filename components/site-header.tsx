@@ -15,38 +15,52 @@ const contactItem = mainNavigation.find((item) => item.href === "/lien-he") ?? {
 export function SiteHeader() {
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
-  useEffect(() => setReady(true), []);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => setReady(true), []);
+
+  const closeMenus = () => {
+    setMobileOpen(false);
+    headerRef.current?.querySelectorAll("details[open]").forEach((el) => el.removeAttribute("open"));
+  };
+
   useEffect(() => {
     const closeOutside = (event: PointerEvent) => {
-      if (event.target instanceof Node && !headerRef.current?.contains(event.target)) {
-        headerRef.current?.querySelectorAll("details[open]").forEach((el) => el.removeAttribute("open"));
-      }
+      if (event.target instanceof Node && !headerRef.current?.contains(event.target)) closeMenus();
     };
     document.addEventListener("pointerdown", closeOutside);
     return () => document.removeEventListener("pointerdown", closeOutside);
   }, []);
+
+  useEffect(() => closeMenus(), [pathname]);
+
   useEffect(() => {
-    headerRef.current?.querySelectorAll("details[open]").forEach((el) => el.removeAttribute("open"));
-  }, [pathname]);
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen]);
+
   const current = (href: string) => pathname === href || (href !== "/" && pathname?.startsWith(href + "/"));
-  const closeMenus = () => headerRef.current?.querySelectorAll("details[open]").forEach((el) => el.removeAttribute("open"));
 
   return (
     <header
       data-interactive={ready}
       data-ui="final"
+      data-mobile-open={mobileOpen ? "true" : "false"}
       ref={headerRef}
       className={`${styles.header} v12-header final-header`}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           const open = headerRef.current?.querySelector("details[open]");
           closeMenus();
-          (open?.querySelector("summary") as HTMLElement | null)?.focus();
+          if (open) (open.querySelector("summary") as HTMLElement | null)?.focus();
         }
       }}
       onClick={(event) => {
-        if ((event.target as HTMLElement).closest("a")) closeMenus();
         const summary = (event.target as HTMLElement).closest("summary");
         if (summary) {
           headerRef.current?.querySelectorAll("details[open]").forEach((el) => {
@@ -63,7 +77,7 @@ export function SiteHeader() {
       </div>
 
       <div className={`shell ${styles.brandRow}`}>
-        <Link className={styles.brand} href="/" aria-label="IAICT - Trang chủ">
+        <Link className={styles.brand} href="/" aria-label="IAICT - Trang chủ" onClick={closeMenus}>
           <span className={styles.brandMark} aria-hidden="true">IA</span>
           <span>
             <strong>IAICT</strong>
@@ -74,32 +88,82 @@ export function SiteHeader() {
 
         <nav className={styles.desktopNav} aria-label="Điều hướng chính">
           {primaryItems.map((item) => (
-            <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined}>{item.label}</Link>
+            <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined} onClick={closeMenus}>{item.label}</Link>
           ))}
           <details className={styles.dropdown}>
             <summary>Khám phá</summary>
             <div className={styles.dropdownPanel}>
               {moreItems.map((item) => (
-                <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined}>{item.label}</Link>
+                <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined} onClick={closeMenus}>{item.label}</Link>
               ))}
             </div>
           </details>
         </nav>
 
         <div className={styles.actions}>
-          <Link className={styles.search} href="/tim-kiem" aria-label="Tìm kiếm">Tìm kiếm</Link>
-          <Link className={styles.cta} href={contactItem.href}>Liên hệ hợp tác</Link>
-          <details className={styles.mobileMenu}>
-            <summary aria-label="Mở menu">Menu</summary>
-            <nav aria-label="Điều hướng di động"><span className="v12-menu-label">KHÁM PHÁ IAICT</span>
-              {mainNavigation.map((item) => (
-                <Link className={item.href === "/lien-he" ? styles.mobileContact : undefined} href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined}>{item.label}</Link>
-              ))}
-              <Link href="/tim-kiem">Tìm kiếm</Link>
-            </nav>
-          </details>
+          <Link className={styles.search} href="/tim-kiem" aria-label="Tìm kiếm" onClick={closeMenus}>Tìm kiếm</Link>
+          <Link className={styles.cta} href={contactItem.href} onClick={closeMenus}>Liên hệ hợp tác</Link>
+          <div className={styles.mobileMenu}>
+            <button
+              type="button"
+              className={styles.mobileToggle}
+              aria-label={mobileOpen ? "Đóng điều hướng" : "Mở điều hướng"}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-navigation"
+              onClick={() => setMobileOpen((open) => !open)}
+            >
+              <span className={styles.menuIcon} aria-hidden="true"><i /><i /><i /></span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {mobileOpen ? (
+        <div className={styles.mobileLayer}>
+          <button className={styles.mobileBackdrop} type="button" aria-label="Đóng điều hướng" onClick={closeMenus} />
+          <nav
+            id="mobile-navigation"
+            className={styles.mobilePanel}
+            aria-label="Điều hướng di động"
+            onClick={(event) => {
+              if ((event.target as HTMLElement).closest("a")) setMobileOpen(false);
+            }}
+          >
+            <div className={styles.mobilePanelHead}>
+              <div>
+                <small>IAICT</small>
+                <strong>Khám phá hệ sinh thái</strong>
+              </div>
+              <span>{mainNavigation.length + 1} mục</span>
+            </div>
+
+            <div className={styles.mobileNavList}>
+              {mainNavigation.map((item, index) => (
+                <Link
+                  className={`${styles.mobileNavItem} ${item.href === "/lien-he" ? styles.mobileContact : ""}`}
+                  href={item.href}
+                  key={item.href}
+                  aria-current={current(item.href) ? "page" : undefined}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <span className={styles.mobileNavNo}>{String(index + 1).padStart(2, "0")}</span>
+                  <span>{item.label}</span>
+                  <span className={styles.mobileNavArrow} aria-hidden="true">↗</span>
+                </Link>
+              ))}
+              <Link className={`${styles.mobileNavItem} ${styles.mobileSearchItem}`} href="/tim-kiem" onClick={() => setMobileOpen(false)}>
+                <span className={styles.mobileNavNo}>⌕</span>
+                <span>Tìm kiếm</span>
+                <span className={styles.mobileNavArrow} aria-hidden="true">→</span>
+              </Link>
+            </div>
+
+            <div className={styles.mobilePanelFoot}>
+              <span>Applied Technology</span><i aria-hidden="true" /><span>Real-world Value</span>
+            </div>
+          </nav>
+        </div>
+      ) : null}
     </header>
   );
 }
