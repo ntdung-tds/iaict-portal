@@ -1,0 +1,21 @@
+/* Final public-facing polish: intentionally small, global and non-destructive. */
+html{scroll-padding-top:124px}
+main#main-content :where(h1,h2,h3){text-wrap:balance}
+main#main-content :where(p,li){text-wrap:pretty}
+main#main-content section[id],main#main-content article[id]{scroll-margin-top:124px}
+main#main-content :where(a,button,input,summary):focus-visible{outline-color:#65d8bf}
+main#main-content :where(a,button){-webkit-tap-highlight-color:rgba(10,132,125,.12)}
+
+@media(max-width:760px){
+  html{scroll-padding-top:104px}
+  .shell{width:min(1180px,calc(100% - 28px))}
+  main#main-content section[id],main#main-content article[id]{scroll-margin-top:104px}
+}
+
+@media(max-width:360px){
+  .shell{width:min(1180px,calc(100% - 20px))}
+}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+}
