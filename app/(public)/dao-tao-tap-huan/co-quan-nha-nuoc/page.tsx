@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { governmentAudiences } from "@/lib/public-content";
-import styles from "@/components/public-v15.module.css";
+import styles from "@/components/public.module.css";
 
 export const metadata: Metadata = {
   title: "Đào tạo dành cho cơ quan nhà nước",

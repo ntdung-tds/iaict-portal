@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { newsCategories } from "@/lib/public-content";
-import styles from "@/components/public-v15.module.css";
+import styles from "@/components/public.module.css";
 
 export const metadata: Metadata = {
   title: "Tin tức & Tri thức",
