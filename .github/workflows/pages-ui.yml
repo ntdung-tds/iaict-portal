@@ -38,22 +38,18 @@ jobs:
         env:
           GITHUB_PAGES: "true"
 
-      - name: Detect static export directory
+      - name: Prepare GitHub Pages artifact
         id: export
         shell: bash
         run: |
           set -euo pipefail
-          if [ -f dist/client/index.html ]; then
-            PAGES_DIR="dist/client"
-          elif [ -f .cloudflare/output/v0/workers/default/assets/iaict-portal/index.html ]; then
-            PAGES_DIR=".cloudflare/output/v0/workers/default/assets/iaict-portal"
-          else
-            echo "Could not find exported index.html. Candidates:"
-            find dist .cloudflare -type f -name index.html -print 2>/dev/null || true
-            exit 1
+          PAGES_DIR="dist/client/iaict-portal"
+          test -f "$PAGES_DIR/index.html"
+          touch "$PAGES_DIR/.nojekyll"
+          if [ -f dist/client/404/index.html ]; then
+            cp dist/client/404/index.html "$PAGES_DIR/404.html"
           fi
           echo "pages_dir=$PAGES_DIR" >> "$GITHUB_OUTPUT"
-          touch "$PAGES_DIR/.nojekyll"
           echo "Using GitHub Pages artifact: $PAGES_DIR"
           find "$PAGES_DIR" -maxdepth 2 -type f | head -80
 
