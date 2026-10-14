@@ -86,7 +86,7 @@ test("health endpoint is live and no-store", async ({ request }) => {
 });
 
 
-test("V12 topic controls and service disclosures work", async ({ page }) => {
+test("homepage topic controls and service disclosures work", async ({ page }) => {
   await page.goto("/");
   const topics = page.getByRole("group", { name: "Chuyển nội dung giới thiệu" });
   await topics.getByRole("button", { name: "AI & Dữ liệu", exact: true }).click();
@@ -97,12 +97,12 @@ test("V12 topic controls and service disclosures work", async ({ page }) => {
   await expect(automatic).toHaveAttribute("aria-pressed", "true");
   await topics.getByRole("button", { name: "IoT & Hiện trường" }).click();
   await expect(automatic).toHaveAttribute("aria-pressed", "false");
-  await page.locator(".v12-service-details summary").first().click();
-  await expect(page.locator(".v12-service-details").first()).toHaveAttribute("open", "");
-  await expect(page.locator(".v12-service-details").first().getByText("Bản đồ ưu tiên · lộ trình · tiêu chí đánh giá")).toBeVisible();
+  await page.locator(".ia-service-details summary").first().click();
+  await expect(page.locator(".ia-service-details").first()).toHaveAttribute("open", "");
+  await expect(page.locator(".ia-service-details").first().getByText("Bản đồ ưu tiên · lộ trình · tiêu chí đánh giá")).toBeVisible();
 });
 
-test("V12 mobile navigation closes with Escape and marks the current page", async ({ page }) => {
+test("mobile navigation closes with Escape and marks the current page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/gioi-thieu");
   await expect(page.locator("header[data-interactive]")).toHaveAttribute("data-interactive", "true");
