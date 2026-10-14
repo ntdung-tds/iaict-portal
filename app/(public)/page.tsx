@@ -84,13 +84,13 @@ const knowledge = [
 
 export default function HomePage() {
   return (
-    <main id="main-content">
+    <main id="main-content" className="ia-home">
       <WowHero />
 
-      <section className={`${styles.capabilityBar} v11-capability`} aria-label="Năng lực nổi bật">
+      <section className={`${styles.capabilityBar} ia-capability v11-capability`} aria-label="Năng lực nổi bật">
         <div className={`shell ${styles.capabilityInner}`}>
           {capabilities.map(([no, title, body]) => (
-            <div className={`${styles.capabilityItem} homeV7-capabilityItem v11-capability-item`} key={title}>
+            <div className={`${styles.capabilityItem} ia-capability-item homeV7-capabilityItem v11-capability-item`} key={title}>
               <span>{no}</span>
               <strong>{title}</strong>
               <small>{body}</small>
@@ -99,21 +99,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="v11-entry" aria-label="Khám phá theo nhu cầu">
+      <section className="ia-entry v11-entry" aria-label="Khám phá theo nhu cầu">
         <div className="shell">
-          <div className="v11-entry-label"><strong>Khám phá IAICT theo nhu cầu của bạn</strong><span>Công nghệ phù hợp. Lộ trình rõ ràng.</span></div>
-          <div className="v11-entry-grid">
-            <Link href="/san-pham-nen-tang#ai-du-lieu"><span className="v11-icon" aria-hidden="true">AI</span><span><strong>AI & Dữ liệu</strong><small>Ứng dụng vào công việc</small></span><span aria-hidden="true">↗</span></Link>
-            <Link href="/san-pham-nen-tang#iot-quan-trac"><span className="v11-icon" aria-hidden="true">IoT</span><span><strong>IoT & Quan trắc</strong><small>Kết nối dữ liệu hiện trường</small></span><span aria-hidden="true">↗</span></Link>
-            <Link href="/giai-phap-dich-vu"><span className="v11-icon" aria-hidden="true">DX</span><span><strong>Giải pháp số</strong><small>Thiết kế theo nhu cầu</small></span><span aria-hidden="true">↗</span></Link>
-            <Link href="/dao-tao-tap-huan"><span className="v11-icon" aria-hidden="true">ED</span><span><strong>Đào tạo & Tập huấn</strong><small>Nâng cao năng lực đội ngũ</small></span><span aria-hidden="true">↗</span></Link>
+          <div className="ia-entry-label v11-entry-label"><strong>Khám phá IAICT theo nhu cầu của bạn</strong><span>Công nghệ phù hợp. Lộ trình rõ ràng.</span></div>
+          <div className="ia-entry-grid v11-entry-grid">
+            <Link href="/san-pham-nen-tang#ai-du-lieu"><span className="ia-entry-icon v11-icon" aria-hidden="true">AI</span><span><strong>AI & Dữ liệu</strong><small>Ứng dụng vào công việc</small></span><span aria-hidden="true">↗</span></Link>
+            <Link href="/san-pham-nen-tang#iot-quan-trac"><span className="ia-entry-icon v11-icon" aria-hidden="true">IoT</span><span><strong>IoT & Quan trắc</strong><small>Kết nối dữ liệu hiện trường</small></span><span aria-hidden="true">↗</span></Link>
+            <Link href="/giai-phap-dich-vu"><span className="ia-entry-icon v11-icon" aria-hidden="true">DX</span><span><strong>Giải pháp số</strong><small>Thiết kế theo nhu cầu</small></span><span aria-hidden="true">↗</span></Link>
+            <Link href="/dao-tao-tap-huan"><span className="ia-entry-icon v11-icon" aria-hidden="true">ED</span><span><strong>Đào tạo & Tập huấn</strong><small>Nâng cao năng lực đội ngũ</small></span><span aria-hidden="true">↗</span></Link>
           </div>
         </div>
       </section>
 
       <section className={`${styles.sectionIntro} final-needs`} aria-labelledby="needs-title">
         <div className="shell">
-          <div className={`${styles.editorialHeading} v11-heading`}>
+          <div className={`${styles.editorialHeading} ia-section-heading v11-heading`}>
             <div>
               <p className={styles.label}>From problem to capability</p>
               <h2 id="needs-title">Bài toán đúng trước.<br />Công nghệ sau.</h2>
@@ -124,20 +124,20 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="v12-services">
+          <div className="ia-service-list v12-services">
             {needs.map((item) => (
-              <article className="v12-service" key={item.no}>
-                <span className="v12-service-no">{item.no}</span>
-                <div className="v12-service-copy">
-                  <span className="v12-service-meta">{item.meta}</span>
+              <article className="ia-service-row v12-service" key={item.no}>
+                <span className="ia-service-no v12-service-no">{item.no}</span>
+                <div className="ia-service-copy v12-service-copy">
+                  <span className="ia-service-meta v12-service-meta">{item.meta}</span>
                   <h3><Link href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link></h3>
                   <p>{item.body}</p>
-                  <details className="v12-service-details">
+                  <details className="ia-service-details v12-service-details">
                     <summary>Hướng tiếp cận & đầu ra</summary>
                     <div><p>{item.narrative}</p><ul>{item.points.map(point => <li key={point}>{point}</li>)}</ul><strong>{item.output}</strong></div>
                   </details>
                 </div>
-                <div className="v12-service-tags">{item.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
+                <div className="ia-service-tags v12-service-tags">{item.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
               </article>
             ))}
           </div>
@@ -154,7 +154,7 @@ export default function HomePage() {
 
           <div className={styles.ecosystemStack}>
             {pillars.map((pillar, index) => (
-              <Link href={pillar.href ?? "/"} className={`${styles.ecosystemRow} homeV7-ecosystemRow`} key={pillar.title}>
+              <Link href={pillar.href ?? "/"} className={`${styles.ecosystemRow} ia-ecosystem-row homeV7-ecosystemRow`} key={pillar.title}>
                 <span className={styles.ecosystemNo}>{String(index + 1).padStart(2, "0")}</span>
                 <div><small>IAICT / {index === 0 ? "Technology" : index === 1 ? "Solutions" : index === 2 ? "Transfer" : "Academy"}</small><h3>{pillar.title}</h3></div>
                 <p>{pillar.summary}</p>
@@ -165,7 +165,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.projectSection} homeV7-project final-project`} aria-labelledby="project-title">
+      <section className={`${styles.projectSection} ia-project homeV7-project final-project`} aria-labelledby="project-title">
         <div className={`shell ${styles.projectSpotlight}`}>
           <div className={styles.projectNarrative}>
             <div className={styles.projectIndex}><span>PROJECT / 01</span><i /><span>FIELD SYSTEMS</span></div>
@@ -207,13 +207,13 @@ export default function HomePage() {
 
       <section className={`${styles.journeySection} final-journey`} aria-labelledby="journey-title">
         <div className="shell">
-          <div className={`${styles.editorialHeading} v11-heading`}>
+          <div className={`${styles.editorialHeading} ia-section-heading v11-heading`}>
             <div><p className={styles.label}>IAICT Method</p><h2 id="journey-title">Từ nhu cầu đến<br />khả năng nhân rộng.</h2></div>
             <div className={styles.headingSide}><span className={styles.headingRule} /><p>Một dự án công nghệ chỉ hoàn chỉnh khi có thể đi qua đủ các lớp: hiểu bài toán, thiết kế, kiểm chứng, chuyển giao và mở rộng.</p></div>
           </div>
           <div className={styles.journeyLine}>
             {journey.map(([no, key, title, body]) => (
-              <article className={`${styles.journeyStep} homeV7-journeyStep`} key={key}>
+              <article className={`${styles.journeyStep} ia-journey-step homeV7-journeyStep`} key={key}>
                 <div><span>{no}</span><i /></div>
                 <small>{key}</small>
                 <h3>{title}</h3>
@@ -234,7 +234,7 @@ export default function HomePage() {
           </div>
           <div className={styles.expertiseList}>
             {expertise.map(([no, title, body]) => (
-              <article className="homeV7-expertiseCard" key={title}><span>{no}</span><div><h3>{title}</h3><p>{body}</p></div></article>
+              <article className="ia-expertise-card homeV7-expertiseCard" key={title}><span>{no}</span><div><h3>{title}</h3><p>{body}</p></div></article>
             ))}
           </div>
         </div>
@@ -242,15 +242,15 @@ export default function HomePage() {
 
       <section className={`${styles.gallerySection} final-gallery`} aria-labelledby="gallery-title">
         <div className="shell">
-          <div className={`${styles.editorialHeading} v11-heading`}>
+          <div className={`${styles.editorialHeading} ia-section-heading v11-heading`}>
             <div><p className={styles.label}>Capability Spaces</p><h2 id="gallery-title">Từ hiện trường<br />đến hệ thống số.</h2></div>
             <div className={styles.headingSide}><span className={styles.headingRule} /><p>Các không gian năng lực được tổ chức để người xem hiểu mối liên hệ giữa công nghệ, dữ liệu, vận hành và chuyển giao.</p></div>
           </div>
           <div className={styles.gallery}>
-            <Link href="/du-an/tram-rung" className={`${styles.galleryCard} ${styles.galleryLead} homeV7-galleryCard homeV7-galleryLead`}><span>01 / PROJECT</span><strong>Trâm Rừng</strong><small>IoT ngoài trời · dữ liệu hiện trường · server</small><b>↗</b></Link>
-            <Link href="/san-pham-nen-tang#iot-quan-trac" className={`${styles.galleryCard} homeV7-galleryCard`}><span>02 / TECHNOLOGY</span><strong>IoT & Quan trắc</strong><small>Sensor · edge · connectivity</small><b>↗</b></Link>
-            <Link href="/san-pham-nen-tang#ai-du-lieu" className={`${styles.galleryCard} homeV7-galleryCard`}><span>03 / DATA</span><strong>AI & Dữ liệu</strong><small>Workflow · analytics · intelligence</small><b>↗</b></Link>
-            <Link href="/dao-tao-tap-huan" className={`${styles.galleryCard} ${styles.galleryWide} homeV7-galleryCard`}><span>04 / ACADEMY</span><strong>Năng lực số cho tổ chức</strong><small>AI · dữ liệu · kỹ năng số · chuyển giao</small><b>↗</b></Link>
+            <Link href="/du-an/tram-rung" className={`${styles.galleryCard} ${styles.galleryLead} ia-gallery-card ia-gallery-lead homeV7-galleryCard homeV7-galleryLead`}><span>01 / PROJECT</span><strong>Trâm Rừng</strong><small>IoT ngoài trời · dữ liệu hiện trường · server</small><b>↗</b></Link>
+            <Link href="/san-pham-nen-tang#iot-quan-trac" className={`${styles.galleryCard} ia-gallery-card homeV7-galleryCard`}><span>02 / TECHNOLOGY</span><strong>IoT & Quan trắc</strong><small>Sensor · edge · connectivity</small><b>↗</b></Link>
+            <Link href="/san-pham-nen-tang#ai-du-lieu" className={`${styles.galleryCard} ia-gallery-card homeV7-galleryCard`}><span>03 / DATA</span><strong>AI & Dữ liệu</strong><small>Workflow · analytics · intelligence</small><b>↗</b></Link>
+            <Link href="/dao-tao-tap-huan" className={`${styles.galleryCard} ${styles.galleryWide} ia-gallery-card homeV7-galleryCard`}><span>04 / ACADEMY</span><strong>Năng lực số cho tổ chức</strong><small>AI · dữ liệu · kỹ năng số · chuyển giao</small><b>↗</b></Link>
           </div>
         </div>
       </section>
@@ -265,7 +265,7 @@ export default function HomePage() {
           </div>
           <div className={styles.knowledgeGrid}>
             {knowledge.map(([tag, title, body], index) => (
-              <article className={`${styles.knowledgeCard} homeV7-knowledgeCard ${index === 0 ? `${styles.knowledgeLead} homeV7-knowledgeLead` : ""}`} key={title}>
+              <article className={`${styles.knowledgeCard} ia-knowledge-card homeV7-knowledgeCard ${index === 0 ? `${styles.knowledgeLead} ia-knowledge-lead homeV7-knowledgeLead` : ""}`} key={title}>
                 <span>{tag}</span>
                 <h3>{title}</h3>
                 <p>{body}</p>
