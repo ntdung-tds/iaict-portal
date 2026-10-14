@@ -7,7 +7,7 @@ html{scroll-behavior:smooth}
 .iaict-motion-ready .iaict-reveal{opacity:0;transform:translate3d(0,26px,0);transition:opacity .72s cubic-bezier(.2,.7,.2,1),transform .82s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--reveal-order,0)*45ms);will-change:opacity,transform}
 .iaict-motion-ready .iaict-reveal.iaict-visible{opacity:1;transform:translate3d(0,0,0)}
 
-body.iaict-scrolled .ia-header,body.iaict-scrolled .v12-header{backdrop-filter:blur(18px) saturate(1.18);-webkit-backdrop-filter:blur(18px) saturate(1.18);box-shadow:0 14px 38px rgba(12,48,99,.10)!important;border-bottom-color:rgba(133,175,232,.42)!important}
+body.iaict-scrolled .ia-header{backdrop-filter:blur(18px) saturate(1.18);-webkit-backdrop-filter:blur(18px) saturate(1.18);box-shadow:0 14px 38px rgba(12,48,99,.10)!important;border-bottom-color:rgba(133,175,232,.42)!important}
 
 .homeV7-capabilityItem{transition:transform .28s ease,background .28s ease,border-color .28s ease}
 .homeV7-capabilityItem:hover{transform:translateY(-5px)}
