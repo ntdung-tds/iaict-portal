@@ -18,13 +18,6 @@
 .ia-gallery-card:nth-child(4)::after{width:118px;height:68px;border-radius:18px;transform:rotate(-5deg)}
 .ia-gallery-card>*{position:relative;z-index:2}
 
-/* Journey cards: compact phase rail. */
-.ia-journey-step{min-height:225px!important;padding-bottom:24px!important}
-.ia-journey-step::after{content:"";position:absolute;left:0;right:24px;bottom:0;height:3px;background:linear-gradient(90deg,#0c8a86,rgba(12,138,134,.08) 72%,transparent)}
-
-/* Secondary knowledge cards stay compact. */
-.ia-knowledge-card:not(.ia-knowledge-lead){min-height:190px!important}
-
 @media(max-width:1080px){
   .ia-knowledge-lead{padding-top:228px!important}
 }
@@ -32,7 +25,6 @@
   .ia-knowledge-lead{min-height:0!important;padding-top:202px!important}
   .ia-knowledge-lead::before{left:22px;right:22px;top:22px;height:145px}
   .ia-knowledge-lead::after{left:38px;right:38px;top:125px;font-size:8px}
-  .ia-journey-step{min-height:0!important;padding-bottom:28px!important}
 }
 
 /* Closing CTA: deliberate inner margin. */
@@ -44,50 +36,6 @@
 [class*="closingSection"] [class*="closingAction"]{padding-right:0!important}
 [class*="closingSection"] [class*="closingAction"] p{max-width:680px;font-size:15px!important;line-height:1.76!important}
 [class*="closingSection"] [class*="closingAction"] a{margin-top:20px!important}
-
-/* Knowledge card 02: current state → standardize → digitize. */
-.ia-knowledge-card:nth-child(2){
-  position:relative;
-  overflow:hidden;
-  min-height:285px!important;
-  padding-top:132px!important;
-  background:linear-gradient(180deg,#fff 0%,#f8fbfa 100%)!important;
-}
-.ia-knowledge-card:nth-child(2)::before{
-  content:"";
-  position:absolute;
-  z-index:0;
-  left:28px;
-  right:28px;
-  top:28px;
-  height:74px;
-  border:1px solid #d8e6e3;
-  border-radius:18px;
-  background:
-    radial-gradient(circle at 13% 50%,#0c8b80 0 6px,rgba(12,139,128,.12) 7px 15px,transparent 16px),
-    radial-gradient(circle at 50% 50%,#0c8b80 0 6px,rgba(12,139,128,.12) 7px 15px,transparent 16px),
-    radial-gradient(circle at 87% 50%,#0c8b80 0 6px,rgba(12,139,128,.12) 7px 15px,transparent 16px),
-    linear-gradient(90deg,transparent 13%,rgba(12,139,128,.28) 13.2% 49%,transparent 49.2% 50.8%,rgba(12,139,128,.28) 51% 87%,transparent 87.2%),
-    rgba(244,249,247,.9);
-  pointer-events:none;
-}
-.ia-knowledge-card:nth-child(2)::after{
-  content:"HIỆN TRẠNG     →     CHUẨN HÓA     →     SỐ HÓA";
-  position:absolute;
-  z-index:1;
-  left:42px;
-  right:42px;
-  top:82px;
-  color:#5d797e;
-  font-size:9px;
-  font-weight:900;
-  letter-spacing:.08em;
-  text-align:center;
-  pointer-events:none;
-}
-.ia-knowledge-card:nth-child(2)>*{position:relative;z-index:2}
-.ia-knowledge-card:nth-child(2) h3{margin-top:8px!important}
-.ia-knowledge-card:nth-child(2) p{max-width:620px}
 
 /* Journey: informative output rail. */
 [class*="journeySection"]{padding-top:92px!important;padding-bottom:94px!important}
@@ -119,14 +67,10 @@
 
 @media(max-width:1080px){
   [class*="closingSection"] [class*="closingInner"]{padding:48px 44px!important}
-  .ia-knowledge-card:nth-child(2){min-height:270px!important}
   [class*="journeySection"]{padding-top:82px!important;padding-bottom:84px!important}
 }
 @media(max-width:760px){
   [class*="closingSection"] [class*="closingInner"]{padding:34px 26px 38px!important}
-  .ia-knowledge-card:nth-child(2){min-height:0!important;padding-top:122px!important}
-  .ia-knowledge-card:nth-child(2)::before{left:22px;right:22px;top:22px;height:68px}
-  .ia-knowledge-card:nth-child(2)::after{left:28px;right:28px;top:73px;font-size:8px}
   [class*="journeySection"]{padding-top:72px!important;padding-bottom:74px!important}
   [class*="journeySection"] [class*="editorialHeading"]{margin-bottom:30px!important}
   .ia-journey-step{min-height:0!important;padding-bottom:70px!important}
@@ -173,6 +117,7 @@
     linear-gradient(90deg,transparent 14%,rgba(11,139,128,.30) 14.3% 49%,transparent 49.3% 50.7%,rgba(11,139,128,.30) 51% 86%,transparent 86.3%),
     linear-gradient(135deg,#f3f9f7,#edf6f3);
   box-shadow:0 16px 34px rgba(21,73,70,.05);
+  pointer-events:none;
 }
 .ia-knowledge-card:nth-child(2)::after{
   content:"HIỆN TRẠNG     →     CHUẨN HÓA     →     SỐ HÓA";
