@@ -11,6 +11,7 @@ const channels = [
     body: "Theo dõi các chương trình, hoạt động chuyên môn, hợp tác và thông tin được IAICT công bố chính thức.",
     href: "/tin-tuc",
     cta: "Xem Tin tức",
+    image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&fm=jpg&q=82&w=1800",
   },
   {
     no: "02",
@@ -19,6 +20,7 @@ const channels = [
     body: "Các nội dung về công nghệ, thử nghiệm, kiến trúc hệ thống và cách đưa kết quả nghiên cứu vào bối cảnh sử dụng thực tế.",
     href: "/du-an",
     cta: "Khám phá dự án",
+    image: "https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=82&w=1800",
   },
   {
     no: "03",
@@ -27,6 +29,7 @@ const channels = [
     body: "Tập trung vào dữ liệu đầu vào, quy trình, quyền truy cập, cách kiểm soát đầu ra và giá trị vận hành có thể đo lường.",
     href: "/san-pham-nen-tang#ai-du-lieu",
     cta: "Xem năng lực AI",
+    image: "https://images.unsplash.com/photo-1768224656445-33d078c250b7?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=82&w=1800",
   },
   {
     no: "04",
@@ -35,6 +38,7 @@ const channels = [
     body: "Các hoạt động hội thảo, chuyên đề và tập huấn được tổ chức theo nhu cầu thực tế và chỉ công bố khi thông tin đã được xác minh.",
     href: "/dao-tao-tap-huan",
     cta: "Xem chương trình",
+    image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&fm=jpg&q=82&w=1800",
   },
 ] as const;
 
@@ -88,16 +92,12 @@ export function HomeNewsroom() {
               <Link href={current.href}>{current.cta}<span aria-hidden="true">↗</span></Link>
             </div>
 
-            <div className="final-newsroom-visual" aria-hidden="true">
-              <div className="final-newsroom-orbit orbit-a" />
-              <div className="final-newsroom-orbit orbit-b" />
-              <div className="final-newsroom-core">
-                <span>IAICT</span>
-                <small>{current.tag}</small>
+            <div className="final-newsroom-visual" aria-hidden="true" style={{ backgroundImage: `url("${current.image}")` }}>
+              <div className="final-newsroom-photo-shade" />
+              <div className="final-newsroom-photo-label">
+                <span>IAICT / {current.tag}</span>
+                <strong>{current.no}</strong>
               </div>
-              <i className="final-newsroom-node node-a" />
-              <i className="final-newsroom-node node-b" />
-              <i className="final-newsroom-node node-c" />
             </div>
 
             <div className="final-newsroom-controls" aria-label="Điều khiển nội dung nổi bật">
