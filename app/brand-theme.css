@@ -1,20 +1,5 @@
 :root{
-  /* Temporary compatibility aliases while legacy selectors are consolidated. */
-  --v10-blue:var(--brand-primary);
-  --v10-blue-deep:var(--brand-primary-strong);
-  --v10-accent:var(--brand-accent);
-  --v10-accent-2:var(--brand-accent-alt);
-  --v10-sky:var(--surface-subtle);
-  --v10-sky-strong:var(--surface-subtle-strong);
-  --v10-canvas:var(--surface-canvas);
-  --v10-paper:var(--surface-paper);
-  --v10-ink:var(--text-primary);
-  --v10-muted:var(--text-muted);
-  --v10-line:var(--border-subtle);
-  --v10-line-strong:var(--border-strong);
-  --v10-shadow:var(--shadow-elevated);
-  --v10-shadow-soft:var(--shadow-soft);
-
+  /* Temporary V9 compatibility aliases while legacy selectors are consolidated. */
   --v9-canvas:var(--surface-canvas);
   --v9-canvas-warm:var(--surface-canvas-warm);
   --v9-canvas-deep:var(--surface-canvas-deep);
