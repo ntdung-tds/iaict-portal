@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import styles from "./wow-hero.module.css";
+import styles from "./home-hero.module.css";
 
 const slides = [
   {
@@ -39,7 +39,7 @@ const slides = [
 
 const topicLabels = ["Công nghệ ứng dụng", "AI & Dữ liệu", "IoT & Hiện trường"];
 
-export function WowHero() {
+export function HomeHero() {
   const [active, setActive] = useState(0);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(true);

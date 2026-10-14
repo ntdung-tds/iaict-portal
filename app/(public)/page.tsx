@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { HomeNewsroom } from "@/components/wow/home-newsroom";
-import { WowHero } from "@/components/wow/wow-hero";
-import styles from "@/components/wow/wow.module.css";
+import { HomeNewsroom } from "@/components/home/home-newsroom";
+import { HomeHero } from "@/components/home/home-hero";
+import styles from "@/components/home/home.module.css";
 import { pillars } from "@/lib/public-content";
 
 const capabilities = [
@@ -85,7 +85,7 @@ const knowledge = [
 export default function HomePage() {
   return (
     <main id="main-content" className="ia-home">
-      <WowHero />
+      <HomeHero />
 
       <section className={`${styles.capabilityBar} ia-capability`} aria-label="Năng lực nổi bật">
         <div className={`shell ${styles.capabilityInner}`}>
