@@ -4,7 +4,7 @@ import styles from "./site-chrome.module.css";
 
 export function SiteFooter() {
   return (
-    <footer className={styles.footer}>
+    <footer className={`${styles.footer} final-footer`}>
       <div className={`shell ${styles.footerTop}`}>
         <div>
           <div className={styles.footerBrand}>
@@ -13,6 +13,7 @@ export function SiteFooter() {
           </div>
           <p className={styles.footerIntro}>Viện Ứng dụng Công nghệ Thông tin và Truyền thông — kết nối công nghệ, giải pháp, chuyển giao và đào tạo trong một hệ sinh thái ứng dụng thống nhất.</p>
           <p className={styles.address}>Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội</p>
+          <div className="final-footer-signature"><i aria-hidden="true" /><span>Applied Technology · Real-world Value</span></div>
         </div>
 
         <div>
@@ -46,7 +47,7 @@ export function SiteFooter() {
 
       <div className={`shell ${styles.footerBottom}`}>
         <span>© {new Date().getFullYear()} IAICT</span>
-        <span>Applied technology · Solutions · Transfer · Academy</span>
+        <span>Technology · Solutions · Transfer · Academy</span>
       </div>
     </footer>
   );

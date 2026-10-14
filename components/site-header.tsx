@@ -18,14 +18,28 @@ export function SiteHeader() {
   useEffect(() => setReady(true), []);
   const headerRef = useRef<HTMLElement>(null);
   const current = (href: string) => pathname === href || (href !== "/" && pathname?.startsWith(href + "/"));
-  const closeMenus = () => headerRef.current?.querySelectorAll("details[open]").forEach(el => el.removeAttribute("open"));
+  const closeMenus = () => headerRef.current?.querySelectorAll("details[open]").forEach((el) => el.removeAttribute("open"));
+
   return (
-    <header data-interactive={ready} ref={headerRef} className={`${styles.header} v12-header`}
-      onKeyDown={event => { if (event.key === "Escape") { const open = headerRef.current?.querySelector("details[open]"); closeMenus(); (open?.querySelector("summary") as HTMLElement | null)?.focus(); } }}
-      onClick={event => { if ((event.target as HTMLElement).closest("a")) closeMenus(); }}>
+    <header
+      data-interactive={ready}
+      data-ui="final"
+      ref={headerRef}
+      className={`${styles.header} v12-header final-header`}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          const open = headerRef.current?.querySelector("details[open]");
+          closeMenus();
+          (open?.querySelector("summary") as HTMLElement | null)?.focus();
+        }
+      }}
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest("a")) closeMenus();
+      }}
+    >
       <div className={styles.topline}>
         <div className={`shell ${styles.toplineInner}`}>
-          <span>Cổng thông tin điện tử · IAICT</span>
+          <span className="final-top-status"><i aria-hidden="true" />Cổng thông tin điện tử · IAICT</span>
           <span>Công nghệ · Giải pháp · Chuyển giao · Đào tạo</span>
         </div>
       </div>
@@ -36,6 +50,7 @@ export function SiteHeader() {
           <span>
             <strong>IAICT</strong>
             <small>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</small>
+            <span className="final-brand-meta">Applied Technology · Real-world Value</span>
           </span>
         </Link>
 
@@ -70,4 +85,3 @@ export function SiteHeader() {
     </header>
   );
 }
-

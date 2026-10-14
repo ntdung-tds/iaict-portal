@@ -9,17 +9,35 @@ const revealSelectors = [
   ".v12-service",
   ".homeV7-ecosystemRow",
   ".homeV7-project",
+  ".final-project-architecture",
   ".homeV7-journeyStep",
   ".homeV7-expertiseCard",
   ".homeV7-galleryCard",
+  ".final-newsroom-head",
+  ".final-newsroom-lead",
+  ".final-newsroom-list > button",
+  ".final-event-desk",
   ".homeV7-knowledgeCard",
   ".homeV7-capabilityItem",
+  ".v6-card",
+  ".v8-card",
+  ".v8-principle",
+  ".v8-topic",
+  ".v8-story",
+  ".v8-news article",
+  ".v9-card",
+  ".v9-feature",
+  ".v9-path",
 ].join(",");
 
 const tiltSelectors = [
   ".v11-entry-grid > a",
   ".homeV7-galleryCard",
   ".homeV7-knowledgeCard",
+  ".final-event-desk",
+  ".v6-card",
+  ".v8-card",
+  ".v9-card",
 ].join(",");
 
 export function SiteMotion() {
@@ -48,7 +66,7 @@ export function SiteMotion() {
             observer?.unobserve(entry.target);
           });
         },
-        { threshold: 0.11, rootMargin: "0px 0px -7% 0px" },
+        { threshold: 0.1, rootMargin: "0px 0px -6% 0px" },
       );
       revealItems.forEach((item) => observer?.observe(item));
     }
@@ -88,12 +106,12 @@ export function SiteMotion() {
     const tilts = Array.from(document.querySelectorAll<HTMLElement>(tiltSelectors));
     const tiltCleanups = tilts.map((card) => {
       const onMove = (event: PointerEvent) => {
-        if (reduced || event.pointerType === "touch") return;
+        if (reduced || event.pointerType === "touch" || window.innerWidth < 900) return;
         const rect = card.getBoundingClientRect();
         const x = (event.clientX - rect.left) / rect.width - 0.5;
         const y = (event.clientY - rect.top) / rect.height - 0.5;
-        card.style.setProperty("--tilt-y", `${(x * 3.2).toFixed(2)}deg`);
-        card.style.setProperty("--tilt-x", `${(-y * 3.2).toFixed(2)}deg`);
+        card.style.setProperty("--tilt-y", `${(x * 2.4).toFixed(2)}deg`);
+        card.style.setProperty("--tilt-x", `${(-y * 2.4).toFixed(2)}deg`);
         card.classList.add("iaict-tilt-active");
       };
       const onLeave = () => {
