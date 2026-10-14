@@ -15,7 +15,10 @@ main#main-content :where(img,svg,video,canvas){max-width:100%}
   .shell{width:min(1180px,calc(100% - 28px))}
   main#main-content section[id],main#main-content article[id]{scroll-margin-top:104px}
   main#main-content :where([class*="heroGrid"],[class*="sectionHead"],[class*="ctaInner"]){min-width:0}
-  main#main-content :where(a[class*="primaryAction"],a[class*="secondaryAction"],a[class*="cta"],button,summary){min-height:44px}
+
+  /* Keep the global rule scoped to CTA links. Component-level buttons may intentionally
+     use a larger target (for example the 48px search submit control). */
+  main#main-content :where(a[class*="primaryAction"],a[class*="secondaryAction"],a[class*="cta"]){min-height:44px}
 
   /* Trâm Rừng: make the architecture layout shrink from its mobile viewport,
      rather than retaining the desktop grid items' intrinsic inline size. */
