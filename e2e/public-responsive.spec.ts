@@ -93,8 +93,15 @@ test("V15 discovery hub preserves search behavior and mobile touch targets", asy
   expect(inputBox?.height ?? 0).toBeGreaterThanOrEqual(48);
   expect(submitBox?.height ?? 0).toBeGreaterThanOrEqual(48);
 
+  const suggestion = search.getByRole("button", { name: "AI", exact: true });
+  const filter = search.getByRole("group", { name: "Lọc nhóm nội dung" }).getByRole("button", { name: "Dự án", exact: true });
+  const suggestionBox = await suggestion.boundingBox();
+  const filterBox = await filter.boundingBox();
+  expect(suggestionBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+  expect(filterBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+
   await search.getByRole("button", { name: "Xóa tìm kiếm & bộ lọc" }).click();
-  await search.getByRole("group", { name: "Lọc nhóm nội dung" }).getByRole("button", { name: "Dự án", exact: true }).click();
+  await filter.click();
   await expect(search.locator(".public-search-results article>span").first()).toHaveText("Dự án");
 });
 
@@ -107,6 +114,16 @@ test("V15 public-sector training detail keeps useful hierarchy and navigation", 
   await expect(page.getByRole("link", { name: /Trao đổi chương trình/i })).toHaveAttribute("href", "/lien-he");
   await page.getByRole("link", { name: /Xem nhóm đối tượng/i }).click();
   await expect(page.locator("#audiences")).toBeInViewport();
+});
+
+test("tablet edge keeps primary CTA usable at exactly 768px", async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 900 });
+  await page.goto("/tim-kiem");
+
+  const primary = page.getByRole("link", { name: /Bắt đầu tìm kiếm/i });
+  const box = await primary.boundingBox();
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(768);
 });
 
 test("primary public calls to action remain keyboard-visible", async ({ page }) => {
