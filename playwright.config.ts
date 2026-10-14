@@ -6,12 +6,14 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:3000",
   },
   webServer: {
-    // CI already verifies the Cloudflare production build separately. Build a
-    // Vinext-only production bundle for browser tests so hydration is exercised
-    // in production mode without deploying or depending on Worker preview packaging.
-    command: "npx vite build --mode e2e && npx vinext start --port 3000",
+    // Keep the Cloudflare Worker runtime, but force production React during
+    // Vite dev so client hydration does not depend on development-only eval().
+    command: "npm run dev -- --host 127.0.0.1 --port 3000",
     url: "http://127.0.0.1:3000/api/health",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      NODE_ENV: "production",
+    },
   },
 });
