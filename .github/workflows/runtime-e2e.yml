@@ -1,6 +1,9 @@
 name: runtime-e2e-diagnostic
 
 on:
+  push:
+    branches:
+      - ui-wow-production
   workflow_dispatch:
 
 permissions:
