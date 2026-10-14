@@ -22,20 +22,19 @@ body>footer{background:#061f4a!important;color:#a9c3e8!important}
 body>footer [class*="footerLabel"],body>footer b{color:#77adff!important}
 
 /* Shared public heroes and surfaces */
-.page-hero,
-.v9-hero{
+.page-hero{
   background:
     radial-gradient(circle at 83% 16%,rgba(72,149,255,.18),transparent 29%),
     radial-gradient(circle at 10% 86%,rgba(11,61,145,.07),transparent 27%),
     linear-gradient(145deg,#ffffff 0%,#f2f7ff 54%,#eaf3ff 100%)!important;
   border-bottom-color:var(--border-subtle)!important;
 }
-.page-hero::before,.v9-hero::before{
+.page-hero::before{
   background-image:linear-gradient(rgba(29,110,242,.038) 1px,transparent 1px),linear-gradient(90deg,rgba(29,110,242,.038) 1px,transparent 1px)!important;
 }
-.page-hero h1,.v9-hero h1{color:var(--text-primary)!important}
-.page-lead,.v9-lead{color:var(--text-muted)!important}
-.kicker,.v9-kicker,[class*="kicker"],[class*="label"]{color:var(--brand-accent)!important}
+.page-hero h1{color:var(--text-primary)!important}
+.page-lead{color:var(--text-muted)!important}
+.kicker,[class*="kicker"],[class*="label"]{color:var(--brand-accent)!important}
 .section-tint,.v9-section-alt,[class*="sectionAlt"],[class*="sectionTint"]{
   background:linear-gradient(145deg,#eaf3ff,#f8fbff 62%,#eef6ff)!important;
   border-color:var(--border-subtle)!important;
