@@ -1,15 +1,11 @@
-/* IAICT Trâm Rừng project showcase visual direction.
-   Keeps the semantic five-step flow in the homepage component while aligning
-   the source branch with the Pages demo: pale institutional canvas, technical
-   grid, light cards, deep navy copy and teal data connectors. */
+/* IAICT Trâm Rừng project technical-flow layer.
+   Base structure lives in the homepage module; the active photo-led surface
+   lives in home-active.css. This layer keeps the technical grid, flow and
+   connector treatment without restating final project colors. */
 
 main [class*="projectSection"] {
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 84% 12%, rgba(123, 205, 194, 0.14), transparent 27%),
-    radial-gradient(circle at 8% 84%, rgba(112, 151, 194, 0.09), transparent 30%),
-    linear-gradient(145deg, #f8f7f1 0%, #f2f6f7 56%, #f7faf9 100%) !important;
 }
 
 main [class*="projectSection"]::before {
@@ -28,7 +24,6 @@ main [class*="projectSpotlight"] {
   position: relative;
   z-index: 1;
   gap: 18px !important;
-  box-shadow: none !important;
 }
 
 main [class*="projectNarrative"],
@@ -41,8 +36,6 @@ main [class*="architecture"] {
 main [class*="projectNarrative"] {
   position: relative;
   overflow: hidden;
-  color: #173746 !important;
-  background: linear-gradient(152deg, #fbfdfb, #edf5f3) !important;
 }
 
 main [class*="projectNarrative"]::after {
@@ -60,22 +53,11 @@ main [class*="projectNarrative"]::after {
   pointer-events: none;
 }
 
-main [class*="projectNarrative"] h2 {
-  position: relative;
-  z-index: 1;
-  color: #082c3b !important;
-}
-
-main [class*="projectNarrative"] p {
-  position: relative;
-  z-index: 1;
-  color: #58727d !important;
-}
-
+main [class*="projectNarrative"] h2,
+main [class*="projectNarrative"] p,
 main [class*="projectNarrative"] [class*="projectIndex"] {
   position: relative;
   z-index: 1;
-  color: #789099 !important;
 }
 
 main [class*="projectNarrative"] [class*="projectIndex"] i {
@@ -86,21 +68,7 @@ main [class*="projectFacts"] {
   position: relative;
   z-index: 1;
   overflow: hidden;
-  border-color: #d7e5e3 !important;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.68);
-}
-
-main [class*="projectFacts"] span {
-  border-color: #d7e5e3 !important;
-}
-
-main [class*="projectFacts"] small {
-  color: #84979e !important;
-}
-
-main [class*="projectFacts"] strong {
-  color: #163c48 !important;
 }
 
 main [class*="textAction"] {
