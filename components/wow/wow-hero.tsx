@@ -60,7 +60,7 @@ export function WowHero() {
 
   return (
     <section
-      className={`${styles.hero} v11-hero`}
+      className={styles.hero}
       aria-label="IAICT - năng lực và định hướng"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -117,7 +117,7 @@ export function WowHero() {
           <span>03</span>
         </div>
 
-        <div className={`${styles.topics} v12-topics`} role="group" aria-label="Chuyển nội dung giới thiệu">
+        <div className={styles.topics} role="group" aria-label="Chuyển nội dung giới thiệu">
           {slides.map((item, index) => (
             <button
               key={item.kicker}
@@ -137,7 +137,7 @@ export function WowHero() {
           <button
             type="button"
             disabled={!ready}
-            className={`${styles.play} v12-play`}
+            className={styles.play}
             onClick={() => setPlaying(!playing)}
             aria-pressed={playing}
             aria-label="Tự động chuyển nội dung"
