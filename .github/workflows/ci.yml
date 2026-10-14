@@ -20,7 +20,7 @@ jobs:
       - name: Verify canonical migrations
         run: node scripts/verify-migrations.mjs
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: vinext compatibility check
         run: npm run check:vinext
       - name: Typecheck
