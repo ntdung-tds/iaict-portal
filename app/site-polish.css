@@ -89,7 +89,7 @@ main#main-content [class*="contactPhoto"] span{
   font-size:10.5px!important;
   text-shadow:0 1px 8px rgba(0,0,0,.35);
 }
-main#main-content [class*="contactPrimary"] [class*="labelLight"]{font-size:10.5px!important}
+main#main-content [class*="contactPrimary"] [class*="labelLight"]{color:#bcd9d3!important;font-size:10.5px!important}
 main#main-content [class*="addressBox"]{font-style:normal}
 main#main-content [class*="addressBox"]>span{
   color:#bcd9d3!important;
