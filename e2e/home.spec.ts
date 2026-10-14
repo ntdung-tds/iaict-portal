@@ -135,3 +135,60 @@ test("public search supports Vietnamese, filters, empty state and shareable quer
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
 });
+
+test("capability pages support direct navigation and details without losing the overview", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const [route] of categoryRoutes) {
+    await page.goto(route);
+    const index = page.getByRole("navigation", { name: "Chọn năng lực cần khám phá" });
+    const firstLink = index.getByRole("link").first();
+    const target = await firstLink.getAttribute("href");
+    expect(target).toMatch(/^#/);
+    await firstLink.click();
+    const card = page.locator(`article${target}`);
+    await expect(card).toBeInViewport();
+    // The fixed header must not cover the section selected from the index.
+    const bounds = await card.boundingBox();
+    const header = await page.locator("header").boundingBox();
+    expect(bounds!.y).toBeGreaterThanOrEqual(header!.y + header!.height);
+    const details = card.locator("details");
+    await expect(details).not.toHaveAttribute("open", "");
+    await details.locator("summary").focus();
+    await page.keyboard.press("Enter");
+    await expect(details).toHaveAttribute("open", "");
+    await expect(details.getByText("Nội dung chính", { exact: true })).toBeVisible();
+    await page.keyboard.press("Enter");
+    await expect(details).not.toHaveAttribute("open", "");
+    await expect(card.getByText("Đầu ra", { exact: true })).toBeVisible();
+    await expect(card.getByRole("link", { name: /Trao đổi nhu cầu/ })).toHaveAttribute("href", "/lien-he");
+  }
+  await page.goto("/san-pham-nen-tang#iot-quan-trac");
+  await expect(page.locator("#iot-quan-trac")).toBeInViewport();
+  await expect(page.getByRole("link", { name: /Khám phá dự án Trâm Rừng/ })).toHaveAttribute("href", "/du-an/tram-rung");
+});
+
+test("capability pages and mobile menu fit narrow screens", async ({ page }) => {
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const [route] of categoryRoutes) {
+      await page.goto(route);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${route} at ${width}px`).toBeTruthy();
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/san-pham-nen-tang");
+  await expect(page.locator("header")).toHaveAttribute("data-interactive", "true");
+  const toggle = page.getByLabel("Mở menu", { exact: true });
+  const nav = page.getByRole("navigation", { name: "Điều hướng di động" });
+  await toggle.click();
+  await expect(nav).toBeVisible();
+  const navBounds = await nav.boundingBox();
+  expect(navBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(navBounds!.x + navBounds!.width).toBeLessThanOrEqual(390);
+  await page.getByRole("heading", { level: 1 }).click();
+  await expect(nav).not.toBeVisible();
+  await toggle.click();
+  await nav.getByRole("link", { name: "Liên hệ & Hợp tác", exact: true }).click();
+  await expect(page).toHaveURL(/\/lien-he/);
+  await expect(nav).not.toBeVisible();
+});

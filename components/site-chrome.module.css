@@ -25,3 +25,9 @@
 
 /* V11 control polish */
 .brandMark,.footerBrandMark{border-radius:12px}.cta,.mobileMenu>summary{border-radius:10px;min-height:44px}.dropdownPanel,.mobileMenu nav{border-radius:14px}.mobileMenu nav a{min-height:44px;border-radius:8px}.desktopNav a:focus-visible,.mobileMenu summary:focus-visible{outline:3px solid #1d6ef2;outline-offset:4px}
+
+/* Keep the mobile navigation inside the viewport, with a clear contact action. */
+.mobileMenu nav a[aria-current="page"]{background:#eaf3ff;box-shadow:inset 3px 0 0 #1d6ef2}
+.mobileMenu nav a.mobileContact{margin-top:8px;border:1px solid #cfe0f8;background:#edf4ff;color:#0b3d91}
+.mobileMenu>summary{min-width:64px;display:flex;align-items:center;justify-content:center}
+@media(max-width:760px){.mobileMenu nav{max-height:calc(100dvh - 140px);overscroll-behavior:contain}.brandRow{gap:16px}.brand{min-width:0}.brand>span:last-child{min-width:0}}

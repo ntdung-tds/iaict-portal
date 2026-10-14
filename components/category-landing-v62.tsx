@@ -278,13 +278,59 @@ const cardDetails: Record<CategoryLandingVariant, Record<string, CardDetail>> = 
   },
 };
 
+const capabilityAnchors: Record<string, string> = {
+  "AI & Dữ liệu": "ai-du-lieu",
+  "IoT & Quan trắc": "iot-quan-trac",
+};
+
+function capabilityAnchor(item: TaxonomyCard, index: number) {
+  return capabilityAnchors[item.title] ?? `nang-luc-${index + 1}`;
+}
+
+const relatedContent: Record<CategoryLandingVariant, {
+  label: string; title: string; body: string; href: string; action: string; stages: string[];
+}> = {
+  technology: {
+    label: "CÔNG NGHỆ TRONG THỰC TẾ",
+    title: "Trâm Rừng: kết nối dữ liệu hiện trường với hồ sơ số.",
+    body: "Khám phá cách IoT, truy xuất nguồn gốc và quản lý vòng đời được kết hợp trong cùng một bài toán ứng dụng.",
+    href: "/du-an/tram-rung", action: "Khám phá dự án Trâm Rừng",
+    stages: ["Dữ liệu hiện trường", "Hồ sơ & truy xuất", "Quản lý vòng đời"],
+  },
+  solutions: {
+    label: "TỪ GIẢI PHÁP ĐẾN ỨNG DỤNG",
+    title: "Nhìn giải pháp qua bài toán triển khai.",
+    body: "Xem hướng tiếp cận của IAICT qua các mô hình ứng dụng: bối cảnh, các lớp công nghệ và khả năng đưa vào vận hành.",
+    href: "/du-an", action: "Xem dự án & mô hình ứng dụng",
+    stages: ["Bài toán", "Giải pháp", "Vận hành"],
+  },
+  transfer: {
+    label: "NĂNG LỰC SAU CHUYỂN GIAO",
+    title: "Công nghệ được tiếp nhận. Con người làm chủ.",
+    body: "Kết nối chuyển giao với đào tạo theo vai trò, hướng dẫn thực hành và năng lực sử dụng trong công việc hằng ngày.",
+    href: "/dao-tao-tap-huan", action: "Khám phá chương trình đào tạo",
+    stages: ["Tài liệu", "Thực hành", "Làm chủ"],
+  },
+  academy: {
+    label: "HỌC ĐỂ ÁP DỤNG",
+    title: "Kết nối chương trình học với năng lực công nghệ.",
+    body: "Từ AI, dữ liệu đến IoT và các nền tảng nghiệp vụ, nội dung học được gắn với công cụ và tình huống có thể áp dụng.",
+    href: "/san-pham-nen-tang", action: "Khám phá hệ sinh thái công nghệ",
+    stages: ["Kiến thức", "Công cụ", "Ứng dụng"],
+  },
+};
+
 export function CategoryLanding({ eyebrow, title, intro, items = [], children, variant = "solutions" }: CategoryLandingProps) {
   const content = variantContent[variant];
   const sequential = variant === "transfer";
+  const related = relatedContent[variant];
 
   return (
     <main id="main-content" className={styles.page} data-variant={variant}>
       <section className={styles.hero}>
+        <nav className={`shell ${styles.breadcrumb}`} aria-label="Đường dẫn trang">
+          <Link href="/">Trang chủ</Link><span aria-hidden="true">/</span><span aria-current="page">{title}</span>
+        </nav>
         <div className={`shell ${styles.heroGrid}`}>
           <div>
             <p className={styles.kicker}>{eyebrow}</p>
@@ -316,9 +362,18 @@ export function CategoryLanding({ eyebrow, title, intro, items = [], children, v
               <p>{content.sectionIntro}</p>
             </div>
 
+            <nav className={styles.capabilityIndex} aria-label="Chọn năng lực cần khám phá">
+              <span>{sequential ? "Lộ trình chuyển giao" : "Khám phá theo nhu cầu"}</span>
+              <div>{items.map((item, index) => (
+                <a href={`#${capabilityAnchor(item, index)}`} key={item.title}>
+                  <small aria-hidden="true">{String(index + 1).padStart(2, "0")}</small>{item.title}<span aria-hidden="true">↘</span>
+                </a>
+              ))}</div>
+            </nav>
+
             <div className={styles.grid} data-sequential={sequential ? "true" : undefined}>
               {items.map((item, index) => {
-                const anchor = item.title === "AI & Dữ liệu" ? "ai-du-lieu" : item.title === "IoT & Quan trắc" ? "iot-quan-trac" : undefined;
+                const anchor = capabilityAnchor(item, index);
                 const detail = cardDetails[variant][item.title];
 
                 return (
@@ -332,18 +387,25 @@ export function CategoryLanding({ eyebrow, title, intro, items = [], children, v
                     <p className={styles.summary}>{item.summary}</p>
                     {detail ? (
                       <>
-                        <p className={styles.narrative}>{detail.narrative}</p>
-                        <div className={styles.contentBlock}>
-                          <span className={styles.blockLabel}>Nội dung chính</span>
-                          <ul className={styles.points}>{detail.points.map((point) => <li key={point}>{point}</li>)}</ul>
-                        </div>
                         <div className={styles.metaGrid}>
                           <div><small>Đầu ra</small><strong>{detail.output}</strong></div>
                           <div><small>Trọng tâm</small><strong>{detail.focus}</strong></div>
                         </div>
+                        <details className={styles.disclosure}>
+                          <summary>Phạm vi & cách triển khai<span aria-hidden="true">+</span></summary>
+                          <div>
+                            <p className={styles.narrative}>{detail.narrative}</p>
+                            <div className={styles.contentBlock}>
+                              <span className={styles.blockLabel}>Nội dung chính</span>
+                              <ul className={styles.points}>{detail.points.map((point) => <li key={point}>{point}</li>)}</ul>
+                            </div>
+                          </div>
+                        </details>
                         <div className={styles.cardFooter}>
                           <div className={styles.tags}>{detail.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-                          {item.href ? <Link className={styles.cardLink} href={item.href}>Khám phá →</Link> : null}
+                          <Link className={styles.cardLink} href={item.href ?? "/lien-he"}>
+                            {item.href ? "Khám phá" : "Trao đổi nhu cầu"} <span aria-hidden="true">↗</span>
+                          </Link>
                         </div>
                       </>
                     ) : item.href ? <Link className={styles.cardLink} href={item.href}>Khám phá →</Link> : null}
@@ -357,6 +419,22 @@ export function CategoryLanding({ eyebrow, title, intro, items = [], children, v
       ) : null}
 
       {children ? <div className={styles.children}>{children}</div> : null}
+
+      <section className={styles.related} aria-labelledby="related-title">
+        <div className={`shell ${styles.relatedInner}`}>
+          <div className={styles.relatedVisual} aria-hidden="true">
+            <span>IAICT / {variant === "academy" ? "ACADEMY" : "APPLIED TECHNOLOGY"}</span>
+            <strong>Ý tưởng.<br />Ứng dụng.<br /><em>Giá trị.</em></strong>
+            <div>{related.stages.map((stage, index) => <span key={stage}><small>0{index + 1}</small>{stage}</span>)}</div>
+          </div>
+          <div className={styles.relatedCopy}>
+            <p className={styles.kicker}>{related.label}</p>
+            <h2 id="related-title">{related.title}</h2>
+            <p>{related.body}</p>
+            <Link className={styles.primaryAction} href={related.href}>{related.action}<span aria-hidden="true">↗</span></Link>
+          </div>
+        </div>
+      </section>
 
       <section className={styles.final}>
         <div className={`shell ${styles.finalInner}`}>

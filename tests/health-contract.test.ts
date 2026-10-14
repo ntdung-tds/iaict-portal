@@ -14,6 +14,9 @@ describe("GET /api/health", () => {
       version: expect.any(String),
       environment: expect.any(String),
     });
+    if (body === null || typeof body !== "object") {
+      throw new Error("Health payload must be a JSON object");
+    }
     expect(Object.keys(body).sort()).toEqual(["environment", "status", "version"]);
   });
 });

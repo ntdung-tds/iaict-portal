@@ -17,6 +17,18 @@ export function SiteHeader() {
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !headerRef.current?.contains(event.target)) {
+        headerRef.current?.querySelectorAll("details[open]").forEach((el) => el.removeAttribute("open"));
+      }
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, []);
+  useEffect(() => {
+    headerRef.current?.querySelectorAll("details[open]").forEach((el) => el.removeAttribute("open"));
+  }, [pathname]);
   const current = (href: string) => pathname === href || (href !== "/" && pathname?.startsWith(href + "/"));
   const closeMenus = () => headerRef.current?.querySelectorAll("details[open]").forEach((el) => el.removeAttribute("open"));
 
@@ -35,6 +47,12 @@ export function SiteHeader() {
       }}
       onClick={(event) => {
         if ((event.target as HTMLElement).closest("a")) closeMenus();
+        const summary = (event.target as HTMLElement).closest("summary");
+        if (summary) {
+          headerRef.current?.querySelectorAll("details[open]").forEach((el) => {
+            if (el !== summary.parentElement) el.removeAttribute("open");
+          });
+        }
       }}
     >
       <div className={styles.topline}>
@@ -75,7 +93,7 @@ export function SiteHeader() {
             <summary aria-label="Mở menu">Menu</summary>
             <nav aria-label="Điều hướng di động"><span className="v12-menu-label">KHÁM PHÁ IAICT</span>
               {mainNavigation.map((item) => (
-                <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined}>{item.label}</Link>
+                <Link className={item.href === "/lien-he" ? styles.mobileContact : undefined} href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined}>{item.label}</Link>
               ))}
               <Link href="/tim-kiem">Tìm kiếm</Link>
             </nav>
