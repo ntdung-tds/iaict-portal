@@ -147,7 +147,7 @@ main#main-content [class*="safeNote"]{font-size:12.5px!important}
   main#main-content [class*="heroActions"]>a{
     width:100%;
     min-width:0;
-    min-height:48px;
+    min-height:48px!important;
   }
   main#main-content [class*="ctaInner"]>a[class*="primaryAction"]{
     width:100%;
