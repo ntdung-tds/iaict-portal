@@ -53,7 +53,7 @@ export function SiteHeader() {
       data-ui="final"
       data-mobile-open={mobileOpen ? "true" : "false"}
       ref={headerRef}
-      className={`${styles.header} v12-header final-header`}
+      className={`${styles.header} ia-header final-header`}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           const open = headerRef.current?.querySelector("details[open]");
