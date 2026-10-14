@@ -10,13 +10,33 @@ main#main-content :where(a,button){-webkit-tap-highlight-color:rgba(10,132,125,.
   html{scroll-padding-top:104px}
   .shell{width:min(1180px,calc(100% - 28px))}
   main#main-content section[id],main#main-content article[id]{scroll-margin-top:104px}
+
+  /* Trâm Rừng: force the architecture pair onto a shrink-safe single track. */
+  #architecture>.shell{
+    min-width:0;
+    grid-template-columns:minmax(0,1fr);
+  }
+  #architecture>.shell>*{
+    min-width:0;
+    max-width:100%;
+  }
 }
 
 @media(max-width:360px){
   .shell{width:min(1180px,calc(100% - 20px))}
 
-  /* Trâm Rừng: the desktop pipeline reserves 54px + 120px columns.
-     Collapse those fixed tracks at 320–360px so the explanatory copy can wrap naturally. */
+  /* Keep the image caption inside the narrow architecture card. */
+  #architecture>.shell>div:first-child>div{
+    left:20px;
+    right:20px;
+    max-width:calc(100% - 40px);
+  }
+  #architecture>.shell>div:first-child>div strong{
+    font-size:clamp(24px,8vw,30px);
+    overflow-wrap:anywhere;
+  }
+
+  /* The desktop pipeline reserves 54px + 120px columns. Collapse fixed tracks at 320–360px. */
   #architecture [aria-label="Luồng vận hành dữ liệu"]>div{
     grid-template-columns:30px minmax(62px,82px) minmax(0,1fr);
     gap:8px;
