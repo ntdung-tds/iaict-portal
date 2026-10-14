@@ -23,8 +23,34 @@ test("all public routes fit 320, 390 and 768px without horizontal overflow", asy
     for (const route of publicRoutes) {
       await page.goto(route);
       await expect(page.locator("#main-content")).toBeVisible();
-      const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
-      expect(fits, `${route} should fit within ${width}px`).toBeTruthy();
+      const report = await page.evaluate(() => {
+        const viewport = window.innerWidth;
+        const documentWidth = document.documentElement.scrollWidth;
+        const offenders = [...document.querySelectorAll<HTMLElement>("body *")]
+          .map((element) => {
+            const rect = element.getBoundingClientRect();
+            const overflow = Math.max(0, rect.right - viewport, -rect.left);
+            if (overflow < 0.5) return null;
+            return {
+              tag: element.tagName.toLowerCase(),
+              id: element.id,
+              className: typeof element.className === "string" ? element.className.slice(0, 140) : "",
+              text: (element.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 90),
+              left: Math.round(rect.left * 10) / 10,
+              right: Math.round(rect.right * 10) / 10,
+              width: Math.round(rect.width * 10) / 10,
+              overflow: Math.round(overflow * 10) / 10,
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => (b?.overflow ?? 0) - (a?.overflow ?? 0))
+          .slice(0, 8);
+        return { viewport, documentWidth, offenders };
+      });
+      expect(
+        report.documentWidth <= report.viewport,
+        `${route} should fit within ${width}px; overflow report: ${JSON.stringify(report)}`,
+      ).toBeTruthy();
     }
   }
 });
