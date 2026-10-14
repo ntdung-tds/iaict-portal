@@ -90,7 +90,7 @@ export default function HomePage() {
       <section className={`${styles.capabilityBar} ia-capability`} aria-label="Năng lực nổi bật">
         <div className={`shell ${styles.capabilityInner}`}>
           {capabilities.map(([no, title, body]) => (
-            <div className={`${styles.capabilityItem} ia-capability-item homeV7-capabilityItem`} key={title}>
+            <div className={`${styles.capabilityItem} ia-capability-item`} key={title}>
               <span>{no}</span>
               <strong>{title}</strong>
               <small>{body}</small>
@@ -154,7 +154,7 @@ export default function HomePage() {
 
           <div className={styles.ecosystemStack}>
             {pillars.map((pillar, index) => (
-              <Link href={pillar.href ?? "/"} className={`${styles.ecosystemRow} ia-ecosystem-row homeV7-ecosystemRow`} key={pillar.title}>
+              <Link href={pillar.href ?? "/"} className={`${styles.ecosystemRow} ia-ecosystem-row`} key={pillar.title}>
                 <span className={styles.ecosystemNo}>{String(index + 1).padStart(2, "0")}</span>
                 <div><small>IAICT / {index === 0 ? "Technology" : index === 1 ? "Solutions" : index === 2 ? "Transfer" : "Academy"}</small><h3>{pillar.title}</h3></div>
                 <p>{pillar.summary}</p>
@@ -165,7 +165,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.projectSection} ia-project homeV7-project final-project`} aria-labelledby="project-title">
+      <section className={`${styles.projectSection} ia-project final-project`} aria-labelledby="project-title">
         <div className={`shell ${styles.projectSpotlight}`}>
           <div className={styles.projectNarrative}>
             <div className={styles.projectIndex}><span>PROJECT / 01</span><i /><span>FIELD SYSTEMS</span></div>
@@ -213,7 +213,7 @@ export default function HomePage() {
           </div>
           <div className={styles.journeyLine}>
             {journey.map(([no, key, title, body]) => (
-              <article className={`${styles.journeyStep} ia-journey-step homeV7-journeyStep`} key={key}>
+              <article className={`${styles.journeyStep} ia-journey-step`} key={key}>
                 <div><span>{no}</span><i /></div>
                 <small>{key}</small>
                 <h3>{title}</h3>
@@ -234,7 +234,7 @@ export default function HomePage() {
           </div>
           <div className={styles.expertiseList}>
             {expertise.map(([no, title, body]) => (
-              <article className="ia-expertise-card homeV7-expertiseCard" key={title}><span>{no}</span><div><h3>{title}</h3><p>{body}</p></div></article>
+              <article className="ia-expertise-card" key={title}><span>{no}</span><div><h3>{title}</h3><p>{body}</p></div></article>
             ))}
           </div>
         </div>
@@ -247,10 +247,10 @@ export default function HomePage() {
             <div className={styles.headingSide}><span className={styles.headingRule} /><p>Các không gian năng lực được tổ chức để người xem hiểu mối liên hệ giữa công nghệ, dữ liệu, vận hành và chuyển giao.</p></div>
           </div>
           <div className={styles.gallery}>
-            <Link href="/du-an/tram-rung" className={`${styles.galleryCard} ${styles.galleryLead} ia-gallery-card ia-gallery-lead homeV7-galleryCard homeV7-galleryLead`}><span>01 / PROJECT</span><strong>Trâm Rừng</strong><small>IoT ngoài trời · dữ liệu hiện trường · server</small><b>↗</b></Link>
-            <Link href="/san-pham-nen-tang#iot-quan-trac" className={`${styles.galleryCard} ia-gallery-card homeV7-galleryCard`}><span>02 / TECHNOLOGY</span><strong>IoT & Quan trắc</strong><small>Sensor · edge · connectivity</small><b>↗</b></Link>
-            <Link href="/san-pham-nen-tang#ai-du-lieu" className={`${styles.galleryCard} ia-gallery-card homeV7-galleryCard`}><span>03 / DATA</span><strong>AI & Dữ liệu</strong><small>Workflow · analytics · intelligence</small><b>↗</b></Link>
-            <Link href="/dao-tao-tap-huan" className={`${styles.galleryCard} ${styles.galleryWide} ia-gallery-card homeV7-galleryCard`}><span>04 / ACADEMY</span><strong>Năng lực số cho tổ chức</strong><small>AI · dữ liệu · kỹ năng số · chuyển giao</small><b>↗</b></Link>
+            <Link href="/du-an/tram-rung" className={`${styles.galleryCard} ${styles.galleryLead} ia-gallery-card ia-gallery-lead`}><span>01 / PROJECT</span><strong>Trâm Rừng</strong><small>IoT ngoài trời · dữ liệu hiện trường · server</small><b>↗</b></Link>
+            <Link href="/san-pham-nen-tang#iot-quan-trac" className={`${styles.galleryCard} ia-gallery-card`}><span>02 / TECHNOLOGY</span><strong>IoT & Quan trắc</strong><small>Sensor · edge · connectivity</small><b>↗</b></Link>
+            <Link href="/san-pham-nen-tang#ai-du-lieu" className={`${styles.galleryCard} ia-gallery-card`}><span>03 / DATA</span><strong>AI & Dữ liệu</strong><small>Workflow · analytics · intelligence</small><b>↗</b></Link>
+            <Link href="/dao-tao-tap-huan" className={`${styles.galleryCard} ${styles.galleryWide} ia-gallery-card`}><span>04 / ACADEMY</span><strong>Năng lực số cho tổ chức</strong><small>AI · dữ liệu · kỹ năng số · chuyển giao</small><b>↗</b></Link>
           </div>
         </div>
       </section>
@@ -265,7 +265,7 @@ export default function HomePage() {
           </div>
           <div className={styles.knowledgeGrid}>
             {knowledge.map(([tag, title, body], index) => (
-              <article className={`${styles.knowledgeCard} ia-knowledge-card homeV7-knowledgeCard ${index === 0 ? `${styles.knowledgeLead} ia-knowledge-lead homeV7-knowledgeLead` : ""}`} key={title}>
+              <article className={`${styles.knowledgeCard} ia-knowledge-card ${index === 0 ? `${styles.knowledgeLead} ia-knowledge-lead` : ""}`} key={title}>
                 <span>{tag}</span>
                 <h3>{title}</h3>
                 <p>{body}</p>
