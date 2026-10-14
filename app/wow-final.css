@@ -167,12 +167,6 @@ body.iaict-scrolled .final-header{box-shadow:0 14px 42px rgba(6,31,74,.1)!import
 .iaict-final .final-closing::after{content:"IAICT";position:absolute;right:-24px;bottom:-60px;font-size:clamp(120px,18vw,260px);line-height:1;font-weight:900;letter-spacing:-.08em;color:rgba(255,255,255,.035)}
 .iaict-final .final-closing .shell{position:relative;z-index:1}
 
-/* Institutional/category pages final pass */
-.iaict-final .v6-hero,.iaict-final .v8-hero{position:relative;overflow:hidden}
-.iaict-final .v6-hero::after,.iaict-final .v8-hero::after{content:"";position:absolute;right:-90px;top:-90px;width:320px;height:320px;border-radius:50%;border:1px solid rgba(72,149,255,.12);box-shadow:0 0 0 40px rgba(72,149,255,.025),0 0 0 80px rgba(72,149,255,.018);pointer-events:none}
-.iaict-final .v6-card,.iaict-final .v8-card,.iaict-final .v8-principle,.iaict-final .v8-topic,.iaict-final .v8-story,.iaict-final .v8-news article{border-radius:18px!important;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease!important}
-.iaict-final :is(.v6-card,.v8-card,.v8-principle,.v8-topic,.v8-story,.v8-news article):hover{transform:translateY(-5px);box-shadow:0 24px 58px rgba(11,61,145,.11)!important;border-color:#9fc1ef!important}
-
 /* Footer */
 .final-footer{position:relative;overflow:hidden;background:
   radial-gradient(circle at 75% 20%,rgba(72,149,255,.16),transparent 25rem),
