@@ -16,7 +16,7 @@ import "./public-search.css";
 import "./site-experience.css";
 import "./home-active.css";
 import "./public-landing.css";
-import "./final-polish.css";
+import "./site-polish.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],

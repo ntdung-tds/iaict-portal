@@ -1,4 +1,4 @@
-/* Final public-facing polish: intentionally small, global and non-destructive. */
+/* Site public-facing polish: intentionally small, global and non-destructive. */
 html{scroll-padding-top:124px}
 main#main-content :where(h1,h2,h3){text-wrap:balance}
 main#main-content :where(p,li){text-wrap:pretty}
