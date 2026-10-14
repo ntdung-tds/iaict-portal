@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import type { ReactNode } from "react";
 import { SiteMotion } from "@/components/site-motion";
+import { isIndexableSite, SITE_DESCRIPTION, SITE_TITLE, siteBaseUrl } from "@/lib/site-config";
 import "./globals.css";
 import "./typography.css";
 import "./project-showcase.css";
@@ -26,13 +27,32 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://iaict.example"),
+  metadataBase: siteBaseUrl ?? undefined,
+  applicationName: "IAICT",
   title: {
-    default: "IAICT — Viện Ứng dụng Công nghệ Thông tin và Truyền thông",
+    default: SITE_TITLE,
     template: "%s | IAICT",
   },
-  description:
-    "Cổng thông tin điện tử IAICT — công nghệ, giải pháp, chuyển giao, đào tạo và các hoạt động của Viện.",
+  description: SITE_DESCRIPTION,
+  creator: "Viện Ứng dụng Công nghệ Thông tin và Truyền thông",
+  publisher: "IAICT",
+  category: "Công nghệ thông tin và truyền thông",
+  robots: isIndexableSite
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
+  openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    siteName: "IAICT",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    ...(siteBaseUrl ? { url: siteBaseUrl } : {}),
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

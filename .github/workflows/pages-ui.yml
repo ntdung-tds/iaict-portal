@@ -37,6 +37,8 @@ jobs:
         shell: bash
         env:
           GITHUB_PAGES: "true"
+          NEXT_PUBLIC_SITE_URL: "https://ntdung-tds.github.io/iaict-portal/"
+          NEXT_PUBLIC_INDEXABLE_SITE: "false"
         run: |
           set -euo pipefail
           mv cloudflare.config.ts cloudflare.config.ts.pages-disabled
