@@ -8,6 +8,20 @@ main#main-content :where(a,button){-webkit-tap-highlight-color:rgba(10,132,125,.
 main#main-content .shell>*{min-width:0}
 main#main-content :where(img,svg,video,canvas){max-width:100%}
 
+/* Public card metadata and text actions must remain readable and touch-friendly. */
+main#main-content [class*="newsCard"] small{
+  color:#5f777e!important;
+  font-size:10.5px!important;
+}
+main#main-content [class*="newsCard"] small a{
+  display:inline-flex;
+  align-items:center;
+  min-height:44px;
+  color:#0b716a!important;
+  font-size:11.5px;
+  line-height:1.4;
+}
+
 /* Header controls live outside main, so keep keyboard focus explicit there too. */
 .ia-header :where(a,button,summary):focus-visible{outline:3px solid #1d6ef2;outline-offset:3px}
 
