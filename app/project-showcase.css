@@ -1,4 +1,4 @@
-/* Project V4 — approved IAICT Trâm Rừng visual direction.
+/* IAICT Trâm Rừng project showcase visual direction.
    Keeps the semantic five-step flow in the homepage component while aligning
    the source branch with the Pages demo: pale institutional canvas, technical
    grid, light cards, deep navy copy and teal data connectors. */
@@ -204,7 +204,7 @@ main [class*="flowNode"] i {
   box-shadow:
     0 0 0 5px rgba(33, 173, 155, 0.08),
     0 0 18px rgba(33, 173, 155, 0.28) !important;
-  animation: project-v4-node 2.6s ease-in-out infinite;
+  animation: project-node-pulse 2.6s ease-in-out infinite;
 }
 
 main [class*="flowNode"] strong {
@@ -222,7 +222,7 @@ main [class*="architectureNote"] p {
   color: #607981 !important;
 }
 
-@keyframes project-v4-node {
+@keyframes project-node-pulse {
   0%, 100% { transform: scale(0.9); opacity: 0.7; }
   50% { transform: scale(1.12); opacity: 1; }
 }
