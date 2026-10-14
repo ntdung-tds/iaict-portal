@@ -34,9 +34,13 @@ jobs:
         run: npm run verify:migrations
 
       - name: Build static public preview
-        run: npx vinext build
+        shell: bash
         env:
           GITHUB_PAGES: "true"
+        run: |
+          set -euo pipefail
+          mv cloudflare.config.ts cloudflare.config.ts.pages-disabled
+          npx vinext build
 
       - name: Prepare GitHub Pages artifact
         id: export
