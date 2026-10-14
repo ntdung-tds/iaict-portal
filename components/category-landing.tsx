@@ -403,12 +403,20 @@ export function CategoryLanding({ eyebrow, title, intro, items = [], children, v
                         </details>
                         <div className={styles.cardFooter}>
                           <div className={styles.tags}>{detail.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-                          <Link className={styles.cardLink} href={item.href ?? "/lien-he"}>
+                          <Link
+                            className={styles.cardLink}
+                            href={item.href ?? "/lien-he"}
+                            aria-label={item.href ? `Khám phá ${item.title}` : `Trao đổi nhu cầu về ${item.title}`}
+                          >
                             {item.href ? "Khám phá" : "Trao đổi nhu cầu"} <span aria-hidden="true">↗</span>
                           </Link>
                         </div>
                       </>
-                    ) : item.href ? <Link className={styles.cardLink} href={item.href}>Khám phá →</Link> : null}
+                    ) : item.href ? (
+                      <Link className={styles.cardLink} href={item.href} aria-label={`Khám phá ${item.title}`}>
+                        Khám phá →
+                      </Link>
+                    ) : null}
                     <span className={styles.cardGlyph} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                   </article>
                 );

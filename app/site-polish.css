@@ -58,6 +58,50 @@ main#main-content [class*="evidenceNote"]{
   font-size:11.5px!important;
 }
 
+/* Category landing cards: preserve the visual hierarchy without allowing pale microcopy or undersized actions. */
+main#main-content[data-variant]{--muted:#536e74!important}
+main#main-content[data-variant] [class*="signalPanel"] small,
+main#main-content[data-variant] [class*="index"],
+main#main-content[data-variant] [class*="blockLabel"],
+main#main-content[data-variant] [class*="metaGrid"] small,
+main#main-content[data-variant] [class*="tags"] span,
+main#main-content[data-variant] [class*="capabilityIndex"]>span,
+main#main-content[data-variant] [class*="capabilityIndex"] small{
+  color:#536e74!important;
+  font-size:10.5px!important;
+}
+main#main-content[data-variant] [class*="signalPanel"] p{color:#536e74!important}
+main#main-content[data-variant] [class*="cardTop"]>*{min-width:0}
+main#main-content[data-variant] [class*="cardLabel"]{max-width:100%;overflow-wrap:anywhere}
+main#main-content[data-variant] [class*="capabilityIndex"] a{min-height:44px!important}
+main#main-content[data-variant] [class*="cardLink"]{
+  display:inline-flex!important;
+  align-items:center;
+  min-height:44px;
+  padding-block:8px;
+  line-height:1.45;
+}
+
+/* Contact page: keep institutional information legible, semantic and usable on touch screens. */
+main#main-content [class*="contactHero"] [class*="lead"]{color:#536e74!important}
+main#main-content [class*="contactPhoto"] span{
+  color:#c9f4ea!important;
+  font-size:10.5px!important;
+  text-shadow:0 1px 8px rgba(0,0,0,.35);
+}
+main#main-content [class*="contactPrimary"] [class*="labelLight"]{font-size:10.5px!important}
+main#main-content [class*="addressBox"]{font-style:normal}
+main#main-content [class*="addressBox"]>span{
+  color:#bcd9d3!important;
+  font-size:10.5px!important;
+}
+main#main-content :where([class*="contactTopic"],[class*="processStep"])>span{
+  color:#08756e!important;
+  font-size:10.5px!important;
+}
+main#main-content :where([class*="contactTopic"],[class*="processStep"])>p,
+main#main-content [class*="safeNote"]{font-size:12.5px!important}
+
 /* Header controls live outside main, so keep keyboard focus explicit there too. */
 .ia-header :where(a,button,summary):focus-visible{outline:3px solid #1d6ef2;outline-offset:3px}
 
@@ -109,6 +153,14 @@ main#main-content [class*="evidenceNote"]{
     width:100%;
     min-width:0;
     min-height:48px;
+  }
+  main#main-content[data-variant] [class*="cardFooter"]{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  main#main-content[data-variant] [class*="cardLink"]{
+    width:100%;
+    justify-content:space-between;
   }
 }
 

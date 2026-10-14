@@ -40,10 +40,10 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className={styles.section} id="contact-scope">
+      <section className={styles.section} id="contact-scope" aria-labelledby="contact-scope-title">
         <div className="shell">
           <div className={styles.sectionHead}>
-            <div><p className={styles.label}>Contact & Partnership</p><h2>Chọn đúng hướng trao đổi ngay từ đầu.</h2></div>
+            <div><p className={styles.label}>Contact & Partnership</p><h2 id="contact-scope-title">Chọn đúng hướng trao đổi ngay từ đầu.</h2></div>
             <p>IAICT tổ chức nhu cầu hợp tác theo bốn nhóm để việc tiếp nhận và phản hồi tập trung hơn. Một nhu cầu có thể đi qua nhiều nhóm nếu dự án cần cả công nghệ, chuyển giao và đào tạo.</p>
           </div>
           <div className={styles.contactGrid}>
@@ -51,34 +51,34 @@ export default function ContactPage() {
               <p className={styles.labelLight}>Đơn vị đầu mối</p>
               <h2>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</h2>
               <p>Trao đổi về nhu cầu công nghệ, dữ liệu, AI, IoT, chuyển đổi số, chuyển giao, đào tạo hoặc hợp tác triển khai.</p>
-              <div className={styles.addressBox}><span>Địa chỉ</span><strong>Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội</strong></div>
+              <address className={styles.addressBox}><span>Địa chỉ</span><strong>Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội</strong></address>
             </article>
-            <div className={styles.contactTopics}>
-              {topics.map(([no, title, body]) => <article className={styles.contactTopic} key={title}><span>{no} / IAICT</span><h3>{title}</h3><p>{body}</p></article>)}
+            <div className={styles.contactTopics} role="list" aria-label="Các hướng hợp tác">
+              {topics.map(([no, title, body]) => <article className={styles.contactTopic} role="listitem" key={title}><span>{no} / IAICT</span><h3>{title}</h3><p>{body}</p></article>)}
             </div>
           </div>
         </div>
       </section>
 
-      <section className={styles.sectionAlt}>
+      <section className={styles.sectionAlt} aria-labelledby="contact-process-title">
         <div className="shell">
           <div className={styles.sectionHead}>
-            <div><p className={styles.label}>Start a Conversation</p><h2>Một quy trình trao đổi ngắn, đủ để đi đúng hướng.</h2></div>
+            <div><p className={styles.label}>Start a Conversation</p><h2 id="contact-process-title">Một quy trình trao đổi ngắn, đủ để đi đúng hướng.</h2></div>
             <p>Ở bước đầu, thông tin cần nhất là bối cảnh, nhu cầu và tiêu chí thành công. Chi tiết kỹ thuật có thể được làm rõ dần trong quá trình trao đổi.</p>
           </div>
-          <div className={styles.process}>
-            <article className={styles.processStep}><span>01</span><h3>Bối cảnh</h3><p>Mô tả tổ chức, quy trình, hệ thống hoặc hiện trường đang cần cải thiện.</p></article>
-            <article className={styles.processStep}><span>02</span><h3>Nhu cầu</h3><p>Nêu vấn đề ưu tiên, mục tiêu mong muốn và giới hạn cần lưu ý.</p></article>
-            <article className={styles.processStep}><span>03</span><h3>Trao đổi</h3><p>Cùng làm rõ dữ liệu, công nghệ, nguồn lực, phạm vi và tiêu chí đánh giá.</p></article>
-            <article className={styles.processStep}><span>04</span><h3>Đề xuất</h3><p>Thống nhất hướng tiếp cận, bước thử nghiệm hoặc phương án triển khai tiếp theo.</p></article>
+          <div className={styles.process} role="list" aria-label="Quy trình bắt đầu trao đổi">
+            <article className={styles.processStep} role="listitem"><span>01</span><h3>Bối cảnh</h3><p>Mô tả tổ chức, quy trình, hệ thống hoặc hiện trường đang cần cải thiện.</p></article>
+            <article className={styles.processStep} role="listitem"><span>02</span><h3>Nhu cầu</h3><p>Nêu vấn đề ưu tiên, mục tiêu mong muốn và giới hạn cần lưu ý.</p></article>
+            <article className={styles.processStep} role="listitem"><span>03</span><h3>Trao đổi</h3><p>Cùng làm rõ dữ liệu, công nghệ, nguồn lực, phạm vi và tiêu chí đánh giá.</p></article>
+            <article className={styles.processStep} role="listitem"><span>04</span><h3>Đề xuất</h3><p>Thống nhất hướng tiếp cận, bước thử nghiệm hoặc phương án triển khai tiếp theo.</p></article>
           </div>
-          <div className={styles.safeNote}>Kênh liên hệ trực tuyến chỉ nên thu thập dữ liệu khi luồng tiếp nhận và bảo vệ dữ liệu đã được kiểm chứng. Trong thời gian hoàn thiện, thông tin liên hệ chính thức của Viện vẫn là đầu mối trao đổi.</div>
+          <div className={styles.safeNote} role="note">Kênh liên hệ trực tuyến chỉ nên thu thập dữ liệu khi luồng tiếp nhận và bảo vệ dữ liệu đã được kiểm chứng. Trong thời gian hoàn thiện, thông tin liên hệ chính thức của Viện vẫn là đầu mối trao đổi.</div>
         </div>
       </section>
 
-      <section className={styles.ctaBand}>
+      <section className={styles.ctaBand} aria-labelledby="contact-next-title">
         <div className={`shell ${styles.ctaInner}`}>
-          <div><h2>Muốn hiểu trước năng lực của IAICT?</h2><p>Xem hệ sinh thái công nghệ, giải pháp, chuyển giao và đào tạo trước khi bắt đầu một cuộc trao đổi cụ thể.</p></div>
+          <div><h2 id="contact-next-title">Muốn hiểu trước năng lực của IAICT?</h2><p>Xem hệ sinh thái công nghệ, giải pháp, chuyển giao và đào tạo trước khi bắt đầu một cuộc trao đổi cụ thể.</p></div>
           <Link className={styles.primaryAction} href="/gioi-thieu">Giới thiệu IAICT <span>↗</span></Link>
         </div>
       </section>
