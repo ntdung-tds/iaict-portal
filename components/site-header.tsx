@@ -18,6 +18,7 @@ export function SiteHeader() {
   const [ready, setReady] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const mobileToggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => setReady(true), []);
 
@@ -45,6 +46,16 @@ export function SiteHeader() {
     };
   }, [mobileOpen]);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      const currentLink = headerRef.current?.querySelector<HTMLElement>('#mobile-navigation a[aria-current="page"]');
+      const firstLink = headerRef.current?.querySelector<HTMLElement>('#mobile-navigation a[href]');
+      (currentLink ?? firstLink)?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [mobileOpen]);
+
   const current = (href: string) => pathname === href || (href !== "/" && pathname?.startsWith(href + "/"));
 
   return (
@@ -55,10 +66,25 @@ export function SiteHeader() {
       ref={headerRef}
       className={`${styles.header} ia-header`}
       onKeyDown={(event) => {
+        if (event.key === "Tab" && mobileOpen) {
+          const links = [...(headerRef.current?.querySelectorAll<HTMLElement>('#mobile-navigation a[href]') ?? [])];
+          const focusable = [mobileToggleRef.current, ...links].filter((item): item is HTMLElement => Boolean(item));
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last?.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first?.focus();
+          }
+        }
         if (event.key === "Escape") {
           const open = headerRef.current?.querySelector("details[open]");
+          const hadMobileOpen = mobileOpen;
           closeMenus();
           if (open) (open.querySelector("summary") as HTMLElement | null)?.focus();
+          else if (hadMobileOpen) mobileToggleRef.current?.focus();
         }
       }}
       onClick={(event) => {
@@ -106,6 +132,7 @@ export function SiteHeader() {
           <Link className={styles.cta} href={contactItem.href} onClick={closeMenus}>Liên hệ hợp tác</Link>
           <div className={styles.mobileMenu}>
             <button
+              ref={mobileToggleRef}
               type="button"
               className={styles.mobileToggle}
               aria-label={mobileOpen ? "Đóng điều hướng" : "Mở điều hướng"}
@@ -121,7 +148,16 @@ export function SiteHeader() {
 
       {mobileOpen ? (
         <div className={`${styles.mobileLayer} ${headerStyles.mobileLayer}`}>
-          <button className={styles.mobileBackdrop} type="button" aria-label="Đóng điều hướng" onClick={closeMenus} />
+          <button
+            className={styles.mobileBackdrop}
+            type="button"
+            tabIndex={-1}
+            aria-label="Đóng điều hướng"
+            onClick={() => {
+              closeMenus();
+              mobileToggleRef.current?.focus();
+            }}
+          />
           <nav
             id="mobile-navigation"
             className={styles.mobilePanel}

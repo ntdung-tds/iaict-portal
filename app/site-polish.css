@@ -8,6 +8,13 @@ main#main-content :where(a,button){-webkit-tap-highlight-color:rgba(10,132,125,.
 main#main-content .shell>*{min-width:0}
 main#main-content :where(img,svg,video,canvas){max-width:100%}
 
+/* Header controls live outside main, so keep keyboard focus explicit there too. */
+.ia-header :where(a,button,summary):focus-visible{outline:3px solid #1d6ef2;outline-offset:3px}
+
+/* Hero carousel controls need a high-contrast focus indicator on the dark media surface. */
+.iaict-public [role="group"][aria-label="Chuyển nội dung giới thiệu"] button:focus-visible{outline:3px solid #8ff0d9;outline-offset:3px}
+.iaict-public [role="group"][aria-label="Chuyển nội dung giới thiệu"] button[aria-pressed="false"]:not([aria-label="Tự động chuyển nội dung"]){color:rgba(194,215,219,.62)}
+
 /* The QA matrix includes 768px exactly. Keep tablet-edge spacing and controls intentional. */
 @media(max-width:768px){
   html{scroll-padding-top:104px}
