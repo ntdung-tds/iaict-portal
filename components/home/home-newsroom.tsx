@@ -42,6 +42,21 @@ const channels = [
   },
 ] as const;
 
+const newsroomImageWidths = [480, 800, 1200] as const;
+
+function responsiveImageUrl(source: string, width: number, quality = 74) {
+  const url = new URL(source);
+  url.searchParams.set("auto", "format");
+  url.searchParams.delete("fm");
+  url.searchParams.set("q", String(quality));
+  url.searchParams.set("w", String(width));
+  return url.toString();
+}
+
+function responsiveImageSrcSet(source: string) {
+  return newsroomImageWidths.map((width) => `${responsiveImageUrl(source, width)} ${width}w`).join(", ");
+}
+
 export function HomeNewsroom() {
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(true);
@@ -92,7 +107,17 @@ export function HomeNewsroom() {
               <Link href={current.href}>{current.cta}<span aria-hidden="true">↗</span></Link>
             </div>
 
-            <div className="ia-newsroom-visual" aria-hidden="true" style={{ backgroundImage: `url("${current.image}")` }}>
+            <div className="ia-newsroom-visual" aria-hidden="true">
+              <img
+                src={responsiveImageUrl(current.image, 800)}
+                srcSet={responsiveImageSrcSet(current.image)}
+                sizes="(max-width: 560px) 205px, (max-width: 820px) 240px, 40vw"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+              />
               <div className="ia-newsroom-photo-shade" />
               <div className="ia-newsroom-photo-label">
                 <span>IAICT / {current.tag}</span>

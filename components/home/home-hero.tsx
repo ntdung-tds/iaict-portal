@@ -38,6 +38,20 @@ const slides = [
 ];
 
 const topicLabels = ["Công nghệ ứng dụng", "AI & Dữ liệu", "IoT & Hiện trường"];
+const heroImageWidths = [960, 1600, 2200] as const;
+
+function responsiveImageUrl(source: string, width: number, quality = 76) {
+  const url = new URL(source);
+  url.searchParams.set("auto", "format");
+  url.searchParams.delete("fm");
+  url.searchParams.set("q", String(quality));
+  url.searchParams.set("w", String(width));
+  return url.toString();
+}
+
+function responsiveImageSrcSet(source: string) {
+  return heroImageWidths.map((width) => `${responsiveImageUrl(source, width)} ${width}w`).join(", ");
+}
 
 export function HomeHero() {
   const [active, setActive] = useState(0);
@@ -69,12 +83,17 @@ export function HomeHero() {
         if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
       }}
     >
-      <div
-        key={slide.image}
-        className={styles.background}
-        aria-hidden="true"
-        style={{ backgroundImage: `url("${slide.image}")` }}
-      />
+      <div key={slide.image} className={styles.background} aria-hidden="true">
+        <img
+          src={responsiveImageUrl(slide.image, 1600)}
+          srcSet={responsiveImageSrcSet(slide.image)}
+          sizes="100vw"
+          alt=""
+          loading={active === 0 ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={active === 0 ? "high" : "auto"}
+        />
+      </div>
       <div className={styles.overlay} aria-hidden="true" />
       <div className={styles.texture} aria-hidden="true" />
 

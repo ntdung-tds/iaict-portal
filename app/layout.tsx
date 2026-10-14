@@ -58,6 +58,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="vi" className={beVietnamPro.variable}>
+      <head>
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="//images.unsplash.com" />
+      </head>
       <body className="iaict-public">
         <a className="skip-link" href="#main-content">
           Bỏ qua điều hướng
