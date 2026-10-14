@@ -22,6 +22,42 @@ main#main-content [class*="newsCard"] small a{
   line-height:1.4;
 }
 
+/* Newsroom and project-detail metadata should meet AA contrast instead of relying on pale microcopy. */
+main#main-content :where([class*="story"],[class*="newsCard"],[class*="eventState"])>span{
+  color:#08756e!important;
+  font-size:10.5px!important;
+}
+main#main-content [class*="editorialFeature"]>small{
+  color:#bfd8d3!important;
+  font-size:10.5px!important;
+}
+main#main-content [class*="eventIntro"] h2{
+  margin:10px 0 14px;
+  color:#0d313a;
+  font-size:28px;
+  line-height:1.12;
+}
+main#main-content [class*="factBarItem"]>span{
+  color:#5f777e!important;
+  font-size:10.5px!important;
+}
+main#main-content :where([class*="pipelineRow"],[class*="principle"])>span{
+  color:#08756e!important;
+  font-size:10.5px!important;
+}
+main#main-content [class*="pipelineRow"]>small{
+  color:#587176!important;
+  font-size:12px!important;
+}
+main#main-content [class*="systemFlow"] small{
+  color:#b8d2cf!important;
+  font-size:10.5px!important;
+}
+main#main-content [class*="evidenceNote"]{
+  color:#b8d2cf!important;
+  font-size:11.5px!important;
+}
+
 /* Header controls live outside main, so keep keyboard focus explicit there too. */
 .ia-header :where(a,button,summary):focus-visible{outline:3px solid #1d6ef2;outline-offset:3px}
 
@@ -35,6 +71,16 @@ main#main-content [class*="newsCard"] small a{
   .shell{width:min(1180px,calc(100% - 28px))}
   main#main-content section[id],main#main-content article[id]{scroll-margin-top:104px}
   main#main-content :where([class*="heroGrid"],[class*="sectionHead"],[class*="ctaInner"]){min-width:0}
+  main#main-content [class*="sectionHead"] h2{font-size:clamp(32px,10.5vw,38px)!important}
+
+  /* Keep breadcrumb navigation readable and finger-friendly on project/detail pages. */
+  main#main-content [class*="breadcrumb"]{flex-wrap:wrap;font-size:12px!important}
+  main#main-content [class*="breadcrumb"]>a{display:inline-flex;align-items:center;min-height:44px}
+
+  /* Trâm Rừng keeps a dedicated mobile architecture; its microcopy must not regress below AA/readable sizes. */
+  main#main-content [data-tram-mobile-row]>span{color:#08756e!important;font-size:10.5px!important}
+  main#main-content [data-tram-mobile-row]>strong{font-size:12px!important}
+  main#main-content [data-tram-mobile-row]>small{color:#587176!important;font-size:12px!important;line-height:1.55!important}
 
   /* Prefer the explicitly supplied mobile image variants without changing component layout. */
   main#main-content [style*="--hero-image-mobile"]{--hero-image:var(--hero-image-mobile)!important}

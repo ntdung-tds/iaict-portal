@@ -35,14 +35,14 @@ export default function NewsPage() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section className={styles.section} aria-labelledby="editorial-topics-title">
         <div className="shell">
           <div className={styles.sectionHead}>
-            <div><p className={styles.label}>Editorial Topics</p><h2>Những chủ đề IAICT theo đuổi.</h2></div>
+            <div><p className={styles.label}>Editorial Topics</p><h2 id="editorial-topics-title">Những chủ đề IAICT theo đuổi.</h2></div>
             <p>Các khối dưới đây là cấu trúc biên tập và chủ đề chuyên môn, không được trình bày như bài báo đã xuất bản. Khi CMS được kết nối, danh sách nội dung sẽ kế thừa hệ phân loại này.</p>
           </div>
-          <div className={styles.topicChips} aria-label="Chuyên mục tin tức">
-            {newsCategories.map((item) => <span className={styles.chip} key={item}>{item}</span>)}
+          <div className={styles.topicChips} role="list" aria-label="Chuyên mục tin tức">
+            {newsCategories.map((item) => <span className={styles.chip} role="listitem" key={item}>{item}</span>)}
           </div>
           <div className={styles.editorialGrid}>
             <article className={styles.editorialFeature}>
@@ -59,10 +59,10 @@ export default function NewsPage() {
         </div>
       </section>
 
-      <section className={styles.sectionAlt}>
+      <section className={styles.sectionAlt} aria-labelledby="knowledge-stream-title">
         <div className="shell">
           <div className={styles.sectionHead}>
-            <div><p className={styles.label}>Knowledge Stream</p><h2>Ba hướng nội dung chuyên môn.</h2></div>
+            <div><p className={styles.label}>Knowledge Stream</p><h2 id="knowledge-stream-title">Ba hướng nội dung chuyên môn.</h2></div>
             <p>Khi dữ liệu bài viết được kết nối, các hướng này có thể mở rộng thành series, case study, hướng dẫn kỹ thuật hoặc tài liệu phục vụ đào tạo.</p>
           </div>
           <div className={styles.newsGrid}>
@@ -75,12 +75,12 @@ export default function NewsPage() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section className={styles.section} aria-labelledby="events-title">
         <div className="shell">
           <div className={styles.eventPanel}>
             <div className={styles.eventIntro}>
               <p className={styles.label}>Events & Activities</p>
-              <h3>Sự kiện – Hội thảo – Tập huấn</h3>
+              <h2 id="events-title">Sự kiện – Hội thảo – Tập huấn</h2>
               <p>Khu vực dành cho các hoạt động có thời gian, địa điểm, đơn vị phối hợp và trạng thái xuất bản rõ ràng.</p>
             </div>
             <div className={styles.eventState}>

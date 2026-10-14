@@ -156,6 +156,106 @@ test("V15 discovery hub exposes semantic groups and readable compact actions", a
   expect(await quickAction.evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(11);
 });
 
+test("V15 newsroom and project detail expose readable metadata and semantic hierarchy", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto("/tin-tuc");
+
+  await expect(page.getByRole("heading", { level: 1, name: /Tin tức, hoạt động/i })).toBeVisible();
+  const categoryList = page.getByRole("list", { name: "Chuyên mục tin tức" });
+  await expect(categoryList).toBeVisible();
+  await expect(categoryList.getByRole("listitem").first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: /Sự kiện.*Hội thảo.*Tập huấn/i })).toBeVisible();
+
+  const newsMetrics = await page.evaluate(() => {
+    const specs = [
+      { selector: '[class*="story"]>span', background: [255, 255, 255] },
+      { selector: '[class*="newsCard"]>span', background: [255, 255, 255] },
+      { selector: '[class*="eventState"]>span', background: [237, 244, 241] },
+      { selector: '[class*="editorialFeature"]>small', background: [12, 98, 91] },
+    ];
+    const parseRgb = (value: string) => {
+      const match = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : [0, 0, 0];
+    };
+    const luminance = ([r, g, b]: number[]) => {
+      const channels = [r, g, b].map((channel) => {
+        const value = channel / 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    };
+    return specs.map(({ selector, background }) => {
+      const element = document.querySelector<HTMLElement>(selector);
+      if (!element) return { selector, fontSize: 0, contrast: 0 };
+      const style = getComputedStyle(element);
+      const foregroundLuminance = luminance(parseRgb(style.color));
+      const backgroundLuminance = luminance(background);
+      const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+      const darker = Math.min(foregroundLuminance, backgroundLuminance);
+      return {
+        selector,
+        fontSize: parseFloat(style.fontSize),
+        contrast: (lighter + 0.05) / (darker + 0.05),
+      };
+    });
+  });
+
+  for (const metric of newsMetrics) {
+    expect(metric.fontSize, `${metric.selector} should not collapse into unreadable microcopy`).toBeGreaterThanOrEqual(10.5);
+    expect(metric.contrast, `${metric.selector} should meet AA contrast`).toBeGreaterThanOrEqual(4.5);
+  }
+
+  await page.goto("/du-an/tram-rung");
+  await expect(page.getByRole("heading", { level: 1, name: /Kết nối rừng với dữ liệu/i })).toBeVisible();
+
+  const breadcrumb = page.getByRole("navigation", { name: "Đường dẫn trang" });
+  for (const link of await breadcrumb.getByRole("link").all()) {
+    const box = await link.boundingBox();
+    expect(box?.height ?? 0, "breadcrumb links should keep a 44px mobile touch target").toBeGreaterThanOrEqual(44);
+  }
+
+  const detailMetrics = await page.evaluate(() => {
+    const specs = [
+      { selector: '[class*="factBarItem"]>span', background: [255, 255, 255], minSize: 10.5 },
+      { selector: '[data-tram-mobile-row]>span', background: [255, 255, 255], minSize: 10.5 },
+      { selector: '[data-tram-mobile-row]>small', background: [255, 255, 255], minSize: 12 },
+      { selector: '[class*="systemFlow"] small', background: [7, 59, 66], minSize: 10.5 },
+      { selector: '[class*="evidenceNote"]', background: [7, 59, 66], minSize: 11.5 },
+    ];
+    const parseRgb = (value: string) => {
+      const match = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : [0, 0, 0];
+    };
+    const luminance = ([r, g, b]: number[]) => {
+      const channels = [r, g, b].map((channel) => {
+        const value = channel / 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    };
+    return specs.map(({ selector, background, minSize }) => {
+      const element = document.querySelector<HTMLElement>(selector);
+      if (!element) return { selector, minSize, fontSize: 0, contrast: 0 };
+      const style = getComputedStyle(element);
+      const foregroundLuminance = luminance(parseRgb(style.color));
+      const backgroundLuminance = luminance(background);
+      const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+      const darker = Math.min(foregroundLuminance, backgroundLuminance);
+      return {
+        selector,
+        minSize,
+        fontSize: parseFloat(style.fontSize),
+        contrast: (lighter + 0.05) / (darker + 0.05),
+      };
+    });
+  });
+
+  for (const metric of detailMetrics) {
+    expect(metric.fontSize, `${metric.selector} should remain readable`).toBeGreaterThanOrEqual(metric.minSize);
+    expect(metric.contrast, `${metric.selector} should meet AA contrast`).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
 test("V15 public-sector training detail keeps useful hierarchy and navigation", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/dao-tao-tap-huan/co-quan-nha-nuoc");
