@@ -13,7 +13,6 @@ body.iaict-public::after{content:"";position:fixed;inset:0;pointer-events:none;z
 body.iaict-scrolled .ia-header{box-shadow:0 14px 42px rgba(6,31,74,.1)!important;background:rgba(255,255,255,.96)!important}
 .ia-header .ia-header-status{display:flex;align-items:center;gap:8px}
 .ia-header .ia-header-status i{width:6px;height:6px;border-radius:50%;background:#5eb2ff;box-shadow:0 0 0 5px rgba(94,178,255,.11)}
-.ia-header .ia-brand-meta{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7990af;margin-top:3px}
 .ia-header nav[aria-label="Điều hướng chính"] a,.ia-header nav[aria-label="Điều hướng chính"] summary{transition:color .2s ease,transform .2s ease}
 .ia-header nav[aria-label="Điều hướng chính"] a:hover,.ia-header nav[aria-label="Điều hướng chính"] summary:hover{transform:translateY(-1px)}
 
@@ -114,15 +113,6 @@ body.iaict-scrolled .ia-header{box-shadow:0 14px 42px rgba(6,31,74,.1)!important
 .ia-newsroom-copy>a:hover{transform:translateY(-2px);box-shadow:0 18px 34px rgba(0,0,0,.16)}
 .ia-newsroom-copy>a span{font-size:16px}
 .ia-newsroom-visual{position:relative;z-index:1;aspect-ratio:1;max-width:330px;width:100%;justify-self:end;align-self:center;display:grid;place-items:center}
-.ia-newsroom-orbit{position:absolute;border-radius:50%;border:1px solid rgba(171,204,255,.28)}
-.ia-newsroom-orbit.orbit-a{width:78%;height:78%;animation:ia-orbit 18s linear infinite}
-.ia-newsroom-orbit.orbit-b{width:100%;height:100%;border-style:dashed;animation:ia-orbit 28s linear infinite reverse}
-.ia-newsroom-orbit::after{content:"";position:absolute;top:7%;left:49%;width:7px;height:7px;border-radius:50%;background:#7db1ff;box-shadow:0 0 20px #7db1ff}
-.ia-newsroom-core{width:148px;height:148px;border-radius:50%;display:grid;place-items:center;align-content:center;background:radial-gradient(circle at 38% 32%,#fff,#dbeaff 72%);box-shadow:0 18px 48px rgba(0,0,0,.22),0 0 0 13px rgba(255,255,255,.055)}
-.ia-newsroom-core span{font-size:29px;font-weight:850;letter-spacing:-.04em;color:#0b3d91}
-.ia-newsroom-core small{margin-top:5px;max-width:95px;text-align:center;color:#60789b;font-size:8px;font-weight:750;line-height:1.4;text-transform:uppercase;letter-spacing:.08em}
-.ia-newsroom-node{position:absolute;width:10px;height:10px;border-radius:50%;background:#b7d5ff;box-shadow:0 0 0 6px rgba(183,213,255,.09),0 0 18px rgba(183,213,255,.45)}
-.ia-newsroom-node.node-a{left:9%;top:31%}.ia-newsroom-node.node-b{right:7%;top:58%}.ia-newsroom-node.node-c{left:31%;bottom:4%}
 .ia-newsroom-controls{position:absolute;z-index:3;left:42px;right:42px;bottom:32px;display:flex;align-items:center;gap:12px}
 .ia-newsroom-controls>button{width:38px;height:38px;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:rgba(255,255,255,.07);color:white;cursor:pointer;font-family:inherit;transition:background .2s ease,transform .2s ease}
 .ia-newsroom-controls>button:hover{background:rgba(255,255,255,.14);transform:translateY(-1px)}
@@ -168,7 +158,6 @@ body.iaict-scrolled .ia-header{box-shadow:0 14px 42px rgba(6,31,74,.1)!important
 @keyframes ia-sweep{0%{transform:translateX(-110%)}55%,100%{transform:translateX(110%)}}
 @keyframes ia-architecture-scan{0%,15%{transform:translateX(-120%)}65%,100%{transform:translateX(120%)}}
 @keyframes ia-node-pulse{0%,100%{box-shadow:0 0 0 0 rgba(29,110,242,.18)}50%{box-shadow:0 0 0 8px rgba(29,110,242,0)}}
-@keyframes ia-orbit{to{transform:rotate(360deg)}}
 @keyframes ia-slide-in{from{opacity:.7;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 @media(max-width:1100px){
@@ -191,7 +180,6 @@ body.iaict-scrolled .ia-header{box-shadow:0 14px 42px rgba(6,31,74,.1)!important
 
 @media(max-width:560px){
   body.iaict-public::after{display:none}
-  .ia-header .ia-brand-meta{display:none}
   .ia-newsroom-head h2{font-size:36px}
   .ia-newsroom-head-copy{grid-template-columns:35px 1fr}
   .ia-newsroom-lead{padding:22px;border-radius:22px;min-height:650px}
@@ -200,7 +188,6 @@ body.iaict-scrolled .ia-header{box-shadow:0 14px 42px rgba(6,31,74,.1)!important
   .ia-newsroom-copy h3{font-size:31px}
   .ia-newsroom-copy>p{font-size:13px;line-height:1.75}
   .ia-newsroom-visual{width:205px;right:18px;bottom:72px}
-  .ia-newsroom-core{width:112px;height:112px}.ia-newsroom-core span{font-size:23px}
   .ia-newsroom-controls{left:22px;right:22px;gap:8px}.ia-newsroom-controls>button{width:34px;height:34px}.ia-newsroom-play span{display:none}
   .ia-newsroom-list button{padding:16px 14px;grid-template-columns:29px 1fr 16px}
   .ia-event-desk{padding:22px;border-radius:20px}
