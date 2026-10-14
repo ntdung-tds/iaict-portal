@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { TaxonomyCard } from "@/lib/public-content";
-import styles from "./category-landing-v62.module.css";
+import styles from "./category-landing.module.css";
 
 export type CategoryLandingVariant = "solutions" | "technology" | "transfer" | "academy";
 
