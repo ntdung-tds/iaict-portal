@@ -6,7 +6,9 @@ test("mobile navigation manages keyboard focus at the narrow QA breakpoint", asy
   await expect(page.locator("header[data-interactive]")).toHaveAttribute("data-interactive", "true");
 
   const toggle = page.locator('button[aria-controls="mobile-navigation"]');
-  await toggle.click();
+  await toggle.focus();
+  await expect(toggle).toBeFocused();
+  await page.keyboard.press("Enter");
 
   const nav = page.getByRole("navigation", { name: "Điều hướng di động" });
   const current = nav.locator('a[aria-current="page"]');
@@ -35,6 +37,7 @@ test("desktop header and homepage carousel expose visible keyboard focus", async
   expect(await discovery.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe("none");
 
   const topic = page.getByRole("group", { name: "Chuyển nội dung giới thiệu" }).getByRole("button", { name: "AI & Dữ liệu", exact: true });
+  await expect(topic).toBeEnabled();
   await topic.focus();
   await expect(topic).toBeFocused();
   expect(await topic.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe("none");
