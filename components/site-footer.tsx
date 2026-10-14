@@ -4,20 +4,20 @@ import styles from "./site-chrome.module.css";
 
 export function SiteFooter() {
   return (
-    <footer className={`${styles.footer} final-footer`}>
+    <footer className={`${styles.footer} ia-footer`}>
       <div className={`shell ${styles.footerTop}`}>
         <div>
           <div className={styles.footerBrand}>
             <span className={styles.footerBrandMark} aria-hidden="true">IA</span>
             <strong>IAICT</strong>
           </div>
-          <div className="final-footer-institute">
+          <div className="ia-footer-institute">
             <strong>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</strong>
             <span>Institute of Applied Information and Communication Technology</span>
           </div>
           <p className={styles.footerIntro}>Kết nối công nghệ, giải pháp, chuyển giao và đào tạo trong một hệ sinh thái ứng dụng thống nhất.</p>
           <p className={styles.address}>Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội</p>
-          <div className="final-footer-signature"><i aria-hidden="true" /><span>Applied Technology · Real-world Value</span></div>
+          <div className="ia-footer-signature"><i aria-hidden="true" /><span>Applied Technology · Real-world Value</span></div>
         </div>
 
         <div>

@@ -50,10 +50,10 @@ export function SiteHeader() {
   return (
     <header
       data-interactive={ready}
-      data-ui="final"
+      data-ui="public"
       data-mobile-open={mobileOpen ? "true" : "false"}
       ref={headerRef}
-      className={`${styles.header} ia-header final-header`}
+      className={`${styles.header} ia-header`}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           const open = headerRef.current?.querySelector("details[open]");
@@ -72,7 +72,7 @@ export function SiteHeader() {
     >
       <div className={`${styles.topline} ${headerStyles.topline}`}>
         <div className={`shell ${styles.toplineInner} ${headerStyles.toplineInner}`}>
-          <span className="final-top-status"><i aria-hidden="true" />Cổng thông tin điện tử · IAICT</span>
+          <span className="ia-header-status"><i aria-hidden="true" />Cổng thông tin điện tử · IAICT</span>
           <span>Institute of Applied Information and Communication Technology</span>
         </div>
       </div>

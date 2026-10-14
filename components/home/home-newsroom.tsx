@@ -59,8 +59,8 @@ export function HomeNewsroom() {
 
   return (
     <section
-      className="final-newsroom"
-      aria-labelledby="final-newsroom-title"
+      className="ia-newsroom"
+      aria-labelledby="newsroom-title"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocusCapture={() => setFocused(true)}
@@ -69,21 +69,21 @@ export function HomeNewsroom() {
       }}
     >
       <div className="shell">
-        <div className="final-newsroom-head">
+        <div className="ia-newsroom-head">
           <div>
             <p>IAICT / Newsroom</p>
-            <h2 id="final-newsroom-title">Tin tức, hoạt động<br />và tri thức chuyên môn.</h2>
+            <h2 id="newsroom-title">Tin tức, hoạt động<br />và tri thức chuyên môn.</h2>
           </div>
-          <div className="final-newsroom-head-copy">
+          <div className="ia-newsroom-head-copy">
             <span />
             <p>Nội dung được tổ chức theo chủ đề để vừa phục vụ truyền thông hoạt động, vừa giúp người đọc tiếp cận tri thức có giá trị sử dụng.</p>
           </div>
         </div>
 
-        <div className="final-newsroom-grid">
-          <article className="final-newsroom-lead" key={current.no} aria-live="polite">
-            <div className="final-newsroom-copy">
-              <div className="final-newsroom-meta">
+        <div className="ia-newsroom-grid">
+          <article className="ia-newsroom-lead" key={current.no} aria-live="polite">
+            <div className="ia-newsroom-copy">
+              <div className="ia-newsroom-meta">
                 <span>{current.no} / 04</span>
                 <strong>{current.tag}</strong>
               </div>
@@ -92,28 +92,28 @@ export function HomeNewsroom() {
               <Link href={current.href}>{current.cta}<span aria-hidden="true">↗</span></Link>
             </div>
 
-            <div className="final-newsroom-visual" aria-hidden="true" style={{ backgroundImage: `url("${current.image}")` }}>
-              <div className="final-newsroom-photo-shade" />
-              <div className="final-newsroom-photo-label">
+            <div className="ia-newsroom-visual" aria-hidden="true" style={{ backgroundImage: `url("${current.image}")` }}>
+              <div className="ia-newsroom-photo-shade" />
+              <div className="ia-newsroom-photo-label">
                 <span>IAICT / {current.tag}</span>
                 <strong>{current.no}</strong>
               </div>
             </div>
 
-            <div className="final-newsroom-controls" aria-label="Điều khiển nội dung nổi bật">
+            <div className="ia-newsroom-controls" aria-label="Điều khiển nội dung nổi bật">
               <button type="button" onClick={() => setActive((active - 1 + channels.length) % channels.length)} aria-label="Nội dung trước">←</button>
-              <div className="final-newsroom-progress" aria-hidden="true">
+              <div className="ia-newsroom-progress" aria-hidden="true">
                 <span style={{ width: `${((active + 1) / channels.length) * 100}%` }} />
               </div>
               <button type="button" onClick={() => setActive((active + 1) % channels.length)} aria-label="Nội dung tiếp theo">→</button>
-              <button type="button" className="final-newsroom-play" onClick={() => setPlaying((value) => !value)} aria-pressed={playing}>
+              <button type="button" className="ia-newsroom-play" onClick={() => setPlaying((value) => !value)} aria-pressed={playing}>
                 {playing ? "Ⅱ" : "▷"}<span>{playing ? "Tạm dừng" : "Tự động"}</span>
               </button>
             </div>
           </article>
 
-          <div className="final-newsroom-side">
-            <div className="final-newsroom-list" role="list" aria-label="Chủ đề nội dung">
+          <div className="ia-newsroom-side">
+            <div className="ia-newsroom-list" role="list" aria-label="Chủ đề nội dung">
               {channels.map((item, index) => (
                 <button
                   type="button"
@@ -133,12 +133,12 @@ export function HomeNewsroom() {
               ))}
             </div>
 
-            <aside className="final-event-desk" aria-label="Sự kiện và hội thảo">
-              <div className="final-event-desk-top"><span>EVENT DESK</span><i /></div>
+            <aside className="ia-event-desk" aria-label="Sự kiện và hội thảo">
+              <div className="ia-event-desk-top"><span>EVENT DESK</span><i /></div>
               <h3>Sự kiện & Hội thảo</h3>
               <p>Lịch hoạt động chỉ hiển thị khi có thông tin chính thức và đã được xác minh.</p>
-              <div className="final-event-tags"><span>Hội thảo</span><span>Tập huấn</span><span>Chuyên đề</span></div>
-              <div className="final-event-links">
+              <div className="ia-event-tags"><span>Hội thảo</span><span>Tập huấn</span><span>Chuyên đề</span></div>
+              <div className="ia-event-links">
                 <Link href="/tin-tuc">Theo dõi thông tin <span>↗</span></Link>
                 <Link href="/dao-tao-tap-huan">Chương trình đào tạo <span>↗</span></Link>
               </div>

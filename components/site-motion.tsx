@@ -9,14 +9,14 @@ const revealSelectors = [
   ".ia-service-row",
   ".ia-ecosystem-row",
   ".ia-project",
-  ".final-project-architecture",
+  ".ia-project-architecture",
   ".ia-journey-step",
   ".ia-expertise-card",
   ".ia-gallery-card",
-  ".final-newsroom-head",
-  ".final-newsroom-lead",
-  ".final-newsroom-list > button",
-  ".final-event-desk",
+  ".ia-newsroom-head",
+  ".ia-newsroom-lead",
+  ".ia-newsroom-list > button",
+  ".ia-event-desk",
   ".ia-knowledge-card",
   ".ia-capability-item",
 ].join(",");
@@ -25,7 +25,7 @@ const tiltSelectors = [
   ".ia-entry-grid > a",
   ".ia-gallery-card",
   ".ia-knowledge-card",
-  ".final-event-desk",
+  ".ia-event-desk",
 ].join(",");
 
 export function SiteMotion() {

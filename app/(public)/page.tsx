@@ -111,7 +111,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.sectionIntro} final-needs`} aria-labelledby="needs-title">
+      <section className={`${styles.sectionIntro} ia-needs`} aria-labelledby="needs-title">
         <div className="shell">
           <div className={`${styles.editorialHeading} ia-section-heading`}>
             <div>
@@ -144,7 +144,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.ecosystemSection} final-ecosystem`} aria-labelledby="ecosystem-title">
+      <section className={`${styles.ecosystemSection} ia-ecosystem`} aria-labelledby="ecosystem-title">
         <div className="shell">
           <div className={styles.ecosystemIntro}>
             <p className={styles.labelLight}>IAICT Ecosystem</p>
@@ -165,7 +165,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.projectSection} ia-project final-project`} aria-labelledby="project-title">
+      <section className={`${styles.projectSection} ia-project`} aria-labelledby="project-title">
         <div className={`shell ${styles.projectSpotlight}`}>
           <div className={styles.projectNarrative}>
             <div className={styles.projectIndex}><span>PROJECT / 01</span><i /><span>FIELD SYSTEMS</span></div>
@@ -181,7 +181,7 @@ export default function HomePage() {
             <Link className={styles.textAction} href="/du-an/tram-rung">Khám phá dự án <span>↗</span></Link>
           </div>
 
-          <div className={`${styles.architecture} final-project-architecture`} aria-label="Kiến trúc dữ liệu Trâm Rừng">
+          <div className={`${styles.architecture} ia-project-architecture`} aria-label="Kiến trúc dữ liệu Trâm Rừng">
             <div className={styles.architectureTop}>
               <div><small>DATA ARCHITECTURE</small><strong>Field → Core → Application</strong></div>
               <span>TRÂM RỪNG</span>
@@ -205,7 +205,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.journeySection} final-journey`} aria-labelledby="journey-title">
+      <section className={`${styles.journeySection} ia-journey`} aria-labelledby="journey-title">
         <div className="shell">
           <div className={`${styles.editorialHeading} ia-section-heading`}>
             <div><p className={styles.label}>IAICT Method</p><h2 id="journey-title">Từ nhu cầu đến<br />khả năng nhân rộng.</h2></div>
@@ -224,7 +224,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.expertiseSection} final-expertise`} aria-labelledby="expertise-title">
+      <section className={`${styles.expertiseSection} ia-expertise`} aria-labelledby="expertise-title">
         <div className={`shell ${styles.expertiseLayout}`}>
           <div className={styles.expertiseStatement}>
             <p className={styles.labelLight}>Core Expertise</p>
@@ -240,7 +240,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.gallerySection} final-gallery`} aria-labelledby="gallery-title">
+      <section className={`${styles.gallerySection} ia-gallery`} aria-labelledby="gallery-title">
         <div className="shell">
           <div className={`${styles.editorialHeading} ia-section-heading`}>
             <div><p className={styles.label}>Capability Spaces</p><h2 id="gallery-title">Từ hiện trường<br />đến hệ thống số.</h2></div>
@@ -257,7 +257,7 @@ export default function HomePage() {
 
       <HomeNewsroom />
 
-      <section className={`${styles.knowledgeSection} final-knowledge`} aria-labelledby="knowledge-title">
+      <section className={`${styles.knowledgeSection} ia-knowledge`} aria-labelledby="knowledge-title">
         <div className="shell">
           <div className={styles.knowledgeHead}>
             <div><p className={styles.label}>IAICT Knowledge</p><h2 id="knowledge-title">Góc nhìn chuyên môn.</h2></div>
@@ -276,7 +276,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.closingSection} final-closing`}>
+      <section className={`${styles.closingSection} ia-closing`}>
         <div className={`shell ${styles.closingInner}`}>
           <div>
             <p className={styles.labelLight}>Collaborate with IAICT</p>
