@@ -19,15 +19,6 @@ const revealSelectors = [
   ".final-event-desk",
   ".ia-knowledge-card",
   ".ia-capability-item",
-  ".v6-card",
-  ".v8-card",
-  ".v8-principle",
-  ".v8-topic",
-  ".v8-story",
-  ".v8-news article",
-  ".v9-card",
-  ".v9-feature",
-  ".v9-path",
 ].join(",");
 
 const tiltSelectors = [
@@ -35,9 +26,6 @@ const tiltSelectors = [
   ".ia-gallery-card",
   ".ia-knowledge-card",
   ".final-event-desk",
-  ".v6-card",
-  ".v8-card",
-  ".v9-card",
 ].join(",");
 
 export function SiteMotion() {

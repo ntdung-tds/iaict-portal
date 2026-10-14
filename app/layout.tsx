@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import type { ReactNode } from "react";
-import { SiteMotion } from "@/components/wow/site-motion";
+import { SiteMotion } from "@/components/site-motion";
 import "./globals.css";
 import "./typography.css";
 import "./project-showcase.css";
