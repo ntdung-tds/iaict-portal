@@ -15,6 +15,8 @@
 
   --border-subtle:#d6e6ff;
   --border-strong:#b8d3fb;
+  --border-translucent:rgba(74,132,213,.20);
+  --border-translucent-strong:rgba(29,110,242,.32);
 
   --brand-primary:#0b3d91;
   --brand-primary-strong:#072b6b;
