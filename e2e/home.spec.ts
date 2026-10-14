@@ -106,7 +106,7 @@ test("V12 mobile navigation closes with Escape and marks the current page", asyn
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/gioi-thieu");
   await expect(page.locator("header[data-interactive]")).toHaveAttribute("data-interactive", "true");
-  const toggle = page.getByLabel("Mở menu", { exact: true });
+  const toggle = page.locator('button[aria-controls="mobile-navigation"]');
   await toggle.click();
   const nav = page.getByRole("navigation", { name: "Điều hướng di động" });
   await expect(nav).toBeVisible();
@@ -167,7 +167,7 @@ test("capability pages support direct navigation and details without losing the 
   await expect(page.getByRole("link", { name: /Khám phá dự án Trâm Rừng/ })).toHaveAttribute("href", "/du-an/tram-rung");
 });
 
-test("capability pages and mobile menu fit narrow screens", async ({ page }) => {
+test("capability pages and mobile navigation fit narrow screens and always close after selection", async ({ page }) => {
   for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 844 });
     for (const [route] of categoryRoutes) {
@@ -175,19 +175,32 @@ test("capability pages and mobile menu fit narrow screens", async ({ page }) => 
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${route} at ${width}px`).toBeTruthy();
     }
   }
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/san-pham-nen-tang");
   await expect(page.locator("header")).toHaveAttribute("data-interactive", "true");
-  const toggle = page.getByLabel("Mở menu", { exact: true });
-  const nav = page.getByRole("navigation", { name: "Điều hướng di động" });
+  const toggle = page.locator('button[aria-controls="mobile-navigation"]');
+
   await toggle.click();
+  let nav = page.getByRole("navigation", { name: "Điều hướng di động" });
   await expect(nav).toBeVisible();
   const navBounds = await nav.boundingBox();
   expect(navBounds!.x).toBeGreaterThanOrEqual(0);
   expect(navBounds!.x + navBounds!.width).toBeLessThanOrEqual(390);
+
   await page.mouse.click(5, 200);
   await expect(nav).not.toBeVisible();
+
+  // Selecting the current page must close the navigation even when the route does not change.
   await toggle.click();
+  nav = page.getByRole("navigation", { name: "Điều hướng di động" });
+  await nav.getByRole("link", { name: "Sản phẩm & Nền tảng", exact: true }).click();
+  await expect(nav).not.toBeVisible();
+  await expect(page).toHaveURL(/\/san-pham-nen-tang/);
+
+  // Selecting a different page also closes immediately after navigation.
+  await toggle.click();
+  nav = page.getByRole("navigation", { name: "Điều hướng di động" });
   await nav.getByRole("link", { name: "Liên hệ & Hợp tác", exact: true }).click();
   await expect(page).toHaveURL(/\/lien-he/);
   await expect(nav).not.toBeVisible();
