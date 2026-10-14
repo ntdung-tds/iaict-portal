@@ -13,8 +13,8 @@ import "./public-active.css";
 import "./wow-motion.css";
 import "./public-search.css";
 import "./wow-final.css";
-import "./home-v13.css";
-import "./public-v14.css";
+import "./home-active.css";
+import "./public-landing.css";
 import "./final-polish.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
