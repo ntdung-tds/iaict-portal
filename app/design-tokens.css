@@ -1,6 +1,5 @@
 :root{
-  /* Canonical semantic UI tokens. These own the production values.
-     Legacy versioned variables resolve to these tokens in brand-theme.css. */
+  /* Canonical semantic UI tokens. These own the production values. */
   --surface-canvas:#f7fbff;
   --surface-canvas-warm:#ffffff;
   --surface-canvas-deep:#eaf3ff;
@@ -27,4 +26,5 @@
 
   --shadow-elevated:0 26px 70px rgba(26,73,139,.11);
   --shadow-soft:0 14px 38px rgba(26,73,139,.075);
+  --shadow-interactive:0 14px 40px rgba(11,61,145,.08);
 }
