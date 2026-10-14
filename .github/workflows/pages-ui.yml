@@ -44,29 +44,27 @@ jobs:
         run: |
           set -euo pipefail
 
-          SOURCE_DIR="dist/client/iaict-portal"
-          STATIC_DIR="dist/client/_next"
+          HTML_DIR="dist/client/iaict-portal"
+          ASSET_DIR=".cloudflare/output/v0/workers/default/assets/iaict-portal"
           PAGES_DIR=".pages-artifact"
 
-          test -f "$SOURCE_DIR/index.html"
-          test -d "$STATIC_DIR"
+          test -f "$HTML_DIR/index.html"
+          test -d "$ASSET_DIR/_next"
 
           rm -rf "$PAGES_DIR"
           mkdir -p "$PAGES_DIR"
 
-          # Route HTML is emitted under dist/client/iaict-portal because the
-          # Pages basePath is /iaict-portal. Shared Next/Vinext assets are emitted
-          # one level higher at dist/client/_next, so both must be present in the
-          # final Pages artifact.
-          cp -a "$SOURCE_DIR"/. "$PAGES_DIR"/
-          cp -a "$STATIC_DIR" "$PAGES_DIR/_next"
+          # Vinext emits prerendered route HTML and browser assets into separate
+          # output trees. GitHub Pages needs both trees merged at the site root.
+          cp -a "$ASSET_DIR"/. "$PAGES_DIR"/
+          cp -a "$HTML_DIR"/. "$PAGES_DIR"/
 
           touch "$PAGES_DIR/.nojekyll"
           if [ -f dist/client/404/index.html ]; then
             cp dist/client/404/index.html "$PAGES_DIR/404.html"
           fi
 
-          # Prevent a successful deploy of unstyled/unhydrated HTML.
+          # Never publish an unstyled/unhydrated HTML-only artifact again.
           test -n "$(find "$PAGES_DIR/_next/static/css" -type f -name '*.css' -print -quit)"
           test -n "$(find "$PAGES_DIR/_next/static/chunks" -type f -name '*.js' -print -quit)"
 
@@ -74,7 +72,7 @@ jobs:
           echo "Using complete GitHub Pages artifact: $PAGES_DIR"
           echo "CSS files: $(find "$PAGES_DIR/_next/static/css" -type f -name '*.css' | wc -l)"
           echo "JS files: $(find "$PAGES_DIR/_next/static/chunks" -type f -name '*.js' | wc -l)"
-          find "$PAGES_DIR" -maxdepth 3 -type f | head -120
+          find "$PAGES_DIR" -maxdepth 4 -type f | head -160
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
