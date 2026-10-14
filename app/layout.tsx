@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="vi" className={beVietnamPro.variable}>
-      <body className="iaict-v11 iaict-final">
+      <body className="iaict-public iaict-final">
         <a className="skip-link" href="#main-content">
           Bỏ qua điều hướng
         </a>

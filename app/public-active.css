@@ -1,7 +1,7 @@
 /* IAICT public active layer — V15 canonical compatibility surface.
    Active homepage hooks use semantic names; older public-page families remain isolated below. */
-body.iaict-v11{background:#fff!important;color:#10233f}
-.iaict-v11 :is(a,button,summary,input):focus-visible{outline:3px solid #1d6ef2!important;outline-offset:5px}
+body.iaict-public{background:#fff!important;color:#10233f}
+.iaict-public :is(a,button,summary,input):focus-visible{outline:3px solid #1d6ef2!important;outline-offset:5px}
 
 /* Homepage entry navigation. */
 .ia-entry{padding:36px 0 0;background:#fff}
@@ -15,23 +15,23 @@ body.iaict-v11{background:#fff!important;color:#10233f}
 .ia-entry-grid small{display:block;font-size:11px;color:#536680;margin-top:4px}
 
 /* Shared homepage heading. */
-.iaict-v11 .ia-section-heading h2{font-size:clamp(32px,3.5vw,52px)!important;line-height:1.18!important;letter-spacing:-.04em!important;text-wrap:balance}
+.iaict-public .ia-section-heading h2{font-size:clamp(32px,3.5vw,52px)!important;line-height:1.18!important;letter-spacing:-.04em!important;text-wrap:balance}
 
 /* Capability rail. */
-.iaict-v11 .ia-capability{background:#fff!important;border-bottom-color:#d6e6ff!important}
-.iaict-v11 .ia-capability strong{color:#0b3d91;font-size:11px}
-.iaict-v11 .ia-capability small{color:#536680;font-size:11px}
-.iaict-v11 .ia-capability-item{min-height:100px!important}
+.iaict-public .ia-capability{background:#fff!important;border-bottom-color:#d6e6ff!important}
+.iaict-public .ia-capability strong{color:#0b3d91;font-size:11px}
+.iaict-public .ia-capability small{color:#536680;font-size:11px}
+.iaict-public .ia-capability-item{min-height:100px!important}
 
 /* Public page compatibility while V6/V8/V9 page families are migrated. */
-.iaict-v11 .page-hero,.iaict-v11 .v9-hero{padding-block:80px!important}
-.iaict-v11 .page-hero h1,.iaict-v11 .v9-hero h1{font-size:clamp(38px,4.8vw,66px)!important;line-height:1.16!important}
-.iaict-v11 :is(.v9-card,.v6-card,.v8-card){border-radius:18px!important}
+.iaict-public .page-hero,.iaict-public .v9-hero{padding-block:80px!important}
+.iaict-public .page-hero h1,.iaict-public .v9-hero h1{font-size:clamp(38px,4.8vw,66px)!important;line-height:1.16!important}
+.iaict-public :is(.v9-card,.v6-card,.v8-card){border-radius:18px!important}
 
 @media(max-width:1100px){.ia-entry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.ia-entry-label{flex-direction:column;gap:3px}}
 @media(max-width:480px){.ia-entry-grid{grid-template-columns:1fr}.ia-entry-grid a{padding:16px}}
-@media(prefers-reduced-motion:reduce){.iaict-v11 *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){.iaict-public *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 /* Homepage service list. */
 .ia-service-list{border-top:1px solid #b8d3fb}
@@ -58,15 +58,15 @@ body.iaict-v11{background:#fff!important;color:#10233f}
 .ia-header a[aria-current="page"]{color:#1d6ef2!important;border-bottom-color:#1d6ef2!important}
 
 /* Active homepage refinements. */
-.iaict-v11 .ia-entry{padding-block:32px;background:#f7fbff;border-bottom:1px solid #d6e6ff}
-.iaict-v11 .ia-entry-grid a{background:#fff;border-radius:12px;box-shadow:0 4px 12px #0b3d9104}
-.iaict-v11 .ia-entry-grid a:hover{border-color:#1d6ef2;background:#fff}
-.iaict-v11 .ia-entry-label{margin-bottom:20px}
-.iaict-v11 .ia-section-heading h2{font-size:clamp(32px,3.5vw,50px)!important}
+.iaict-public .ia-entry{padding-block:32px;background:#f7fbff;border-bottom:1px solid #d6e6ff}
+.iaict-public .ia-entry-grid a{background:#fff;border-radius:12px;box-shadow:0 4px 12px #0b3d9104}
+.iaict-public .ia-entry-grid a:hover{border-color:#1d6ef2;background:#fff}
+.iaict-public .ia-entry-label{margin-bottom:20px}
+.iaict-public .ia-section-heading h2{font-size:clamp(32px,3.5vw,50px)!important}
 
 /* Public-page compatibility while older page families are migrated. */
-.iaict-v11 .v9-section,.iaict-v11 .section{scroll-margin-top:100px}
-.iaict-v11 :is(.v6-hero,.v9-hero){border-bottom:1px solid #d6e6ff!important}
+.iaict-public .v9-section,.iaict-public .section{scroll-margin-top:100px}
+.iaict-public :is(.v6-hero,.v9-hero){border-bottom:1px solid #d6e6ff!important}
 
 @media(min-width:1101px){.ia-header nav[aria-label="Điều hướng chính"]{gap:16px}.ia-header nav[aria-label="Điều hướng chính"] a{font-size:12px}}
 @media(max-width:1000px){.ia-service-row{grid-template-columns:48px minmax(0,1fr);gap:24px}.ia-service-tags{grid-column:2;padding-top:0;margin-top:-12px}}
