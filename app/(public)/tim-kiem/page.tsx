@@ -1,13 +1,15 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import type { Metadata } from "next";
 import { PublicSearch } from "@/components/public-search";
 import styles from "@/components/public.module.css";
+import { createPublicMetadata } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
+export const metadata = createPublicMetadata({
   title: "Tìm kiếm",
   description: "Tìm kiếm nội dung IAICT theo từ khóa, năng lực, dự án và nhóm chủ đề.",
-};
+  path: "/tim-kiem",
+  index: false,
+});
 
 const quickPaths = [
   ["01", "Sản phẩm & Nền tảng", "IoT, AI, dữ liệu, truy xuất, quản lý vòng đời và các nền tảng ứng dụng.", "/san-pham-nen-tang"],

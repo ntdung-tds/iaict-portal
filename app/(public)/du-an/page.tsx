@@ -1,12 +1,13 @@
-import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import styles from "@/components/public.module.css";
+import { createPublicMetadata } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
+export const metadata = createPublicMetadata({
   title: "Dự án tiêu biểu",
   description: "Các mô hình ứng dụng của IAICT được trình bày theo bối cảnh, kiến trúc, bằng chứng và khả năng chuyển giao, nhân rộng.",
-};
+  path: "/du-an",
+});
 
 const projectLenses = [
   ["01", "Field systems", "IoT & dữ liệu hiện trường", "Thiết kế luồng từ cảm biến, gateway và kết nối đến hạ tầng lưu trữ có thể khai thác."],

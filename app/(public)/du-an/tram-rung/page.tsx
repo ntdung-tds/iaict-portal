@@ -1,12 +1,13 @@
-import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import styles from "@/components/public.module.css";
+import { createPublicMetadata } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
+export const metadata = createPublicMetadata({
   title: "Trâm Rừng — IAICT Project Lab",
   description: "Kiến trúc dữ liệu IoT ngoài trời từ cảm biến đến server, cơ sở dữ liệu và lớp ứng dụng khai thác.",
-};
+  path: "/du-an/tram-rung",
+});
 
 const facts = [
   ["Môi trường", "Ngoài trời"],
@@ -98,7 +99,7 @@ function ArchitecturePanelContent({ mobile = false }: { mobile?: boolean }) {
   return (
     <div className={styles.architecturePanel}>
       <p className={styles.label}>Architecture</p>
-      <h2 id="architecture-title">Data-first: dữ liệu phải về được server ổn định và có thể kiểm soát.</h2>
+      <h2>Data-first: dữ liệu phải về được server ổn định và có thể kiểm soát.</h2>
       <p>Kiến trúc được tổ chức theo các lớp rõ ràng để thuận lợi cho lắp đặt, vận hành, thay thế thiết bị và mở rộng về sau.</p>
       <ul className={styles.bulletList}>
         {architectureBullets.map((item) => <li key={item}>{item}</li>)}
@@ -148,7 +149,7 @@ export default function TramRungPage() {
         </div>
       </div>
 
-      <section className={styles.section} id="architecture" aria-labelledby="architecture-title">
+      <section className={styles.section} id="architecture" aria-label="Kiến trúc dữ liệu Trâm Rừng">
         <div className={`shell ${styles.architectureGrid}`} data-tram-architecture-desktop>
           <div className={styles.architecturePhoto} style={architectureStyle} aria-hidden="true">
             <div className={styles.architecturePhotoCopy}>
