@@ -44,24 +44,30 @@ jobs:
         run: |
           set -euo pipefail
 
-          HTML_DIR="dist/client/iaict-portal"
-          ASSET_DIR=".cloudflare/output/v0/workers/default/assets/iaict-portal"
-          PAGES_DIR=".pages-artifact"
+          if [ -f "dist/client/iaict-portal/index.html" ]; then
+            EXPORT_DIR="dist/client/iaict-portal"
+          elif [ -f "dist/client/index.html" ]; then
+            EXPORT_DIR="dist/client"
+          else
+            echo "Static export index.html not found"
+            find dist/client -maxdepth 4 -type f | head -160 || true
+            exit 1
+          fi
 
-          test -f "$HTML_DIR/index.html"
-          test -d "$ASSET_DIR/_next"
+          PAGES_DIR=".pages-artifact"
+          test -d "$EXPORT_DIR/_next"
 
           rm -rf "$PAGES_DIR"
           mkdir -p "$PAGES_DIR"
-
-          # Vinext emits prerendered route HTML and browser assets into separate
-          # output trees. GitHub Pages needs both trees merged at the site root.
-          cp -a "$ASSET_DIR"/. "$PAGES_DIR"/
-          cp -a "$HTML_DIR"/. "$PAGES_DIR"/
+          cp -a "$EXPORT_DIR"/. "$PAGES_DIR"/
 
           touch "$PAGES_DIR/.nojekyll"
-          if [ -f dist/client/404/index.html ]; then
-            cp dist/client/404/index.html "$PAGES_DIR/404.html"
+          if [ ! -f "$PAGES_DIR/404.html" ]; then
+            if [ -f dist/client/404.html ]; then
+              cp dist/client/404.html "$PAGES_DIR/404.html"
+            elif [ -f dist/client/404/index.html ]; then
+              cp dist/client/404/index.html "$PAGES_DIR/404.html"
+            fi
           fi
 
           # Never publish an unstyled/unhydrated HTML-only artifact again.
@@ -69,7 +75,7 @@ jobs:
           test -n "$(find "$PAGES_DIR/_next/static/chunks" -type f -name '*.js' -print -quit)"
 
           echo "pages_dir=$PAGES_DIR" >> "$GITHUB_OUTPUT"
-          echo "Using complete GitHub Pages artifact: $PAGES_DIR"
+          echo "Using static GitHub Pages artifact: $PAGES_DIR"
           echo "CSS files: $(find "$PAGES_DIR/_next/static/css" -type f -name '*.css' | wc -l)"
           echo "JS files: $(find "$PAGES_DIR/_next/static/chunks" -type f -name '*.js' | wc -l)"
           find "$PAGES_DIR" -maxdepth 4 -type f | head -160
