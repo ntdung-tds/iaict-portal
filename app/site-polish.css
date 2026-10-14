@@ -15,6 +15,13 @@ main#main-content :where(img,svg,video,canvas){max-width:100%}
   main#main-content section[id],main#main-content article[id]{scroll-margin-top:104px}
   main#main-content :where([class*="heroGrid"],[class*="sectionHead"],[class*="ctaInner"]){min-width:0}
 
+  /* Prefer the explicitly supplied mobile image variants without changing component layout. */
+  main#main-content [style*="--hero-image-mobile"]{--hero-image:var(--hero-image-mobile)!important}
+  main#main-content [style*="--feature-image-mobile"]{--feature-image:var(--feature-image-mobile)!important}
+  main#main-content [style*="--architecture-image-mobile"]{--architecture-image:var(--architecture-image-mobile)!important}
+  main#main-content [style*="--editorial-image-mobile"]{--editorial-image:var(--editorial-image-mobile)!important}
+  main#main-content [style*="--contact-image-mobile"]{--contact-image:var(--contact-image-mobile)!important}
+
   /* Keep the global rule scoped to CTA links. Component-level buttons may intentionally
      use a larger target (for example the 48px search submit control). */
   main#main-content :where(a[class*="primaryAction"],a[class*="secondaryAction"],a[class*="cta"]){display:inline-flex!important;align-items:center;justify-content:center;min-height:44px!important}

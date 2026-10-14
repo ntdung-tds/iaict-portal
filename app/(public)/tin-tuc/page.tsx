@@ -15,7 +15,8 @@ const editorialTopics = [
 ] as const;
 
 const editorialStyle = {
-  "--editorial-image": "url('https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&fm=jpg&q=84&w=1800')",
+  "--editorial-image": "url('https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=1400')",
+  "--editorial-image-mobile": "url('https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=74&w=720')",
 } as CSSProperties;
 
 export default function NewsPage() {

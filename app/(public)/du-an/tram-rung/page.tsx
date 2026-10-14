@@ -39,11 +39,13 @@ const architectureBullets = [
 ] as const;
 
 const heroStyle = {
-  "--hero-image": "url('https://images.unsplash.com/photo-1783434640967-1e0098a362df?auto=format&fit=crop&fm=jpg&q=86&w=2400')",
+  "--hero-image": "url('https://images.unsplash.com/photo-1783434640967-1e0098a362df?auto=format&fit=crop&q=82&w=1800')",
+  "--hero-image-mobile": "url('https://images.unsplash.com/photo-1783434640967-1e0098a362df?auto=format&fit=crop&q=74&w=960')",
 } as CSSProperties;
 
 const architectureStyle = {
-  "--architecture-image": "url('https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&fm=jpg&q=84&w=1800')",
+  "--architecture-image": "url('https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&q=80&w=1400')",
+  "--architecture-image-mobile": "url('https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&q=74&w=720')",
 } as CSSProperties;
 
 const tramResponsiveCss = `

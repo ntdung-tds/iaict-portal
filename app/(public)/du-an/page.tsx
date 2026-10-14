@@ -24,11 +24,13 @@ const projectFlow = [
 ] as const;
 
 const heroStyle = {
-  "--hero-image": "url('https://images.unsplash.com/photo-1783434640967-1e0098a362df?auto=format&fit=crop&fm=jpg&q=84&w=2200')",
+  "--hero-image": "url('https://images.unsplash.com/photo-1783434640967-1e0098a362df?auto=format&fit=crop&q=80&w=1800')",
+  "--hero-image-mobile": "url('https://images.unsplash.com/photo-1783434640967-1e0098a362df?auto=format&fit=crop&q=74&w=960')",
 } as CSSProperties;
 
 const featureStyle = {
-  "--feature-image": "url('https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&fm=jpg&q=84&w=1800')",
+  "--feature-image": "url('https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&q=80&w=1400')",
+  "--feature-image-mobile": "url('https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&q=74&w=720')",
 } as CSSProperties;
 
 export default function ProjectsPage() {

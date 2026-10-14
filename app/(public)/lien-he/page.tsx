@@ -16,7 +16,8 @@ const topics = [
 ] as const;
 
 const contactStyle = {
-  "--contact-image": "url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&fm=jpg&q=84&w=1800')",
+  "--contact-image": "url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=1400')",
+  "--contact-image-mobile": "url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=74&w=720')",
 } as CSSProperties;
 
 export default function ContactPage() {
