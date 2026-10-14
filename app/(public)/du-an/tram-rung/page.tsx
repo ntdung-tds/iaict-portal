@@ -38,9 +38,27 @@ const architectureStyle = {
   "--architecture-image": "url('https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&fm=jpg&q=84&w=1800')",
 } as CSSProperties;
 
+const tramResponsiveCss = `
+@media (max-width:760px){
+  [data-tram-architecture-grid]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important}
+  [data-tram-architecture-photo],[data-tram-architecture-panel]{display:block!important;inline-size:100%!important;width:100%!important;min-inline-size:0!important;min-width:0!important;max-inline-size:100%!important;max-width:100%!important;box-sizing:border-box!important}
+  [data-tram-architecture-panel]{margin-top:28px!important}
+  [data-tram-architecture-copy]{left:20px!important;right:20px!important;width:auto!important;min-width:0!important;max-width:calc(100% - 40px)!important;box-sizing:border-box!important}
+  [data-tram-architecture-copy] *{min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;word-break:normal!important}
+  [data-tram-architecture-panel] *{min-width:0;max-width:100%;overflow-wrap:anywhere}
+  [data-tram-pipeline-row]{width:100%!important;min-width:0!important;grid-template-columns:38px minmax(72px,90px) minmax(0,1fr)!important;gap:9px!important;box-sizing:border-box!important}
+  [data-tram-pipeline-row]>*{min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important}
+}
+@media (max-width:360px){
+  [data-tram-architecture-copy] strong{font-size:clamp(23px,8vw,29px)!important}
+  [data-tram-pipeline-row]{grid-template-columns:28px minmax(58px,74px) minmax(0,1fr)!important;gap:7px!important}
+}
+`;
+
 export default function TramRungPage() {
   return (
     <main id="main-content" className={styles.page}>
+      <style>{tramResponsiveCss}</style>
       <section className={styles.hero} style={heroStyle}>
         <div className={`shell ${styles.heroInner}`}>
           <nav className={styles.breadcrumb} aria-label="Đường dẫn trang">
@@ -76,14 +94,14 @@ export default function TramRungPage() {
       </div>
 
       <section className={styles.section} id="architecture" aria-labelledby="architecture-title">
-        <div className={`shell ${styles.architectureGrid}`}>
-          <div className={styles.architecturePhoto} style={architectureStyle} aria-hidden="true">
-            <div className={styles.architecturePhotoCopy}>
+        <div className={`shell ${styles.architectureGrid}`} data-tram-architecture-grid>
+          <div className={styles.architecturePhoto} style={architectureStyle} aria-hidden="true" data-tram-architecture-photo>
+            <div className={styles.architecturePhotoCopy} data-tram-architecture-copy>
               <span>Field → Core → Applications</span>
               <strong>Một luồng dữ liệu xuyên suốt từ hiện trường tới lớp khai thác.</strong>
             </div>
           </div>
-          <div className={styles.architecturePanel}>
+          <div className={styles.architecturePanel} data-tram-architecture-panel>
             <p className={styles.label}>Architecture</p>
             <h2 id="architecture-title">Data-first: dữ liệu phải về được server ổn định và có thể kiểm soát.</h2>
             <p>Kiến trúc được tổ chức theo các lớp rõ ràng để thuận lợi cho lắp đặt, vận hành, thay thế thiết bị và mở rộng về sau.</p>
@@ -94,7 +112,7 @@ export default function TramRungPage() {
               <li>Server hiện hữu đóng vai trò trung tâm tiếp nhận, lưu trữ và cung cấp dữ liệu cho các lớp ứng dụng.</li>
             </ul>
             <div className={styles.pipeline} aria-label="Luồng vận hành dữ liệu">
-              {steps.map(([no, title, body]) => <div className={styles.pipelineRow} key={no}><span>{no}</span><strong>{title}</strong><small>{body}</small></div>)}
+              {steps.map(([no, title, body]) => <div className={styles.pipelineRow} data-tram-pipeline-row key={no}><span>{no}</span><strong>{title}</strong><small>{body}</small></div>)}
             </div>
           </div>
         </div>
