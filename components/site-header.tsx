@@ -73,7 +73,7 @@ export function SiteHeader() {
       <div className={`${styles.topline} ${v13.topline}`}>
         <div className={`shell ${styles.toplineInner} ${v13.toplineInner}`}>
           <span className="final-top-status"><i aria-hidden="true" />Cổng thông tin điện tử · IAICT</span>
-          <span>Institute of Applied Information &amp; Communication Technology</span>
+          <span>Institute of Applied Information and Communication Technology</span>
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export function SiteHeader() {
           <span className={v13.brandIdentity}>
             <strong>IAICT</strong>
             <span className={v13.brandVi}>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</span>
-            <span className={v13.brandEn}>Institute of Applied Information &amp; Communication Technology</span>
+            <span className={v13.brandEn}>Institute of Applied Information and Communication Technology</span>
           </span>
         </Link>
 
