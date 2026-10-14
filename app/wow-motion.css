@@ -1,0 +1,44 @@
+/* IAICT UI preview motion layer — progressive enhancement for GitHub Pages and production. */
+:root{--iaict-scroll:0}
+html{scroll-behavior:smooth}
+.iaict-scroll-progress{position:fixed;inset:0 0 auto 0;height:3px;z-index:1400;pointer-events:none;background:transparent}
+.iaict-scroll-progress span{display:block;height:100%;width:100%;transform:scaleX(var(--iaict-scroll));transform-origin:left center;background:linear-gradient(90deg,#1d6ef2,#5ba1ff 55%,#0b3d91);box-shadow:0 0 18px #1d6ef266}
+
+.iaict-motion-ready .iaict-reveal{opacity:0;transform:translate3d(0,26px,0);transition:opacity .72s cubic-bezier(.2,.7,.2,1),transform .82s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--reveal-order,0)*45ms);will-change:opacity,transform}
+.iaict-motion-ready .iaict-reveal.iaict-visible{opacity:1;transform:translate3d(0,0,0)}
+
+body.iaict-scrolled .ia-header,body.iaict-scrolled .v12-header{backdrop-filter:blur(18px) saturate(1.18);-webkit-backdrop-filter:blur(18px) saturate(1.18);box-shadow:0 14px 38px rgba(12,48,99,.10)!important;border-bottom-color:rgba(133,175,232,.42)!important}
+
+.v11-hero{--hero-x:72%;--hero-y:24%;--hero-shift-x:0px;--hero-shift-y:0px;isolation:isolate}
+.v11-hero:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(circle at var(--hero-x) var(--hero-y),rgba(72,149,255,.16),transparent 22rem);transition:background-position .25s ease}
+.v11-hero-atmosphere{transform:translate3d(var(--hero-shift-x),var(--hero-shift-y),0);transition:transform .32s ease-out;will-change:transform}
+.v11-hero .v12-network{transform:translate3d(calc(var(--hero-shift-x)*-.22),calc(var(--hero-shift-y)*-.22),0);transition:transform .42s ease-out,box-shadow .3s ease;will-change:transform}
+.v11-hero .v12-network:hover{box-shadow:0 38px 86px rgba(11,61,145,.24)}
+
+.v12-network-node{animation:iaictNodePulse 5.8s ease-in-out infinite;transform-origin:center}
+.v12-network-node rect:nth-child(2){animation-delay:.7s}.v12-network-node rect:nth-child(3){animation-delay:1.4s}.v12-network-node rect:nth-child(4){animation-delay:2.1s}
+.v12-network svg path[stroke-dasharray]{animation:iaictDash 12s linear infinite}
+@keyframes iaictNodePulse{0%,100%{stroke-opacity:.48}50%{stroke-opacity:.9}}
+@keyframes iaictDash{to{stroke-dashoffset:-80}}
+
+.homeV7-capabilityItem{transition:transform .28s ease,background .28s ease,border-color .28s ease}
+.homeV7-capabilityItem:hover{transform:translateY(-5px)}
+.v11-entry-grid>a,.homeV7-galleryCard,.homeV7-knowledgeCard{transform:perspective(900px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)) translate3d(0,0,0);transform-style:preserve-3d;transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease,background .28s ease;will-change:transform}
+.v11-entry-grid>a.iaict-tilt-active,.homeV7-galleryCard.iaict-tilt-active,.homeV7-knowledgeCard.iaict-tilt-active{transition:transform .08s linear,border-color .28s ease,box-shadow .28s ease}
+.v11-entry-grid>a:hover,.homeV7-galleryCard:hover,.homeV7-knowledgeCard:hover{box-shadow:0 24px 64px rgba(20,72,145,.14)!important}
+
+.homeV7-ecosystemRow{position:relative;overflow:hidden;transition:transform .28s ease,border-color .28s ease,background .28s ease}
+.homeV7-ecosystemRow:before{content:"";position:absolute;inset:0 auto 0 -24%;width:22%;background:linear-gradient(90deg,transparent,rgba(74,148,255,.10),transparent);transform:skewX(-12deg);transition:left .65s ease;pointer-events:none}
+.homeV7-ecosystemRow:hover{transform:translateX(6px)}
+.homeV7-ecosystemRow:hover:before{left:112%}
+
+.homeV7-project{position:relative;overflow:hidden}
+.homeV7-project:before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;right:-210px;top:-220px;background:radial-gradient(circle,rgba(72,149,255,.16),transparent 66%);animation:iaictProjectGlow 8s ease-in-out infinite;pointer-events:none}
+@keyframes iaictProjectGlow{0%,100%{transform:scale(.92);opacity:.64}50%{transform:scale(1.08);opacity:1}}
+
+.homeV7-journeyStep{transition:transform .28s ease,background .28s ease}
+.homeV7-journeyStep:hover{transform:translateY(-7px)}
+.homeV7-expertiseCard{transition:transform .28s ease,border-color .28s ease}.homeV7-expertiseCard:hover{transform:translateX(7px)}
+
+@media (hover:none),(pointer:coarse){.v11-entry-grid>a,.homeV7-galleryCard,.homeV7-knowledgeCard{transform:none!important}.homeV7-ecosystemRow:hover,.homeV7-capabilityItem:hover,.homeV7-journeyStep:hover,.homeV7-expertiseCard:hover{transform:none}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.iaict-scroll-progress{display:none}.iaict-motion-ready .iaict-reveal{opacity:1!important;transform:none!important;transition:none!important}.v12-network-node,.v12-network svg path[stroke-dasharray],.homeV7-project:before{animation:none!important}.v11-hero-atmosphere,.v11-hero .v12-network{transform:none!important;transition:none!important}}

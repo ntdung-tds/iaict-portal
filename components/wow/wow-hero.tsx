@@ -41,7 +41,7 @@ export function WowHero() {
   const [active, setActive] = useState(0);
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(true);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
 
@@ -112,4 +112,3 @@ export function WowHero() {
     </section>
   );
 }
-

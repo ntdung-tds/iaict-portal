@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import type { ReactNode } from "react";
+import { SiteMotion } from "@/components/wow/site-motion";
 import "./globals.css";
 import "./typography.css";
 import "./project-v4.css";
@@ -13,6 +14,7 @@ import "./wow-v9.css";
 import "./wow-v10.css";
 import "./wow-v11.css";
 import "./wow-v12.css";
+import "./wow-motion.css";
 import "./public-search.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -39,9 +41,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <a className="skip-link" href="#main-content">
           Bỏ qua điều hướng
         </a>
+        <SiteMotion />
         {children}
       </body>
     </html>
   );
 }
-
