@@ -11,7 +11,11 @@ export function SiteFooter() {
             <span className={styles.footerBrandMark} aria-hidden="true">IA</span>
             <strong>IAICT</strong>
           </div>
-          <p className={styles.footerIntro}>Viện Ứng dụng Công nghệ Thông tin và Truyền thông — kết nối công nghệ, giải pháp, chuyển giao và đào tạo trong một hệ sinh thái ứng dụng thống nhất.</p>
+          <div className="final-footer-institute">
+            <strong>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</strong>
+            <span>Institute of Applied Information and Communication Technology</span>
+          </div>
+          <p className={styles.footerIntro}>Kết nối công nghệ, giải pháp, chuyển giao và đào tạo trong một hệ sinh thái ứng dụng thống nhất.</p>
           <p className={styles.address}>Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội</p>
           <div className="final-footer-signature"><i aria-hidden="true" /><span>Applied Technology · Real-world Value</span></div>
         </div>
