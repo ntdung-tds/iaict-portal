@@ -14,7 +14,7 @@ body.iaict-public{background:var(--surface-paper)!important;color:var(--text-pri
 .ia-entry-grid small{display:block;font-size:11px;color:#536680;margin-top:4px}
 
 /* Shared homepage heading. */
-.iaict-public .ia-section-heading h2{font-size:clamp(32px,3.5vw,52px)!important;line-height:1.18!important;letter-spacing:-.04em!important;text-wrap:balance}
+.iaict-public .ia-section-heading h2{font-size:clamp(32px,3.5vw,50px)!important;line-height:1.18!important;letter-spacing:-.04em!important;text-wrap:balance}
 
 /* Capability rail. */
 .iaict-public .ia-capability{background:var(--surface-paper)!important;border-bottom-color:var(--border-subtle)!important}
@@ -60,7 +60,6 @@ body.iaict-public{background:var(--surface-paper)!important;color:var(--text-pri
 .iaict-public .ia-entry-grid a{background:var(--surface-paper);border-radius:12px;box-shadow:0 4px 12px #0b3d9104}
 .iaict-public .ia-entry-grid a:hover{border-color:var(--brand-accent);background:var(--surface-paper)}
 .iaict-public .ia-entry-label{margin-bottom:20px}
-.iaict-public .ia-section-heading h2{font-size:clamp(32px,3.5vw,50px)!important}
 
 /* Shared public-section anchor behavior. */
 .iaict-public .section{scroll-margin-top:100px}
