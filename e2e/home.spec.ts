@@ -185,7 +185,7 @@ test("capability pages and mobile menu fit narrow screens", async ({ page }) => 
   const navBounds = await nav.boundingBox();
   expect(navBounds!.x).toBeGreaterThanOrEqual(0);
   expect(navBounds!.x + navBounds!.width).toBeLessThanOrEqual(390);
-  await page.getByRole("heading", { level: 1 }).click();
+  await page.mouse.click(5, 200);
   await expect(nav).not.toBeVisible();
   await toggle.click();
   await nav.getByRole("link", { name: "Liên hệ & Hợp tác", exact: true }).click();
