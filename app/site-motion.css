@@ -1,6 +1,5 @@
-/* IAICT UI preview motion layer — progressive enhancement for GitHub Pages and production. */
+/* IAICT site motion layer — progressive enhancement for the public UI. */
 :root{--iaict-scroll:0}
-html{scroll-behavior:smooth}
 .iaict-scroll-progress{position:fixed;inset:0 0 auto 0;height:3px;z-index:1400;pointer-events:none;background:transparent}
 .iaict-scroll-progress span{display:block;height:100%;width:100%;transform:scaleX(var(--iaict-scroll));transform-origin:left center;background:linear-gradient(90deg,#1d6ef2,#5ba1ff 55%,#0b3d91);box-shadow:0 0 18px #1d6ef266}
 
@@ -29,4 +28,4 @@ body.iaict-scrolled .ia-header{backdrop-filter:blur(18px) saturate(1.18);-webkit
 .ia-expertise-card{transition:transform .28s ease,border-color .28s ease}.ia-expertise-card:hover{transform:translateX(7px)}
 
 @media (hover:none),(pointer:coarse){.ia-entry-grid>a,.ia-gallery-card,.ia-knowledge-card{transform:none!important}.ia-ecosystem-row:hover,.ia-capability-item:hover,.ia-journey-step:hover,.ia-expertise-card:hover{transform:none}}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.iaict-scroll-progress{display:none}.iaict-motion-ready .iaict-reveal{opacity:1!important;transform:none!important;transition:none!important}.ia-project:before{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.iaict-scroll-progress{display:none}.iaict-motion-ready .iaict-reveal{opacity:1!important;transform:none!important;transition:none!important}.ia-project:before{animation:none!important}}
