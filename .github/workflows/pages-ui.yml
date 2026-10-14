@@ -43,15 +43,38 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          PAGES_DIR="dist/client/iaict-portal"
-          test -f "$PAGES_DIR/index.html"
+
+          SOURCE_DIR="dist/client/iaict-portal"
+          STATIC_DIR="dist/client/_next"
+          PAGES_DIR=".pages-artifact"
+
+          test -f "$SOURCE_DIR/index.html"
+          test -d "$STATIC_DIR"
+
+          rm -rf "$PAGES_DIR"
+          mkdir -p "$PAGES_DIR"
+
+          # Route HTML is emitted under dist/client/iaict-portal because the
+          # Pages basePath is /iaict-portal. Shared Next/Vinext assets are emitted
+          # one level higher at dist/client/_next, so both must be present in the
+          # final Pages artifact.
+          cp -a "$SOURCE_DIR"/. "$PAGES_DIR"/
+          cp -a "$STATIC_DIR" "$PAGES_DIR/_next"
+
           touch "$PAGES_DIR/.nojekyll"
           if [ -f dist/client/404/index.html ]; then
             cp dist/client/404/index.html "$PAGES_DIR/404.html"
           fi
+
+          # Prevent a successful deploy of unstyled/unhydrated HTML.
+          test -n "$(find "$PAGES_DIR/_next/static/css" -type f -name '*.css' -print -quit)"
+          test -n "$(find "$PAGES_DIR/_next/static/chunks" -type f -name '*.js' -print -quit)"
+
           echo "pages_dir=$PAGES_DIR" >> "$GITHUB_OUTPUT"
-          echo "Using GitHub Pages artifact: $PAGES_DIR"
-          find "$PAGES_DIR" -maxdepth 2 -type f | head -80
+          echo "Using complete GitHub Pages artifact: $PAGES_DIR"
+          echo "CSS files: $(find "$PAGES_DIR/_next/static/css" -type f -name '*.css' | wc -l)"
+          echo "JS files: $(find "$PAGES_DIR/_next/static/chunks" -type f -name '*.js' | wc -l)"
+          find "$PAGES_DIR" -maxdepth 3 -type f | head -120
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
