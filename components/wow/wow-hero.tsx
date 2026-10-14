@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import styles from "./wow.module.css";
-import { CapabilityNetwork } from "./capability-network";
+import styles from "./wow-hero-v13.module.css";
 
 const slides = [
   {
@@ -13,7 +12,8 @@ const slides = [
     primary: { label: "Khám phá năng lực", href: "/giai-phap-dich-vu" },
     secondary: { label: "Dự án tiêu biểu", href: "/du-an" },
     focus: "Applied Technology",
-    signal: "Technology → Solutions → Transfer → Academy",
+    signal: "Research → Design → Prove → Transfer",
+    image: "https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=82&w=2400",
   },
   {
     kicker: "AI · Data · Digital Workflow",
@@ -23,6 +23,7 @@ const slides = [
     secondary: { label: "Giải pháp & Dịch vụ", href: "/giai-phap-dich-vu" },
     focus: "AI & Data",
     signal: "Data → Workflow → Intelligence → Decision",
+    image: "https://images.unsplash.com/photo-1768224656445-33d078c250b7?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=82&w=2400",
   },
   {
     kicker: "IoT · Field Systems · Traceability",
@@ -32,6 +33,7 @@ const slides = [
     secondary: { label: "IoT & Quan trắc", href: "/san-pham-nen-tang#iot-quan-trac" },
     focus: "IoT & Field Data",
     signal: "Sense → Connect → Store → Understand",
+    image: "https://images.unsplash.com/photo-1783434640967-1e0098a362df?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=82&w=2400",
   },
 ];
 
@@ -40,10 +42,11 @@ const topicLabels = ["Công nghệ ứng dụng", "AI & Dữ liệu", "IoT & Hi�
 export function WowHero() {
   const [active, setActive] = useState(0);
   const [ready, setReady] = useState(false);
-  useEffect(() => setReady(true), []);
   const [playing, setPlaying] = useState(true);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+
+  useEffect(() => setReady(true), []);
 
   useEffect(() => {
     if (!playing || hovered || focused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -56,57 +59,91 @@ export function WowHero() {
   const slide = slides[active];
 
   return (
-    <section className={`${styles.wowHero} v11-hero`} aria-label="IAICT - năng lực và định hướng"
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+    <section
+      className={`${styles.hero} v11-hero`}
+      aria-label="IAICT - năng lực và định hướng"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       onFocusCapture={() => setFocused(true)}
-      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
-      <div className={`${styles.heroAtmosphere} v11-hero-atmosphere`} aria-hidden="true">
-        <span className={styles.glowA} />
-        <span className={styles.glowB} />
-        <span className={styles.gridFade} />
-      </div>
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
+      }}
+    >
+      <div
+        key={slide.image}
+        className={styles.background}
+        aria-hidden="true"
+        style={{ backgroundImage: `url("${slide.image}")` }}
+      />
+      <div className={styles.overlay} aria-hidden="true" />
+      <div className={styles.texture} aria-hidden="true" />
 
-      <div className={`shell ${styles.heroShell} v11-hero-grid`}>
-        <div className={styles.heroCopy}>
-          <div className={`${styles.heroIndex} v11-overline`}><span>IAICT</span><i /> <span>{String(active + 1).padStart(2, "0")} / 03</span></div>
-          <p className={`${styles.eyebrow} v11-eyebrow`}>{slide.kicker}</p>
+      <div className={`shell ${styles.inner}`}>
+        <div className={styles.copy}>
+          <div className={styles.indexRow}>
+            <span>IAICT</span><i aria-hidden="true" /><span>{String(active + 1).padStart(2, "0")} / 03 · {slide.focus}</span>
+          </div>
+          <p className={styles.eyebrow}>{slide.kicker}</p>
           <h1>{slide.title}</h1>
-          <p className={`${styles.heroLead} v11-lead`}>{slide.lead}</p>
+          <p className={styles.lead}>{slide.lead}</p>
 
-          <div className={styles.heroActions}>
-            <Link className={`${styles.primaryAction} v11-primary`} href={slide.primary.href}>
+          <div className={styles.actions}>
+            <Link className={styles.primary} href={slide.primary.href}>
               {slide.primary.label}<span aria-hidden="true">↗</span>
             </Link>
-            <Link className={`${styles.secondaryAction} v11-secondary`} href={slide.secondary.href}>
+            <Link className={styles.secondary} href={slide.secondary.href}>
               {slide.secondary.label}
             </Link>
           </div>
-
-          <div className={`${styles.heroMeta} v11-meta`} aria-label="Hệ sinh thái IAICT">
-            <span>Technology</span>
-            <span>Solutions</span>
-            <span>Transfer</span>
-            <span>Academy</span>
-          </div>
         </div>
 
-        <CapabilityNetwork />
+        <aside className={styles.sideCard} aria-label="Thông tin định vị IAICT">
+          <div className={styles.sideTop}><span>IAICT / Capability Focus</span><i aria-hidden="true" /></div>
+          <strong>{slide.focus}</strong>
+          <p>{slide.signal}</p>
+          <div className={styles.sideStats}>
+            <span><b>04</b><small>trụ cột năng lực</small></span>
+            <span><b>01</b><small>hành trình triển khai</small></span>
+            <span><b>360°</b><small>từ bài toán đến vận hành</small></span>
+            <span><b>IAICT</b><small>applied technology</small></span>
+          </div>
+        </aside>
       </div>
 
-      <div className={`shell ${styles.heroRail} v11-rail`}>
-        <div className={`${styles.heroRailText} v11-rail-text`}>Research · Application · Integration · Transfer · Training</div>
-        <div className="v12-topics" role="group" aria-label="Chuyển nội dung giới thiệu">
+      <div className={`shell ${styles.bottom}`}>
+        <div className={styles.progressWrap} aria-hidden="true">
+          <span>{String(active + 1).padStart(2, "0")}</span>
+          <div className={styles.progress}><span style={{ width: `${((active + 1) / slides.length) * 100}%` }} /></div>
+          <span>03</span>
+        </div>
+
+        <div className={`${styles.topics} v12-topics`} role="group" aria-label="Chuyển nội dung giới thiệu">
           {slides.map((item, index) => (
             <button
               key={item.kicker}
               disabled={!ready}
-              className={`${styles.dot} ${index === active ? styles.dotActive : ""}`}
+              className={`${styles.topic} ${index === active ? styles.topicActive : ""}`}
               aria-label={topicLabels[index]}
               aria-pressed={index === active}
-              onClick={() => { setActive(index); setPlaying(false); }}
-            ><span>{String(index + 1).padStart(2, "0")}</span><strong>{topicLabels[index]}</strong></button>
+              onClick={() => {
+                setActive(index);
+                setPlaying(false);
+              }}
+            >
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{topicLabels[index]}</strong>
+            </button>
           ))}
-          <button type="button" disabled={!ready} className="v12-play" onClick={() => setPlaying(!playing)} aria-pressed={playing} aria-label="Tự động chuyển nội dung">{playing ? "Ⅱ Tạm dừng" : "▷ Tự động"}</button>
+          <button
+            type="button"
+            disabled={!ready}
+            className={`${styles.play} v12-play`}
+            onClick={() => setPlaying(!playing)}
+            aria-pressed={playing}
+            aria-label="Tự động chuyển nội dung"
+          >
+            {playing ? "Ⅱ Tạm dừng" : "▷ Tự động"}
+          </button>
         </div>
       </div>
     </section>
