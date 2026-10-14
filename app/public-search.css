@@ -171,6 +171,6 @@
   .public-search{padding:17px}
   .public-search-suggestions{margin-bottom:20px}
   .public-search-suggestions button{padding-inline:10px}
-  .public-search-filters button{font-size:11.5px;padding-inline:8px}
+  .public-search-filters button{font-size:12px;padding-inline:8px}
 }
 @media(prefers-reduced-motion:reduce){.public-search :is(button,a){transition:none}}
