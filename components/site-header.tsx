@@ -146,13 +146,13 @@ export function SiteHeader() {
                   aria-current={current(item.href) ? "page" : undefined}
                   onClick={() => setMobileOpen(false)}
                 >
-                  <span className={styles.mobileNavNo}>{String(index + 1).padStart(2, "0")}</span>
+                  <span className={styles.mobileNavNo} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                   <span>{item.label}</span>
                   <span className={styles.mobileNavArrow} aria-hidden="true">↗</span>
                 </Link>
               ))}
               <Link className={`${styles.mobileNavItem} ${styles.mobileSearchItem}`} href="/tim-kiem" onClick={() => setMobileOpen(false)}>
-                <span className={styles.mobileNavNo}>⌕</span>
+                <span className={styles.mobileNavNo} aria-hidden="true">⌕</span>
                 <span>Tìm kiếm</span>
                 <span className={styles.mobileNavArrow} aria-hidden="true">→</span>
               </Link>
