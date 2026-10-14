@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import styles from "./wow-hero-v13.module.css";
+import styles from "./wow-hero.module.css";
 
 const slides = [
   {

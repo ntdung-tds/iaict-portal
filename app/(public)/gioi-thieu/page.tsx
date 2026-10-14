@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pillars } from "@/lib/public-content";
-import styles from "@/components/institutional-v8.module.css";
+import styles from "@/components/institutional.module.css";
 
 export const metadata: Metadata = {
   title: "Giới thiệu",

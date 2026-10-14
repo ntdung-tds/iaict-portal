@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { mainNavigation } from "@/lib/public-content";
 import styles from "./site-chrome.module.css";
-import v13 from "./site-header-v13.module.css";
+import headerStyles from "./site-header.module.css";
 
 const primaryHrefs = ["/gioi-thieu", "/giai-phap-dich-vu", "/san-pham-nen-tang", "/dao-tao-tap-huan"];
 const moreHrefs = ["/chuyen-giao-cong-nghe", "/du-an", "/tin-tuc"];
@@ -70,20 +70,20 @@ export function SiteHeader() {
         }
       }}
     >
-      <div className={`${styles.topline} ${v13.topline}`}>
-        <div className={`shell ${styles.toplineInner} ${v13.toplineInner}`}>
+      <div className={`${styles.topline} ${headerStyles.topline}`}>
+        <div className={`shell ${styles.toplineInner} ${headerStyles.toplineInner}`}>
           <span className="final-top-status"><i aria-hidden="true" />Cổng thông tin điện tử · IAICT</span>
           <span>Institute of Applied Information and Communication Technology</span>
         </div>
       </div>
 
-      <div className={`shell ${styles.brandRow} ${v13.headerRow}`}>
-        <Link className={`${styles.brand} ${v13.brand}`} href="/" aria-label="IAICT - Trang chủ" onClick={closeMenus}>
-          <span className={`${styles.brandMark} ${v13.brandMark}`} aria-hidden="true">IA</span>
-          <span className={v13.brandIdentity}>
+      <div className={`shell ${styles.brandRow} ${headerStyles.headerRow}`}>
+        <Link className={`${styles.brand} ${headerStyles.brand}`} href="/" aria-label="IAICT - Trang chủ" onClick={closeMenus}>
+          <span className={`${styles.brandMark} ${headerStyles.brandMark}`} aria-hidden="true">IA</span>
+          <span className={headerStyles.brandIdentity}>
             <strong>IAICT</strong>
-            <span className={v13.brandVi}>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</span>
-            <span className={v13.brandEn}>Institute of Applied Information and Communication Technology</span>
+            <span className={headerStyles.brandVi}>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</span>
+            <span className={headerStyles.brandEn}>Institute of Applied Information and Communication Technology</span>
           </span>
         </Link>
 
@@ -120,7 +120,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen ? (
-        <div className={`${styles.mobileLayer} ${v13.mobileLayer}`}>
+        <div className={`${styles.mobileLayer} ${headerStyles.mobileLayer}`}>
           <button className={styles.mobileBackdrop} type="button" aria-label="Đóng điều hướng" onClick={closeMenus} />
           <nav
             id="mobile-navigation"
