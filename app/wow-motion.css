@@ -9,24 +9,24 @@ html{scroll-behavior:smooth}
 
 body.iaict-scrolled .ia-header{backdrop-filter:blur(18px) saturate(1.18);-webkit-backdrop-filter:blur(18px) saturate(1.18);box-shadow:0 14px 38px rgba(12,48,99,.10)!important;border-bottom-color:rgba(133,175,232,.42)!important}
 
-.homeV7-capabilityItem{transition:transform .28s ease,background .28s ease,border-color .28s ease}
-.homeV7-capabilityItem:hover{transform:translateY(-5px)}
-.v11-entry-grid>a,.homeV7-galleryCard,.homeV7-knowledgeCard{transform:perspective(900px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)) translate3d(0,0,0);transform-style:preserve-3d;transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease,background .28s ease;will-change:transform}
-.v11-entry-grid>a.iaict-tilt-active,.homeV7-galleryCard.iaict-tilt-active,.homeV7-knowledgeCard.iaict-tilt-active{transition:transform .08s linear,border-color .28s ease,box-shadow .28s ease}
-.v11-entry-grid>a:hover,.homeV7-galleryCard:hover,.homeV7-knowledgeCard:hover{box-shadow:0 24px 64px rgba(20,72,145,.14)!important}
+.ia-capability-item{transition:transform .28s ease,background .28s ease,border-color .28s ease}
+.ia-capability-item:hover{transform:translateY(-5px)}
+.ia-entry-grid>a,.ia-gallery-card,.ia-knowledge-card{transform:perspective(900px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)) translate3d(0,0,0);transform-style:preserve-3d;transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease,background .28s ease;will-change:transform}
+.ia-entry-grid>a.iaict-tilt-active,.ia-gallery-card.iaict-tilt-active,.ia-knowledge-card.iaict-tilt-active{transition:transform .08s linear,border-color .28s ease,box-shadow .28s ease}
+.ia-entry-grid>a:hover,.ia-gallery-card:hover,.ia-knowledge-card:hover{box-shadow:0 24px 64px rgba(20,72,145,.14)!important}
 
-.homeV7-ecosystemRow{position:relative;overflow:hidden;transition:transform .28s ease,border-color .28s ease,background .28s ease}
-.homeV7-ecosystemRow:before{content:"";position:absolute;inset:0 auto 0 -24%;width:22%;background:linear-gradient(90deg,transparent,rgba(74,148,255,.10),transparent);transform:skewX(-12deg);transition:left .65s ease;pointer-events:none}
-.homeV7-ecosystemRow:hover{transform:translateX(6px)}
-.homeV7-ecosystemRow:hover:before{left:112%}
+.ia-ecosystem-row{position:relative;overflow:hidden;transition:transform .28s ease,border-color .28s ease,background .28s ease}
+.ia-ecosystem-row:before{content:"";position:absolute;inset:0 auto 0 -24%;width:22%;background:linear-gradient(90deg,transparent,rgba(74,148,255,.10),transparent);transform:skewX(-12deg);transition:left .65s ease;pointer-events:none}
+.ia-ecosystem-row:hover{transform:translateX(6px)}
+.ia-ecosystem-row:hover:before{left:112%}
 
-.homeV7-project{position:relative;overflow:hidden}
-.homeV7-project:before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;right:-210px;top:-220px;background:radial-gradient(circle,rgba(72,149,255,.16),transparent 66%);animation:iaictProjectGlow 8s ease-in-out infinite;pointer-events:none}
+.ia-project{position:relative;overflow:hidden}
+.ia-project:before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;right:-210px;top:-220px;background:radial-gradient(circle,rgba(72,149,255,.16),transparent 66%);animation:iaictProjectGlow 8s ease-in-out infinite;pointer-events:none}
 @keyframes iaictProjectGlow{0%,100%{transform:scale(.92);opacity:.64}50%{transform:scale(1.08);opacity:1}}
 
-.homeV7-journeyStep{transition:transform .28s ease,background .28s ease}
-.homeV7-journeyStep:hover{transform:translateY(-7px)}
-.homeV7-expertiseCard{transition:transform .28s ease,border-color .28s ease}.homeV7-expertiseCard:hover{transform:translateX(7px)}
+.ia-journey-step{transition:transform .28s ease,background .28s ease}
+.ia-journey-step:hover{transform:translateY(-7px)}
+.ia-expertise-card{transition:transform .28s ease,border-color .28s ease}.ia-expertise-card:hover{transform:translateX(7px)}
 
-@media (hover:none),(pointer:coarse){.v11-entry-grid>a,.homeV7-galleryCard,.homeV7-knowledgeCard{transform:none!important}.homeV7-ecosystemRow:hover,.homeV7-capabilityItem:hover,.homeV7-journeyStep:hover,.homeV7-expertiseCard:hover{transform:none}}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.iaict-scroll-progress{display:none}.iaict-motion-ready .iaict-reveal{opacity:1!important;transform:none!important;transition:none!important}.homeV7-project:before{animation:none!important}}
+@media (hover:none),(pointer:coarse){.ia-entry-grid>a,.ia-gallery-card,.ia-knowledge-card{transform:none!important}.ia-ecosystem-row:hover,.ia-capability-item:hover,.ia-journey-step:hover,.ia-expertise-card:hover{transform:none}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.iaict-scroll-progress{display:none}.iaict-motion-ready .iaict-reveal{opacity:1!important;transform:none!important;transition:none!important}.ia-project:before{animation:none!important}}
