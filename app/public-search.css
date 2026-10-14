@@ -27,7 +27,7 @@
   font:inherit;
   font-size:14px;
 }
-.public-search input::placeholder{color:#809395}
+.public-search input::placeholder{color:#5e7478}
 .public-search button{font:inherit;cursor:pointer}
 .public-search-box button,.public-search-empty button{
   min-height:48px;
@@ -43,8 +43,8 @@
 .public-search button:disabled{opacity:.48;cursor:wait}
 .public-search form>p{
   margin:10px 0 0;
-  color:#70868a;
-  font-size:11px;
+  color:#5f777e;
+  font-size:12px;
   line-height:1.65;
 }
 .public-search-suggestions{
@@ -53,8 +53,8 @@
   gap:7px;
   align-items:center;
   margin:18px 0 26px;
-  color:#71888b;
-  font-size:10.5px;
+  color:#5f777e;
+  font-size:12px;
 }
 .public-search-suggestions>span{font-weight:700}
 .public-search-suggestions button{
@@ -64,7 +64,7 @@
   border-radius:999px;
   background:#f6faf8;
   color:#0b716a;
-  font-size:10.5px;
+  font-size:12px;
   font-weight:750;
 }
 .public-search-filters{
@@ -80,8 +80,8 @@
   border:1px solid transparent;
   border-radius:10px;
   background:#fff;
-  color:#657d81;
-  font-size:11px;
+  color:#587176;
+  font-size:12px;
   font-weight:700;
 }
 .public-search-filters button[aria-pressed=true]{
@@ -96,8 +96,8 @@
   align-items:center;
   justify-content:space-between;
   padding:18px 0;
-  color:#6f8589;
-  font-size:11px;
+  color:#5c7479;
+  font-size:12px;
 }
 .public-search-status p{margin:0;overflow-wrap:anywhere}
 .public-search-status button{
@@ -107,7 +107,7 @@
   border:0;
   background:none;
   color:#0a726c;
-  font-size:11px;
+  font-size:12px;
   font-weight:750;
   text-decoration:underline;
   text-underline-offset:3px;
@@ -116,7 +116,7 @@
 .public-search-results article{min-width:0;padding:22px 0;border-top:1px solid #e0e9e6}
 .public-search-results article>span{
   color:#0a8178;
-  font-size:9px;
+  font-size:10.5px;
   font-weight:850;
   letter-spacing:.1em;
   text-transform:uppercase;
@@ -137,7 +137,7 @@
   color:inherit;
 }
 .public-search-results a span{color:#0a8178}
-.public-search-results article>p{margin:0;color:#657d81;font-size:12.5px;line-height:1.72}
+.public-search-results article>p{margin:0;color:#5f777e;font-size:13px;line-height:1.72}
 .public-search-empty{
   padding:38px 24px;
   border:1px dashed #bed5cf;
@@ -146,8 +146,8 @@
   text-align:center;
 }
 .public-search-empty h3{margin:0;color:#12363e!important;font-size:21px!important}
-.public-search-empty p{max-width:620px;margin:10px auto 18px;color:#667f82;font-size:13px;line-height:1.72}
-.public-search :is(button,input,a):focus-visible{outline:3px solid #6bd8c0;outline-offset:3px}
+.public-search-empty p{max-width:620px;margin:10px auto 18px;color:#5f777e;font-size:13px;line-height:1.72}
+.public-search :is(button,input,a):focus-visible{outline:3px solid #2d8a79;outline-offset:3px}
 .public-search :is(button,a){transition:transform .18s ease,border-color .18s ease,background-color .18s ease,color .18s ease}
 @media(hover:hover){
   .public-search-suggestions button:hover,.public-search-filters button:hover{border-color:#9fc8bf;background:#eef7f4;color:#075f59}
@@ -171,6 +171,6 @@
   .public-search{padding:17px}
   .public-search-suggestions{margin-bottom:20px}
   .public-search-suggestions button{padding-inline:10px}
-  .public-search-filters button{font-size:10px;padding-inline:8px}
+  .public-search-filters button{font-size:11.5px;padding-inline:8px}
 }
 @media(prefers-reduced-motion:reduce){.public-search :is(button,a){transition:none}}
