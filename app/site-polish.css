@@ -17,7 +17,7 @@ main#main-content :where(img,svg,video,canvas){max-width:100%}
 
   /* Keep the global rule scoped to CTA links. Component-level buttons may intentionally
      use a larger target (for example the 48px search submit control). */
-  main#main-content :where(a[class*="primaryAction"],a[class*="secondaryAction"],a[class*="cta"]){min-height:44px}
+  main#main-content :where(a[class*="primaryAction"],a[class*="secondaryAction"],a[class*="cta"]){display:inline-flex!important;align-items:center;justify-content:center;min-height:44px!important}
 }
 
 /* On phone widths, paired hero/closing CTAs should read as deliberate full-width actions. */
@@ -40,6 +40,8 @@ main#main-content :where(img,svg,video,canvas){max-width:100%}
 
 @media(max-width:360px){
   .shell{width:min(1180px,calc(100% - 20px))}
+  .iaict-public .ia-project [class*="projectFacts"]{grid-template-columns:minmax(0,1fr)!important}
+  .iaict-public .ia-project [class*="projectFacts"]>span{min-width:0!important}
 }
 
 @media(max-width:320px){

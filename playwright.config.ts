@@ -8,6 +8,9 @@ export default defineConfig({
   webServer: {
     command: "npm run dev -- --host 127.0.0.1 --port 3000",
     url: "http://127.0.0.1:3000/api/health",
+    env: {
+      PLAYWRIGHT_E2E: "true",
+    },
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
