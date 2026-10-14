@@ -17,7 +17,7 @@ const principles = [
 
 export default function AboutPage() {
   return (
-    <main id="main-content">
+    <main id="main-content" data-page="about">
       <section className={styles.hero}>
         <div className={`shell ${styles.heroInner}`}>
           <div>
