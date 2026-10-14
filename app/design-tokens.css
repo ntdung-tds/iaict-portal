@@ -1,28 +1,28 @@
 :root{
-  /* Canonical semantic UI tokens. During consolidation these resolve through
-     the current foundation/theme variables so visual output remains unchanged. */
-  --surface-canvas:var(--v10-canvas);
-  --surface-canvas-warm:var(--v9-canvas-warm);
-  --surface-canvas-deep:var(--v9-canvas-deep);
-  --surface-paper:var(--v10-paper);
-  --surface-paper-translucent:var(--v9-paper);
-  --surface-paper-strong:var(--v9-paper-strong);
-  --surface-subtle:var(--v10-sky);
-  --surface-subtle-strong:var(--v10-sky-strong);
+  /* Canonical semantic UI tokens. These own the production values.
+     Legacy versioned variables resolve to these tokens in brand-theme.css. */
+  --surface-canvas:#f7fbff;
+  --surface-canvas-warm:#ffffff;
+  --surface-canvas-deep:#eaf3ff;
+  --surface-paper:#ffffff;
+  --surface-paper-translucent:rgba(255,255,255,.92);
+  --surface-paper-strong:#ffffff;
+  --surface-subtle:#eaf3ff;
+  --surface-subtle-strong:#dcecff;
 
-  --text-primary:var(--v10-ink);
-  --text-muted:var(--v10-muted);
+  --text-primary:#10233f;
+  --text-muted:#5b6b85;
 
-  --border-subtle:var(--v10-line);
-  --border-strong:var(--v10-line-strong);
+  --border-subtle:#d6e6ff;
+  --border-strong:#b8d3fb;
 
-  --brand-primary:var(--v10-blue);
-  --brand-primary-strong:var(--v10-blue-deep);
-  --brand-accent:var(--v10-accent);
-  --brand-accent-alt:var(--v10-accent-2);
-  --brand-mint:var(--v9-mint);
-  --brand-navy:var(--v9-navy);
+  --brand-primary:#0b3d91;
+  --brand-primary-strong:#072b6b;
+  --brand-accent:#1d6ef2;
+  --brand-accent-alt:#4895ff;
+  --brand-mint:#8ab8ff;
+  --brand-navy:#071f4d;
 
-  --shadow-elevated:var(--v10-shadow);
-  --shadow-soft:var(--v10-shadow-soft);
+  --shadow-elevated:0 26px 70px rgba(26,73,139,.11);
+  --shadow-soft:0 14px 38px rgba(26,73,139,.075);
 }
