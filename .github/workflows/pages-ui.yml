@@ -38,10 +38,24 @@ jobs:
         env:
           GITHUB_PAGES: "true"
 
-      - name: Verify static export
+      - name: Detect static export directory
+        id: export
+        shell: bash
         run: |
-          test -f dist/client/index.html
-          touch dist/client/.nojekyll
+          set -euo pipefail
+          if [ -f dist/client/index.html ]; then
+            PAGES_DIR="dist/client"
+          elif [ -f .cloudflare/output/v0/workers/default/assets/iaict-portal/index.html ]; then
+            PAGES_DIR=".cloudflare/output/v0/workers/default/assets/iaict-portal"
+          else
+            echo "Could not find exported index.html. Candidates:"
+            find dist .cloudflare -type f -name index.html -print 2>/dev/null || true
+            exit 1
+          fi
+          echo "pages_dir=$PAGES_DIR" >> "$GITHUB_OUTPUT"
+          touch "$PAGES_DIR/.nojekyll"
+          echo "Using GitHub Pages artifact: $PAGES_DIR"
+          find "$PAGES_DIR" -maxdepth 2 -type f | head -80
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -49,7 +63,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/client
+          path: ${{ steps.export.outputs.pages_dir }}
 
   deploy:
     environment:
