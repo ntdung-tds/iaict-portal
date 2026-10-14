@@ -8,8 +8,7 @@ main#main-content :where(a,button){-webkit-tap-highlight-color:rgba(10,132,125,.
 main#main-content .shell>*{min-width:0}
 main#main-content :where(img,svg,video,canvas){max-width:100%}
 
-/* The QA matrix includes 768px exactly. Keep tablet-edge spacing and controls intentional
-   instead of waiting for older 760px component breakpoints to activate. */
+/* The QA matrix includes 768px exactly. Keep tablet-edge spacing and controls intentional. */
 @media(max-width:768px){
   html{scroll-padding-top:104px}
   .shell{width:min(1180px,calc(100% - 28px))}
@@ -19,24 +18,6 @@ main#main-content :where(img,svg,video,canvas){max-width:100%}
   /* Keep the global rule scoped to CTA links. Component-level buttons may intentionally
      use a larger target (for example the 48px search submit control). */
   main#main-content :where(a[class*="primaryAction"],a[class*="secondaryAction"],a[class*="cta"]){min-height:44px}
-
-  /* Trâm Rừng: make the architecture layout shrink from its mobile viewport,
-     rather than retaining the desktop grid items' intrinsic inline size. */
-  #architecture>.shell{
-    min-width:0;
-    grid-template-columns:minmax(0,1fr);
-  }
-  #architecture>.shell>div{
-    width:100%;
-    min-width:0;
-    max-width:100%;
-    box-sizing:border-box;
-  }
-  #architecture>.shell>div :where(h2,p,li,strong,small,span){
-    min-width:0;
-    max-width:100%;
-    overflow-wrap:anywhere;
-  }
 }
 
 /* On phone widths, paired hero/closing CTAs should read as deliberate full-width actions. */
@@ -59,34 +40,6 @@ main#main-content :where(img,svg,video,canvas){max-width:100%}
 
 @media(max-width:360px){
   .shell{width:min(1180px,calc(100% - 20px))}
-
-  /* Keep the image caption inside the narrow architecture card. */
-  #architecture>.shell>div:first-child>div{
-    left:20px;
-    right:20px;
-    width:auto;
-    min-width:0;
-    max-width:none;
-    box-sizing:border-box;
-  }
-  #architecture>.shell>div:first-child>div strong{
-    font-size:clamp(24px,8vw,30px);
-    overflow-wrap:anywhere;
-  }
-
-  /* The desktop pipeline reserves 54px + 120px columns. Collapse fixed tracks at 320–360px. */
-  #architecture [aria-label="Luồng vận hành dữ liệu"]>div{
-    width:100%;
-    min-width:0;
-    grid-template-columns:30px minmax(62px,82px) minmax(0,1fr);
-    gap:8px;
-    box-sizing:border-box;
-  }
-  #architecture [aria-label="Luồng vận hành dữ liệu"]>div>*{
-    min-width:0;
-    max-width:100%;
-    overflow-wrap:anywhere;
-  }
 }
 
 @media(max-width:320px){
