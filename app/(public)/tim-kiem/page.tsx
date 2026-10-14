@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { PublicSearch } from "@/components/public-search";
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
+import { PublicSearch } from "@/components/public-search";
+import styles from "@/components/public-v15.module.css";
 
 export const metadata: Metadata = {
   title: "Tìm kiếm",
@@ -16,53 +18,80 @@ const quickPaths = [
   ["06", "Tin tức & Tri thức", "Thông tin hoạt động, tri thức ứng dụng, sự kiện và các chủ đề công nghệ liên quan.", "/tin-tuc"],
 ] as const;
 
+const heroStyle = {
+  "--hero-image": "url('https://images.unsplash.com/photo-1768224656445-33d078c250b7?auto=format&fit=crop&fm=jpg&q=84&w=2200')",
+} as CSSProperties;
+
 export default function SearchPage() {
   return (
-    <main id="main-content" className="v9-page">
-      <section className="v9-hero">
-        <div className="shell v9-hero-grid">
-          <div>
-            <p className="v9-kicker">IAICT / DISCOVERY</p>
-            <h1>Tìm đúng năng lực, không chỉ tìm từ khóa.</h1>
-            <p className="v9-lead">Tìm sản phẩm, giải pháp, dự án và chương trình đào tạo trong nội dung IAICT đang công khai. Bắt đầu bằng một từ khóa hoặc chọn nhóm chủ đề phù hợp.</p>
+    <main id="main-content" className={styles.page}>
+      <section className={styles.hero} style={heroStyle}>
+        <div className={`shell ${styles.heroInner}`}>
+          <nav className={styles.breadcrumb} aria-label="Đường dẫn trang">
+            <Link href="/">Trang chủ</Link><span aria-hidden="true">/</span><span aria-current="page">Tìm kiếm</span>
+          </nav>
+          <div className={styles.heroGrid}>
+            <div>
+              <p className={styles.kicker}>IAICT / DISCOVERY HUB</p>
+              <h1>Tìm đúng năng lực, không chỉ tìm từ khóa.</h1>
+              <p className={styles.lead}>Tìm sản phẩm, giải pháp, dự án và chương trình đào tạo trong nội dung IAICT đang công khai. Có thể bắt đầu bằng từ khóa, nhu cầu hoặc nhóm năng lực.</p>
+              <div className={styles.heroActions}>
+                <a className={styles.primaryAction} href="#search-hub">Bắt đầu tìm kiếm <span>↓</span></a>
+                <Link className={styles.secondaryAction} href="/lien-he">Trao đổi nhu cầu ↗</Link>
+              </div>
+            </div>
+            <aside className={styles.heroAside} aria-label="Các cách khám phá nội dung IAICT">
+              <span className={styles.heroAsideLabel}>IAICT / Discovery Framework</span>
+              <div className={styles.signalList}>
+                <div className={styles.signal}><span>01</span><div><strong>Theo nhu cầu</strong><small>Bắt đầu từ bài toán cần giải quyết.</small></div></div>
+                <div className={styles.signal}><span>02</span><div><strong>Theo năng lực</strong><small>Công nghệ · giải pháp · chuyển giao.</small></div></div>
+                <div className={styles.signal}><span>03</span><div><strong>Theo dự án</strong><small>Xem mô hình ứng dụng và kiến trúc.</small></div></div>
+                <div className={styles.signal}><span>04</span><div><strong>Theo tri thức</strong><small>Tin tức, hoạt động và chuyên đề.</small></div></div>
+              </div>
+            </aside>
           </div>
-          <aside className="v9-signal" aria-label="Các cách khám phá nội dung IAICT">
-            <div><small>BY NEED</small><strong>Theo nhu cầu</strong><span>Bắt đầu từ bài toán cần giải quyết.</span></div>
-            <div><small>BY CAPABILITY</small><strong>Theo năng lực</strong><span>Công nghệ · giải pháp · chuyển giao.</span></div>
-            <div><small>BY PROJECT</small><strong>Theo dự án</strong><span>Xem mô hình ứng dụng và kiến trúc.</span></div>
-            <div><small>BY KNOWLEDGE</small><strong>Theo tri thức</strong><span>Tin tức, sự kiện và chuyên đề.</span></div>
-          </aside>
         </div>
       </section>
 
-      <section className="v9-section">
+      <section className={styles.section} id="search-hub">
         <div className="shell">
-          <div className="v9-section-head">
-            <div><p className="v9-kicker">DISCOVERY HUB</p><h2>Bạn đang tìm nội dung nào?</h2></div>
-            <p>Tìm nhanh theo tên hoặc mô tả, sau đó lọc kết quả theo nhóm nội dung.</p>
+          <div className={styles.sectionHead}>
+            <div><p className={styles.label}>Discovery Hub</p><h2>Bạn đang tìm nội dung nào?</h2></div>
+            <p>Tìm theo tên, mô tả hoặc từ khóa không dấu; sau đó lọc nhanh theo công nghệ, giải pháp, đào tạo, dự án, tri thức hoặc thông tin về Viện.</p>
           </div>
           <PublicSearch />
         </div>
       </section>
 
-      <section className="v9-section-alt">
+      <section className={styles.sectionAlt}>
         <div className="shell">
-          <div className="v9-section-head">
-            <div><p className="v9-kicker">MORE PATHS</p><h2>Tiếp tục bằng dự án hoặc tri thức ứng dụng.</h2></div>
-            <p>Hai nhóm này phù hợp khi người xem muốn bắt đầu từ một mô hình triển khai cụ thể hoặc từ chủ đề đang quan tâm.</p>
+          <div className={styles.sectionHead}>
+            <div><p className={styles.label}>Explore by Path</p><h2>Không cần biết chính xác tên nội dung.</h2></div>
+            <p>Nếu từ khóa chưa đủ rõ, có thể đi trực tiếp vào nhóm năng lực hoặc bắt đầu từ dự án, tri thức ứng dụng và nhu cầu hợp tác.</p>
           </div>
-          <div className="v9-grid-4">
-            {quickPaths.slice(4).map(([no, title, body, href]) => (
-              <Link className="v9-card" href={href} key={title}><span>{no} · EXPLORE</span><h3>{title}</h3><p>{body}</p><small>Khám phá nội dung →</small></Link>
+          <div className={styles.newsGrid}>
+            {quickPaths.slice(0, 3).map(([no, title, body, href]) => (
+              <article className={styles.newsCard} key={title}>
+                <span>{no} · IAICT</span><h3>{title}</h3><p>{body}</p><small><Link href={href}>Khám phá nội dung ↗</Link></small>
+              </article>
             ))}
-            <Link className="v9-card" href="/gioi-thieu"><span>07 · IAICT</span><h3>Giới thiệu Viện</h3><p>Tìm hiểu cách IAICT kết nối công nghệ, giải pháp, chuyển giao và đào tạo trong cùng một hệ sinh thái.</p><small>About · Ecosystem</small></Link>
-            <Link className="v9-card" href="/lien-he"><span>08 · CONTACT</span><h3>Trao đổi trực tiếp</h3><p>Nếu chưa xác định đúng nhóm nội dung, có thể bắt đầu từ bài toán và nhu cầu thực tế của đơn vị.</p><small>Contact · Collaboration</small></Link>
+          </div>
+          <div className={styles.newsGrid} style={{ marginTop: 16 }}>
+            {quickPaths.slice(3).map(([no, title, body, href]) => (
+              <article className={styles.newsCard} key={title}>
+                <span>{no} · IAICT</span><h3>{title}</h3><p>{body}</p><small><Link href={href}>Khám phá nội dung ↗</Link></small>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="v9-cta"><div className="shell v9-cta-inner"><div><h2>Không chắc nên bắt đầu từ đâu?</h2><p>Hãy mô tả ngắn bài toán, bối cảnh và kết quả mong muốn; IAICT sẽ định hướng nhóm năng lực phù hợp để trao đổi tiếp.</p></div><Link href="/lien-he">Bắt đầu từ nhu cầu <span>↗</span></Link></div></section>
+      <section className={styles.ctaBand}>
+        <div className={`shell ${styles.ctaInner}`}>
+          <div><h2>Không chắc nên bắt đầu từ đâu?</h2><p>Mô tả ngắn bài toán, bối cảnh và kết quả mong muốn; IAICT sẽ định hướng nhóm năng lực phù hợp để trao đổi tiếp.</p></div>
+          <Link className={styles.primaryAction} href="/lien-he">Bắt đầu từ nhu cầu <span>↗</span></Link>
+        </div>
+      </section>
     </main>
   );
 }
-
