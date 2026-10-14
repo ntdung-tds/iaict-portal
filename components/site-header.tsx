@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { mainNavigation } from "@/lib/public-content";
 import styles from "./site-chrome.module.css";
+import v13 from "./site-header-v13.module.css";
 
 const primaryHrefs = ["/gioi-thieu", "/giai-phap-dich-vu", "/san-pham-nen-tang", "/dao-tao-tap-huan"];
 const moreHrefs = ["/chuyen-giao-cong-nghe", "/du-an", "/tin-tuc"];
@@ -69,20 +70,20 @@ export function SiteHeader() {
         }
       }}
     >
-      <div className={styles.topline}>
-        <div className={`shell ${styles.toplineInner}`}>
+      <div className={`${styles.topline} ${v13.topline}`}>
+        <div className={`shell ${styles.toplineInner} ${v13.toplineInner}`}>
           <span className="final-top-status"><i aria-hidden="true" />Cổng thông tin điện tử · IAICT</span>
-          <span>Công nghệ · Giải pháp · Chuyển giao · Đào tạo</span>
+          <span>Institute of Applied Information &amp; Communication Technology</span>
         </div>
       </div>
 
-      <div className={`shell ${styles.brandRow}`}>
-        <Link className={styles.brand} href="/" aria-label="IAICT - Trang chủ" onClick={closeMenus}>
-          <span className={styles.brandMark} aria-hidden="true">IA</span>
-          <span>
+      <div className={`shell ${styles.brandRow} ${v13.headerRow}`}>
+        <Link className={`${styles.brand} ${v13.brand}`} href="/" aria-label="IAICT - Trang chủ" onClick={closeMenus}>
+          <span className={`${styles.brandMark} ${v13.brandMark}`} aria-hidden="true">IA</span>
+          <span className={v13.brandIdentity}>
             <strong>IAICT</strong>
-            <small>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</small>
-            <span className="final-brand-meta">Applied Technology · Real-world Value</span>
+            <span className={v13.brandVi}>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</span>
+            <span className={v13.brandEn}>Institute of Applied Information &amp; Communication Technology</span>
           </span>
         </Link>
 
@@ -119,7 +120,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen ? (
-        <div className={styles.mobileLayer}>
+        <div className={`${styles.mobileLayer} ${v13.mobileLayer}`}>
           <button className={styles.mobileBackdrop} type="button" aria-label="Đóng điều hướng" onClick={closeMenus} />
           <nav
             id="mobile-navigation"
