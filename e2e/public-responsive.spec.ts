@@ -26,16 +26,20 @@ test("all public routes fit 320, 390 and 768px without horizontal overflow", asy
       const report = await page.evaluate(() => {
         const viewport = window.innerWidth;
         const documentWidth = document.documentElement.scrollWidth;
-        const offenders = [...document.querySelectorAll<HTMLElement>("body *")]
+        const elements = [...document.querySelectorAll<HTMLElement>("body *")];
+        const describe = (element: HTMLElement) => ({
+          tag: element.tagName.toLowerCase(),
+          id: element.id,
+          className: typeof element.className === "string" ? element.className.slice(0, 140) : "",
+          text: (element.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 90),
+        });
+        const offenders = elements
           .map((element) => {
             const rect = element.getBoundingClientRect();
             const overflow = Math.max(0, rect.right - viewport, -rect.left);
             if (overflow < 0.5) return null;
             return {
-              tag: element.tagName.toLowerCase(),
-              id: element.id,
-              className: typeof element.className === "string" ? element.className.slice(0, 140) : "",
-              text: (element.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 90),
+              ...describe(element),
               left: Math.round(rect.left * 10) / 10,
               right: Math.round(rect.right * 10) / 10,
               width: Math.round(rect.width * 10) / 10,
@@ -45,7 +49,25 @@ test("all public routes fit 320, 390 and 768px without horizontal overflow", asy
           .filter(Boolean)
           .sort((a, b) => (b?.overflow ?? 0) - (a?.overflow ?? 0))
           .slice(0, 8);
-        return { viewport, documentWidth, offenders };
+        const internalOverflow = elements
+          .map((element) => {
+            const extra = element.scrollWidth - element.clientWidth;
+            if (extra < 1) return null;
+            const style = getComputedStyle(element);
+            return {
+              ...describe(element),
+              clientWidth: element.clientWidth,
+              scrollWidth: element.scrollWidth,
+              extra,
+              overflowX: style.overflowX,
+              display: style.display,
+              gridTemplateColumns: style.gridTemplateColumns,
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => (b?.extra ?? 0) - (a?.extra ?? 0))
+          .slice(0, 12);
+        return { viewport, documentWidth, offenders, internalOverflow };
       });
       expect(
         report.documentWidth <= report.viewport,
