@@ -47,7 +47,7 @@ const architectureStyle = {
 
 const tramResponsiveCss = `
 [data-tram-architecture-mobile]{display:none}
-@media (max-width:760px){
+@media (max-width:768px){
   [data-tram-architecture-desktop]{display:none!important}
   [data-tram-architecture-mobile]{display:block!important;width:min(100% - 28px,1180px)!important;min-width:0!important;max-width:100%!important;margin-inline:auto!important}
   [data-tram-mobile-photo]{position:relative;width:100%!important;min-width:0!important;min-height:360px;border-radius:22px;overflow:hidden;background-image:linear-gradient(180deg,rgba(3,42,45,.04),rgba(3,42,45,.78)),var(--architecture-image);background-size:cover;background-position:center}
