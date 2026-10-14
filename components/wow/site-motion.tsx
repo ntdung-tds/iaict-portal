@@ -90,19 +90,6 @@ export function SiteMotion() {
     updateScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    const hero = document.querySelector<HTMLElement>(".v11-hero");
-    const onHeroPointer = (event: PointerEvent) => {
-      if (!hero || reduced || event.pointerType === "touch") return;
-      const rect = hero.getBoundingClientRect();
-      const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-      const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
-      hero.style.setProperty("--hero-x", `${Math.round(x * 100)}%`);
-      hero.style.setProperty("--hero-y", `${Math.round(y * 100)}%`);
-      hero.style.setProperty("--hero-shift-x", `${((x - 0.5) * 18).toFixed(2)}px`);
-      hero.style.setProperty("--hero-shift-y", `${((y - 0.5) * 14).toFixed(2)}px`);
-    };
-    hero?.addEventListener("pointermove", onHeroPointer);
-
     const tilts = Array.from(document.querySelectorAll<HTMLElement>(tiltSelectors));
     const tiltCleanups = tilts.map((card) => {
       const onMove = (event: PointerEvent) => {
@@ -131,7 +118,6 @@ export function SiteMotion() {
       observer?.disconnect();
       window.removeEventListener("scroll", onScroll);
       if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
-      hero?.removeEventListener("pointermove", onHeroPointer);
       tiltCleanups.forEach((cleanup) => cleanup());
       doc.classList.remove("iaict-motion-ready");
       body.classList.remove("iaict-scrolled");
