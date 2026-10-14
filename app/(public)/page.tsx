@@ -87,10 +87,10 @@ export default function HomePage() {
     <main id="main-content" className="ia-home">
       <WowHero />
 
-      <section className={`${styles.capabilityBar} ia-capability v11-capability`} aria-label="Năng lực nổi bật">
+      <section className={`${styles.capabilityBar} ia-capability`} aria-label="Năng lực nổi bật">
         <div className={`shell ${styles.capabilityInner}`}>
           {capabilities.map(([no, title, body]) => (
-            <div className={`${styles.capabilityItem} ia-capability-item homeV7-capabilityItem v11-capability-item`} key={title}>
+            <div className={`${styles.capabilityItem} ia-capability-item homeV7-capabilityItem`} key={title}>
               <span>{no}</span>
               <strong>{title}</strong>
               <small>{body}</small>
@@ -99,21 +99,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="ia-entry v11-entry" aria-label="Khám phá theo nhu cầu">
+      <section className="ia-entry" aria-label="Khám phá theo nhu cầu">
         <div className="shell">
-          <div className="ia-entry-label v11-entry-label"><strong>Khám phá IAICT theo nhu cầu của bạn</strong><span>Công nghệ phù hợp. Lộ trình rõ ràng.</span></div>
-          <div className="ia-entry-grid v11-entry-grid">
-            <Link href="/san-pham-nen-tang#ai-du-lieu"><span className="ia-entry-icon v11-icon" aria-hidden="true">AI</span><span><strong>AI & Dữ liệu</strong><small>Ứng dụng vào công việc</small></span><span aria-hidden="true">↗</span></Link>
-            <Link href="/san-pham-nen-tang#iot-quan-trac"><span className="ia-entry-icon v11-icon" aria-hidden="true">IoT</span><span><strong>IoT & Quan trắc</strong><small>Kết nối dữ liệu hiện trường</small></span><span aria-hidden="true">↗</span></Link>
-            <Link href="/giai-phap-dich-vu"><span className="ia-entry-icon v11-icon" aria-hidden="true">DX</span><span><strong>Giải pháp số</strong><small>Thiết kế theo nhu cầu</small></span><span aria-hidden="true">↗</span></Link>
-            <Link href="/dao-tao-tap-huan"><span className="ia-entry-icon v11-icon" aria-hidden="true">ED</span><span><strong>Đào tạo & Tập huấn</strong><small>Nâng cao năng lực đội ngũ</small></span><span aria-hidden="true">↗</span></Link>
+          <div className="ia-entry-label"><strong>Khám phá IAICT theo nhu cầu của bạn</strong><span>Công nghệ phù hợp. Lộ trình rõ ràng.</span></div>
+          <div className="ia-entry-grid">
+            <Link href="/san-pham-nen-tang#ai-du-lieu"><span className="ia-entry-icon" aria-hidden="true">AI</span><span><strong>AI & Dữ liệu</strong><small>Ứng dụng vào công việc</small></span><span aria-hidden="true">↗</span></Link>
+            <Link href="/san-pham-nen-tang#iot-quan-trac"><span className="ia-entry-icon" aria-hidden="true">IoT</span><span><strong>IoT & Quan trắc</strong><small>Kết nối dữ liệu hiện trường</small></span><span aria-hidden="true">↗</span></Link>
+            <Link href="/giai-phap-dich-vu"><span className="ia-entry-icon" aria-hidden="true">DX</span><span><strong>Giải pháp số</strong><small>Thiết kế theo nhu cầu</small></span><span aria-hidden="true">↗</span></Link>
+            <Link href="/dao-tao-tap-huan"><span className="ia-entry-icon" aria-hidden="true">ED</span><span><strong>Đào tạo & Tập huấn</strong><small>Nâng cao năng lực đội ngũ</small></span><span aria-hidden="true">↗</span></Link>
           </div>
         </div>
       </section>
 
       <section className={`${styles.sectionIntro} final-needs`} aria-labelledby="needs-title">
         <div className="shell">
-          <div className={`${styles.editorialHeading} ia-section-heading v11-heading`}>
+          <div className={`${styles.editorialHeading} ia-section-heading`}>
             <div>
               <p className={styles.label}>From problem to capability</p>
               <h2 id="needs-title">Bài toán đúng trước.<br />Công nghệ sau.</h2>
@@ -124,20 +124,20 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="ia-service-list v12-services">
+          <div className="ia-service-list">
             {needs.map((item) => (
-              <article className="ia-service-row v12-service" key={item.no}>
-                <span className="ia-service-no v12-service-no">{item.no}</span>
-                <div className="ia-service-copy v12-service-copy">
-                  <span className="ia-service-meta v12-service-meta">{item.meta}</span>
+              <article className="ia-service-row" key={item.no}>
+                <span className="ia-service-no">{item.no}</span>
+                <div className="ia-service-copy">
+                  <span className="ia-service-meta">{item.meta}</span>
                   <h3><Link href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link></h3>
                   <p>{item.body}</p>
-                  <details className="ia-service-details v12-service-details">
+                  <details className="ia-service-details">
                     <summary>Hướng tiếp cận & đầu ra</summary>
                     <div><p>{item.narrative}</p><ul>{item.points.map(point => <li key={point}>{point}</li>)}</ul><strong>{item.output}</strong></div>
                   </details>
                 </div>
-                <div className="ia-service-tags v12-service-tags">{item.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
+                <div className="ia-service-tags">{item.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
               </article>
             ))}
           </div>
@@ -207,7 +207,7 @@ export default function HomePage() {
 
       <section className={`${styles.journeySection} final-journey`} aria-labelledby="journey-title">
         <div className="shell">
-          <div className={`${styles.editorialHeading} ia-section-heading v11-heading`}>
+          <div className={`${styles.editorialHeading} ia-section-heading`}>
             <div><p className={styles.label}>IAICT Method</p><h2 id="journey-title">Từ nhu cầu đến<br />khả năng nhân rộng.</h2></div>
             <div className={styles.headingSide}><span className={styles.headingRule} /><p>Một dự án công nghệ chỉ hoàn chỉnh khi có thể đi qua đủ các lớp: hiểu bài toán, thiết kế, kiểm chứng, chuyển giao và mở rộng.</p></div>
           </div>
@@ -242,7 +242,7 @@ export default function HomePage() {
 
       <section className={`${styles.gallerySection} final-gallery`} aria-labelledby="gallery-title">
         <div className="shell">
-          <div className={`${styles.editorialHeading} ia-section-heading v11-heading`}>
+          <div className={`${styles.editorialHeading} ia-section-heading`}>
             <div><p className={styles.label}>Capability Spaces</p><h2 id="gallery-title">Từ hiện trường<br />đến hệ thống số.</h2></div>
             <div className={styles.headingSide}><span className={styles.headingRule} /><p>Các không gian năng lực được tổ chức để người xem hiểu mối liên hệ giữa công nghệ, dữ liệu, vận hành và chuyển giao.</p></div>
           </div>
