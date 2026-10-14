@@ -105,6 +105,57 @@ test("V15 discovery hub preserves search behavior and mobile touch targets", asy
   await expect(search.locator(".public-search-results article>span").first()).toHaveText("Dự án");
 });
 
+test("V15 discovery hub exposes semantic groups and readable compact actions", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto("/tim-kiem");
+
+  const search = page.locator(".public-search");
+  await expect(search).toHaveAttribute("data-ready", "true");
+  await expect(search.getByRole("group", { name: "Gợi ý tìm kiếm" })).toBeVisible();
+  await expect(search.getByRole("group", { name: "Lọc nhóm nội dung" })).toBeVisible();
+  await expect(search.getByRole("region", { name: "Kết quả tìm kiếm IAICT" })).toBeVisible();
+
+  const compactText = await page.evaluate(() => {
+    const selectors = [
+      ".public-search form>p",
+      ".public-search-suggestions",
+      ".public-search-filters button:not([aria-pressed=true])",
+      ".public-search-status",
+      ".public-search-results article>p",
+    ];
+    const parseRgb = (value: string) => {
+      const match = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : [0, 0, 0];
+    };
+    const luminance = ([r, g, b]: number[]) => {
+      const channels = [r, g, b].map((channel) => {
+        const value = channel / 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    };
+    const whiteLuminance = luminance([255, 255, 255]);
+    return selectors.map((selector) => {
+      const element = document.querySelector<HTMLElement>(selector);
+      if (!element) return { selector, fontSize: 0, contrast: 0 };
+      const style = getComputedStyle(element);
+      const foreground = luminance(parseRgb(style.color));
+      const contrast = (whiteLuminance + 0.05) / (foreground + 0.05);
+      return { selector, fontSize: parseFloat(style.fontSize), contrast };
+    });
+  });
+
+  for (const metric of compactText) {
+    expect(metric.fontSize, `${metric.selector} should remain readable`).toBeGreaterThanOrEqual(12);
+    expect(metric.contrast, `${metric.selector} should meet AA contrast on the white search surface`).toBeGreaterThanOrEqual(4.5);
+  }
+
+  const quickAction = page.getByRole("link", { name: /Khám phá nội dung/i }).first();
+  const quickActionBox = await quickAction.boundingBox();
+  expect(quickActionBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+  expect(await quickAction.evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(11);
+});
+
 test("V15 public-sector training detail keeps useful hierarchy and navigation", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/dao-tao-tap-huan/co-quan-nha-nuoc");
