@@ -1,0 +1,28 @@
+:root{
+  /* Canonical semantic UI tokens. During consolidation these resolve through
+     the current foundation/theme variables so visual output remains unchanged. */
+  --surface-canvas:var(--v10-canvas);
+  --surface-canvas-warm:var(--v9-canvas-warm);
+  --surface-canvas-deep:var(--v9-canvas-deep);
+  --surface-paper:var(--v10-paper);
+  --surface-paper-translucent:var(--v9-paper);
+  --surface-paper-strong:var(--v9-paper-strong);
+  --surface-subtle:var(--v10-sky);
+  --surface-subtle-strong:var(--v10-sky-strong);
+
+  --text-primary:var(--v10-ink);
+  --text-muted:var(--v10-muted);
+
+  --border-subtle:var(--v10-line);
+  --border-strong:var(--v10-line-strong);
+
+  --brand-primary:var(--v10-blue);
+  --brand-primary-strong:var(--v10-blue-deep);
+  --brand-accent:var(--v10-accent);
+  --brand-accent-alt:var(--v10-accent-2);
+  --brand-mint:var(--v9-mint);
+  --brand-navy:var(--v9-navy);
+
+  --shadow-elevated:var(--v10-shadow);
+  --shadow-soft:var(--v10-shadow-soft);
+}
