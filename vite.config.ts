@@ -2,14 +2,18 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import { defineConfig } from "vite";
 import vinext from "vinext";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     vinext(),
-    cloudflare({
-      viteEnvironment: {
-        name: "rsc",
-        childEnvironments: ["ssr"],
-      },
-    }),
+    ...(mode === "e2e"
+      ? []
+      : [
+          cloudflare({
+            viteEnvironment: {
+              name: "rsc",
+              childEnvironments: ["ssr"],
+            },
+          }),
+        ]),
   ],
-});
+}));
