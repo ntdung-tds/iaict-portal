@@ -5,11 +5,17 @@ main#main-content :where(p,li){text-wrap:pretty}
 main#main-content section[id],main#main-content article[id]{scroll-margin-top:124px}
 main#main-content :where(a,button,input,summary):focus-visible{outline-color:#65d8bf}
 main#main-content :where(a,button){-webkit-tap-highlight-color:rgba(10,132,125,.12)}
+main#main-content .shell>*{min-width:0}
+main#main-content :where(img,svg,video,canvas){max-width:100%}
 
-@media(max-width:760px){
+/* The QA matrix includes 768px exactly. Keep tablet-edge spacing and controls intentional
+   instead of waiting for older 760px component breakpoints to activate. */
+@media(max-width:768px){
   html{scroll-padding-top:104px}
   .shell{width:min(1180px,calc(100% - 28px))}
   main#main-content section[id],main#main-content article[id]{scroll-margin-top:104px}
+  main#main-content :where([class*="heroGrid"],[class*="sectionHead"],[class*="ctaInner"]){min-width:0}
+  main#main-content :where(a[class*="primaryAction"],a[class*="secondaryAction"],a[class*="cta"],button,summary){min-height:44px}
 
   /* Trâm Rừng: make the architecture layout shrink from its mobile viewport,
      rather than retaining the desktop grid items' intrinsic inline size. */
@@ -27,6 +33,24 @@ main#main-content :where(a,button){-webkit-tap-highlight-color:rgba(10,132,125,.
     min-width:0;
     max-width:100%;
     overflow-wrap:anywhere;
+  }
+}
+
+/* On phone widths, paired hero/closing CTAs should read as deliberate full-width actions. */
+@media(max-width:390px){
+  main#main-content [class*="heroActions"]{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  main#main-content [class*="heroActions"]>a{
+    width:100%;
+    min-width:0;
+    min-height:48px;
+  }
+  main#main-content [class*="ctaInner"]>a[class*="primaryAction"]{
+    width:100%;
+    min-width:0;
+    min-height:48px;
   }
 }
 
@@ -60,6 +84,11 @@ main#main-content :where(a,button){-webkit-tap-highlight-color:rgba(10,132,125,.
     max-width:100%;
     overflow-wrap:anywhere;
   }
+}
+
+@media(max-width:320px){
+  main#main-content :where(button,input,select,textarea,a){max-width:100%}
+  main#main-content :where(h1,h2,h3,p,li,a,button,small,strong,span){overflow-wrap:anywhere}
 }
 
 @media(prefers-reduced-motion:reduce){
