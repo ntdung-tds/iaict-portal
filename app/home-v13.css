@@ -1,0 +1,40 @@
+/* V13 home polish — restrained institutional green, stronger depth and spacing. */
+.iaict-v11 .v11-capability{position:relative;background:#f4f8f6!important;border-bottom:1px solid #dce7e3!important}
+.iaict-v11 .v11-capability>.shell{padding-top:0;padding-bottom:0}
+.iaict-v11 .v11-capability-item{min-height:128px!important;padding:24px 19px 21px!important;background:transparent;transition:background .22s ease,transform .22s ease,border-color .22s ease}
+.iaict-v11 .v11-capability-item:hover{z-index:2;background:#fff;transform:translateY(-4px);box-shadow:0 18px 45px rgba(15,67,64,.08)}
+.iaict-v11 .v11-capability-item>span{color:#78a29a!important;font-size:9px!important;font-weight:900!important;letter-spacing:.08em}
+.iaict-v11 .v11-capability-item strong{color:#123f45!important;font-size:10.5px!important;line-height:1.35;letter-spacing:.075em}
+.iaict-v11 .v11-capability-item small{color:#70858a!important;font-size:9.5px!important;line-height:1.45}
+
+.iaict-v11 .v11-entry{padding:50px 0 66px!important;background:linear-gradient(180deg,#fff,#f7faf8)!important;border-bottom:1px solid #e0e9e6!important}
+.iaict-v11 .v11-entry-label{align-items:flex-end;margin-bottom:24px!important;color:#72858a!important}
+.iaict-v11 .v11-entry-label strong{color:#123f45!important;font-size:13px;font-weight:800}
+.iaict-v11 .v11-entry-label span{font-size:11px}
+.iaict-v11 .v11-entry-grid{gap:14px}
+.iaict-v11 .v11-entry-grid a{position:relative;min-height:92px;padding:21px 18px!important;border:1px solid #dce7e3!important;border-radius:16px!important;background:rgba(255,255,255,.94)!important;box-shadow:0 10px 30px rgba(16,60,58,.045)!important;overflow:hidden;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease!important}
+.iaict-v11 .v11-entry-grid a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,#0d7770,#7ed9c2);transform:scaleX(0);transform-origin:left;transition:transform .22s ease}
+.iaict-v11 .v11-entry-grid a:hover{border-color:#bcd7d0!important;background:#fff!important;transform:translateY(-4px)!important;box-shadow:0 18px 38px rgba(16,60,58,.09)!important}
+.iaict-v11 .v11-entry-grid a:hover::after{transform:scaleX(1)}
+.iaict-v11 .v11-entry-grid .v11-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(145deg,#e7f4f0,#dcece7)!important;color:#0b6d67!important;font-size:11px!important}
+.iaict-v11 .v11-entry-grid strong{color:#163b43!important;font-size:13px!important}
+.iaict-v11 .v11-entry-grid small{color:#73868b!important;font-size:10.5px!important}
+
+.iaict-v11 .final-needs{padding-top:110px}
+.iaict-v11 .final-needs .v12-services{border-top:1px solid #cdded8}
+.iaict-v11 .final-needs .v12-service{padding:40px 0;border-bottom-color:#dce7e3}
+.iaict-v11 .final-needs .v12-service-no{color:#9abdb4}
+.iaict-v11 .final-needs .v12-service-meta{color:#6d8589}
+.iaict-v11 .final-needs .v12-service h3{color:#123f45!important}
+.iaict-v11 .final-needs .v12-service h3 a span{color:#0c7b73}
+.iaict-v11 .final-needs .v12-service p{color:#667d82}
+.iaict-v11 .final-needs .v12-service-tags span{border-color:#d4e3df;color:#587478;background:#f8faf9}
+.iaict-v11 .final-needs .v12-service-details summary{color:#12554f}
+.iaict-v11 .final-needs .v12-service-details summary:before{border-color:#b9d2cc;color:#0b746d}
+.iaict-v11 .final-needs .v12-service-details>div{background:#f4f8f6;border-left-color:#0b8178}
+.iaict-v11 .final-needs .v12-service-details strong{color:#124a47}
+
+@media(max-width:1080px){.iaict-v11 .v11-capability-item{min-height:112px!important}.iaict-v11 .v11-entry{padding-block:42px 56px!important}}
+@media(max-width:760px){.iaict-v11 .v11-capability-item{min-height:104px!important;padding:18px 14px!important}.iaict-v11 .v11-entry{padding:36px 0 48px!important}.iaict-v11 .v11-entry-label{align-items:flex-start}.iaict-v11 .v11-entry-grid a{min-height:82px}.iaict-v11 .final-needs{padding-top:82px}.iaict-v11 .final-needs .v12-service{padding-block:30px}}
+@media(max-width:480px){.iaict-v11 .v11-entry-grid a{padding:16px!important;border-radius:14px!important}.iaict-v11 .v11-capability-item strong{font-size:9.5px!important}.iaict-v11 .v11-capability-item small{font-size:8.7px!important}}
+@media(prefers-reduced-motion:reduce){.iaict-v11 .v11-capability-item,.iaict-v11 .v11-entry-grid a,.iaict-v11 .v11-entry-grid a::after{transition:none!important}}
