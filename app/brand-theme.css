@@ -1,22 +1,3 @@
-:root{
-  /* Temporary V9 compatibility aliases while legacy selectors are consolidated. */
-  --v9-canvas:var(--surface-canvas);
-  --v9-canvas-warm:var(--surface-canvas-warm);
-  --v9-canvas-deep:var(--surface-canvas-deep);
-  --v9-paper:var(--surface-paper-translucent);
-  --v9-paper-strong:var(--surface-paper-strong);
-  --v9-line:rgba(74,132,213,.20);
-  --v9-line-strong:rgba(29,110,242,.32);
-  --v9-ink:var(--text-primary);
-  --v9-muted:var(--text-muted);
-  --v9-teal:var(--brand-accent);
-  --v9-teal-deep:var(--brand-primary);
-  --v9-mint:var(--brand-mint);
-  --v9-navy:var(--brand-navy);
-  --v9-shadow:var(--shadow-elevated);
-  --v9-shadow-soft:var(--shadow-soft);
-}
-
 html{background:var(--surface-canvas)!important}
 body{
   color:var(--text-primary);
