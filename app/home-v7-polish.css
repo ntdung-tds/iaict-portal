@@ -1,54 +1,41 @@
-/* IAICT homepage V7 polish — consolidated from V7.2–V7.5.
-   Keep rule order stable: later sections intentionally override earlier refinements. */
+/* IAICT homepage editorial polish — canonical semantic hooks.
+   Rule order is intentionally preserved so later refinements override earlier ones. */
 
-/* === V7.2 === */
-/* Lead need card: use the open desktop area as a compact roadmap visual. */
-.homeV7-needCard:first-child{position:relative;padding-right:228px!important}
-.homeV7-needCard:first-child::before{content:"";position:absolute;z-index:0;right:34px;top:100px;width:158px;height:144px;border:1px solid rgba(95,211,194,.25);border-radius:22px;background:radial-gradient(circle at 50% 50%,rgba(100,231,208,.2) 0 5px,transparent 6px),radial-gradient(circle at 18% 22%,rgba(100,231,208,.75) 0 4px,transparent 5px),radial-gradient(circle at 82% 28%,rgba(100,231,208,.58) 0 4px,transparent 5px),radial-gradient(circle at 74% 78%,rgba(100,231,208,.42) 0 4px,transparent 5px),linear-gradient(90deg,transparent 49.5%,rgba(133,227,211,.13) 50%,transparent 50.5%),linear-gradient(transparent 49.5%,rgba(133,227,211,.13) 50%,transparent 50.5%),rgba(5,43,52,.18);box-shadow:inset 0 0 0 8px rgba(255,255,255,.018),0 18px 42px rgba(3,28,36,.12);pointer-events:none}
-.homeV7-needCard:first-child::after{content:"MAP  →  PRIORITY  →  ROADMAP";position:absolute;z-index:1;right:45px;top:260px;width:136px;color:#99d8ce;font-size:8px;font-weight:850;line-height:1.45;letter-spacing:.08em;text-align:center;pointer-events:none}
-.homeV7-needCard:first-child>*,.homeV7-knowledgeLead>*{position:relative;z-index:2}
+/* Knowledge lead: editorial data-governance visual. */
+.ia-knowledge-lead>*{position:relative;z-index:2}
+.ia-knowledge-lead{position:relative;overflow:hidden;justify-content:flex-start!important;min-height:500px!important;padding-top:244px!important;background:linear-gradient(145deg,#f3f8f6,#e9f3f0)!important}
+.ia-knowledge-lead::before{content:"";position:absolute;z-index:0;left:28px;right:28px;top:28px;height:176px;border:1px solid #d5e6e2;border-radius:22px;background:radial-gradient(circle at 18% 50%,#0d8d83 0 7px,rgba(13,141,131,.12) 8px 18px,transparent 19px),radial-gradient(circle at 50% 50%,#0d8d83 0 7px,rgba(13,141,131,.12) 8px 18px,transparent 19px),radial-gradient(circle at 82% 50%,#0d8d83 0 7px,rgba(13,141,131,.12) 8px 18px,transparent 19px),linear-gradient(90deg,transparent 17%,rgba(13,141,131,.34) 17.2% 49%,transparent 49.2% 51%,rgba(13,141,131,.34) 51.2% 82%,transparent 82.2%),linear-gradient(rgba(13,141,131,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(13,141,131,.045) 1px,transparent 1px),rgba(255,255,255,.66);background-size:auto,auto,auto,auto,26px 26px,26px 26px,auto;box-shadow:0 18px 44px rgba(28,67,70,.065);pointer-events:none}
+.ia-knowledge-lead::after{content:"DATA                         AI                         REVIEW";position:absolute;z-index:1;left:58px;right:58px;top:142px;color:#627f83;font-size:9px;font-weight:900;letter-spacing:.08em;word-spacing:10px;text-align:center;pointer-events:none}
+.ia-knowledge-lead h3{margin-top:16px!important}
+.ia-knowledge-lead p{max-width:700px}
 
-/* Knowledge lead: replace the oversized blank upper half with an editorial data-governance visual. */
-.homeV7-knowledgeLead{position:relative;overflow:hidden;justify-content:flex-start!important;min-height:500px!important;padding-top:244px!important;background:linear-gradient(145deg,#f3f8f6,#e9f3f0)!important}
-.homeV7-knowledgeLead::before{content:"";position:absolute;z-index:0;left:28px;right:28px;top:28px;height:176px;border:1px solid #d5e6e2;border-radius:22px;background:radial-gradient(circle at 18% 50%,#0d8d83 0 7px,rgba(13,141,131,.12) 8px 18px,transparent 19px),radial-gradient(circle at 50% 50%,#0d8d83 0 7px,rgba(13,141,131,.12) 8px 18px,transparent 19px),radial-gradient(circle at 82% 50%,#0d8d83 0 7px,rgba(13,141,131,.12) 8px 18px,transparent 19px),linear-gradient(90deg,transparent 17%,rgba(13,141,131,.34) 17.2% 49%,transparent 49.2% 51%,rgba(13,141,131,.34) 51.2% 82%,transparent 82.2%),linear-gradient(rgba(13,141,131,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(13,141,131,.045) 1px,transparent 1px),rgba(255,255,255,.66);background-size:auto,auto,auto,auto,26px 26px,26px 26px,auto;box-shadow:0 18px 44px rgba(28,67,70,.065);pointer-events:none}
-.homeV7-knowledgeLead::after{content:"DATA                         AI                         REVIEW";position:absolute;z-index:1;left:58px;right:58px;top:142px;color:#627f83;font-size:9px;font-weight:900;letter-spacing:.08em;word-spacing:10px;text-align:center;pointer-events:none}
-.homeV7-knowledgeLead h3{margin-top:16px!important}
-.homeV7-knowledgeLead p{max-width:700px}
+/* Gallery: technical visual field. */
+.ia-gallery-card{isolation:isolate;background-color:#0b3544!important}
+.ia-gallery-card::before{z-index:0!important;inset:0!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:radial-gradient(circle at 78% 20%,rgba(94,230,204,.25),transparent 26%),linear-gradient(120deg,transparent 45%,rgba(255,255,255,.035) 45.5%,transparent 46%),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px)!important;background-size:auto,auto,42px 42px,42px 42px!important;opacity:1!important}
+.ia-gallery-card::after{content:"";position:absolute;z-index:0;right:28px;top:28px;width:86px;height:86px;border:1px solid rgba(121,235,215,.25);border-radius:50%;box-shadow:0 0 0 14px rgba(121,235,215,.035),0 0 0 30px rgba(121,235,215,.02);pointer-events:none}
+.ia-gallery-card:nth-child(2)::after{border-radius:18px;transform:rotate(8deg)}
+.ia-gallery-card:nth-child(3)::after{border-style:dashed;box-shadow:inset 0 0 0 18px rgba(121,235,215,.03)}
+.ia-gallery-card:nth-child(4)::after{width:118px;height:68px;border-radius:18px;transform:rotate(-5deg)}
+.ia-gallery-card>*{position:relative;z-index:2}
 
-/* Gallery: give every capability card a technical visual field, not a flat color block. */
-.homeV7-galleryCard{isolation:isolate;background-color:#0b3544!important}
-.homeV7-galleryCard::before{z-index:0!important;inset:0!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:radial-gradient(circle at 78% 20%,rgba(94,230,204,.25),transparent 26%),linear-gradient(120deg,transparent 45%,rgba(255,255,255,.035) 45.5%,transparent 46%),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px)!important;background-size:auto,auto,42px 42px,42px 42px!important;opacity:1!important}
-.homeV7-galleryCard::after{content:"";position:absolute;z-index:0;right:28px;top:28px;width:86px;height:86px;border:1px solid rgba(121,235,215,.25);border-radius:50%;box-shadow:0 0 0 14px rgba(121,235,215,.035),0 0 0 30px rgba(121,235,215,.02);pointer-events:none}
-.homeV7-galleryCard:nth-child(2)::after{border-radius:18px;transform:rotate(8deg)}
-.homeV7-galleryCard:nth-child(3)::after{border-style:dashed;box-shadow:inset 0 0 0 18px rgba(121,235,215,.03)}
-.homeV7-galleryCard:nth-child(4)::after{width:118px;height:68px;border-radius:18px;transform:rotate(-5deg)}
-.homeV7-galleryCard>*{position:relative;z-index:2}
+/* Journey cards: compact phase rail. */
+.ia-journey-step{min-height:225px!important;padding-bottom:24px!important}
+.ia-journey-step::after{content:"";position:absolute;left:0;right:24px;bottom:0;height:3px;background:linear-gradient(90deg,#0c8a86,rgba(12,138,134,.08) 72%,transparent)}
 
-/* Journey cards already say enough; reduce dead height and use a phase rail instead of adding prose. */
-.homeV7-journeyStep{min-height:225px!important;padding-bottom:24px!important}
-.homeV7-journeyStep::after{content:"";position:absolute;left:0;right:24px;bottom:0;height:3px;background:linear-gradient(90deg,#0c8a86,rgba(12,138,134,.08) 72%,transparent)}
-
-/* The secondary knowledge cards are compact editorial entries; don't stretch them unnecessarily. */
-.homeV7-knowledgeCard:not(.homeV7-knowledgeLead){min-height:190px!important}
+/* Secondary knowledge cards stay compact. */
+.ia-knowledge-card:not(.ia-knowledge-lead){min-height:190px!important}
 
 @media(max-width:1080px){
-  .homeV7-needCard:first-child{padding-right:36px!important;padding-top:210px!important}
-  .homeV7-needCard:first-child::before{left:36px;right:36px;top:34px;width:auto;height:136px}
-  .homeV7-needCard:first-child::after{left:50px;right:50px;top:178px;width:auto}
-  .homeV7-knowledgeLead{padding-top:228px!important}
+  .ia-knowledge-lead{padding-top:228px!important}
 }
 @media(max-width:760px){
-  .homeV7-needCard:first-child{padding-top:180px!important}
-  .homeV7-needCard:first-child::before{left:28px;right:28px;top:28px;height:118px}
-  .homeV7-needCard:first-child::after{top:154px}
-  .homeV7-knowledgeLead{min-height:0!important;padding-top:202px!important}
-  .homeV7-knowledgeLead::before{left:22px;right:22px;top:22px;height:145px}
-  .homeV7-knowledgeLead::after{left:38px;right:38px;top:125px;font-size:8px}
-  .homeV7-journeyStep{min-height:0!important;padding-bottom:28px!important}
+  .ia-knowledge-lead{min-height:0!important;padding-top:202px!important}
+  .ia-knowledge-lead::before{left:22px;right:22px;top:22px;height:145px}
+  .ia-knowledge-lead::after{left:38px;right:38px;top:125px;font-size:8px}
+  .ia-journey-step{min-height:0!important;padding-bottom:28px!important}
 }
 
-/* === V7.3 === */
-/* Closing CTA: keep the poster scale, but give the copy a deliberate inner margin. */
+/* Closing CTA: deliberate inner margin. */
 [class*="closingSection"] [class*="closingInner"]{
   padding:58px clamp(42px,5.2vw,76px)!important;
   box-sizing:border-box;
@@ -58,15 +45,15 @@
 [class*="closingSection"] [class*="closingAction"] p{max-width:680px;font-size:15px!important;line-height:1.76!important}
 [class*="closingSection"] [class*="closingAction"] a{margin-top:20px!important}
 
-/* Knowledge card 02: use the open area for a compact process model instead of blank paper. */
-.homeV7-knowledgeCard:nth-child(2){
+/* Knowledge card 02: current state → standardize → digitize. */
+.ia-knowledge-card:nth-child(2){
   position:relative;
   overflow:hidden;
   min-height:285px!important;
   padding-top:132px!important;
   background:linear-gradient(180deg,#fff 0%,#f8fbfa 100%)!important;
 }
-.homeV7-knowledgeCard:nth-child(2)::before{
+.ia-knowledge-card:nth-child(2)::before{
   content:"";
   position:absolute;
   z-index:0;
@@ -84,7 +71,7 @@
     rgba(244,249,247,.9);
   pointer-events:none;
 }
-.homeV7-knowledgeCard:nth-child(2)::after{
+.ia-knowledge-card:nth-child(2)::after{
   content:"HIỆN TRẠNG     →     CHUẨN HÓA     →     SỐ HÓA";
   position:absolute;
   z-index:1;
@@ -98,18 +85,18 @@
   text-align:center;
   pointer-events:none;
 }
-.homeV7-knowledgeCard:nth-child(2)>*{position:relative;z-index:2}
-.homeV7-knowledgeCard:nth-child(2) h3{margin-top:8px!important}
-.homeV7-knowledgeCard:nth-child(2) p{max-width:620px}
+.ia-knowledge-card:nth-child(2)>*{position:relative;z-index:2}
+.ia-knowledge-card:nth-child(2) h3{margin-top:8px!important}
+.ia-knowledge-card:nth-child(2) p{max-width:620px}
 
-/* Journey: reduce dead section height and make the bottom of every phase informative. */
+/* Journey: informative output rail. */
 [class*="journeySection"]{padding-top:92px!important;padding-bottom:94px!important}
 [class*="journeySection"] [class*="editorialHeading"]{margin-bottom:40px!important}
-.homeV7-journeyStep{
+.ia-journey-step{
   min-height:238px!important;
   padding-bottom:72px!important;
 }
-.homeV7-journeyStep::after{
+.ia-journey-step::after{
   position:absolute!important;
   left:0!important;
   right:22px!important;
@@ -124,31 +111,30 @@
   line-height:1.45;
   letter-spacing:.015em;
 }
-.homeV7-journeyStep:nth-child(1)::after{content:"Đầu ra · hiện trạng · điểm nghẽn · phạm vi"}
-.homeV7-journeyStep:nth-child(2)::after{content:"Đầu ra · kiến trúc · backlog · tiêu chí đo"}
-.homeV7-journeyStep:nth-child(3)::after{content:"Đầu ra · PoC · đánh giá · điều chỉnh"}
-.homeV7-journeyStep:nth-child(4)::after{content:"Đầu ra · tài liệu · đào tạo · bàn giao"}
-.homeV7-journeyStep:nth-child(5)::after{content:"Đầu ra · chuẩn mở rộng · roadmap"}
+.ia-journey-step:nth-child(1)::after{content:"Đầu ra · hiện trạng · điểm nghẽn · phạm vi"}
+.ia-journey-step:nth-child(2)::after{content:"Đầu ra · kiến trúc · backlog · tiêu chí đo"}
+.ia-journey-step:nth-child(3)::after{content:"Đầu ra · PoC · đánh giá · điều chỉnh"}
+.ia-journey-step:nth-child(4)::after{content:"Đầu ra · tài liệu · đào tạo · bàn giao"}
+.ia-journey-step:nth-child(5)::after{content:"Đầu ra · chuẩn mở rộng · roadmap"}
 
 @media(max-width:1080px){
   [class*="closingSection"] [class*="closingInner"]{padding:48px 44px!important}
-  .homeV7-knowledgeCard:nth-child(2){min-height:270px!important}
+  .ia-knowledge-card:nth-child(2){min-height:270px!important}
   [class*="journeySection"]{padding-top:82px!important;padding-bottom:84px!important}
 }
 @media(max-width:760px){
   [class*="closingSection"] [class*="closingInner"]{padding:34px 26px 38px!important}
-  .homeV7-knowledgeCard:nth-child(2){min-height:0!important;padding-top:122px!important}
-  .homeV7-knowledgeCard:nth-child(2)::before{left:22px;right:22px;top:22px;height:68px}
-  .homeV7-knowledgeCard:nth-child(2)::after{left:28px;right:28px;top:73px;font-size:8px}
+  .ia-knowledge-card:nth-child(2){min-height:0!important;padding-top:122px!important}
+  .ia-knowledge-card:nth-child(2)::before{left:22px;right:22px;top:22px;height:68px}
+  .ia-knowledge-card:nth-child(2)::after{left:28px;right:28px;top:73px;font-size:8px}
   [class*="journeySection"]{padding-top:72px!important;padding-bottom:74px!important}
   [class*="journeySection"] [class*="editorialHeading"]{margin-bottom:30px!important}
-  .homeV7-journeyStep{min-height:0!important;padding-bottom:70px!important}
+  .ia-journey-step{min-height:0!important;padding-bottom:70px!important}
 }
 
-/* === V7.4 === */
-/* Shared treatment: cards should read as compact editorial modules, not tall empty posters. */
-.homeV7-knowledgeCard:nth-child(2),
-.homeV7-knowledgeCard:nth-child(3){
+/* Knowledge cards 02–03: compact editorial process models. */
+.ia-knowledge-card:nth-child(2),
+.ia-knowledge-card:nth-child(3){
   position:relative;
   overflow:hidden;
   align-self:start;
@@ -156,14 +142,14 @@
   padding:148px 30px 28px!important;
   background:linear-gradient(180deg,#ffffff 0%,#f7fbfa 100%)!important;
 }
-.homeV7-knowledgeCard:nth-child(2)>*,
-.homeV7-knowledgeCard:nth-child(3)>*{position:relative;z-index:2}
-.homeV7-knowledgeCard:nth-child(2) h3,
-.homeV7-knowledgeCard:nth-child(3) h3{margin-top:8px!important;max-width:560px}
-.homeV7-knowledgeCard:nth-child(2) p,
-.homeV7-knowledgeCard:nth-child(3) p{max-width:590px;margin-bottom:18px!important}
-.homeV7-knowledgeCard:nth-child(2)>small,
-.homeV7-knowledgeCard:nth-child(3)>small{
+.ia-knowledge-card:nth-child(2)>*,
+.ia-knowledge-card:nth-child(3)>*{position:relative;z-index:2}
+.ia-knowledge-card:nth-child(2) h3,
+.ia-knowledge-card:nth-child(3) h3{margin-top:8px!important;max-width:560px}
+.ia-knowledge-card:nth-child(2) p,
+.ia-knowledge-card:nth-child(3) p{max-width:590px;margin-bottom:18px!important}
+.ia-knowledge-card:nth-child(2)>small,
+.ia-knowledge-card:nth-child(3)>small{
   display:block;
   margin-top:18px!important;
   padding-top:14px;
@@ -173,7 +159,7 @@
 }
 
 /* Card 02 — Current state → Standardize → Digitize */
-.homeV7-knowledgeCard:nth-child(2)::before{
+.ia-knowledge-card:nth-child(2)::before{
   content:"";
   position:absolute;
   z-index:0;
@@ -188,7 +174,7 @@
     linear-gradient(135deg,#f3f9f7,#edf6f3);
   box-shadow:0 16px 34px rgba(21,73,70,.05);
 }
-.homeV7-knowledgeCard:nth-child(2)::after{
+.ia-knowledge-card:nth-child(2)::after{
   content:"HIỆN TRẠNG     →     CHUẨN HÓA     →     SỐ HÓA";
   position:absolute;
   z-index:1;
@@ -202,7 +188,7 @@
 }
 
 /* Card 03 — Sensor → Edge → Server → Value */
-.homeV7-knowledgeCard:nth-child(3)::before{
+.ia-knowledge-card:nth-child(3)::before{
   content:"";
   position:absolute;
   z-index:0;
@@ -218,7 +204,7 @@
     linear-gradient(135deg,#f2f8f8,#edf5f4);
   box-shadow:0 16px 34px rgba(20,66,75,.05);
 }
-.homeV7-knowledgeCard:nth-child(3)::after{
+.ia-knowledge-card:nth-child(3)::after{
   content:"SENSOR     →     EDGE     →     SERVER     →     VALUE";
   position:absolute;
   z-index:1;
@@ -232,21 +218,20 @@
 }
 
 @media(max-width:1080px){
-  .homeV7-knowledgeCard:nth-child(2),
-  .homeV7-knowledgeCard:nth-child(3){min-height:280px!important;padding-top:142px!important}
+  .ia-knowledge-card:nth-child(2),
+  .ia-knowledge-card:nth-child(3){min-height:280px!important;padding-top:142px!important}
 }
 @media(max-width:760px){
-  .homeV7-knowledgeCard:nth-child(2),
-  .homeV7-knowledgeCard:nth-child(3){min-height:0!important;padding:132px 24px 26px!important}
-  .homeV7-knowledgeCard:nth-child(2)::before,
-  .homeV7-knowledgeCard:nth-child(3)::before{left:22px;right:22px;top:22px;height:82px}
-  .homeV7-knowledgeCard:nth-child(2)::after,
-  .homeV7-knowledgeCard:nth-child(3)::after{left:30px;right:30px;top:80px;font-size:8px;letter-spacing:.045em}
+  .ia-knowledge-card:nth-child(2),
+  .ia-knowledge-card:nth-child(3){min-height:0!important;padding:132px 24px 26px!important}
+  .ia-knowledge-card:nth-child(2)::before,
+  .ia-knowledge-card:nth-child(3)::before{left:22px;right:22px;top:22px;height:82px}
+  .ia-knowledge-card:nth-child(2)::after,
+  .ia-knowledge-card:nth-child(3)::after{left:30px;right:30px;top:80px;font-size:8px;letter-spacing:.045em}
 }
 
-/* === V7.5 === */
 /* Card 04 — role-based AI capability: Role → Task → Practice → Evidence */
-.homeV7-knowledgeCard:nth-child(4){
+.ia-knowledge-card:nth-child(4){
   position:relative;
   overflow:hidden;
   align-self:start;
@@ -254,10 +239,10 @@
   padding:148px 30px 30px!important;
   background:linear-gradient(180deg,#ffffff 0%,#f7fbfa 100%)!important;
 }
-.homeV7-knowledgeCard:nth-child(4)>*{position:relative;z-index:2}
-.homeV7-knowledgeCard:nth-child(4) h3{margin-top:8px!important;max-width:560px}
-.homeV7-knowledgeCard:nth-child(4) p{max-width:590px;margin-bottom:18px!important}
-.homeV7-knowledgeCard:nth-child(4)::before{
+.ia-knowledge-card:nth-child(4)>*{position:relative;z-index:2}
+.ia-knowledge-card:nth-child(4) h3{margin-top:8px!important;max-width:560px}
+.ia-knowledge-card:nth-child(4) p{max-width:590px;margin-bottom:18px!important}
+.ia-knowledge-card:nth-child(4)::before{
   content:"";
   position:absolute;
   z-index:0;
@@ -273,7 +258,7 @@
     linear-gradient(135deg,#f3f9f7,#edf6f3);
   box-shadow:0 16px 34px rgba(21,73,70,.05);
 }
-.homeV7-knowledgeCard:nth-child(4)::after{
+.ia-knowledge-card:nth-child(4)::after{
   content:"VAI TRÒ     →     NHIỆM VỤ     →     THỰC HÀNH     →     ĐÁNH GIÁ";
   position:absolute;
   z-index:1;
@@ -285,7 +270,7 @@
   text-align:center;
   pointer-events:none;
 }
-.homeV7-knowledgeCard:nth-child(4) p::after{
+.ia-knowledge-card:nth-child(4) p::after{
   content:"• Xác định năng lực AI cần có theo từng vị trí việc làm\A• Thiết kế bài tập theo nhiệm vụ và tình huống thực tế\A• Đánh giá bằng sản phẩm công việc thay vì học lý thuyết đơn thuần";
   display:block;
   margin-top:15px;
@@ -296,7 +281,7 @@
   line-height:1.58;
   white-space:pre-line;
 }
-.homeV7-knowledgeCard:nth-child(4)>small{
+.ia-knowledge-card:nth-child(4)>small{
   display:block;
   margin-top:16px!important;
   padding-top:12px;
@@ -307,14 +292,14 @@
   letter-spacing:.09em;
   text-transform:uppercase;
 }
-.homeV7-knowledgeCard:nth-child(4)>small::before{content:"Trọng tâm · Role · Task · Practice · Evidence\A";white-space:pre-line}
+.ia-knowledge-card:nth-child(4)>small::before{content:"Trọng tâm · Role · Task · Practice · Evidence\A";white-space:pre-line}
 
 @media(max-width:1080px){
-  .homeV7-knowledgeCard:nth-child(4){min-height:290px!important;padding-top:142px!important}
+  .ia-knowledge-card:nth-child(4){min-height:290px!important;padding-top:142px!important}
 }
 @media(max-width:760px){
-  .homeV7-knowledgeCard:nth-child(4){min-height:0!important;padding:132px 24px 26px!important}
-  .homeV7-knowledgeCard:nth-child(4)::before{left:22px;right:22px;top:22px;height:82px}
-  .homeV7-knowledgeCard:nth-child(4)::after{left:28px;right:28px;top:80px;font-size:8px;letter-spacing:.035em}
-  .homeV7-knowledgeCard:nth-child(4) p::after{font-size:11px}
+  .ia-knowledge-card:nth-child(4){min-height:0!important;padding:132px 24px 26px!important}
+  .ia-knowledge-card:nth-child(4)::before{left:22px;right:22px;top:22px;height:82px}
+  .ia-knowledge-card:nth-child(4)::after{left:28px;right:28px;top:80px;font-size:8px;letter-spacing:.035em}
+  .ia-knowledge-card:nth-child(4) p::after{font-size:11px}
 }
