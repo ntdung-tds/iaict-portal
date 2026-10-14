@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CategoryLanding } from "@/components/category-landing-v62";
+import { CategoryLanding } from "@/components/category-landing";
 import { solutionGroups } from "@/lib/public-content";
 
 export const metadata: Metadata = {

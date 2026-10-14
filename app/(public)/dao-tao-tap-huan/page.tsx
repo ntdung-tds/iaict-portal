@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CategoryLanding } from "@/components/category-landing-v62";
+import { CategoryLanding } from "@/components/category-landing";
 
 const trainingDimensions = [
   { title: "Theo đối tượng", summary: "Phân nhóm lãnh đạo, quản lý, chuyên viên và các nhóm nghiệp vụ để xác định đúng mức độ và tình huống học tập." },
