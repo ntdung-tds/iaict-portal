@@ -14,6 +14,17 @@ main#main-content :where(a,button){-webkit-tap-highlight-color:rgba(10,132,125,.
 
 @media(max-width:360px){
   .shell{width:min(1180px,calc(100% - 20px))}
+
+  /* Trâm Rừng: the desktop pipeline reserves 54px + 120px columns.
+     Collapse those fixed tracks at 320–360px so the explanatory copy can wrap naturally. */
+  #architecture [aria-label="Luồng vận hành dữ liệu"]>div{
+    grid-template-columns:30px minmax(62px,82px) minmax(0,1fr);
+    gap:8px;
+  }
+  #architecture [aria-label="Luồng vận hành dữ liệu"]>div>*{
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
 }
 
 @media(prefers-reduced-motion:reduce){
