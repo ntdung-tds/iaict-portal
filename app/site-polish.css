@@ -16,14 +16,9 @@ main#main-content :where(img,svg,video,canvas){max-width:100%}
   main#main-content section[id],main#main-content article[id]{scroll-margin-top:104px}
   main#main-content :where([class*="heroGrid"],[class*="sectionHead"],[class*="ctaInner"]){min-width:0}
 
-  /* Keep CTA links as real touch targets even when a later cascade changes inline display. */
-  main#main-content :where(a[class*="primaryAction"],a[class*="secondaryAction"],a[class*="cta"]){
-    display:inline-flex!important;
-    align-items:center;
-    justify-content:center;
-    box-sizing:border-box;
-    min-height:44px;
-  }
+  /* Keep the global rule scoped to CTA links. Component-level buttons may intentionally
+     use a larger target (for example the 48px search submit control). */
+  main#main-content :where(a[class*="primaryAction"],a[class*="secondaryAction"],a[class*="cta"]){min-height:44px}
 
   /* Trâm Rừng: make the architecture layout shrink from its mobile viewport,
      rather than retaining the desktop grid items' intrinsic inline size. */
@@ -59,18 +54,6 @@ main#main-content :where(img,svg,video,canvas){max-width:100%}
     width:100%;
     min-width:0;
     min-height:48px;
-  }
-
-  /* Homepage Trâm Rừng facts must shrink inside the narrow narrative card. */
-  main#main-content.ia-home [class*="projectFacts"]{
-    min-width:0;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-  main#main-content.ia-home [class*="projectFacts"]>span,
-  main#main-content.ia-home [class*="projectFacts"] :where(small,strong){
-    min-width:0;
-    max-width:100%;
-    overflow-wrap:anywhere;
   }
 }
 
