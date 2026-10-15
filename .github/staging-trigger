@@ -1,3 +1,4 @@
 IAICT V16 functional staging deployment trigger
-Requested: 2026-10-15
-Purpose: apply canonical D1 migrations and deploy ui-v16-functional to isolated Cloudflare staging.
+Requested: 2026-10-15T04:01Z
+Head before trigger: 76076f3f304b00f52c389bdd61842fdfb6330487
+Purpose: controlled Cloudflare Build using immutable D1 bootstrap, then deploy ui-v16-functional to isolated staging.
