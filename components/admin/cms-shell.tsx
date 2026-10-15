@@ -28,7 +28,7 @@ const groups: NavGroup[] = [
   {
     label: "Nội dung",
     items: [
-      { href: "/admin/articles", label: "Tin bài", short: "TB" },
+      { href: "/admin/articles", label: "Bài viết", short: "BV" },
       { href: "/admin/content/pages", label: "Trang", short: "TR" },
       { href: "/admin/content/products", label: "Sản phẩm", short: "SP" },
       { href: "/admin/content/solutions", label: "Giải pháp", short: "GP" },
@@ -43,7 +43,7 @@ const groups: NavGroup[] = [
   {
     label: "Vận hành",
     items: [
-      { href: "/admin/content/media", label: "Media", short: "MD" },
+      { href: "/admin/content/media", label: "Thư viện Media", short: "MD" },
       { href: "/admin/content/leads", label: "Leads", short: "LD" },
       { href: "/admin/content/registrations", label: "Đăng ký học", short: "DK" },
       { href: "/admin/content/navigation", label: "Menu", short: "MN" },
@@ -53,7 +53,7 @@ const groups: NavGroup[] = [
   {
     label: "Hệ thống",
     items: [
-      { href: "/admin/content/users", label: "Người dùng", short: "US" },
+      { href: "/admin/content/users", label: "Người dùng & Phân quyền", short: "US" },
       { href: "/admin/revisions", label: "Phiên bản", short: "RV" },
       { href: "/admin/content/audit", label: "Nhật ký", short: "LG" },
       { href: "/admin/settings", label: "Cấu hình", short: "CF" },
