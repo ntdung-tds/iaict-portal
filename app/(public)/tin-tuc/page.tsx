@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import { PublicNewsFeed } from "@/components/public-news-feed";
 import { newsCategories } from "@/lib/public-content";
 import styles from "@/components/public.module.css";
 
@@ -35,11 +36,21 @@ export default function NewsPage() {
         </div>
       </section>
 
-      <section className={styles.section} aria-labelledby="editorial-topics-title">
+      <section className={styles.section} aria-labelledby="published-news-title">
+        <div className="shell">
+          <div className={styles.sectionHead}>
+            <div><p className={styles.label}>Published / Newsroom</p><h2 id="published-news-title">Tin đã duyệt và xuất bản.</h2></div>
+            <p>Danh sách này được đọc trực tiếp từ luồng IAICT Newsroom. Mỗi bài xuất bản giữ thông tin nguồn, thời điểm thu thập và liên kết về nội dung gốc để bảo đảm khả năng truy vết.</p>
+          </div>
+          <PublicNewsFeed />
+        </div>
+      </section>
+
+      <section className={styles.sectionAlt} aria-labelledby="editorial-topics-title">
         <div className="shell">
           <div className={styles.sectionHead}>
             <div><p className={styles.label}>Editorial Topics</p><h2 id="editorial-topics-title">Những chủ đề IAICT theo đuổi.</h2></div>
-            <p>Các khối dưới đây là cấu trúc biên tập và chủ đề chuyên môn, không được trình bày như bài báo đã xuất bản. Khi CMS được kết nối, danh sách nội dung sẽ kế thừa hệ phân loại này.</p>
+            <p>Luồng tin chính thức từ CMS được hiển thị phía trên. Các khối dưới đây thể hiện hướng biên tập dài hạn để phát triển thành series, case study và nội dung chuyên môn của Viện.</p>
           </div>
           <div className={styles.topicChips} role="list" aria-label="Chuyên mục tin tức">
             {newsCategories.map((item) => <span className={styles.chip} role="listitem" key={item}>{item}</span>)}
@@ -59,11 +70,11 @@ export default function NewsPage() {
         </div>
       </section>
 
-      <section className={styles.sectionAlt} aria-labelledby="knowledge-stream-title">
+      <section className={styles.section} aria-labelledby="knowledge-stream-title">
         <div className="shell">
           <div className={styles.sectionHead}>
             <div><p className={styles.label}>Knowledge Stream</p><h2 id="knowledge-stream-title">Ba hướng nội dung chuyên môn.</h2></div>
-            <p>Khi dữ liệu bài viết được kết nối, các hướng này có thể mở rộng thành series, case study, hướng dẫn kỹ thuật hoặc tài liệu phục vụ đào tạo.</p>
+            <p>Các hướng này có thể mở rộng thành series, case study, hướng dẫn kỹ thuật hoặc tài liệu phục vụ đào tạo và chuyển giao công nghệ.</p>
           </div>
           <div className={styles.newsGrid}>
             {editorialTopics.map(([tag, title, body]) => (
@@ -75,7 +86,7 @@ export default function NewsPage() {
         </div>
       </section>
 
-      <section className={styles.section} aria-labelledby="events-title">
+      <section className={styles.sectionAlt} aria-labelledby="events-title">
         <div className="shell">
           <div className={styles.eventPanel}>
             <div className={styles.eventIntro}>

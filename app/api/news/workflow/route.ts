@@ -1,0 +1,88 @@
+import { NEWS_SOURCE_ADAPTERS } from "@/lib/news-source-adapters";
+import {
+  DEFAULT_NEWS_SOURCES,
+  DEFAULT_NEWS_WORKFLOW_SETTINGS,
+  getNewsWorkflowPolicy,
+} from "@/lib/news-workflow";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  return Response.json(
+    {
+      version: "v16-news-workflow-5",
+      policy: getNewsWorkflowPolicy(),
+      defaultSettings: DEFAULT_NEWS_WORKFLOW_SETTINGS,
+      backend: {
+        d1Binding: "DB",
+        repositoryReady: true,
+        accessFailClosed: true,
+        raceSafePublicationClaims: true,
+        adminEndpoints: [
+          "POST /api/admin/news/ingest",
+          "GET /api/admin/news/review",
+          "POST /api/admin/news/review/action",
+          "GET /api/admin/news/settings",
+          "POST /api/admin/news/settings",
+        ],
+      },
+      scheduler: {
+        ready: true,
+        cronUtc: "*/15 * * * *",
+        sourceSpecificCadence: true,
+        minimumSourceIntervalMinutes: 15,
+        idempotentScheduledKey: true,
+        perSourceLease: true,
+        failureIsolation: true,
+        retryBackoff: true,
+        operationalRunsInD1: true,
+      },
+      cmsControls: {
+        globalAutoPublishToggle: true,
+        perSourcePublicationMode: ["inherit", "manual", "auto"],
+        perSourceScheduleConfiguration: true,
+        defaultMode: "manual",
+        guardrails: [
+          "source-active",
+          "trust-threshold",
+          "dedupe-pass",
+          "valid-title",
+          "valid-canonical-url",
+          "source-attribution",
+          "valid-category",
+          "publication-claim",
+          "scheduler-idempotency",
+          "scheduler-source-lease",
+        ],
+      },
+      adapters: NEWS_SOURCE_ADAPTERS.map((adapter) => ({
+        sourceId: adapter.sourceId,
+        kind: adapter.kind,
+        entryUrl: adapter.entryUrl,
+        allowedHosts: adapter.allowedHosts,
+        maxItems: adapter.maxItems,
+        timeoutMs: adapter.timeoutMs,
+        maxResponseBytes: adapter.maxResponseBytes,
+      })),
+      sources: DEFAULT_NEWS_SOURCES.map((source) => ({
+        id: source.id,
+        name: source.name,
+        homepageUrl: source.homepageUrl,
+        entryUrl: source.entryUrl,
+        fetchStrategy: source.fetchStrategy,
+        trustLevel: source.trustLevel,
+        publicationMode: source.publicationMode,
+        requiresEditorialWorkflow: source.requiresEditorialWorkflow,
+        attributionMode: source.attributionMode,
+        enabledByDefault: source.enabledByDefault,
+      })),
+    },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+    },
+  );
+}

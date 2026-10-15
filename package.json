@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:staging": "vite build --mode staging",
     "start": "vite preview",
     "check:vinext": "vinext check",
     "verify:migrations": "node scripts/verify-migrations.mjs",
@@ -16,7 +17,9 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "verify": "npm run verify:migrations && npm run check:vinext && npm run typecheck && npm run test && npm run build",
-    "deploy:staging": "vinext-cloudflare deploy --env staging --name iaict-portal-staging",
+    "migrate:staging": "node scripts/apply-staging-migrations.mjs",
+    "prepare:cf-output": "node scripts/prepare-cloudflare-build-output.mjs",
+    "deploy:staging": "npm run migrate:staging && npm run prepare:cf-output && vinext-cloudflare deploy --env staging --skip-build",
     "deploy:production": "vinext-cloudflare deploy --env production --name iaict-portal"
   },
   "dependencies": {

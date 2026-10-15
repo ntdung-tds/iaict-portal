@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "iaict-portal-staging-migrations",
+  "compatibility_date": "2026-10-12",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "iaict-portal-staging-db",
+      "database_id": "aa4a97e7-60c5-4da4-9f0b-d469ece811b4",
+      "migrations_dir": "cloudflare/migrations"
+    }
+  ]
+}

@@ -1,11 +1,13 @@
-import { bindings, defineConfig, defineWorker } from "cf/config";
+import { bindings, defineConfig, defineWorker, triggers } from "cf/config";
 
 export default defineConfig({
   worker: defineWorker({
     name: "iaict-portal-staging",
-    entrypoint: "vinext/server/fetch-handler",
+    entrypoint: "./worker.ts",
     compatibilityDate: "2026-10-12",
     compatibilityFlags: ["nodejs_compat"],
+    workersDev: true,
+    previewUrls: false,
     assets: {
       htmlHandling: "none",
       notFoundHandling: "none",
@@ -13,6 +15,12 @@ export default defineConfig({
     },
     env: {
       ASSETS: bindings.assets(),
+      DB: bindings.d1({ name: "iaict-portal-staging-db" }),
     },
+    triggers: [
+      // Cron Triggers execute in UTC. This frequent tick only discovers sources
+      // that are due; source-specific cadence is stored in D1 and editable in CMS.
+      triggers.scheduled({ schedule: "*/15 * * * *" }),
+    ],
   }),
 });
