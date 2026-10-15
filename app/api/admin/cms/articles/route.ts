@@ -1,4 +1,5 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
+import { CMS_ADMIN_ROLES, CMS_EDIT_ROLES, CMS_READ_ROLES } from "@/lib/cms-roles";
 import { NewsroomAuthError, requireNewsroomActor, type NewsroomActor } from "@/lib/newsroom-auth";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ async function revision(db: ReturnType<typeof getDatabaseBinding>, actor: Newsro
 export async function GET(request: Request) {
   try {
     const db = getDatabaseBinding();
-    const actor = await requireNewsroomActor(request, db, ["admin", "editor", "reviewer", "news_admin", "news_editor", "news_reviewer"]);
+    const actor = await requireNewsroomActor(request, db, CMS_READ_ROLES);
     const url = new URL(request.url);
     const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
     const status = (url.searchParams.get("status") ?? "").trim();
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const db = getDatabaseBinding();
-    const actor = await requireNewsroomActor(request, db, ["admin", "editor", "news_admin", "news_editor"]);
+    const actor = await requireNewsroomActor(request, db, CMS_EDIT_ROLES);
     const body = await request.json() as { action?: string; id?: string; data?: Row };
     const action = body.action ?? "save-article";
     const data = body.data ?? {};
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const db = getDatabaseBinding();
-    const actor = await requireNewsroomActor(request, db, ["admin", "news_admin"]);
+    const actor = await requireNewsroomActor(request, db, CMS_ADMIN_ROLES);
     const body = await request.json() as { type?: string; id?: string };
     const id = body.id?.trim() ?? "";
     if (!id) invalid("ID");
