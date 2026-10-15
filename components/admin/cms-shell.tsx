@@ -28,10 +28,12 @@ const groups: NavGroup[] = [
   {
     label: "Nội dung",
     items: [
+      { href: "/admin/articles", label: "Tin bài", short: "TB" },
       { href: "/admin/content/pages", label: "Trang", short: "TR" },
       { href: "/admin/content/products", label: "Sản phẩm", short: "SP" },
       { href: "/admin/content/solutions", label: "Giải pháp", short: "GP" },
       { href: "/admin/content/courses", label: "Đào tạo", short: "DT" },
+      { href: "/admin/course-sessions", label: "Lịch lớp", short: "LL" },
       { href: "/admin/content/projects", label: "Dự án", short: "DA" },
       { href: "/admin/content/events", label: "Sự kiện", short: "SK" },
       { href: "/admin/content/experts", label: "Chuyên gia", short: "CG" },
