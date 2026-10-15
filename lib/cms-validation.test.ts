@@ -48,3 +48,15 @@ describe("Product module validation",()=>{
   it("requires object SEO",async()=>{await expect(prepareCmsData(mockDb(),"products",moduleConfig("products"),null,{...validProduct,seo_json:"[]"})).rejects.toThrow("INVALID_CMS_PRODUCT_JSON_OBJECT_REQUIRED");});
   it("rejects a non-text SEO description",async()=>{await expect(prepareCmsData(mockDb(),"products",moduleConfig("products"),null,{...validProduct,seo_json:'{"description":42}'})).rejects.toThrow("INVALID_CMS_PRODUCT_SEO_TEXT_REQUIRED");});
 });
+
+const validSolution={title:"Giải pháp giám sát rừng",slug:"giam-sat-rung",summary:"Theo dõi dữ liệu hiện trường.",status:"draft",scope_json:'["Khảo sát"]',process_json:'["Khảo sát", "Bàn giao"]',deliverables_json:'["Hệ thống đã cấu hình"]',technologies_json:'["IoT"]',seo_json:"{}"};
+describe("Solution module validation",()=>{
+  it.each(["scope_json","process_json","deliverables_json","technologies_json"])("requires %s to be a text list",async key=>{
+    await expect(prepareCmsData(mockDb(),"solutions",moduleConfig("solutions"),null,{...validSolution,[key]:'[{"name":"Không phải chuỗi"}]'})).rejects.toThrow("INVALID_CMS_SOLUTION_LIST_TEXT_REQUIRED");
+  });
+  it("accepts empty optional lists",async()=>{const data=await prepareCmsData(mockDb(),"solutions",moduleConfig("solutions"),null,{...validSolution,scope_json:"[]",process_json:"[]",deliverables_json:"[]",technologies_json:"[]"});expect(data.scope_json).toBe("[]");});
+  it("rejects an invalid solution slug",async()=>{await expect(prepareCmsData(mockDb(),"solutions",moduleConfig("solutions"),null,{...validSolution,slug:"a/b"})).rejects.toThrow("INVALID_CMS_SOLUTION_SLUG_INVALID");});
+  it("requires object SEO",async()=>{await expect(prepareCmsData(mockDb(),"solutions",moduleConfig("solutions"),null,{...validSolution,seo_json:"[]"})).rejects.toThrow("INVALID_CMS_SOLUTION_JSON_OBJECT_REQUIRED");});
+  it("rejects non-text SEO title",async()=>{await expect(prepareCmsData(mockDb(),"solutions",moduleConfig("solutions"),null,{...validSolution,seo_json:'{"title":42}'})).rejects.toThrow("INVALID_CMS_SOLUTION_SEO_TEXT_REQUIRED");});
+  it("validates a partial update against the saved solution",async()=>{const data=await prepareCmsData(mockDb({current:{...validSolution,id:"s1"}}),"solutions",moduleConfig("solutions"),"s1",{problem:"Khó tổng hợp dữ liệu hiện trường."});expect(data.problem).toBe("Khó tổng hợp dữ liệu hiện trường.");});
+});

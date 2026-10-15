@@ -36,6 +36,10 @@ const fixedMessages: Record<string, string> = {
   USER_EMAIL_IN_USE: "Email này đã được gán cho một người dùng CMS khác.",
   LAST_ACTIVE_ADMIN: "Không thể thực hiện vì hệ thống phải luôn còn ít nhất một Quản trị viên đang hoạt động.",
 
+  SOLUTION_SLUG_INVALID: "Đường dẫn giải pháp chỉ dùng chữ thường không dấu, số, dấu gạch nối và tối đa 120 ký tự. Có thể để trống để tạo từ tên giải pháp.",
+  SOLUTION_JSON_OBJECT_REQUIRED: "SEO phải là đối tượng JSON trong dấu { }. Nếu chưa dùng, nhập {}.",
+  SOLUTION_SEO_TEXT_REQUIRED: "title và description trong SEO phải là chuỗi văn bản đặt trong dấu ngoặc kép.",
+  SOLUTION_LIST_TEXT_REQUIRED: "Phạm vi, Quy trình, Sản phẩm bàn giao và Công nghệ phải là danh sách chuỗi văn bản trong dấu [ ]. Nếu chưa dùng, nhập [].",
   PRODUCT_SLUG_INVALID: "Đường dẫn sản phẩm chỉ dùng chữ thường không dấu, số, dấu gạch nối và tối đa 120 ký tự. Có thể để trống để tạo từ tên sản phẩm.",
   PRODUCT_JSON_OBJECT_REQUIRED: "SEO phải là đối tượng JSON trong dấu { }. Nếu chưa dùng, nhập {}.",
   PRODUCT_SEO_TEXT_REQUIRED: "title và description trong SEO phải là chuỗi văn bản đặt trong dấu ngoặc kép.",
