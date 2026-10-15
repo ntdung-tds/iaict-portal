@@ -29,6 +29,10 @@ const fixedMessages: Record<string, string> = {
   USER_NOT_FOUND: "Không tìm thấy người dùng cần xử lý.",
   USER_SELF_DELETE: "Bạn không thể tự vô hiệu hóa tài khoản đang đăng nhập.",
   MEDIA_SOURCE_REQUIRED: "Vui lòng nhập URL công khai của ảnh, tài liệu hoặc video.",
+  MEDIA_HTTPS_REQUIRED: "URL Media phải sử dụng HTTPS để có thể nhúng an toàn trên website.",
+  MEDIA_URL_DUPLICATE: "URL Media này đã có trong thư viện. Vui lòng chọn bản ghi hiện có thay vì tạo trùng.",
+  MEDIA_TYPE_MISMATCH: "Loại tệp đã chọn không phù hợp với định dạng được suy ra từ URL hoặc tên tệp. Vui lòng kiểm tra lại loại Media.",
+  MEDIA_SIZE_INVALID: "Dung lượng Media phải là số nguyên không âm tính theo byte.",
 };
 
 export function cmsErrorCode(raw: string) {
