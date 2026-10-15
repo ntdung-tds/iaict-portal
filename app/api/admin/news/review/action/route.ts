@@ -1,4 +1,5 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
+import { NEWSROOM_EDIT_ROLES, NEWSROOM_REVIEW_ROLES } from "@/lib/cms-roles";
 import {
   publishApprovedReviewItem,
   setReviewDecision,
@@ -23,9 +24,7 @@ function readOptionalString(value: unknown) {
 }
 
 function mapError(error: unknown) {
-  if (error instanceof NewsroomAuthError) {
-    return Response.json({ error: error.message }, { status: error.status });
-  }
+  if (error instanceof NewsroomAuthError) return Response.json({ error: error.message }, { status: error.status });
   const message = error instanceof Error ? error.message : "Unknown newsroom error";
   const status = message === "REVIEW_ITEM_NOT_FOUND"
     ? 404
@@ -46,12 +45,7 @@ export async function POST(request: Request) {
     if (!queueId) return Response.json({ error: "queueId is required" }, { status: 400 });
 
     if (action === "edit") {
-      const actor = await requireNewsroomActor(request, db, [
-        "admin",
-        "editor",
-        "news_admin",
-        "news_editor",
-      ]);
+      const actor = await requireNewsroomActor(request, db, NEWSROOM_EDIT_ROLES);
       await updateReviewDraft(db, actor, {
         queueId,
         title: readOptionalString(body.title),
@@ -63,12 +57,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "approve" || action === "reject") {
-      const actor = await requireNewsroomActor(request, db, [
-        "admin",
-        "reviewer",
-        "news_admin",
-        "news_reviewer",
-      ]);
+      const actor = await requireNewsroomActor(request, db, NEWSROOM_REVIEW_ROLES);
       await setReviewDecision(db, actor, {
         queueId,
         decision: action === "approve" ? "approved" : "rejected",
@@ -78,12 +67,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "publish") {
-      const actor = await requireNewsroomActor(request, db, [
-        "admin",
-        "reviewer",
-        "news_admin",
-        "news_reviewer",
-      ]);
+      const actor = await requireNewsroomActor(request, db, NEWSROOM_REVIEW_ROLES);
       const article = await publishApprovedReviewItem(db, actor, queueId);
       return Response.json({ ok: true, action, queueId, article });
     }
