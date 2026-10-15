@@ -15,6 +15,11 @@ type RevisionRow = {
   actor: string | null;
 };
 
+function canAutoRestore(entityType: string) {
+  const config = getCmsModule(entityType);
+  return Boolean(config && !config.readOnly && entityType !== "users");
+}
+
 function errorResponse(error: unknown) {
   if (error instanceof NewsroomAuthError) return Response.json({ error: error.message }, { status: error.status });
   const message = error instanceof Error ? error.message : "Unknown revision error";
@@ -43,7 +48,7 @@ export async function GET(request: Request) {
       ORDER BY r.created_at DESC
       LIMIT 120
     `).bind(...values).all<RevisionRow>();
-    return Response.json({ ok: true, revisions: rows.results.map((row) => ({ ...row, canRestore: Boolean(getCmsModule(row.entity_type)) })) });
+    return Response.json({ ok: true, revisions: rows.results.map((row) => ({ ...row, canRestore: canAutoRestore(row.entity_type) })) });
   } catch (error) { return errorResponse(error); }
 }
 
@@ -57,7 +62,7 @@ export async function POST(request: Request) {
     const revision = await db.prepare(`SELECT * FROM cms_revisions WHERE id = ?`).bind(revisionId).first<RevisionRow>();
     if (!revision) return Response.json({ error: "Revision not found" }, { status: 404 });
     const config = getCmsModule(revision.entity_type);
-    if (!config || config.readOnly) return Response.json({ error: "Entity type cannot be restored automatically" }, { status: 400 });
+    if (!config || config.readOnly || revision.entity_type === "users") return Response.json({ error: "Entity type cannot be restored automatically" }, { status: 400 });
     let snapshot: Record<string, unknown>;
     try { snapshot = JSON.parse(revision.snapshot_json) as Record<string, unknown>; }
     catch { return Response.json({ error: "Revision snapshot is invalid" }, { status: 500 }); }
