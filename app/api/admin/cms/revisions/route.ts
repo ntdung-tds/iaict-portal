@@ -31,7 +31,7 @@ function errorResponse(error: unknown) {
 export async function GET(request: Request) {
   try {
     const db = getDatabaseBinding();
-    await requireNewsroomActor(request, db, CMS_READ_ROLES);
+    const actor = await requireNewsroomActor(request, db, CMS_READ_ROLES);
     const url = new URL(request.url);
     const entityType = (url.searchParams.get("entityType") ?? "").trim();
     const entityId = (url.searchParams.get("entityId") ?? "").trim();
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
       ORDER BY r.created_at DESC
       LIMIT 120
     `).bind(...values).all<RevisionRow>();
-    return Response.json({ ok: true, revisions: rows.results.map((row) => ({ ...row, canRestore: canAutoRestore(row.entity_type) })) });
+    return Response.json({ ok: true, actor, revisions: rows.results.map((row) => ({ ...row, canRestore: canAutoRestore(row.entity_type) })) });
   } catch (error) { return errorResponse(error); }
 }
 
