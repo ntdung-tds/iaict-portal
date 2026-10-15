@@ -29,10 +29,29 @@ type Source = {
   lastFetchedAt: string | null;
   lastSuccessAt: string | null;
   lastError: string | null;
+  scheduleEnabled: boolean;
+  scheduleIntervalMinutes: number;
+  scheduleRetryMinutes: number;
+  nextScheduledAt: string | null;
+  lastScheduledAt: string | null;
 };
 
 type Category = { id: string; name: string; slug: string };
 type QueueCounts = Record<ReviewStatus, number>;
+
+type SchedulerRun = {
+  id: string;
+  scheduled_key: string;
+  cron_expression: string;
+  status: "running" | "succeeded" | "partial" | "failed" | "skipped";
+  due_count: number;
+  claimed_count: number;
+  succeeded_count: number;
+  failed_count: number;
+  skipped_count: number;
+  started_at: string;
+  finished_at: string | null;
+};
 
 type ReviewItem = {
   queue_id: string;
@@ -62,6 +81,7 @@ type Overview = {
   sources: Source[];
   categories: Category[];
   queueCounts: QueueCounts;
+  schedulerRuns: SchedulerRun[];
 };
 
 const STATUS_LABELS: Record<ReviewStatus, string> = {
@@ -82,6 +102,12 @@ function formatTime(value: string | null) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(date);
+}
+
+function schedulerStatusClass(status: SchedulerRun["status"]) {
+  if (status === "succeeded") return styles.schedulerHealthy;
+  if (status === "failed") return styles.schedulerFailed;
+  return styles.schedulerWarning;
 }
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -117,6 +143,7 @@ export function NewsroomAdmin() {
       sources: payload.sources,
       categories: payload.categories,
       queueCounts: payload.queueCounts,
+      schedulerRuns: payload.schedulerRuns ?? [],
     };
     setOverview(next);
     setSettingsDraft(next.settings);
@@ -194,9 +221,9 @@ export function NewsroomAdmin() {
     <main id="main-content" className={styles.page}>
       <header className={styles.topbar}>
         <div>
-          <span className={styles.eyebrow}>IAICT CMS / V16.4</span>
+          <span className={styles.eyebrow}>IAICT CMS / V16.5</span>
           <h1>Newsroom Control Center</h1>
-          <p>Lấy tin, biên tập, duyệt và xuất bản trong một luồng có truy vết.</p>
+          <p>Lấy tin, biên tập, duyệt, xuất bản và theo dõi tự động hóa trong một luồng có truy vết.</p>
         </div>
         <div className={styles.topActions}>
           <span className={settingsDraft.autoPublishEnabled ? styles.autoOn : styles.autoOff}>
@@ -241,6 +268,8 @@ export function NewsroomAdmin() {
                 <dl>
                   <div><dt>Lần lấy gần nhất</dt><dd>{formatTime(source.lastFetchedAt)}</dd></div>
                   <div><dt>Chế độ</dt><dd>{source.publicationMode}</dd></div>
+                  <div><dt>Lịch tự động</dt><dd>{source.scheduleEnabled ? `${source.scheduleIntervalMinutes} phút` : "Tắt"}</dd></div>
+                  <div><dt>Lần kế tiếp</dt><dd>{source.scheduleEnabled ? formatTime(source.nextScheduledAt) : "—"}</dd></div>
                 </dl>
                 {source.lastError && <p className={styles.sourceError}>{source.lastError}</p>}
                 <div className={styles.sourceActions}>
@@ -408,7 +437,7 @@ export function NewsroomAdmin() {
         <div className={styles.settingsIntro}>
           <span className={styles.eyebrow}>Settings / Newsroom</span>
           <h2 id="newsroom-settings-title">Tự động hóa có kiểm soát</h2>
-          <p>Auto publish mặc định tắt. Khi bật, hệ thống vẫn áp dụng dedupe, trust, attribution, category và publication claim trước khi xuất bản.</p>
+          <p>Auto publish mặc định tắt. Cron kiểm tra mỗi 15 phút nhưng chỉ chạy các nguồn đến hạn theo lịch riêng trong D1.</p>
         </div>
         <div className={styles.settingsCard}>
           <label className={styles.switchRow}>
@@ -439,23 +468,75 @@ export function NewsroomAdmin() {
           <div className={styles.sourceSettings}>
             {overview.sources.map((source) => (
               <div key={source.id} className={styles.sourceSettingRow}>
-                <div><strong>{source.name}</strong><span>{source.isActive ? "Đang hoạt động" : "Đang tắt"}</span></div>
-                <select
-                  aria-label={`Chế độ xuất bản ${source.name}`}
-                  value={source.publicationMode}
-                  onChange={(event) => {
-                    const mode = event.target.value as PublicationMode;
-                    void runAction(
-                      `source-mode-${source.id}`,
-                      async () => { await post("/api/admin/news/settings", { action: "update-source", sourceId: source.id, publicationMode: mode, isActive: source.isActive }); },
-                      `Đã đổi chế độ ${source.name} sang ${mode}.`,
-                    );
-                  }}
-                >
-                  <option value="inherit">Theo cài đặt chung</option>
-                  <option value="manual">Luôn duyệt thủ công</option>
-                  <option value="auto">Cho phép tự đăng</option>
-                </select>
+                <div>
+                  <strong>{source.name}</strong>
+                  <span>{source.isActive ? "Đang hoạt động" : "Đang tắt"} · {source.scheduleEnabled ? `tự lấy mỗi ${source.scheduleIntervalMinutes} phút` : "không tự lấy"}</span>
+                </div>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <select
+                    aria-label={`Chế độ xuất bản ${source.name}`}
+                    value={source.publicationMode}
+                    onChange={(event) => {
+                      const mode = event.target.value as PublicationMode;
+                      void runAction(
+                        `source-mode-${source.id}`,
+                        async () => { await post("/api/admin/news/settings", { action: "update-source", sourceId: source.id, publicationMode: mode, isActive: source.isActive }); },
+                        `Đã đổi chế độ ${source.name} sang ${mode}.`,
+                      );
+                    }}
+                  >
+                    <option value="inherit">Theo cài đặt chung</option>
+                    <option value="manual">Luôn duyệt thủ công</option>
+                    <option value="auto">Cho phép tự đăng</option>
+                  </select>
+                  <select
+                    aria-label={`Lịch lấy tin ${source.name}`}
+                    value={source.scheduleEnabled ? String(source.scheduleIntervalMinutes) : "off"}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      const enabled = value !== "off";
+                      const interval = enabled ? Number(value) : source.scheduleIntervalMinutes;
+                      void runAction(
+                        `source-schedule-${source.id}`,
+                        async () => { await post("/api/admin/news/settings", {
+                          action: "update-source",
+                          sourceId: source.id,
+                          publicationMode: source.publicationMode,
+                          isActive: source.isActive,
+                          scheduleEnabled: enabled,
+                          scheduleIntervalMinutes: interval,
+                          scheduleRetryMinutes: source.scheduleRetryMinutes,
+                        }); },
+                        enabled ? `Đã đặt lịch ${source.name}: ${interval} phút/lần.` : `Đã tắt lịch tự động của ${source.name}.`,
+                      );
+                    }}
+                  >
+                    <option value="off">Tắt lấy tin tự động</option>
+                    <option value="15">Mỗi 15 phút</option>
+                    <option value="30">Mỗi 30 phút</option>
+                    <option value="60">Mỗi 60 phút</option>
+                    <option value="120">Mỗi 2 giờ</option>
+                    <option value="240">Mỗi 4 giờ</option>
+                    <option value="360">Mỗi 6 giờ</option>
+                    <option value="720">Mỗi 12 giờ</option>
+                    <option value="1440">Mỗi 24 giờ</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.schedulerSummary}>
+            <h3>Hoạt động tự động gần nhất</h3>
+            {overview.schedulerRuns.length === 0 ? (
+              <div className={styles.empty}>Chưa có Cron run nào được ghi nhận.</div>
+            ) : overview.schedulerRuns.slice(0, 5).map((run) => (
+              <div className={styles.schedulerRun} key={run.id}>
+                <strong>{formatTime(run.started_at)}</strong>
+                <span className={schedulerStatusClass(run.status)}>{run.status}</span>
+                <span>Đến hạn {run.due_count}</span>
+                <span>OK {run.succeeded_count}</span>
+                <span>Lỗi {run.failed_count}</span>
               </div>
             ))}
           </div>
