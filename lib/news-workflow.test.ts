@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_NEWS_SOURCES,
+  DEFAULT_NEWS_WORKFLOW_SETTINGS,
   buildNewsReviewDraft,
   canTransitionNewsReviewStatus,
   canonicalizeNewsUrl,
   findProbableDuplicate,
   getNewsWorkflowPolicy,
   normalizeNewsTitle,
+  resolveNewsPublicationDecision,
 } from "./news-workflow";
 
 describe("V16 news workflow", () => {
@@ -38,15 +40,76 @@ describe("V16 news workflow", () => {
     expect(findProbableDuplicate(second, [first])).toEqual(first);
   });
 
-  it("does not permit publishing before approval", () => {
+  it("keeps publish as an approved-only transition in the workflow state machine", () => {
     expect(canTransitionNewsReviewStatus("pending", "published")).toBe(false);
     expect(canTransitionNewsReviewStatus("approved", "published")).toBe(true);
     expect(canTransitionNewsReviewStatus("published", "editing")).toBe(false);
   });
 
-  it("keeps all default external sources behind editorial review", () => {
-    expect(DEFAULT_NEWS_SOURCES.length).toBeGreaterThan(0);
-    expect(DEFAULT_NEWS_SOURCES.every((source) => source.requiresEditorialReview)).toBe(true);
-    expect(getNewsWorkflowPolicy().autoPublish).toBe(false);
+  it("keeps auto-publish disabled by default but available for CMS configuration", () => {
+    expect(DEFAULT_NEWS_WORKFLOW_SETTINGS.autoPublishEnabled).toBe(false);
+    expect(getNewsWorkflowPolicy().autoPublishAvailable).toBe(true);
+    expect(getNewsWorkflowPolicy().autoPublishEnabled).toBe(false);
+    expect(DEFAULT_NEWS_SOURCES.every((source) => source.requiresEditorialWorkflow)).toBe(true);
+  });
+
+  it("permits policy-driven auto-publish only when the global switch and guardrails pass", () => {
+    const source = DEFAULT_NEWS_SOURCES[0];
+    const settings = {
+      ...DEFAULT_NEWS_WORKFLOW_SETTINGS,
+      autoPublishEnabled: true,
+    };
+
+    const decision = resolveNewsPublicationDecision(source, settings, {
+      isDuplicate: false,
+      hasAttribution: true,
+      hasValidTitle: true,
+      hasValidCanonicalUrl: true,
+      hasSourcePublishedAt: true,
+    });
+
+    expect(decision).toEqual({ mode: "auto", eligible: true, reasons: [] });
+  });
+
+  it("falls back to manual review when a guardrail fails", () => {
+    const source = DEFAULT_NEWS_SOURCES[0];
+    const settings = {
+      ...DEFAULT_NEWS_WORKFLOW_SETTINGS,
+      autoPublishEnabled: true,
+    };
+
+    const decision = resolveNewsPublicationDecision(source, settings, {
+      isDuplicate: true,
+      hasAttribution: true,
+      hasValidTitle: true,
+      hasValidCanonicalUrl: true,
+      hasSourcePublishedAt: true,
+    });
+
+    expect(decision.eligible).toBe(false);
+    expect(decision.mode).toBe("manual");
+    expect(decision.reasons).toContain("duplicate-detected");
+  });
+
+  it("allows a source to force manual review even when global auto-publish is enabled", () => {
+    const source = {
+      ...DEFAULT_NEWS_SOURCES[0],
+      publicationMode: "manual" as const,
+    };
+    const settings = {
+      ...DEFAULT_NEWS_WORKFLOW_SETTINGS,
+      autoPublishEnabled: true,
+    };
+
+    const decision = resolveNewsPublicationDecision(source, settings, {
+      isDuplicate: false,
+      hasAttribution: true,
+      hasValidTitle: true,
+      hasValidCanonicalUrl: true,
+      hasSourcePublishedAt: true,
+    });
+
+    expect(decision.eligible).toBe(false);
+    expect(decision.reasons).toContain("source-forced-manual");
   });
 });
