@@ -2,25 +2,55 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { mainNavigation } from "@/lib/public-content";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { mainNavigation as fallbackNavigation, type NavigationItem } from "@/lib/public-content";
 import styles from "./site-chrome.module.css";
 import headerStyles from "./site-header.module.css";
 
-const primaryHrefs = ["/gioi-thieu", "/giai-phap-dich-vu", "/san-pham-nen-tang", "/dao-tao-tap-huan"];
-const moreHrefs = ["/chuyen-giao-cong-nghe", "/du-an", "/tin-tuc"];
-const primaryItems = mainNavigation.filter((item) => primaryHrefs.includes(item.href));
-const moreItems = mainNavigation.filter((item) => moreHrefs.includes(item.href));
-const contactItem = mainNavigation.find((item) => item.href === "/lien-he") ?? { label: "Liên hệ & Hợp tác", href: "/lien-he" };
+const preferredPrimaryHrefs = ["/gioi-thieu", "/giai-phap-dich-vu", "/san-pham-nen-tang", "/dao-tao-tap-huan"];
+const preferredMoreHrefs = ["/chuyen-giao-cong-nghe", "/du-an", "/tin-tuc"];
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [navigation, setNavigation] = useState<NavigationItem[]>(fallbackNavigation);
   const headerRef = useRef<HTMLElement>(null);
   const mobileToggleRef = useRef<HTMLButtonElement>(null);
 
+  const { primaryItems, moreItems, contactItem } = useMemo(() => {
+    const contact = navigation.find((item) => item.href === "/lien-he")
+      ?? fallbackNavigation.find((item) => item.href === "/lien-he")
+      ?? { label: "Liên hệ & Hợp tác", href: "/lien-he" };
+
+    const primary = navigation.filter((item) => preferredPrimaryHrefs.includes(item.href));
+    const more = navigation.filter((item) => preferredMoreHrefs.includes(item.href));
+    const assigned = new Set([...primary.map((item) => item.href), ...more.map((item) => item.href), contact.href, "/"]);
+    const remaining = navigation.filter((item) => !assigned.has(item.href));
+
+    return {
+      primaryItems: primary.length > 0 ? primary : navigation.filter((item) => item.href !== "/" && item.href !== contact.href).slice(0, 4),
+      moreItems: [...more, ...remaining],
+      contactItem: contact,
+    };
+  }, [navigation]);
+
   useEffect(() => setReady(true), []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/public/navigation", { cache: "no-store" })
+      .then(async (response) => {
+        const payload = await response.json() as { ok?: boolean; items?: NavigationItem[] };
+        if (!active || !payload.ok || !Array.isArray(payload.items) || payload.items.length === 0) return;
+        const clean = payload.items.filter((item) => typeof item?.label === "string" && typeof item?.href === "string" && item.label.trim() && item.href.trim());
+        if (clean.length > 0) setNavigation(clean);
+      })
+      .catch(() => {
+        // Static navigation is the availability fallback if CMS/D1 is temporarily unavailable.
+      });
+    return () => { active = false; };
+  }, []);
 
   const closeMenus = () => {
     setMobileOpen(false);
@@ -117,14 +147,16 @@ export function SiteHeader() {
           {primaryItems.map((item) => (
             <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined} onClick={closeMenus}>{item.label}</Link>
           ))}
-          <details className={styles.dropdown}>
-            <summary>Khám phá</summary>
-            <div className={styles.dropdownPanel}>
-              {moreItems.map((item) => (
-                <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined} onClick={closeMenus}>{item.label}</Link>
-              ))}
-            </div>
-          </details>
+          {moreItems.length > 0 ? (
+            <details className={styles.dropdown}>
+              <summary>Khám phá</summary>
+              <div className={styles.dropdownPanel}>
+                {moreItems.map((item) => (
+                  <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined} onClick={closeMenus}>{item.label}</Link>
+                ))}
+              </div>
+            </details>
+          ) : null}
         </nav>
 
         <div className={styles.actions}>
@@ -171,15 +203,15 @@ export function SiteHeader() {
                 <small>IAICT</small>
                 <strong>Khám phá hệ sinh thái</strong>
               </div>
-              <span>{mainNavigation.length + 1} mục</span>
+              <span>{navigation.length + 1} mục</span>
             </div>
 
             <div className={styles.mobileNavList}>
-              {mainNavigation.map((item, index) => (
+              {navigation.map((item, index) => (
                 <Link
-                  className={`${styles.mobileNavItem} ${item.href === "/lien-he" ? styles.mobileContact : ""}`}
+                  className={`${styles.mobileNavItem} ${item.href === contactItem.href ? styles.mobileContact : ""}`}
                   href={item.href}
-                  key={item.href}
+                  key={`${item.href}-${index}`}
                   aria-current={current(item.href) ? "page" : undefined}
                   onClick={() => setMobileOpen(false)}
                 >
