@@ -1,4 +1,4 @@
-import { getDatabaseBinding } from "@/lib/cloudflare-db";
+import { getDatabaseBinding, type D1DatabaseLike } from "@/lib/cloudflare-db";
 import { cmsErrorCode, translateCmsError } from "@/lib/cms-errors";
 import { deleteCmsRecord, listCmsRecords, saveCmsRecord } from "@/lib/cms-repository";
 import { CMS_ADMIN_ROLES, CMS_EDIT_ROLES, CMS_READ_ROLES } from "@/lib/cms-roles";
@@ -13,10 +13,7 @@ function errorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "Unknown CMS error";
   const isValidation = message.startsWith("INVALID_CMS_");
   const isConflict = /UNIQUE constraint failed/i.test(message);
-  return Response.json(
-    { error: translateCmsError(message), code: cmsErrorCode(message) },
-    { status: isConflict ? 409 : isValidation ? 400 : 500 },
-  );
+  return Response.json({ error: translateCmsError(message), code: cmsErrorCode(message) }, { status: isConflict ? 409 : isValidation ? 400 : 500 });
 }
 
 function moduleFrom(value: unknown) {
@@ -27,6 +24,25 @@ function moduleFrom(value: unknown) {
   return { moduleKey, config };
 }
 
+async function referencesFor(db: D1DatabaseLike, moduleKey: string) {
+  const references: Record<string, Array<{ value: string; label: string }>> = {};
+  if (["pages", "experts", "partners"].includes(moduleKey)) {
+    const rows = await db.prepare(`SELECT id,COALESCE(filename,alt,id) AS label FROM media WHERE type='image' ORDER BY updated_at DESC LIMIT 200`).all<{ id: string; label: string }>();
+    references.media = rows.results.map((row) => ({ value: row.id, label: row.label }));
+  }
+  if (moduleKey === "leads") {
+    const rows = await db.prepare(`SELECT id,COALESCE(display_name,email) AS label FROM admin_users WHERE is_active=1 ORDER BY lower(COALESCE(display_name,email))`).all<{ id: string; label: string }>();
+    references.users = rows.results.map((row) => ({ value: row.id, label: row.label }));
+  }
+  if (moduleKey === "registrations") {
+    const courses = await db.prepare(`SELECT id,title AS label FROM courses ORDER BY title`).all<{ id: string; label: string }>();
+    const sessions = await db.prepare(`SELECT s.id,(c.title || CASE WHEN s.start_at IS NOT NULL THEN ' · ' || s.start_at ELSE '' END) AS label FROM course_sessions s JOIN courses c ON c.id=s.course_id ORDER BY COALESCE(s.start_at,s.created_at) DESC LIMIT 200`).all<{ id: string; label: string }>();
+    references.courses = courses.results.map((row) => ({ value: row.id, label: row.label }));
+    references.sessions = sessions.results.map((row) => ({ value: row.id, label: row.label }));
+  }
+  return references;
+}
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
@@ -34,12 +50,11 @@ export async function GET(request: Request) {
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, config.adminOnly ? CMS_ADMIN_ROLES : CMS_READ_ROLES);
     const limitRaw = Number(url.searchParams.get("limit") ?? "80");
-    const result = await listCmsRecords(db, moduleKey, {
-      q: url.searchParams.get("q") ?? undefined,
-      status: url.searchParams.get("status") ?? undefined,
-      limit: Number.isFinite(limitRaw) ? limitRaw : 80,
-    });
-    return Response.json({ ok: true, module: config, actor, ...result });
+    const [result, references] = await Promise.all([
+      listCmsRecords(db, moduleKey, { q: url.searchParams.get("q") ?? undefined, status: url.searchParams.get("status") ?? undefined, limit: Number.isFinite(limitRaw) ? limitRaw : 80 }),
+      referencesFor(db, moduleKey),
+    ]);
+    return Response.json({ ok: true, module: config, actor, references, ...result });
   } catch (error) { return errorResponse(error); }
 }
 
