@@ -36,7 +36,7 @@ const MEDIA_FIELD_PRESENTATION: Record<string, Partial<FieldPresentation>> = {
   },
   visibility: {
     label: "Phạm vi sử dụng",
-    help: "Công khai: có thể dùng trên website. Riêng tư: chỉ lưu metadata trong CMS, không nên nhúng ra trang công khai.",
+    help: "Công khai: có thể dùng trên website. Riêng tư: chỉ dùng nội bộ CMS. Lưu ý: lựa chọn này không thể biến một URL bên ngoài vốn công khai thành URL riêng tư.",
   },
   filename: {
     label: "Tên tệp",
@@ -51,7 +51,7 @@ const MEDIA_FIELD_PRESENTATION: Record<string, Partial<FieldPresentation>> = {
   size_bytes: {
     label: "Dung lượng (byte)",
     placeholder: "Ví dụ: 245760",
-    help: "Không bắt buộc. Chỉ dùng khi cần theo dõi dung lượng tệp; nhập số byte, không nhập KB/MB.",
+    help: "Không bắt buộc. Chỉ dùng khi cần theo dõi dung lượng tệp; nhập số nguyên không âm tính theo byte, không nhập KB/MB.",
   },
   alt: {
     label: "Mô tả thay thế (Alt)",
@@ -137,6 +137,20 @@ function isEmpty(value: unknown) {
   return value === undefined || value === null || (typeof value === "string" && value.trim() === "");
 }
 
+function inferMediaType(draft: Record<string, unknown>) {
+  const mime = String(draft.mime_type ?? "").trim().toLowerCase();
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("video/")) return "video";
+  if (mime.startsWith("application/") || mime.startsWith("text/")) return "document";
+
+  const source = String(draft.filename || draft.public_url || "").split(/[?#]/)[0].toLowerCase();
+  const extension = source.split(".").pop();
+  if (["jpg", "jpeg", "png", "webp", "gif", "svg"].includes(extension ?? "")) return "image";
+  if (["mp4", "webm"].includes(extension ?? "")) return "video";
+  if (["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv"].includes(extension ?? "")) return "document";
+  return null;
+}
+
 function validateDraft(moduleKey: string, config: CmsModuleConfig, draft: Record<string, unknown>) {
   for (const field of config.fields) {
     const view = fieldPresentation(moduleKey, field);
@@ -149,14 +163,26 @@ function validateDraft(moduleKey: string, config: CmsModuleConfig, draft: Record
       try {
         const url = new URL(String(value));
         if (!["http:", "https:"].includes(url.protocol)) return `${view.label} phải bắt đầu bằng http:// hoặc https://.`;
+        if (moduleKey === "media" && field.key === "public_url" && url.protocol !== "https:") return "URL Media phải sử dụng HTTPS để có thể nhúng an toàn trên website.";
       } catch { return `${view.label} chưa đúng định dạng URL.`; }
     }
-    if (!isEmpty(value) && field.type === "number" && !Number.isFinite(Number(value))) return `${view.label} phải là một số hợp lệ.`;
+    if (!isEmpty(value) && field.type === "number") {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed)) return `${view.label} phải là một số hợp lệ.`;
+      if (moduleKey === "media" && field.key === "size_bytes" && (!Number.isSafeInteger(parsed) || parsed < 0)) return "Dung lượng Media phải là số nguyên không âm tính theo byte.";
+    }
     if (!isEmpty(value) && field.type === "json" && typeof value === "string") {
       try { JSON.parse(value); }
       catch { return `Dữ liệu JSON ở trường ${view.label} chưa hợp lệ.`; }
     }
   }
+
+  if (moduleKey === "media") {
+    const selectedType = String(draft.type ?? "");
+    const inferredType = inferMediaType(draft);
+    if (selectedType && selectedType !== "other" && inferredType && selectedType !== inferredType) return "Loại tệp đã chọn không phù hợp với URL, tên tệp hoặc MIME. Vui lòng kiểm tra lại loại Media.";
+  }
+
   return null;
 }
 
@@ -251,7 +277,7 @@ export function CmsCollectionManager({ moduleKey }: { moduleKey: string }) {
         <div className={styles.headerActions}><span className={styles.totalBadge}>{total} mục</span>{canCreate ? <button type="button" onClick={startNew}>+ Tạo mới</button> : null}</div>
       </header>
 
-      {isMedia ? <section className={styles.moduleNotice} aria-label="Hướng dẫn Media"><div><strong>Hiện tại: thêm Media bằng URL công khai</strong><p>Cloudflare R2 chưa được cấu hình cho môi trường này nên CMS chưa tải tệp trực tiếp từ thiết bị. Hãy dán URL công khai của tệp; hệ thống sẽ tự tạo khóa lưu trữ nội bộ. Khi R2 được bật, khu vực này sẽ có chức năng tải tệp lên.</p></div><span>Upload trực tiếp: chưa bật</span></section> : null}
+      {isMedia ? <section className={styles.moduleNotice} aria-label="Hướng dẫn Media"><div><strong>Hiện tại: thêm Media bằng URL công khai</strong><p>Cloudflare R2 chưa được cấu hình cho môi trường này nên CMS chưa tải tệp trực tiếp từ thiết bị. Hãy dán URL HTTPS công khai của tệp; hệ thống sẽ tự tạo khóa lưu trữ nội bộ. Khi R2 được bật, khu vực này sẽ có chức năng tải tệp lên.</p></div><span>Upload trực tiếp: chưa bật</span></section> : null}
 
       <div className={styles.toolbar}>
         <label className={styles.searchBox}><span>Tìm kiếm</span><input value={q} onChange={(event) => setQ(event.target.value)} placeholder={`Tìm trong ${(isMedia ? "thư viện Media" : moduleConfig.label).toLowerCase()}…`} /></label>
@@ -272,7 +298,7 @@ export function CmsCollectionManager({ moduleKey }: { moduleKey: string }) {
           <div className={styles.panelHead}><div><span>{selected ? canEdit ? "Chỉnh sửa" : "Chi tiết" : canCreate ? "Tạo mới" : "Chi tiết"}</span><strong>{selected ? displayValue(selected[moduleConfig.titleColumn]) : isMedia ? "media mới" : moduleConfig.singular}</strong></div>{selected?.updated_at ? <small>Cập nhật {formatTime(selected.updated_at)}</small> : null}</div>
 
           {isMedia ? <div className={styles.mediaPreview}>
-            <div><span>Xem trước</span><strong>{mediaUrl ? "Nguồn Media đã nhập" : "Chưa có URL để xem trước"}</strong><small>{mediaUrl ? "Kiểm tra tệp trước khi lưu để tránh liên kết hỏng hoặc sai nội dung." : "Dán URL công khai ở biểu mẫu bên dưới. URL phải bắt đầu bằng http:// hoặc https://."}</small></div>
+            <div><span>Xem trước</span><strong>{mediaUrl ? "Nguồn Media đã nhập" : "Chưa có URL để xem trước"}</strong><small>{mediaUrl ? "Kiểm tra tệp trước khi lưu để tránh liên kết hỏng hoặc sai nội dung." : "Dán URL HTTPS công khai ở biểu mẫu bên dưới."}</small></div>
             {mediaUrl && mediaType === "image" ? <a href={mediaUrl} target="_blank" rel="noreferrer" className={styles.imagePreviewLink}><img src={mediaUrl} alt={typeof draft.alt === "string" ? draft.alt : "Xem trước Media"} /></a> : mediaUrl ? <a className={styles.openMediaButton} href={mediaUrl} target="_blank" rel="noreferrer">Mở tệp ↗</a> : null}
           </div> : null}
 
