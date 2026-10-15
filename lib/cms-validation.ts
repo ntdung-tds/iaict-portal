@@ -15,7 +15,7 @@ function validateUrl(key: string, value: unknown) {
   if (empty(value)) return;
   try {
     const url = new URL(String(value));
-    if (!['http:', 'https:'].includes(url.protocol)) throw new Error("protocol");
+    if (!["http:", "https:"].includes(url.protocol)) throw new Error("protocol");
   } catch {
     invalid(`FIELD_${key.toUpperCase()}_URL`);
   }
@@ -98,7 +98,9 @@ export async function prepareCmsData(
     if (field.readonly) continue;
     const value = data[field.key] !== undefined ? data[field.key] : current?.[field.key];
     const generatedMediaStorageKey = moduleKey === "media" && field.key === "storage_key";
-    if (field.required && !generatedMediaStorageKey && empty(value)) invalid(`FIELD_${field.key.toUpperCase()}_REQUIRED`);
+    const effectiveTitle = data[config.titleColumn] !== undefined ? data[config.titleColumn] : current?.[config.titleColumn];
+    const slugCanAutofill = field.key === config.slugColumn && !empty(effectiveTitle);
+    if (field.required && !generatedMediaStorageKey && !slugCanAutofill && empty(value)) invalid(`FIELD_${field.key.toUpperCase()}_REQUIRED`);
     if (field.type === "url") validateUrl(field.key, value);
     if (field.type === "email") validateEmail(field.key, value);
     if (field.type === "json") validateJson(field.key, value);
