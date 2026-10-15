@@ -13,12 +13,14 @@
 .card { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 16px; padding:20px; border:1px solid #dce7e9; border-radius:17px; background:#fff; box-shadow:0 16px 46px rgba(16,55,64,.04); }
 .card label { min-width:0; }
 .card label>span { display:block; margin-bottom:6px; color:#577078; font-size:10px; font-weight:800; }
+.card label>small { display:block; margin-top:5px; color:#82949a; font-size:9px; line-height:1.45; }
 .wide { grid-column:1/-1; }
 .card input,.card textarea { width:100%; border:1px solid #d6e2e4; border-radius:10px; background:#fbfdfd; color:#173b45; padding:10px 11px; font:inherit; font-size:12px; outline:none; }
 .card textarea { resize:vertical; line-height:1.5; }
 .card input:focus,.card textarea:focus { border-color:#4db7a5; box-shadow:0 0 0 3px rgba(77,183,165,.12); }
-.actions { max-width:1400px; margin:0 auto; display:flex; gap:8px; justify-content:flex-end; }
+.actions { max-width:1400px; margin:0 auto; display:flex; align-items:center; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+.actions>span { margin-right:auto; color:#984438; font-size:10px; font-weight:700; }
 .actions button { border:0; border-radius:10px; padding:11px 15px; background:#0b776c; color:#fff; font:inherit; font-size:11px; font-weight:800; cursor:pointer; }
 .actions .secondary { background:#e5eeee; color:#31545d; }
 .actions button:disabled { opacity:.55; cursor:wait; }
-@media(max-width:780px){.page{padding:24px 12px 48px}.header{align-items:flex-start;flex-direction:column}.header small{white-space:normal}.grid{grid-template-columns:1fr;gap:12px}.card{grid-template-columns:1fr;padding:16px 14px}.wide{grid-column:auto}.actions{justify-content:stretch}.actions button{flex:1}}
+@media(max-width:780px){.page{padding:24px 12px 48px}.header{align-items:flex-start;flex-direction:column}.header small{white-space:normal}.grid{grid-template-columns:1fr;gap:12px}.card{grid-template-columns:1fr;padding:16px 14px}.wide{grid-column:auto}.actions{justify-content:stretch}.actions>span{flex-basis:100%;margin:0}.actions button{flex:1}}
