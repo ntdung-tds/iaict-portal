@@ -286,7 +286,7 @@ export const cmsModules: Record<string, CmsModuleConfig> = {
     key: "media",
     label: "Media",
     singular: "media",
-    description: "Thư viện ảnh/tài liệu và metadata. File có thể dùng URL công khai hoặc storage key.",
+    description: "Thư viện ảnh, tài liệu và video qua URL HTTPS. Khóa lưu trữ được tạo tự động; tải tệp trực tiếp chưa được bật.",
     table: "media",
     titleColumn: "filename",
     subtitleColumn: "mime_type",

@@ -69,7 +69,7 @@ function mimeFromFilename(filename: string) {
     pdf: "application/pdf", doc: "application/msword", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     xls: "application/vnd.ms-excel", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ppt: "application/vnd.ms-powerpoint", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    mp4: "video/mp4", webm: "video/webm",
+    mp4: "video/mp4", webm: "video/webm", txt: "text/plain", csv: "text/csv",
   };
   return extension ? known[extension] ?? "" : "";
 }
@@ -138,8 +138,12 @@ export async function prepareCmsData(
     if (inferredMime && empty(effectiveMime)) data.mime_type = inferredMime;
 
     const effectiveType = String(effective(data, current, "type") ?? "").trim();
-    const inferredType = inferredMime ? mediaTypeFromMime(inferredMime) : null;
-    if (effectiveType && inferredType && effectiveType !== "other" && effectiveType !== inferredType) invalid("MEDIA_TYPE_MISMATCH");
+    const inferredTypes = [
+      inferredMime ? mediaTypeFromMime(inferredMime.toLowerCase()) : null,
+      mediaTypeFromMime(mimeFromFilename(nextFilename)),
+      mediaTypeFromMime(mimeFromFilename(new URL(url).pathname)),
+    ].filter(Boolean);
+    if (effectiveType && effectiveType !== "other" && inferredTypes.some((type) => type !== effectiveType)) invalid("MEDIA_TYPE_MISMATCH");
 
     const effectiveSize = effective(data, current, "size_bytes");
     if (!empty(effectiveSize)) {

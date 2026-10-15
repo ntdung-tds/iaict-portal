@@ -8,7 +8,7 @@ describe("translateCmsError", () => {
 
   it("translates Media-specific validation codes", () => {
     expect(translateCmsError("INVALID_CMS_MEDIA_SOURCE_REQUIRED")).toContain("URL công khai");
-    expect(translateCmsError("INVALID_CMS_MEDIA_HTTPS_REQUIRED")).toContain("HTTPS");
+    expect(translateCmsError("INVALID_CMS_FIELD_PUBLIC_URL_HTTPS")).toContain("HTTPS");
     expect(translateCmsError("INVALID_CMS_MEDIA_URL_DUPLICATE")).toContain("đã có trong thư viện");
     expect(translateCmsError("INVALID_CMS_MEDIA_TYPE_MISMATCH")).toContain("không phù hợp");
   });
