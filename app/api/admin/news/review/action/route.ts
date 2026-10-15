@@ -1,79 +1,10 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
-import { NEWSROOM_EDIT_ROLES, NEWSROOM_REVIEW_ROLES } from "@/lib/cms-roles";
-import {
-  publishApprovedReviewItem,
-  setReviewDecision,
-  updateReviewDraft,
-} from "@/lib/news-repository";
-import { NewsroomAuthError, requireNewsroomActor } from "@/lib/newsroom-auth";
-
-export const dynamic = "force-dynamic";
-
-type ReviewActionBody = {
-  action?: unknown;
-  queueId?: unknown;
-  title?: unknown;
-  excerpt?: unknown;
-  categoryId?: unknown;
-  notes?: unknown;
-  reason?: unknown;
-};
-
-function readOptionalString(value: unknown) {
-  return typeof value === "string" ? value : undefined;
-}
-
-function mapError(error: unknown) {
-  if (error instanceof NewsroomAuthError) return Response.json({ error: error.message }, { status: error.status });
-  const message = error instanceof Error ? error.message : "Unknown newsroom error";
-  const status = message === "REVIEW_ITEM_NOT_FOUND"
-    ? 404
-    : message.includes("CONFLICT") || message === "INVALID_REVIEW_TRANSITION"
-      ? 409
-      : message.includes("REQUIRED") || message.includes("INVALID") || message.includes("TOO_SHORT")
-        ? 400
-        : 500;
-  return Response.json({ error: message }, { status });
-}
-
-export async function POST(request: Request) {
-  try {
-    const db = getDatabaseBinding();
-    const body = await request.json() as ReviewActionBody;
-    const action = typeof body.action === "string" ? body.action : "";
-    const queueId = typeof body.queueId === "string" ? body.queueId.trim() : "";
-    if (!queueId) return Response.json({ error: "queueId is required" }, { status: 400 });
-
-    if (action === "edit") {
-      const actor = await requireNewsroomActor(request, db, NEWSROOM_EDIT_ROLES);
-      await updateReviewDraft(db, actor, {
-        queueId,
-        title: readOptionalString(body.title),
-        excerpt: body.excerpt === null ? null : readOptionalString(body.excerpt),
-        categoryId: body.categoryId === null ? null : readOptionalString(body.categoryId),
-        notes: body.notes === null ? null : readOptionalString(body.notes),
-      });
-      return Response.json({ ok: true, action, queueId });
-    }
-
-    if (action === "approve" || action === "reject") {
-      const actor = await requireNewsroomActor(request, db, NEWSROOM_REVIEW_ROLES);
-      await setReviewDecision(db, actor, {
-        queueId,
-        decision: action === "approve" ? "approved" : "rejected",
-        reason: body.reason === null ? null : readOptionalString(body.reason),
-      });
-      return Response.json({ ok: true, action, queueId });
-    }
-
-    if (action === "publish") {
-      const actor = await requireNewsroomActor(request, db, NEWSROOM_REVIEW_ROLES);
-      const article = await publishApprovedReviewItem(db, actor, queueId);
-      return Response.json({ ok: true, action, queueId, article });
-    }
-
-    return Response.json({ error: "Unsupported review action" }, { status: 400 });
-  } catch (error) {
-    return mapError(error);
-  }
-}
+import { NEWSROOM_EDIT_ROLES,NEWSROOM_REVIEW_ROLES } from "@/lib/cms-roles";
+import { translateNewsroomError } from "@/lib/newsroom-errors";
+import { publishApprovedReviewItem,setReviewDecision,updateReviewDraft } from "@/lib/news-repository";
+import { NewsroomAuthError,requireNewsroomActor } from "@/lib/newsroom-auth";
+export const dynamic="force-dynamic";
+type ReviewActionBody={action?:unknown;queueId?:unknown;title?:unknown;excerpt?:unknown;categoryId?:unknown;notes?:unknown;reason?:unknown};
+function readOptionalString(value:unknown){return typeof value==="string"?value:undefined;}
+function mapError(error:unknown){if(error instanceof NewsroomAuthError)return Response.json({error:error.message},{status:error.status});const message=error instanceof Error?error.message:"Unknown newsroom error";const status=message==="REVIEW_ITEM_NOT_FOUND"?404:message.includes("CONFLICT")||message==="INVALID_REVIEW_TRANSITION"?409:message.includes("REQUIRED")||message.includes("INVALID")||message.includes("TOO_SHORT")||message==="REVIEW_ITEM_NOT_EDITABLE"?400:500;return Response.json({error:translateNewsroomError(message)},{status});}
+export async function POST(request:Request){try{const db=getDatabaseBinding();const body=await request.json() as ReviewActionBody;const action=typeof body.action==="string"?body.action:"";const queueId=typeof body.queueId==="string"?body.queueId.trim():"";if(!queueId)return Response.json({error:"Vui lòng chọn nội dung cần xử lý."},{status:400});if(action==="edit"){const actor=await requireNewsroomActor(request,db,NEWSROOM_EDIT_ROLES);await updateReviewDraft(db,actor,{queueId,title:readOptionalString(body.title),excerpt:body.excerpt===null?null:readOptionalString(body.excerpt),categoryId:body.categoryId===null?null:readOptionalString(body.categoryId),notes:body.notes===null?null:readOptionalString(body.notes)});return Response.json({ok:true,action,queueId});}if(action==="approve"||action==="reject"){const actor=await requireNewsroomActor(request,db,NEWSROOM_REVIEW_ROLES);await setReviewDecision(db,actor,{queueId,decision:action==="approve"?"approved":"rejected",reason:body.reason===null?null:readOptionalString(body.reason)});return Response.json({ok:true,action,queueId});}if(action==="publish"){const actor=await requireNewsroomActor(request,db,NEWSROOM_REVIEW_ROLES);const article=await publishApprovedReviewItem(db,actor,queueId);return Response.json({ok:true,action,queueId,article});}return Response.json({error:"Thao tác xử lý bài viết không được hỗ trợ."},{status:400});}catch(error){return mapError(error);}}
