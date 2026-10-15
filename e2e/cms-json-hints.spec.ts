@@ -13,6 +13,6 @@ test('JSON examples are readable on mobile and do not replace the draft',async({
   await page.getByText('Xem mẫu nhập · Tính năng (JSON)',{exact:true}).click();
   await expect(page.locator('details[open] code')).toContainText('Giám sát dữ liệu');
   expect(JSON.parse(await page.locator('details[open] code').innerText())).toBeInstanceOf(Array);
-  await expect(field).toHaveValue('["Nội dung đang nhập"]');
+  expect(JSON.parse(await field.inputValue())).toEqual(['Nội dung đang nhập']);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
