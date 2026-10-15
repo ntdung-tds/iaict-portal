@@ -38,13 +38,25 @@ Backed by `news_workflow_settings`:
 - require source attribution — default ON;
 - require source publication timestamp — default OFF.
 
-### Per-source override
+### Per-source publication override
 
 Each source has `publication_mode`:
 
 - `inherit` — follow global newsroom policy;
 - `manual` — always require a human editor;
 - `auto` — eligible for automatic publication when the global switch is ON and all guardrails pass.
+
+### Per-source scheduled ingestion
+
+Each source also stores:
+
+- `schedule_enabled`;
+- `schedule_interval_minutes` — allowed 15–1440 minutes;
+- `schedule_retry_minutes` — allowed 15–360 minutes;
+- `next_scheduled_at`;
+- `last_scheduled_at`.
+
+The Worker uses one frequent Cron tick. Source cadence remains data-driven in D1 so operators can change source schedules without redeploying the Worker.
 
 ## Initial official sources and verified adapters
 
@@ -56,6 +68,7 @@ Each source has `publication_mode`:
 - Allowed host: `mst.gov.vn`
 - Discovery payload: title, link, summary and publication time only.
 - Default IAICT category: `Khoa học & Công nghệ`.
+- Initial scheduled cadence: every 30 minutes; retry after 15 minutes.
 
 ### Cổng Thông tin điện tử Chính phủ
 
@@ -64,6 +77,7 @@ Each source has `publication_mode`:
 - Allowed article hosts: `chinhphu.vn`, `baochinhphu.vn`
 - Discovery payload: article URL and title only at this phase.
 - Default IAICT category: `Chính sách & Văn bản`.
+- Initial scheduled cadence: every 60 minutes; retry after 15 minutes.
 
 Source-specific extraction is isolated behind adapters so markup/feed changes do not affect the editorial workflow.
 
@@ -76,6 +90,7 @@ Source-specific extraction is isolated behind adapters so markup/feed changes do
 - fetch errors are retained separately from article state;
 - `publication_mode` controls per-source manual/auto behavior;
 - `default_category_id` provides a valid category for policy-driven publication;
+- scheduled cadence and retry policy are stored per source;
 - all items still enter the editorial workflow for traceability.
 
 ### `news_workflow_settings`
@@ -110,6 +125,20 @@ Publication is only allowed from `approved`. Auto mode first records an automati
 ### `news_publication_claims`
 
 Short-lived race-safety guard used inside the same D1 batch as article publication. A concurrent/stale writer fails before article or provenance side effects are committed.
+
+### `news_scheduler_claims`
+
+One lease per source prevents overlapping Cron deliveries from fetching the same source concurrently. Expired leases can be recovered safely.
+
+### `news_scheduler_runs`
+
+One row per scheduled delivery records:
+
+- unique `scheduled_key` for idempotency;
+- Cron expression;
+- due/claimed/succeeded/failed/skipped counts;
+- start/finish timestamps;
+- source-level result metadata.
 
 ### `article_provenance`
 
@@ -175,7 +204,9 @@ Protected CMS endpoints:
 
 - `POST /api/admin/news/ingest` — manually trigger one configured source;
 - `GET /api/admin/news/review?status=pending&limit=30` — list review queue items;
-- `POST /api/admin/news/review/action` — edit, approve, reject or publish.
+- `POST /api/admin/news/review/action` — edit, approve, reject or publish;
+- `GET /api/admin/news/settings` — settings, sources, queue counts and recent scheduler runs;
+- `POST /api/admin/news/settings` — global automation settings and per-source publication/schedule settings.
 
 ### Role model
 
@@ -191,7 +222,7 @@ Editor actions and reviewer/publication actions are authorized separately.
 
 ### Cloudflare Access boundary
 
-Admin APIs fail closed when Cloudflare Access identity headers are absent. Production deployment must protect `/api/admin/*` with a Cloudflare Access application/policy. The backend additionally maps the authenticated email to an active `admin_users` row and verifies database roles.
+Admin APIs fail closed when Cloudflare Access identity headers are absent. Production deployment must protect `/admin/*` and `/api/admin/*` with a Cloudflare Access application/policy. The backend additionally maps the authenticated email to an active `admin_users` row and verifies database roles.
 
 ## Transaction-safe publication
 
@@ -207,6 +238,26 @@ Manual and auto publication use D1 `batch()` so the following operations commit 
 8. release the claim.
 
 A trigger on `news_publication_claims` checks the expected queue status before any publication side effect.
+
+## Scheduled ingestion architecture
+
+Cloudflare invokes the custom vinext Worker `scheduled()` handler every 15 minutes in UTC.
+
+Each tick performs:
+
+`Cron -> scheduled_key claim -> query due active sources -> per-source lease -> ingestNewsSource() -> policy/manual queue -> update next due -> release lease -> scheduler metrics/audit`
+
+Operational guarantees:
+
+- the same Cron delivery is idempotent via unique `scheduled_key`;
+- concurrent deliveries cannot claim the same source at the same time;
+- only active, schedule-enabled and due sources run;
+- success uses the configured normal interval;
+- failure uses a shorter configured retry interval;
+- one source failure does not stop another source;
+- scheduled ingestion reuses the exact V16.3 ingest/publication pipeline;
+- scheduler failures do not affect public request handling;
+- recent scheduled runs are available to the protected Newsroom overview API.
 
 ## Delivery phases
 
@@ -247,24 +298,33 @@ A trigger on `news_publication_claims` checks the expected queue status before a
 - fail-closed Cloudflare Access identity bridge;
 - backend/auth transaction-shape unit tests.
 
-### V16.4 — newsroom admin UI — next
+### V16.4 — newsroom admin UI — complete
 
+- `/admin/news` control center;
 - source health/status dashboard;
 - pending/editing/approved/rejected/published views;
-- duplicate/source indicators;
 - source + editable draft view;
 - category selection;
 - approve/reject/publish controls;
-- history/provenance view;
-- `Settings > Newsroom` controls for auto-publish and per-source modes.
+- source/provenance visibility;
+- `Settings > Newsroom` global auto-publish and per-source publication controls;
+- backend audit for settings changes;
+- responsive desktop/tablet/mobile layout.
 
-### V16.5 — scheduled ingestion
+### V16.5 — scheduled ingestion + operations — complete
 
-- Cloudflare scheduled trigger;
-- per-source cadence;
-- concurrency/idempotency guard for scheduler execution;
-- auto-publication policy evaluation;
-- operational metrics and alertable failures.
+- custom vinext Worker entrypoint preserving normal fetch handling;
+- Cloudflare Cron Trigger every 15 minutes UTC;
+- D1-managed per-source cadence and retry backoff;
+- scheduler delivery idempotency;
+- per-source leases and stale-lease recovery;
+- source failure isolation;
+- reuse of V16.3 ingest/auto-publication policy pipeline;
+- scheduler run metrics and audit history;
+- protected overview exposes recent operational scheduler runs;
+- schedule-setting validation tests;
+- scheduler helper tests;
+- Vinext compatibility, TypeScript, unit tests, production build and Cloudflare build-output validation PASS.
 
 ## Acceptance gates for Workstream 1
 
@@ -276,9 +336,24 @@ A trigger on `news_publication_claims` checks the expected queue status before a
 - Every published external article has provenance.
 - Every auto-published article records approval mode and policy snapshot.
 - Concurrent/stale publication attempts cannot create duplicate articles.
-- Failed source fetch does not affect public site availability.
+- Duplicate Cron delivery cannot create a second scheduler execution for the same scheduled minute.
+- Two concurrent scheduler executions cannot ingest the same source under a live lease.
+- Failed source fetch does not affect other sources or public site availability.
 - Source can be disabled independently.
-- Review and publication actions are auditable.
+- Source schedule can be disabled independently.
+- Review, publication, settings and scheduler actions are auditable.
 - Admin APIs fail closed without authenticated CMS identity/role.
 - Public output never exposes internal editor notes.
 - Unit tests, migration verification, typecheck, production build and Cloudflare build-output validation must pass before promotion.
+
+## Next release gate
+
+Workstream 1 is code-complete on the V16 functional branch. The next step is **staging integration**:
+
+1. provision/bind the staging D1 database and apply migrations 0012–0018;
+2. configure Cloudflare Access for `/admin/*` and `/api/admin/*`;
+3. seed at least one authorized newsroom administrator;
+4. deploy V16 to staging;
+5. run manual ingest, review, manual publish and auto-publish smoke tests;
+6. invoke the local/remote scheduled handler and verify scheduler run metrics;
+7. keep V15 untouched until staging acceptance is complete.
