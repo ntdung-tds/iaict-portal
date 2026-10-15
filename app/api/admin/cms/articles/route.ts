@@ -1,4 +1,5 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
+import { cmsErrorCode, translateCmsError } from "@/lib/cms-errors";
 import { CMS_ADMIN_ROLES, CMS_EDIT_ROLES, CMS_READ_ROLES } from "@/lib/cms-roles";
 import { NewsroomAuthError, requireNewsroomActor, type NewsroomActor } from "@/lib/newsroom-auth";
 
@@ -15,7 +16,9 @@ function slugify(value: string) {
 function errorResponse(error: unknown) {
   if (error instanceof NewsroomAuthError) return Response.json({ error: error.message }, { status: error.status });
   const message = error instanceof Error ? error.message : "Unknown article CMS error";
-  return Response.json({ error: message.replace(/^INVALID_ARTICLE_/, "") }, { status: message.startsWith("INVALID_ARTICLE_") ? 400 : 500 });
+  const validation = message.startsWith("INVALID_ARTICLE_");
+  const conflict = /UNIQUE constraint failed/i.test(message);
+  return Response.json({ error: translateCmsError(message), code: cmsErrorCode(message) }, { status: conflict ? 409 : validation ? 400 : 500 });
 }
 async function audit(db: ReturnType<typeof getDatabaseBinding>, actor: NewsroomActor, action: string, entityType: string, entityId: string) {
   await db.prepare(`INSERT INTO audit_logs(id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at) VALUES(?,?,?,?,?,'{}',?)`)
@@ -36,7 +39,10 @@ export async function GET(request: Request) {
     const clauses: string[] = [];
     const values: Array<string | number> = [];
     if (q) { clauses.push("(lower(a.title) LIKE ? OR lower(COALESCE(a.excerpt,'')) LIKE ? OR lower(a.slug) LIKE ?)"); values.push(`%${q}%`, `%${q}%`, `%${q}%`); }
-    if (status) { clauses.push("a.status = ?"); values.push(status); }
+    if (status) {
+      if (!["draft", "review", "published", "archived"].includes(status)) invalid("STATUS");
+      clauses.push("a.status = ?"); values.push(status);
+    }
     const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
     const articles = await db.prepare(`
       SELECT a.*, c.name AS category_name
@@ -45,7 +51,8 @@ export async function GET(request: Request) {
       ORDER BY a.featured DESC, a.updated_at DESC LIMIT 120
     `).bind(...values).all<Row>();
     const categories = await db.prepare(`SELECT id, name, slug, sort_order FROM article_categories ORDER BY sort_order, name`).all<Row>();
-    return Response.json({ ok: true, actor, articles: articles.results, categories: categories.results });
+    const media = await db.prepare(`SELECT id,filename,public_url,alt FROM media WHERE type='image' ORDER BY updated_at DESC LIMIT 200`).all<Row>();
+    return Response.json({ ok: true, actor, articles: articles.results, categories: categories.results, media: media.results });
   } catch (error) { return errorResponse(error); }
 }
 
@@ -62,6 +69,7 @@ export async function POST(request: Request) {
       const slug = String(data.slug ?? "").trim() || slugify(name);
       const sortOrder = Number(data.sort_order ?? 0);
       if (!name || !slug) invalid("CATEGORY_REQUIRED");
+      if (!Number.isSafeInteger(sortOrder) || sortOrder < 0) invalid("NAVIGATION_SORT_ORDER");
       const id = body.id?.trim() || crypto.randomUUID();
       if (body.id) {
         const current = await db.prepare(`SELECT * FROM article_categories WHERE id=?`).bind(id).first<Row>();
@@ -83,17 +91,38 @@ export async function POST(request: Request) {
     const excerpt = String(data.excerpt ?? "").trim() || null;
     const heroMediaId = String(data.hero_media_id ?? "").trim() || null;
     const featured = data.featured === true || data.featured === 1 ? 1 : 0;
+
     let tagsJson = "[]";
     let seoJson = "{}";
-    try { tagsJson = JSON.stringify(JSON.parse(String(data.tags_json ?? "[]"))); } catch { invalid("TAGS_JSON"); }
-    try { seoJson = JSON.stringify(JSON.parse(String(data.seo_json ?? "{}"))); } catch { invalid("SEO_JSON"); }
+    try {
+      const parsed = JSON.parse(String(data.tags_json ?? "[]"));
+      if (!Array.isArray(parsed) || parsed.some((item) => typeof item !== "string")) invalid("TAGS_JSON");
+      tagsJson = JSON.stringify(parsed.map((item) => item.trim()).filter(Boolean));
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("INVALID_ARTICLE_")) throw error;
+      invalid("TAGS_JSON");
+    }
+    try {
+      const parsed = JSON.parse(String(data.seo_json ?? "{}"));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) invalid("SEO_JSON");
+      seoJson = JSON.stringify(parsed);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("INVALID_ARTICLE_")) throw error;
+      invalid("SEO_JSON");
+    }
+
     if (!title || !categoryId || !slug || !articleBody) invalid("REQUIRED_FIELDS");
     if (!["draft", "review", "published", "archived"].includes(status)) invalid("STATUS");
     const category = await db.prepare(`SELECT id FROM article_categories WHERE id=?`).bind(categoryId).first<{id:string}>();
     if (!category) invalid("CATEGORY_NOT_FOUND");
+    if (heroMediaId) {
+      const media = await db.prepare(`SELECT id,type FROM media WHERE id=?`).bind(heroMediaId).first<{id:string;type:string}>();
+      if (!media) invalid("HERO_MEDIA_NOT_FOUND");
+      if (media.type !== "image") invalid("HERO_MEDIA_IMAGE_REQUIRED");
+    }
+
     const timestamp = nowIso();
     const id = body.id?.trim() || crypto.randomUUID();
-
     if (body.id) {
       const current = await db.prepare(`SELECT * FROM articles WHERE id=?`).bind(id).first<Row>();
       if (!current) invalid("NOT_FOUND");
