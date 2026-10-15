@@ -1,5 +1,3 @@
-import { env } from "cloudflare:workers";
-
 export type D1BindValue = string | number | null | ArrayBuffer | ArrayBufferView;
 
 export type D1RunResult = {
@@ -20,8 +18,19 @@ export interface D1DatabaseLike {
   batch(statements: D1PreparedStatementLike[]): Promise<D1RunResult[]>;
 }
 
+type IaictRuntimeGlobal = typeof globalThis & {
+  __IAICT_D1_DB__?: D1DatabaseLike;
+};
+
+export function setDatabaseBinding(db: D1DatabaseLike | undefined) {
+  const runtime = globalThis as IaictRuntimeGlobal;
+  if (db) runtime.__IAICT_D1_DB__ = db;
+}
+
 export function getDatabaseBinding(): D1DatabaseLike {
-  const db = (env as unknown as { DB?: D1DatabaseLike }).DB;
-  if (!db) throw new Error("D1 binding DB is not configured");
+  const db = (globalThis as IaictRuntimeGlobal).__IAICT_D1_DB__;
+  if (!db) {
+    throw new Error("D1 binding DB is not configured in this runtime");
+  }
   return db;
 }
