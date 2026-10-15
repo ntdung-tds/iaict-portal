@@ -5,7 +5,6 @@ import { join } from "node:path";
 const database = process.env.IAICT_STAGING_D1_NAME ?? "iaict-portal-staging-db";
 const config = process.env.IAICT_STAGING_WRANGLER_CONFIG ?? "wrangler.staging-migrations.jsonc";
 const migrationsDir = "cloudflare/migrations";
-const immutableLegacyMax = 11;
 
 function runWrangler(args, { capture = false } = {}) {
   const result = spawnSync("npx", ["wrangler", ...args], {
@@ -53,9 +52,12 @@ function collectMigrationNames(value, names = new Set()) {
 
 console.log(`[staging-migrations] target=${database}`);
 console.log(`[staging-migrations] config=${config}`);
+console.log("[staging-migrations] mode=canonical-file-import");
 
-// Match Wrangler's canonical bookkeeping table so a database can be bootstrapped
-// without modifying immutable historical migration files.
+// Wrangler normally creates this table when `d1 migrations apply` runs.
+// Staging uses D1's file-import path instead because the remote /query SQL
+// splitter can reject otherwise-valid trigger bodies containing CASE ... END.
+// Migration files remain byte-for-byte unchanged; only the transport differs.
 executeCommand(`CREATE TABLE IF NOT EXISTS d1_migrations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT UNIQUE,
@@ -74,19 +76,18 @@ try {
   throw error;
 }
 
-const immutableLegacy = readdirSync(migrationsDir)
+const migrations = readdirSync(migrationsDir)
   .filter((name) => /^\d{4}_.+\.sql$/.test(name))
-  .filter((name) => Number(name.slice(0, 4)) <= immutableLegacyMax)
   .sort();
 
-for (const name of immutableLegacy) {
+for (const name of migrations) {
   if (applied.has(name)) {
-    console.log(`[staging-migrations] skip legacy ${name} (already applied)`);
+    console.log(`[staging-migrations] skip ${name} (already applied)`);
     continue;
   }
 
   const file = join(migrationsDir, name);
-  console.log(`[staging-migrations] apply immutable legacy ${name} via d1 execute --file`);
+  console.log(`[staging-migrations] apply ${name} via d1 execute --file`);
   runWrangler([
     "d1",
     "execute",
@@ -103,15 +104,15 @@ for (const name of immutableLegacy) {
   applied.add(name);
 }
 
-console.log("[staging-migrations] legacy baseline complete; applying forward migrations with Wrangler migrations apply");
+console.log("[staging-migrations] verifying Wrangler sees no pending migrations");
 runWrangler([
   "d1",
   "migrations",
-  "apply",
+  "list",
   database,
   "--remote",
   "--config",
   config,
 ]);
 
-console.log("[staging-migrations] complete");
+console.log(`[staging-migrations] complete (${applied.size}/${migrations.length} recorded)`);
