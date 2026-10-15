@@ -1,0 +1,79 @@
+import Link from "next/link";
+import type { PublicCmsEntity } from "@/lib/cms-public";
+import styles from "./public-cms-detail.module.css";
+
+const kindLabels: Record<PublicCmsEntity["kind"], string> = {
+  page: "Nội dung IAICT",
+  product: "Sản phẩm & Nền tảng",
+  solution: "Giải pháp & Dịch vụ",
+  course: "Đào tạo & Tập huấn",
+  project: "Dự án tiêu biểu",
+};
+
+function renderStructuredValue(value: unknown) {
+  if (Array.isArray(value)) {
+    return (
+      <ul>
+        {value.map((item, index) => (
+          <li key={index}>{typeof item === "string" ? item : JSON.stringify(item)}</li>
+        ))}
+      </ul>
+    );
+  }
+  if (value && typeof value === "object") {
+    return (
+      <dl>
+        {Object.entries(value as Record<string, unknown>).map(([key, item]) => (
+          <div key={key}>
+            <dt>{key}</dt>
+            <dd>{typeof item === "string" ? item : JSON.stringify(item)}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
+  return <p>{String(value ?? "")}</p>;
+}
+
+export function PublicCmsDetail({ entity, backHref, backLabel }: { entity: PublicCmsEntity; backHref: string; backLabel: string }) {
+  return (
+    <main className={styles.page}>
+      <section className={styles.hero}>
+        <div className="shell">
+          <span className={styles.eyebrow}>{kindLabels[entity.kind]}</span>
+          <h1>{entity.title}</h1>
+          {entity.summary ? <p>{entity.summary}</p> : null}
+          <div className={styles.meta}>
+            {entity.category ? <span>{entity.category}</span> : null}
+            {entity.publishedAt ? <span>Cập nhật {new Date(entity.publishedAt).toLocaleDateString("vi-VN")}</span> : null}
+          </div>
+        </div>
+      </section>
+
+      <section className={`shell ${styles.body}`}>
+        {entity.body ? (
+          <article className={styles.longform}>
+            {entity.body.split(/\n{2,}/).filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+          </article>
+        ) : null}
+
+        {entity.sections.length > 0 ? (
+          <div className={styles.sections}>
+            {entity.sections.map((section) => (
+              <section key={section.label} className={styles.sectionCard}>
+                <span>IAICT</span>
+                <h2>{section.label}</h2>
+                {renderStructuredValue(section.value)}
+              </section>
+            ))}
+          </div>
+        ) : null}
+
+        <div className={styles.actions}>
+          <Link href={backHref}>← {backLabel}</Link>
+          <Link className={styles.cta} href="/lien-he">Trao đổi với IAICT</Link>
+        </div>
+      </section>
+    </main>
+  );
+}
