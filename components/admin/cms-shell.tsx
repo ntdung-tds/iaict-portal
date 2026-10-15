@@ -53,7 +53,7 @@ const groups: NavGroup[] = [
   {
     label: "Hệ thống",
     items: [
-      { href: "/admin/content/users", label: "Người dùng & Phân quyền", short: "US" },
+      { href: "/admin/users", label: "Quản lý người dùng", short: "US" },
       { href: "/admin/revisions", label: "Phiên bản", short: "RV" },
       { href: "/admin/content/audit", label: "Nhật ký", short: "LG" },
       { href: "/admin/settings", label: "Cấu hình", short: "CF" },
