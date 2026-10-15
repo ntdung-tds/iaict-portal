@@ -27,7 +27,7 @@ function moduleFrom(value: unknown) {
 async function referencesFor(db: D1DatabaseLike, moduleKey: string) {
   const references: Record<string, Array<{ value: string; label: string }>> = {};
   if (["pages", "experts", "partners"].includes(moduleKey)) {
-    const rows = await db.prepare(`SELECT id,COALESCE(filename,alt,id) AS label FROM media WHERE type='image' ORDER BY updated_at DESC LIMIT 200`).all<{ id: string; label: string }>();
+    const rows = await db.prepare(`SELECT id,COALESCE(filename,alt,id) AS label FROM media WHERE type='image' ${moduleKey === "pages" ? "AND visibility='public' AND public_url LIKE 'https://%'" : ""} ORDER BY updated_at DESC LIMIT 200`).all<{ id: string; label: string }>();
     references.media = rows.results.map((row) => ({ value: row.id, label: row.label }));
   }
   if (moduleKey === "leads") {
@@ -68,7 +68,8 @@ export async function POST(request: Request) {
     const rawData = body.data && typeof body.data === "object" && !Array.isArray(body.data) ? body.data as Record<string, unknown> : {};
     const data = await prepareCmsData(db, moduleKey, config, id, rawData);
     const entityId = await saveCmsRecord(db, actor, moduleKey, id, data);
-    return Response.json({ ok: true, id: entityId });
+    const record = await db.prepare(`SELECT * FROM ${config.table} WHERE id=? LIMIT 1`).bind(entityId).first<Record<string, unknown>>();
+    return Response.json({ ok: true, id: entityId, record });
   } catch (error) { return errorResponse(error); }
 }
 

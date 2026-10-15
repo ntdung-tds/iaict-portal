@@ -36,6 +36,10 @@ const fixedMessages: Record<string, string> = {
   USER_EMAIL_IN_USE: "Email này đã được gán cho một người dùng CMS khác.",
   LAST_ACTIVE_ADMIN: "Không thể thực hiện vì hệ thống phải luôn còn ít nhất một Quản trị viên đang hoạt động.",
 
+  PAGE_SLUG_INVALID: "Đường dẫn trang chỉ dùng chữ thường không dấu, số, dấu gạch nối và tối đa 120 ký tự. Có thể để trống để tạo từ tiêu đề.",
+  PAGE_JSON_OBJECT_REQUIRED: "SEO và Thông tin bổ sung phải là đối tượng JSON trong dấu { }. Nếu chưa dùng, nhập {}.",
+  PAGE_SEO_TEXT_REQUIRED: "title và description trong SEO phải là chuỗi văn bản đặt trong dấu ngoặc kép.",
+  PAGE_HERO_PUBLIC_REQUIRED: "Ảnh đại diện phải là ảnh Công khai có URL HTTPS trong Thư viện Media. Vui lòng chọn lại hoặc bỏ chọn ảnh.",
   MEDIA_SOURCE_REQUIRED: "Vui lòng nhập URL công khai của ảnh, tài liệu hoặc video.",
   MEDIA_URL_DUPLICATE: "URL Media này đã có trong thư viện. Vui lòng chọn bản ghi hiện có thay vì tạo trùng.",
   MEDIA_TYPE_MISMATCH: "Loại tệp đã chọn không phù hợp với định dạng được suy ra từ URL hoặc tên tệp.",

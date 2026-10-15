@@ -3,9 +3,9 @@ import type { D1BindValue, D1DatabaseLike, D1PreparedStatementLike } from "./clo
 import { getCmsModule } from "./cms-schema";
 import { prepareCmsData } from "./cms-validation";
 
-type MockOptions={current?:Record<string,unknown>|null;duplicate?:Record<string,unknown>|null;mediaRef?:{id:string;type:string}|null;parent?:{id:string}|null;owner?:{id:string}|null};
+type MockOptions={current?:Record<string,unknown>|null;duplicate?:Record<string,unknown>|null;mediaRef?:{id:string;type:string;visibility?:string;public_url?:string|null}|null;parent?:{id:string}|null;owner?:{id:string}|null};
 function mockDb(options:MockOptions={}):D1DatabaseLike{
-  return{prepare(query:string):D1PreparedStatementLike{let values:D1BindValue[]=[];const statement:D1PreparedStatementLike={bind(...next:D1BindValue[]){values=next;return statement;},async first<T>(){if(query.includes("SELECT * FROM")&&query.includes("WHERE id = ?"))return(options.current??null)as T|null;if(query.includes("SELECT id FROM media WHERE public_url"))return(options.duplicate??null)as T|null;if(query.includes("SELECT id,type FROM media WHERE id="))return(options.mediaRef??null)as T|null;if(query.includes("SELECT id FROM navigation_items WHERE id="))return(options.parent??null)as T|null;if(query.includes("SELECT id FROM admin_users WHERE id="))return(options.owner??null)as T|null;void values;return null;},async all<T>(){return{results:[]as T[]};},async run(){return{success:true};}};return statement;},async batch(){return[];}};
+  return{prepare(query:string):D1PreparedStatementLike{let values:D1BindValue[]=[];const statement:D1PreparedStatementLike={bind(...next:D1BindValue[]){values=next;return statement;},async first<T>(){if(query.includes("SELECT * FROM")&&query.includes("WHERE id = ?"))return(options.current??null)as T|null;if(query.includes("SELECT id FROM media WHERE public_url"))return(options.duplicate??null)as T|null;if((query.includes("SELECT id,type FROM media WHERE id=")||query.includes("SELECT id,type,visibility,public_url FROM media WHERE id=")))return(options.mediaRef??null)as T|null;if(query.includes("SELECT id FROM navigation_items WHERE id="))return(options.parent??null)as T|null;if(query.includes("SELECT id FROM admin_users WHERE id="))return(options.owner??null)as T|null;void values;return null;},async all<T>(){return{results:[]as T[]};},async run(){return{success:true};}};return statement;},async batch(){return[];}};
 }
 function moduleConfig(key:string){const config=getCmsModule(key);if(!config)throw new Error(`Missing config ${key}`);return config;}
 
@@ -26,4 +26,14 @@ describe("prepareCmsData",()=>{
   it("rejects redirect loops",async()=>{await expect(prepareCmsData(mockDb(),"redirects",moduleConfig("redirects"),null,{source_path:"/cu",destination_path:"/cu",status_code:"301",is_active:true})).rejects.toThrow("INVALID_CMS_REDIRECT_LOOP");});
   it("rejects negative navigation sort order",async()=>{await expect(prepareCmsData(mockDb(),"navigation",moduleConfig("navigation"),null,{label:"Trang",href:"/trang",group_name:"main",sort_order:-1,is_active:true,opens_new_tab:false})).rejects.toThrow("INVALID_CMS_NAVIGATION_SORT_ORDER");});
   it("validates image media references",async()=>{await expect(prepareCmsData(mockDb({mediaRef:{id:"m1",type:"document"}}),"experts",moduleConfig("experts"),null,{name:"Chuyên gia",slug:"chuyen-gia",status:"draft",photo_media_id:"m1",expertise_json:"[]",public_contacts_json:"{}",seo_json:"{}"})).rejects.toThrow("INVALID_CMS_FIELD_PHOTO_MEDIA_ID_IMAGE_REQUIRED");});
+});
+
+const validPage={title:"Trang hợp tác",slug:"trang-hop-tac",body:"Nội dung giới thiệu.",status:"draft",page_type:"standard",layout_json:"{}",seo_json:"{}"};
+describe("Page module validation",()=>{
+  it("generates a Vietnamese page slug",async()=>{const row=await prepareCmsData(mockDb(),"pages",moduleConfig("pages"),null,{...validPage,title:"Đào tạo tại Viện",slug:""});expect(row.slug).toBe("dao-tao-tai-vien");});
+  it.each(["Có dấu", "a/b", "UPPERCASE", "a--b", "a".repeat(121)])("rejects unsafe page slug %s",async slug=>{await expect(prepareCmsData(mockDb(),"pages",moduleConfig("pages"),null,{...validPage,slug})).rejects.toThrow("INVALID_CMS_PAGE_SLUG_INVALID");});
+  it.each(["layout_json","seo_json"])("requires %s to be an object",async key=>{await expect(prepareCmsData(mockDb(),"pages",moduleConfig("pages"),null,{...validPage,[key]:"[]"})).rejects.toThrow("INVALID_CMS_PAGE_JSON_OBJECT_REQUIRED");});
+  it("rejects non-text SEO title",async()=>{await expect(prepareCmsData(mockDb(),"pages",moduleConfig("pages"),null,{...validPage,seo_json:'{"title":123}'})).rejects.toThrow("INVALID_CMS_PAGE_SEO_TEXT_REQUIRED");});
+  it("rejects private hero images",async()=>{await expect(prepareCmsData(mockDb({mediaRef:{id:"m1",type:"image",visibility:"private",public_url:"https://example.com/photo.jpg"}}),"pages",moduleConfig("pages"),null,{...validPage,hero_media_id:"m1"})).rejects.toThrow("INVALID_CMS_PAGE_HERO_PUBLIC_REQUIRED");});
+  it("accepts public hero images and partial page updates",async()=>{const current={...validPage,id:"p1",hero_media_id:"m1"};const result=await prepareCmsData(mockDb({current,mediaRef:{id:"m1",type:"image",visibility:"public",public_url:"https://example.com/photo.jpg"}}),"pages",moduleConfig("pages"),"p1",{body:"Nội dung mới"});expect(result.body).toBe("Nội dung mới");});
 });
