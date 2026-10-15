@@ -66,6 +66,9 @@ export async function DELETE(request: Request) {
     const { moduleKey } = moduleFrom(body.module);
     const id = typeof body.id === "string" ? body.id.trim() : "";
     if (!id) return Response.json({ error: "ID_REQUIRED" }, { status: 400 });
+    if (moduleKey === "registrations") {
+      return Response.json({ error: "REGISTRATION_DELETE_DISABLED" }, { status: 400 });
+    }
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, ADMIN_ROLES);
     await deleteCmsRecord(db, actor, moduleKey, id);
