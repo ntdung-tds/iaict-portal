@@ -115,3 +115,37 @@ test("live search hydrates and can discover the Trâm rừng project", async ({ 
   expect(inputBox?.height ?? 0).toBeGreaterThanOrEqual(44);
   expect(submitBox?.height ?? 0).toBeGreaterThanOrEqual(44);
 });
+
+test("published newsroom content reaches the public site with provenance", async ({ request, page }) => {
+  const listResponse = await request.get("/api/news/public?limit=12");
+  expect(listResponse.status()).toBe(200);
+  const listPayload = await listResponse.json() as {
+    items?: Array<{ title: string; slug: string; canonicalUrl?: string | null }>;
+  };
+  const items = listPayload.items ?? [];
+  expect(items.length).toBeGreaterThan(0);
+
+  const target = items.find((item) => item.slug.endsWith("5f255579")) ?? items[0];
+  expect(target.slug).toMatch(/^[a-z0-9-]+$/);
+  expect(target.title.length).toBeGreaterThan(8);
+
+  const detailResponse = await request.get(`/api/news/public?slug=${encodeURIComponent(target.slug)}`);
+  expect(detailResponse.status()).toBe(200);
+  const detailPayload = await detailResponse.json() as {
+    item?: { title?: string; canonicalUrl?: string | null; sourceName?: string | null };
+  };
+  expect(detailPayload.item?.title).toBe(target.title);
+  expect(detailPayload.item?.canonicalUrl).toMatch(/^https:\/\//);
+  expect(detailPayload.item?.sourceName).toBeTruthy();
+
+  const newsPage = await page.goto("/tin-tuc", { waitUntil: "domcontentloaded" });
+  expect(newsPage?.status()).toBeLessThan(400);
+  await expect(page.locator('[data-public-news-state="ready"]')).toBeVisible();
+  await expect(page.locator(`[data-news-slug="${target.slug}"]`)).toBeVisible();
+
+  const articlePage = await page.goto(`/tin-tuc/${target.slug}`, { waitUntil: "domcontentloaded" });
+  expect(articlePage?.status()).toBeLessThan(400);
+  await expect(page.locator('[data-public-news-detail="ready"]')).toBeVisible();
+  await expect(page.locator("h1").first()).toHaveText(target.title);
+  await expect(page.locator('[data-news-provenance="ready"]')).toBeVisible();
+});
