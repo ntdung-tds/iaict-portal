@@ -275,3 +275,5 @@
   .saveButton { grid-column: 1 / -1; }
   .deleteButton { margin-left: 0; }
 }
+
+.jsonField>label{display:block;margin:0 0 7px;color:#355d68;font-size:13px;font-weight:800}.jsonField>small{display:block;margin-top:7px;color:#566f78;font-size:12px;line-height:1.7}.jsonField textarea{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.65;tab-size:2}.jsonExample{min-width:0;margin-top:12px;border:1px solid #d5e5e7;border-radius:10px;background:#f5fafa}.jsonExample summary{padding:12px 14px;color:#155d58;font-size:12px;font-weight:750;cursor:pointer;line-height:1.6;overflow-wrap:anywhere}.jsonExample summary:focus-visible{outline:3px solid #2474cf;outline-offset:2px;border-radius:8px}.jsonExample pre{max-width:100%;margin:0 12px 12px;padding:14px;border-radius:8px;background:#eaf2f3;color:#193e48;font-size:12px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}.jsonExample p{margin:0;padding:0 14px 14px;color:#526d76;font-size:12px;line-height:1.7}@media(max-width:700px){.jsonField textarea{font-size:16px}}
