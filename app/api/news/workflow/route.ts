@@ -1,5 +1,6 @@
 import {
   DEFAULT_NEWS_SOURCES,
+  DEFAULT_NEWS_WORKFLOW_SETTINGS,
   getNewsWorkflowPolicy,
 } from "@/lib/news-workflow";
 
@@ -8,8 +9,22 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   return Response.json(
     {
-      version: "v16-news-workflow-1",
+      version: "v16-news-workflow-2",
       policy: getNewsWorkflowPolicy(),
+      defaultSettings: DEFAULT_NEWS_WORKFLOW_SETTINGS,
+      cmsControls: {
+        globalAutoPublishToggle: true,
+        perSourcePublicationMode: ["inherit", "manual", "auto"],
+        defaultMode: "manual",
+        guardrails: [
+          "source-active",
+          "trust-threshold",
+          "dedupe-pass",
+          "valid-title",
+          "valid-canonical-url",
+          "source-attribution",
+        ],
+      },
       sources: DEFAULT_NEWS_SOURCES.map((source) => ({
         id: source.id,
         name: source.name,
@@ -17,7 +32,8 @@ export async function GET() {
         entryUrl: source.entryUrl,
         fetchStrategy: source.fetchStrategy,
         trustLevel: source.trustLevel,
-        requiresEditorialReview: source.requiresEditorialReview,
+        publicationMode: source.publicationMode,
+        requiresEditorialWorkflow: source.requiresEditorialWorkflow,
         attributionMode: source.attributionMode,
         enabledByDefault: source.enabledByDefault,
       })),
