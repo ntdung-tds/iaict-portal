@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import type { CmsRoleCode } from "@/lib/cms-roles";
 import styles from "./cms-shell.module.css";
 
 type NavItem = {
@@ -10,55 +11,41 @@ type NavItem = {
   label: string;
   short: string;
   exact?: boolean;
+  access: "cms" | "newsroom" | "admin";
 };
 
-type NavGroup = {
-  label: string;
-  items: NavItem[];
-};
+type NavGroup = { label: string; items: NavItem[] };
 
 const groups: NavGroup[] = [
-  {
-    label: "Tổng quan",
-    items: [
-      { href: "/admin", label: "Dashboard", short: "DB", exact: true },
-      { href: "/admin/news", label: "Newsroom", short: "NW" },
-    ],
-  },
-  {
-    label: "Nội dung",
-    items: [
-      { href: "/admin/articles", label: "Bài viết", short: "BV" },
-      { href: "/admin/content/pages", label: "Trang", short: "TR" },
-      { href: "/admin/content/products", label: "Sản phẩm", short: "SP" },
-      { href: "/admin/content/solutions", label: "Giải pháp", short: "GP" },
-      { href: "/admin/content/courses", label: "Đào tạo", short: "DT" },
-      { href: "/admin/course-sessions", label: "Lịch lớp", short: "LL" },
-      { href: "/admin/content/projects", label: "Dự án", short: "DA" },
-      { href: "/admin/content/events", label: "Sự kiện", short: "SK" },
-      { href: "/admin/content/experts", label: "Chuyên gia", short: "CG" },
-      { href: "/admin/content/partners", label: "Đối tác", short: "ĐT" },
-    ],
-  },
-  {
-    label: "Vận hành",
-    items: [
-      { href: "/admin/content/media", label: "Thư viện Media", short: "MD" },
-      { href: "/admin/content/leads", label: "Leads", short: "LD" },
-      { href: "/admin/content/registrations", label: "Đăng ký học", short: "DK" },
-      { href: "/admin/content/navigation", label: "Menu", short: "MN" },
-      { href: "/admin/content/redirects", label: "Redirects", short: "RD" },
-    ],
-  },
-  {
-    label: "Hệ thống",
-    items: [
-      { href: "/admin/users", label: "Quản lý người dùng", short: "US" },
-      { href: "/admin/revisions", label: "Phiên bản", short: "RV" },
-      { href: "/admin/content/audit", label: "Nhật ký", short: "LG" },
-      { href: "/admin/settings", label: "Cấu hình", short: "CF" },
-    ],
-  },
+  { label: "Tổng quan", items: [
+    { href: "/admin", label: "Dashboard", short: "DB", exact: true, access: "cms" },
+    { href: "/admin/news", label: "Newsroom", short: "NW", access: "newsroom" },
+  ] },
+  { label: "Nội dung", items: [
+    { href: "/admin/articles", label: "Bài viết", short: "BV", access: "cms" },
+    { href: "/admin/content/pages", label: "Trang", short: "TR", access: "cms" },
+    { href: "/admin/content/products", label: "Sản phẩm", short: "SP", access: "cms" },
+    { href: "/admin/content/solutions", label: "Giải pháp", short: "GP", access: "cms" },
+    { href: "/admin/content/courses", label: "Đào tạo", short: "DT", access: "cms" },
+    { href: "/admin/course-sessions", label: "Lịch lớp", short: "LL", access: "cms" },
+    { href: "/admin/content/projects", label: "Dự án", short: "DA", access: "cms" },
+    { href: "/admin/content/events", label: "Sự kiện", short: "SK", access: "cms" },
+    { href: "/admin/content/experts", label: "Chuyên gia", short: "CG", access: "cms" },
+    { href: "/admin/content/partners", label: "Đối tác", short: "ĐT", access: "cms" },
+  ] },
+  { label: "Vận hành", items: [
+    { href: "/admin/content/media", label: "Thư viện Media", short: "MD", access: "cms" },
+    { href: "/admin/content/leads", label: "Leads", short: "LD", access: "cms" },
+    { href: "/admin/content/registrations", label: "Đăng ký học", short: "DK", access: "cms" },
+    { href: "/admin/content/navigation", label: "Menu", short: "MN", access: "cms" },
+    { href: "/admin/content/redirects", label: "Redirects", short: "RD", access: "cms" },
+  ] },
+  { label: "Hệ thống", items: [
+    { href: "/admin/users", label: "Quản lý người dùng", short: "US", access: "admin" },
+    { href: "/admin/revisions", label: "Phiên bản", short: "RV", access: "cms" },
+    { href: "/admin/content/audit", label: "Nhật ký", short: "LG", access: "cms" },
+    { href: "/admin/settings", label: "Cấu hình", short: "CF", access: "cms" },
+  ] },
 ];
 
 function isActive(pathname: string, item: NavItem) {
@@ -66,8 +53,32 @@ function isActive(pathname: string, item: NavItem) {
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
+function canSee(item: NavItem, roles: CmsRoleCode[]) {
+  if (roles.includes("admin")) return true;
+  const hasCms = roles.some((role) => ["editor", "reviewer", "viewer"].includes(role));
+  if (item.access === "admin") return false;
+  if (item.access === "cms") return hasCms;
+  return roles.length > 0;
+}
+
 export function CmsShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "/admin";
+  const [roles, setRoles] = useState<CmsRoleCode[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/admin/cms/session", { cache: "no-store" })
+      .then(async (response) => {
+        const payload = await response.json() as { actor?: { roles?: CmsRoleCode[] } };
+        if (!cancelled && response.ok) setRoles(payload.actor?.roles ?? []);
+      })
+      .catch(() => { if (!cancelled) setRoles([]); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const visibleGroups = roles === null ? [] : groups
+    .map((group) => ({ ...group, items: group.items.filter((item) => canSee(item, roles)) }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <div className={styles.shell}>
@@ -78,30 +89,22 @@ export function CmsShell({ children }: { children: ReactNode }) {
         </Link>
 
         <nav className={styles.nav}>
-          {groups.map((group) => (
+          {visibleGroups.map((group) => (
             <div className={styles.group} key={group.label}>
               <span className={styles.groupLabel}>{group.label}</span>
               {group.items.map((item) => (
-                <Link
-                  href={item.href}
-                  key={item.href}
-                  title={item.label}
-                  className={isActive(pathname, item) ? styles.navActive : styles.navItem}
-                  aria-current={isActive(pathname, item) ? "page" : undefined}
-                >
+                <Link href={item.href} key={item.href} title={item.label} className={isActive(pathname, item) ? styles.navActive : styles.navItem} aria-current={isActive(pathname, item) ? "page" : undefined}>
                   <span className={styles.navIcon}>{item.short}</span>
                   <span className={styles.navLabel}>{item.label}</span>
                 </Link>
               ))}
             </div>
           ))}
+          {roles === null ? <div className={styles.group}><span className={styles.groupLabel}>Đang tải quyền…</span></div> : null}
         </nav>
 
         <div className={styles.sidebarFoot}>
-          <a href="/" target="_blank" rel="noreferrer" title="Mở website">
-            <span className={styles.navIcon}>↗</span>
-            <span className={styles.navLabel}>Mở website</span>
-          </a>
+          <a href="/" target="_blank" rel="noreferrer" title="Mở website"><span className={styles.navIcon}>↗</span><span className={styles.navLabel}>Mở website</span></a>
           <span className={styles.secure}><i />Cloudflare Access</span>
         </div>
       </aside>
