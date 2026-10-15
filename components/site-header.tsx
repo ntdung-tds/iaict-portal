@@ -7,6 +7,8 @@ import { mainNavigation as fallbackNavigation, type NavigationItem } from "@/lib
 import styles from "./site-chrome.module.css";
 import headerStyles from "./site-header.module.css";
 
+const adminUrl = process.env.NEXT_PUBLIC_CMS_URL || "/admin";
+
 const preferredPrimaryHrefs = ["/gioi-thieu", "/giai-phap-dich-vu", "/san-pham-nen-tang", "/dao-tao-tap-huan"];
 const preferredMoreHrefs = ["/chuyen-giao-cong-nghe", "/du-an", "/tin-tuc"];
 
@@ -162,6 +164,7 @@ export function SiteHeader() {
         <div className={styles.actions}>
           <Link className={styles.search} href="/tim-kiem" aria-label="Tìm kiếm" onClick={closeMenus}>Tìm kiếm</Link>
           <Link className={styles.cta} href={contactItem.href} onClick={closeMenus}>Liên hệ hợp tác</Link>
+          <a className={headerStyles.login} href={adminUrl} onClick={closeMenus}>Đăng nhập</a>
           <div className={styles.mobileMenu}>
             <button
               ref={mobileToggleRef}
@@ -203,7 +206,7 @@ export function SiteHeader() {
                 <small>IAICT</small>
                 <strong>Khám phá hệ sinh thái</strong>
               </div>
-              <span>{navigation.length + 1} mục</span>
+              <span>{navigation.length + 2} mục</span>
             </div>
 
             <div className={styles.mobileNavList}>
@@ -226,6 +229,8 @@ export function SiteHeader() {
                 <span className={styles.mobileNavArrow} aria-hidden="true">→</span>
               </Link>
             </div>
+
+            <a className={styles.mobileNavItem} href={adminUrl} onClick={closeMenus}><span>Đăng nhập CMS</span><span aria-hidden="true">↗</span></a>
 
             <div className={styles.mobilePanelFoot}>
               <span>Applied Technology</span><i aria-hidden="true" /><span>Real-world Value</span>
