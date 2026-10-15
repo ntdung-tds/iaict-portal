@@ -159,12 +159,12 @@ export function SiteHeader() {
               </div>
             </details>
           ) : null}
+          <a href={adminUrl} onClick={closeMenus}>Đăng nhập</a>
         </nav>
 
         <div className={styles.actions}>
           <Link className={styles.search} href="/tim-kiem" aria-label="Tìm kiếm" onClick={closeMenus}>Tìm kiếm</Link>
           <Link className={styles.cta} href={contactItem.href} onClick={closeMenus}>Liên hệ hợp tác</Link>
-          <a className={headerStyles.login} href={adminUrl} onClick={closeMenus}>Đăng nhập</a>
           <div className={styles.mobileMenu}>
             <button
               ref={mobileToggleRef}
@@ -223,14 +223,17 @@ export function SiteHeader() {
                   <span className={styles.mobileNavArrow} aria-hidden="true">↗</span>
                 </Link>
               ))}
+              <a className={styles.mobileNavItem} href={adminUrl} onClick={closeMenus}>
+                <span className={styles.mobileNavNo} aria-hidden="true">{String(navigation.length + 1).padStart(2, "0")}</span>
+                <span>Đăng nhập</span>
+                <span className={styles.mobileNavArrow} aria-hidden="true">↗</span>
+              </a>
               <Link className={`${styles.mobileNavItem} ${styles.mobileSearchItem}`} href="/tim-kiem" onClick={() => setMobileOpen(false)}>
                 <span className={styles.mobileNavNo} aria-hidden="true">⌕</span>
                 <span>Tìm kiếm</span>
                 <span className={styles.mobileNavArrow} aria-hidden="true">→</span>
               </Link>
             </div>
-
-            <a className={styles.mobileNavItem} href={adminUrl} onClick={closeMenus}><span>Đăng nhập CMS</span><span aria-hidden="true">↗</span></a>
 
             <div className={styles.mobilePanelFoot}>
               <span>Applied Technology</span><i aria-hidden="true" /><span>Real-world Value</span>
