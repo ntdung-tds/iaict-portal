@@ -45,12 +45,12 @@ CREATE INDEX IF NOT EXISTS idx_outbox_entity ON notification_outbox(entity_type,
 CREATE INDEX IF NOT EXISTS idx_leads_retention ON leads(legal_hold, retention_until);
 CREATE INDEX IF NOT EXISTS idx_registrations_retention ON course_registrations(legal_hold, retention_until);
 
--- Authoritative capacity guard. Any INSERT that would exceed capacity aborts the entire D1 batch.
+-- Authoritative capacity guard. Parenthesized CASE is required for the D1 remote trigger splitter.
 CREATE TRIGGER IF NOT EXISTS trg_registration_capacity_before_insert
 BEFORE INSERT ON course_registrations
 WHEN NEW.session_id IS NOT NULL AND NEW.status <> 'cancelled'
 BEGIN
-  SELECT CASE
+  SELECT (CASE
     WHEN NOT EXISTS (SELECT 1 FROM course_sessions WHERE id = NEW.session_id)
       THEN RAISE(ABORT, 'SESSION_NOT_FOUND')
     WHEN EXISTS (
@@ -59,7 +59,7 @@ BEGIN
         AND capacity IS NOT NULL
         AND registered_count >= capacity
     ) THEN RAISE(ABORT, 'SESSION_FULL')
-  END;
+  END);
 END;
 
 CREATE TRIGGER IF NOT EXISTS trg_registration_count_after_insert
@@ -79,7 +79,7 @@ WHEN NEW.session_id IS NOT NULL
   AND NEW.status <> 'cancelled'
   AND (OLD.status = 'cancelled' OR OLD.session_id IS NOT NEW.session_id)
 BEGIN
-  SELECT CASE
+  SELECT (CASE
     WHEN NOT EXISTS (SELECT 1 FROM course_sessions WHERE id = NEW.session_id)
       THEN RAISE(ABORT, 'SESSION_NOT_FOUND')
     WHEN EXISTS (
@@ -88,7 +88,7 @@ BEGIN
         AND capacity IS NOT NULL
         AND registered_count >= capacity
     ) THEN RAISE(ABORT, 'SESSION_FULL')
-  END;
+  END);
 END;
 
 CREATE TRIGGER IF NOT EXISTS trg_registration_count_after_update
