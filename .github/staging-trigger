@@ -1,4 +1,4 @@
 IAICT V16 functional staging deployment trigger
-Requested: 2026-10-15T04:07Z
-Head before trigger: 62725e9ac5d6a31492b51471696f6052ff3a72fe
-Purpose: controlled Cloudflare Build after 18/18 D1 migration gate; deploy ui-v16-functional to isolated staging using cloudflare.config.ts name.
+Requested: 2026-10-15T04:12Z
+Head before trigger: 4d6c45da11107e5b80615b5313129d084eed8182
+Purpose: controlled Cloudflare Build with staging-mode Build Output; D1 already verified 18/18; deploy ui-v16-functional to isolated staging.
