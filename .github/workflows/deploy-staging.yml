@@ -2,6 +2,10 @@ name: deploy-staging
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ui-v16-functional]
+    paths:
+      - .github/staging-trigger
 
 permissions:
   contents: read
@@ -33,6 +37,11 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Verify application baseline
         run: npm run verify
+      - name: Apply staging D1 migrations
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler d1 migrations apply iaict-portal-staging-db --remote --config wrangler.staging-migrations.jsonc
       - name: Deploy staging Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
