@@ -16,7 +16,7 @@ function errorResponse(error: unknown) {
 export async function GET(request: Request) {
   try {
     const db = getDatabaseBinding();
-    const actor = await requireNewsroomActor(request, db, ["admin", "editor", "reviewer"]);
+    const actor = await requireNewsroomActor(request, db, ["admin", "news_admin", "editor", "news_editor", "reviewer", "news_reviewer"]);
     return Response.json({ ok: true, actor, ...(await getCmsSettings(db)) });
   } catch (error) {
     return errorResponse(error);
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const db = getDatabaseBinding();
-    const actor = await requireNewsroomActor(request, db, ["admin"]);
+    const actor = await requireNewsroomActor(request, db, ["admin", "news_admin"]);
     const body = await request.json() as { organizationName?: unknown; settings?: unknown };
     const organizationName = typeof body.organizationName === "string" ? body.organizationName.trim() : "";
     const settings = body.settings && typeof body.settings === "object" && !Array.isArray(body.settings)
