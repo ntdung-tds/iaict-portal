@@ -18,6 +18,7 @@ import "./site-experience.css";
 import "./home-active.css";
 import "./public-landing.css";
 import "./site-polish.css";
+import "./v16-premium.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -62,7 +63,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="//images.unsplash.com" />
       </head>
-      <body className="iaict-public">
+      <body className="iaict-public ia-v16">
         <a className="skip-link" href="#main-content">
           Bỏ qua điều hướng
         </a>
