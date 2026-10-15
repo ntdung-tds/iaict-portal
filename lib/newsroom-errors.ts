@@ -1,0 +1,16 @@
+const messages:Record<string,string>={
+  NEWS_SOURCE_NOT_ACTIVE:"Nguồn tin không tồn tại hoặc đang bị tắt.",
+  REVIEW_ITEM_NOT_FOUND:"Không tìm thấy nội dung trong hàng chờ.",
+  REVIEW_ITEM_NOT_EDITABLE:"Nội dung này không còn ở trạng thái có thể biên tập.",
+  REVIEW_TITLE_TOO_SHORT:"Tiêu đề sau biên tập phải có ít nhất 8 ký tự.",
+  INVALID_REVIEW_TRANSITION:"Không thể chuyển nội dung sang trạng thái này từ trạng thái hiện tại.",
+  NEWS_PUBLICATION_STATE_CONFLICT:"Nội dung đã thay đổi trạng thái ở một phiên xử lý khác. Hãy làm mới trước khi xuất bản.",
+  NEWS_PUBLICATION_CATEGORY_REQUIRED:"Vui lòng chọn chuyên mục trước khi xuất bản.",
+  NEWS_PUBLICATION_TITLE_INVALID:"Tiêu đề chưa hợp lệ để xuất bản.",
+  INVALID_AUTO_PUBLISH_TRUST_LEVEL:"Mức độ tin cậy cho auto-publish không hợp lệ.",
+  INVALID_AUTO_PUBLISH_CAP:"Số bài auto-publish tối đa mỗi lượt phải từ 1 đến 100.",
+  INVALID_SOURCE_SCHEDULE_INTERVAL:"Chu kỳ lấy tin phải là số phút nguyên từ 15 đến 1.440.",
+  INVALID_SOURCE_SCHEDULE_RETRY:"Thời gian thử lại phải là số phút nguyên từ 15 đến 360.",
+  INVALID_SOURCE_PUBLICATION_MODE:"Chế độ xuất bản của nguồn tin không hợp lệ.",
+};
+export function translateNewsroomError(raw:string){const value=raw?.trim?.()||"";return messages[value]??(value.startsWith("NEWS_")||value.startsWith("REVIEW_")||value.startsWith("INVALID_")?"Không thể hoàn tất thao tác Newsroom. Hãy làm mới dữ liệu và thử lại.":value||"Không thể hoàn tất thao tác Newsroom.");}
