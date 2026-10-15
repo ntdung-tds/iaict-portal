@@ -11,12 +11,15 @@ function empty(value: unknown) {
   return value === undefined || value === null || (typeof value === "string" && value.trim() === "");
 }
 
-function validateUrl(key: string, value: unknown) {
-  if (empty(value)) return;
+function normalizedUrl(key: string, value: unknown, httpsOnly = false) {
+  if (empty(value)) return "";
   try {
-    const url = new URL(String(value));
+    const url = new URL(String(value).trim());
     if (!["http:", "https:"].includes(url.protocol)) throw new Error("protocol");
-  } catch {
+    if (httpsOnly && url.protocol !== "https:") invalid("MEDIA_HTTPS_REQUIRED");
+    return url.toString();
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("INVALID_CMS_")) throw error;
     invalid(`FIELD_${key.toUpperCase()}_URL`);
   }
 }
@@ -61,6 +64,13 @@ function mimeFromFilename(filename: string) {
   return extension ? known[extension] ?? "" : "";
 }
 
+function mediaTypeFromMime(mime: string) {
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("video/")) return "video";
+  if (mime.startsWith("application/") || mime.startsWith("text/")) return "document";
+  return null;
+}
+
 export async function prepareCmsData(
   db: D1DatabaseLike,
   moduleKey: string,
@@ -81,16 +91,30 @@ export async function prepareCmsData(
     delete data.storage_key;
     const effectiveUrl = data.public_url !== undefined ? data.public_url : current?.public_url;
     if (empty(effectiveUrl)) invalid("MEDIA_SOURCE_REQUIRED");
-    validateUrl("public_url", effectiveUrl);
+    const url = normalizedUrl("public_url", effectiveUrl, true);
+    data.public_url = url;
+
+    const duplicate = await db.prepare(`SELECT id FROM media WHERE public_url = ? AND id <> ? LIMIT 1`)
+      .bind(url, id ?? "")
+      .first<{ id: string }>();
+    if (duplicate) invalid("MEDIA_URL_DUPLICATE");
 
     if (!id) data.storage_key = `external/${crypto.randomUUID()}`;
     const effectiveFilename = data.filename !== undefined ? data.filename : current?.filename;
-    if (empty(effectiveFilename)) data.filename = filenameFromUrl(effectiveUrl);
+    if (empty(effectiveFilename)) data.filename = filenameFromUrl(url);
     const nextFilename = String(data.filename ?? effectiveFilename ?? "");
     const effectiveMime = data.mime_type !== undefined ? data.mime_type : current?.mime_type;
-    if (empty(effectiveMime)) {
-      const inferred = mimeFromFilename(nextFilename);
-      if (inferred) data.mime_type = inferred;
+    const inferredMime = empty(effectiveMime) ? mimeFromFilename(nextFilename) : String(effectiveMime).trim();
+    if (inferredMime && empty(effectiveMime)) data.mime_type = inferredMime;
+
+    const effectiveType = String(data.type !== undefined ? data.type : current?.type ?? "").trim();
+    const inferredType = inferredMime ? mediaTypeFromMime(inferredMime) : null;
+    if (effectiveType && inferredType && effectiveType !== "other" && effectiveType !== inferredType) invalid("MEDIA_TYPE_MISMATCH");
+
+    const effectiveSize = data.size_bytes !== undefined ? data.size_bytes : current?.size_bytes;
+    if (!empty(effectiveSize)) {
+      const parsedSize = Number(effectiveSize);
+      if (!Number.isSafeInteger(parsedSize) || parsedSize < 0) invalid("MEDIA_SIZE_INVALID");
     }
   }
 
@@ -101,7 +125,7 @@ export async function prepareCmsData(
     const effectiveTitle = data[config.titleColumn] !== undefined ? data[config.titleColumn] : current?.[config.titleColumn];
     const slugCanAutofill = field.key === config.slugColumn && !empty(effectiveTitle);
     if (field.required && !generatedMediaStorageKey && !slugCanAutofill && empty(value)) invalid(`FIELD_${field.key.toUpperCase()}_REQUIRED`);
-    if (field.type === "url") validateUrl(field.key, value);
+    if (field.type === "url" && moduleKey !== "media") normalizedUrl(field.key, value);
     if (field.type === "email") validateEmail(field.key, value);
     if (field.type === "json") validateJson(field.key, value);
     if (field.type === "number") validateNumber(field.key, value);
