@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { NewsroomAdmin } from "@/components/admin/newsroom-admin";
+import styles from "./admin-mobile.module.css";
 
 export const metadata: Metadata = {
   title: "Newsroom Control Center",
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function NewsroomAdminPage() {
-  return <NewsroomAdmin />;
+  return (
+    <div className={styles.mobileAdminShell}>
+      <NewsroomAdmin />
+    </div>
+  );
 }
