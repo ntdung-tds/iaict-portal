@@ -16,58 +16,58 @@ Manual review is the default. Auto-publish is an optional CMS policy for low-sta
 
 ## Publication modes
 
-V16 supports two practical operating modes without changing the ingestion pipeline.
-
-### 1. Manual review — default
+### Manual review — default
 
 `Discover -> Normalize -> Deduplicate -> Pending -> Edit -> Approve/Reject -> Publish`
 
-A human editor reviews the item before publication.
-
-### 2. Policy-driven auto-publish — optional
+### Policy-driven auto-publish — optional
 
 `Discover -> Normalize -> Deduplicate -> Pending -> Policy Check -> Auto Approve -> Publish`
 
-Auto-publish does **not** bypass the review queue. The system records an automatic approval with the policy snapshot that caused the decision, then performs the same publication/provenance operation used by manual publishing.
-
-This allows the Institute to operate with a small editorial team while retaining traceability.
+Auto-publish does not bypass the review queue. The system records a policy-driven approval, including the policy snapshot, before running the same publication/provenance path used by manual publishing.
 
 ## CMS settings model
 
 ### Global newsroom settings
 
-The CMS will expose a newsroom settings screen backed by `news_workflow_settings`:
+Backed by `news_workflow_settings`:
 
-- `Auto publish`: ON/OFF — default OFF.
-- minimum trusted source level — default `official`.
-- maximum auto-published items per ingest run — default 10.
-- require source attribution — default ON.
+- `Auto publish`: ON/OFF — default OFF;
+- minimum trusted source level — default `official`;
+- maximum auto-published items per ingest run — default 10;
+- require source attribution — default ON;
 - require source publication timestamp — default OFF.
-
-The global switch is a master safety gate. If it is OFF, no source may auto-publish.
 
 ### Per-source override
 
 Each source has `publication_mode`:
 
-- `inherit` — follow the global newsroom policy;
+- `inherit` — follow global newsroom policy;
 - `manual` — always require a human editor;
 - `auto` — eligible for automatic publication when the global switch is ON and all guardrails pass.
 
-Initial official sources use `inherit`, so turning on global auto-publish is still an explicit CMS action.
+## Initial official sources and verified adapters
 
-## Initial official sources
+### Bộ Khoa học và Công nghệ
 
-1. Cổng Thông tin điện tử Bộ Khoa học và Công nghệ — `https://mst.gov.vn/`
-2. Cổng Thông tin điện tử Chính phủ — `https://chinhphu.vn/`
+- Homepage: `https://mst.gov.vn/`
+- Verified feed: `https://mst.gov.vn/rss/tin-tuc-su-kien.rss`
+- Adapter: `rss`
+- Allowed host: `mst.gov.vn`
+- Discovery payload: title, link, summary and publication time only.
 
-The initial implementation uses `html_discovery` entry points. RSS/API endpoints must be verified before being configured. Source-specific extraction must be isolated behind adapters so markup changes do not affect the editorial workflow.
+### Cổng Thông tin điện tử Chính phủ
+
+- Entry point: `https://chinhphu.vn/`
+- Adapter: `html`
+- Allowed article hosts: `chinhphu.vn`, `baochinhphu.vn`
+- Discovery payload: article URL and title only at this phase.
+
+Source-specific extraction is isolated behind adapters so markup/feed changes do not affect the editorial workflow.
 
 ## Data model
 
 ### `news_sources`
-
-Configuration and fetch state for external sources. Important rules:
 
 - source can be disabled without deleting history;
 - attribution mode is stored per source;
@@ -77,7 +77,7 @@ Configuration and fetch state for external sources. Important rules:
 
 ### `news_workflow_settings`
 
-Global CMS-controlled auto-publication policy. The seeded configuration is deliberately conservative:
+Seeded conservatively:
 
 - auto-publish OFF;
 - official sources only;
@@ -86,15 +86,15 @@ Global CMS-controlled auto-publication policy. The seeded configuration is delib
 
 ### `news_ingest_runs`
 
-One record per fetch execution. Stores counts for fetched/new/duplicate/queued/error items and an error summary.
+One record per fetch execution with fetched/new/duplicate/queued/error counts.
 
 ### `news_ingest_items`
 
-Raw discovery records. Stores source URL, canonical URL, normalized title, dedupe key, source timestamps and raw metadata.
+Raw discovery metadata: source URL, canonical URL, normalized title, dedupe key, source timestamps and metadata.
 
 ### `news_review_queue`
 
-Editorial queue with state machine:
+Statuses:
 
 - `pending`
 - `editing`
@@ -102,98 +102,91 @@ Editorial queue with state machine:
 - `rejected`
 - `published`
 
-Publication is still only allowed from `approved`. In auto mode, the backend writes an automatic approval first, setting:
-
-- `approval_mode = auto`;
-- `policy_snapshot_json`;
-- `auto_publish_reason`.
-
-Manual review uses `approval_mode = manual`.
-
-`published` remains terminal.
+Publication is only allowed from `approved`. Auto mode first records an automatic approval with `approval_mode = auto`, `policy_snapshot_json` and `auto_publish_reason`.
 
 ### `article_provenance`
 
-Permanent source attribution attached to the published `articles` record. Provenance survives later source configuration changes.
+Permanent source attribution linked to the published `articles` record.
 
 ## Deduplication policy
 
-First-pass duplicate detection is deterministic and conservative:
-
-1. canonical URL after removing fragments and common tracking parameters;
-2. exact normalized title match;
-3. source-specific external identifier when an adapter exposes one;
-4. later phase: optional semantic similarity, only as an editorial hint, never as an automatic delete rule.
+1. canonical URL after removing fragments/tracking parameters;
+2. exact normalized-title match;
+3. source-specific external identifier when available;
+4. optional semantic similarity later, as an editorial hint only.
 
 A probable duplicate is never auto-published.
 
 ## Auto-publish guardrails
 
-An item can be automatically approved only when all required checks pass:
+An item can auto-publish only when all required checks pass:
 
-1. global auto-publish is enabled;
-2. source is active;
+1. global auto-publish enabled;
+2. source active;
 3. source publication mode is not `manual`;
-4. source trust level meets the configured threshold;
-5. no duplicate has been detected;
-6. title is valid;
-7. canonical URL is valid;
-8. required attribution is present;
-9. source publication timestamp is present when that CMS option is enabled;
-10. per-run auto-publish cap has not been reached.
+4. trust level meets threshold;
+5. no duplicate detected;
+6. valid title;
+7. valid canonical URL;
+8. required attribution present;
+9. source publication timestamp present when configured;
+10. per-run auto-publish cap not reached.
 
-If any check fails, the item remains in the manual review queue. The failure of auto-publish must never discard the item.
+Any failure falls back to manual review. No item is discarded merely because auto-publish was denied.
 
-## Editorial policy
+## Source adapter safety
 
-- External content is discovery material, not automatically assumed to be publication-ready.
-- Editors may rewrite title/excerpt/body before manual approval.
-- Original source URL and source publication time are preserved.
-- Attribution is rendered from provenance data.
-- Rejecting an item does not delete the ingest record.
-- Rejected items may return to `pending`/`editing` if an editor reopens them.
-- Publishing must create/update both `articles` and `article_provenance` atomically in the backend phase.
-- Auto-published items must retain the exact policy snapshot used for the decision.
+V16.2 adapters enforce:
+
+- explicit source ID registry;
+- HTTPS-only URLs;
+- host allowlist per source;
+- response-size cap;
+- fetch timeout;
+- limited item count per source run;
+- canonical URL normalization;
+- duplicate URL/title removal before queueing;
+- no full-article republication during discovery.
 
 ## Security / access direction
 
-The current milestone establishes schema and business rules only. CMS write actions will later be protected by Cloudflare Access and server-side authorization. Public API surfaces must never expose unpublished body content, internal review notes or privileged newsroom settings.
+CMS write actions will later be protected by Cloudflare Access and server-side authorization. Public API surfaces must not expose unpublished body content, editor notes or privileged newsroom settings.
 
-Only authorized CMS roles may change auto-publish settings. Changing the global switch or a source publication mode must create an audit log entry.
+Only authorized CMS roles may change auto-publish settings. Settings changes must be audited.
 
 ## Delivery phases
 
-### V16.1 — foundation (current)
+### V16.1 — foundation — complete
 
-- D1 schema for sources, ingest runs/items, review queue and provenance.
-- Global auto-publish settings schema, default OFF.
-- Per-source publication policy.
-- Initial official source registry.
-- URL/title normalization and deterministic dedupe key.
-- Review state machine.
-- Auto-publish eligibility policy and guardrails.
-- Unit tests.
-- Read-only workflow manifest endpoint for build/debug visibility.
+- D1 source/ingest/review/provenance schema;
+- auto-publish settings schema, default OFF;
+- per-source publication policy;
+- normalization/dedupe/state machine;
+- auto-publish eligibility guardrails;
+- unit tests;
+- read-only workflow manifest.
 
-### V16.2 — source adapters
+### V16.2 — source adapters — current
 
-- source adapter interface;
-- HTML discovery adapter for each verified source;
-- safe fetch limits/timeouts/user-agent policy;
-- extraction of URL/title/summary/date only;
-- ingest-run persistence;
-- retry/error handling;
-- no full-content republication during discovery.
+- source adapter registry/interface — complete;
+- verified Bộ KH&CN RSS adapter — complete;
+- Cổng Chính phủ HTML discovery adapter — complete;
+- host allowlists — complete;
+- safe fetch timeout and response-size limits — complete;
+- extraction of metadata only — complete;
+- source parser unit tests — complete;
+- ingest persistence/retry orchestration — next inside V16.2/V16.3 boundary.
 
 ### V16.3 — review queue backend
 
 - D1 repository layer;
+- ingest-run/item persistence;
 - queue/list/detail endpoints;
 - approve/reject/edit operations;
-- transaction-safe manual publish operation;
-- transaction-safe auto-approve + publish operation;
+- transaction-safe manual publish;
+- transaction-safe auto-approve + publish;
 - policy snapshot persistence;
-- audit log records;
+- audit logs;
 - role checks.
 
 ### V16.4 — newsroom admin UI
@@ -201,36 +194,31 @@ Only authorized CMS roles may change auto-publish settings. Changing the global 
 - source health/status;
 - pending queue;
 - duplicate flag;
-- side-by-side source + editable draft;
+- source + editable draft view;
 - category selection;
 - approve/reject/publish controls;
-- history and provenance view;
-- CMS Settings > Newsroom:
-  - global auto-publish ON/OFF;
-  - trust threshold;
-  - per-run cap;
-  - attribution/date requirements;
-  - per-source `inherit/manual/auto` mode.
+- history/provenance;
+- `Settings > Newsroom` controls for auto-publish and per-source modes.
 
 ### V16.5 — scheduled ingestion
 
 - Cloudflare scheduled trigger;
 - per-source cadence;
 - concurrency/idempotency guard;
-- automatic publication policy evaluation;
+- auto-publication policy evaluation;
 - operational metrics and alertable failures.
 
 ## Acceptance gates for Workstream 1
 
 - Manual review remains the default installation state.
-- Auto-publish cannot operate while the global CMS switch is OFF.
+- Auto-publish cannot operate while the global switch is OFF.
 - A source explicitly set to `manual` cannot auto-publish.
-- Auto-publish failure falls back to the manual queue instead of dropping content.
-- Duplicate canonical URL cannot create a second active queue item or auto-publish.
+- Auto-publish failure falls back to manual review.
+- Duplicate canonical URLs cannot create a second active queue item or auto-publish.
 - Every published external article has provenance.
-- Every automatically published article records `approval_mode = auto` and the policy snapshot.
+- Every auto-published article records approval mode and policy snapshot.
 - Failed source fetch does not affect public site availability.
 - Source can be disabled independently.
 - Review and policy-setting changes are auditable.
-- Public article output never exposes internal editor notes.
-- Unit tests and migration verification pass before the workstream is promoted.
+- Public output never exposes internal editor notes.
+- Unit tests, migration verification, typecheck and production build must pass before promotion.
