@@ -1,5 +1,6 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
 import { saveCmsRecord } from "@/lib/cms-repository";
+import { CMS_ADMIN_ROLES, CMS_READ_ROLES } from "@/lib/cms-roles";
 import { getCmsModule } from "@/lib/cms-schema";
 import { NewsroomAuthError, requireNewsroomActor } from "@/lib/newsroom-auth";
 
@@ -30,7 +31,7 @@ function errorResponse(error: unknown) {
 export async function GET(request: Request) {
   try {
     const db = getDatabaseBinding();
-    await requireNewsroomActor(request, db, ["admin", "news_admin", "editor", "news_editor", "reviewer", "news_reviewer"]);
+    await requireNewsroomActor(request, db, CMS_READ_ROLES);
     const url = new URL(request.url);
     const entityType = (url.searchParams.get("entityType") ?? "").trim();
     const entityId = (url.searchParams.get("entityId") ?? "").trim();
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const db = getDatabaseBinding();
-    const actor = await requireNewsroomActor(request, db, ["admin", "news_admin"]);
+    const actor = await requireNewsroomActor(request, db, CMS_ADMIN_ROLES);
     const body = await request.json() as { revisionId?: unknown };
     const revisionId = typeof body.revisionId === "string" ? body.revisionId.trim() : "";
     if (!revisionId) return Response.json({ error: "revisionId required" }, { status: 400 });
