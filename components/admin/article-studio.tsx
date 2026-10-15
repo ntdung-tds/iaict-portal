@@ -112,8 +112,8 @@ export function ArticleStudio() {
   return (
     <main id="main-content" className={styles.page}>
       <header className={styles.header}>
-        <div><span>IAICT CMS / EDITORIAL</span><h1>Tin bài & Chuyên mục</h1><p>Soạn bài trực tiếp hoặc tiếp tục dùng Newsroom cho nguồn tin tự động. Bài ở trạng thái Published xuất hiện trên trang Tin tức.</p></div>
-        <div className={styles.tabs}><button className={mode === "articles" ? styles.activeTab : ""} onClick={() => setMode("articles")}>Tin bài</button><button className={mode === "categories" ? styles.activeTab : ""} onClick={() => setMode("categories")}>Chuyên mục</button></div>
+        <div><span>IAICT CMS / EDITORIAL</span><h1>Bài viết & Chuyên mục</h1><p>Soạn bài viết trực tiếp hoặc tiếp tục dùng Newsroom cho nguồn tin tự động. Bài viết ở trạng thái Published xuất hiện trên trang Tin tức.</p></div>
+        <div className={styles.tabs}><button className={mode === "articles" ? styles.activeTab : ""} onClick={() => setMode("articles")}>Bài viết</button><button className={mode === "categories" ? styles.activeTab : ""} onClick={() => setMode("categories")}>Chuyên mục</button></div>
       </header>
       {(error || message) ? <div className={error ? styles.error : styles.success}>{error ?? message}</div> : null}
 
@@ -121,7 +121,7 @@ export function ArticleStudio() {
         <div className={styles.toolbar}>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm tiêu đề, slug, tóm tắt…" />
           <select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Tất cả trạng thái</option><option value="draft">Bản nháp</option><option value="review">Chờ duyệt</option><option value="published">Đã xuất bản</option><option value="archived">Lưu trữ</option></select>
-          <button onClick={startNew}>+ Bài mới</button>
+          <button onClick={startNew}>+ Bài viết mới</button>
         </div>
         <section className={styles.workspace}>
           <aside className={styles.list}>
@@ -139,7 +139,7 @@ export function ArticleStudio() {
               <label><span>Tags JSON</span><textarea rows={5} value={String(draft.tags_json ?? "[]")} onChange={(e) => setDraft({ ...draft, tags_json: e.target.value })} spellCheck={false} /></label>
               <label><span>SEO JSON</span><textarea rows={5} value={String(draft.seo_json ?? "{}")} onChange={(e) => setDraft({ ...draft, seo_json: e.target.value })} spellCheck={false} /></label>
               <label><span>Hero Media ID</span><input value={String(draft.hero_media_id ?? "")} onChange={(e) => setDraft({ ...draft, hero_media_id: e.target.value })} /></label>
-              <label className={styles.check}><input type="checkbox" checked={Boolean(draft.featured)} onChange={(e) => setDraft({ ...draft, featured: e.target.checked })} /><span>Bài nổi bật</span></label>
+              <label className={styles.check}><input type="checkbox" checked={Boolean(draft.featured)} onChange={(e) => setDraft({ ...draft, featured: e.target.checked })} /><span>Bài viết nổi bật</span></label>
             </div>
             <div className={styles.actions}><button disabled={busy} onClick={() => void saveArticle()}>{busy ? "Đang lưu…" : selectedId ? "Lưu thay đổi" : "Tạo bài viết"}</button>{selected ? <button className={styles.delete} disabled={busy} onClick={() => void deleteArticle()}>Xóa</button> : null}</div>
           </section>
