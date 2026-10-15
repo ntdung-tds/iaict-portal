@@ -33,6 +33,23 @@
 .headerActions button { background: #0b776c; color: #fff; }
 .totalBadge { padding: 10px 12px; border-radius: 999px; background: #e2eeef; color: #355b64; font-size: 10px; font-weight: 800; }
 
+.moduleNotice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: 1540px;
+  margin: 0 auto 14px;
+  padding: 14px 16px;
+  border: 1px solid #cfe4e0;
+  border-radius: 14px;
+  background: #eef9f6;
+}
+.moduleNotice div { min-width: 0; }
+.moduleNotice strong { display: block; color: #0b5f57; font-size: 12px; }
+.moduleNotice p { margin: 5px 0 0; color: #557279; font-size: 11px; line-height: 1.55; }
+.moduleNotice > span { flex: 0 0 auto; padding: 7px 10px; border-radius: 999px; background: #fff; color: #7a5d20; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .05em; }
+
 .toolbar {
   display: flex;
   align-items: end;
@@ -128,6 +145,25 @@
 .itemActive small { display: block; margin-top: 5px; color: #72878e; font-size: 9px; line-height: 1.4; overflow-wrap: anywhere; }
 .empty { padding: 24px 16px; color: #84959a; font-size: 11px; line-height: 1.55; }
 
+.mediaPreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px 20px 0;
+  padding: 13px 14px;
+  border: 1px dashed #c8dadc;
+  border-radius: 12px;
+  background: #f8fbfb;
+}
+.mediaPreview > div { min-width: 0; }
+.mediaPreview span { display: block; color: #7d9096; font-size: 8px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.mediaPreview strong { display: block; margin-top: 3px; color: #21454f; font-size: 12px; }
+.mediaPreview small { display: block; max-width: 620px; margin-top: 4px; color: #758b91; font-size: 9px; line-height: 1.45; }
+.imagePreviewLink { flex: 0 0 auto; width: 92px; height: 64px; overflow: hidden; border: 1px solid #d6e3e5; border-radius: 9px; background: #fff; }
+.imagePreviewLink img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.openMediaButton { flex: 0 0 auto; padding: 9px 11px; border-radius: 9px; background: #e4f2ef; color: #0b6b61; font-size: 10px; font-weight: 800; text-decoration: none; }
+
 .editorBody {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -172,7 +208,7 @@
 .fieldWide input:disabled,
 .fieldWide select:disabled { background: #f0f4f4; color: #71848a; cursor: not-allowed; }
 .field > small,
-.fieldWide > small { display: block; margin-top: 5px; color: #87979c; font-size: 9px; line-height: 1.4; }
+.fieldWide > small { display: block; margin-top: 5px; color: #74888e; font-size: 9px; line-height: 1.5; }
 .toggleRow {
   display: flex !important;
   align-items: center;
@@ -194,9 +230,10 @@
   padding: 15px 20px 20px;
   border-top: 1px solid #edf1f2;
 }
+.validationHint { flex: 1 1 100%; padding: 9px 11px; border-radius: 9px; background: #fff8e8; color: #8a621b; font-size: 10px; font-weight: 700; line-height: 1.45; }
 .editorActions button:disabled,
 .headerActions button:disabled,
-.refreshButton:disabled { opacity: .55; cursor: wait; }
+.refreshButton:disabled { opacity: .55; cursor: not-allowed; }
 .saveButton { background: #0b776c; color: #fff; }
 .deleteButton { margin-left: auto; background: #fff0ed; color: #9a4035; }
 .cancelButton { background: #e8eff0; color: #345961; }
@@ -210,12 +247,15 @@
   .page { padding: 22px 10px 46px; }
   .header { align-items: flex-start; flex-direction: column; }
   .headerActions { width: 100%; }
+  .moduleNotice { align-items: flex-start; flex-direction: column; }
+  .moduleNotice > span { align-self: flex-start; }
   .toolbar { align-items: stretch; flex-wrap: wrap; }
   .searchBox { flex-basis: 100%; }
   .filterBox { flex: 1; width: auto; }
   .workspace { grid-template-columns: 1fr; overflow: visible; }
   .listPanel { border-right: 0; border-bottom: 1px solid #e4ebed; }
   .list { max-height: 300px; }
+  .mediaPreview { margin: 14px 14px 0; }
   .editorBody { grid-template-columns: 1fr; padding: 16px 14px; }
   .fieldWide { grid-column: auto; }
   .editorActions { padding-inline: 14px; }
@@ -227,7 +267,11 @@
   .filterBox { flex-basis: 100%; }
   .refreshButton { width: 100%; }
   .panelHead { padding-inline: 12px; }
+  .mediaPreview { align-items: flex-start; flex-direction: column; }
+  .imagePreviewLink { width: 100%; height: 150px; }
+  .openMediaButton { width: 100%; text-align: center; }
   .editorActions { display: grid; grid-template-columns: 1fr 1fr; }
+  .validationHint { grid-column: 1 / -1; }
   .saveButton { grid-column: 1 / -1; }
   .deleteButton { margin-left: 0; }
 }
