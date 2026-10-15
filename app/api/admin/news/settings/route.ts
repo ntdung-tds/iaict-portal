@@ -15,6 +15,9 @@ type SettingsBody = {
   sourceId?: unknown;
   publicationMode?: unknown;
   isActive?: unknown;
+  scheduleEnabled?: unknown;
+  scheduleIntervalMinutes?: unknown;
+  scheduleRetryMinutes?: unknown;
 };
 
 function errorResponse(error: unknown) {
@@ -60,10 +63,18 @@ export async function POST(request: Request) {
         ? body.publicationMode as NewsPublicationMode
         : "inherit";
       if (!sourceId) return Response.json({ error: "sourceId is required" }, { status: 400 });
+
       await updateNewsSourceSettings(db, actor, {
         sourceId,
         publicationMode,
         isActive: typeof body.isActive === "boolean" ? body.isActive : undefined,
+        scheduleEnabled: typeof body.scheduleEnabled === "boolean" ? body.scheduleEnabled : undefined,
+        scheduleIntervalMinutes: typeof body.scheduleIntervalMinutes === "number"
+          ? body.scheduleIntervalMinutes
+          : undefined,
+        scheduleRetryMinutes: typeof body.scheduleRetryMinutes === "number"
+          ? body.scheduleRetryMinutes
+          : undefined,
       });
       return Response.json({ ok: true });
     }
