@@ -1,8 +1,11 @@
 import { bindings, defineConfig, defineWorker, triggers } from "cf/config";
 
+const deployTarget = process.env.IAICT_DEPLOY_TARGET === "staging" ? "staging" : "production";
+const isStaging = deployTarget === "staging";
+
 export default defineConfig({
   worker: defineWorker({
-    name: "iaict-portal-staging",
+    name: isStaging ? "iaict-portal-staging" : "iaict-portal",
     entrypoint: "./worker.ts",
     compatibilityDate: "2026-10-12",
     compatibilityFlags: ["nodejs_compat"],
@@ -15,7 +18,7 @@ export default defineConfig({
     },
     env: {
       ASSETS: bindings.assets(),
-      DB: bindings.d1({ name: "iaict-portal-staging-db" }),
+      DB: bindings.d1({ name: isStaging ? "iaict-portal-staging-db" : "iaict-portal-db" }),
     },
     triggers: [
       // Cron Triggers execute in UTC. This frequent tick only discovers sources
