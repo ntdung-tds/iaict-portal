@@ -13,6 +13,7 @@ export default defineConfig({
     },
     env: {
       ASSETS: bindings.assets(),
+      DB: bindings.d1({ name: "iaict-portal-staging-db" }),
     },
   }),
 });
