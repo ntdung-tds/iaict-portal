@@ -1,8 +1,6 @@
 name: deploy-staging
 
 on:
-  push:
-    branches: [cms/v17-full-admin]
   workflow_dispatch:
 
 permissions:
