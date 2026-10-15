@@ -1,7 +1,9 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
+import { cmsErrorCode, translateCmsError } from "@/lib/cms-errors";
 import { deleteCmsRecord, listCmsRecords, saveCmsRecord } from "@/lib/cms-repository";
 import { CMS_ADMIN_ROLES, CMS_EDIT_ROLES, CMS_READ_ROLES } from "@/lib/cms-roles";
 import { getCmsModule } from "@/lib/cms-schema";
+import { prepareCmsData } from "@/lib/cms-validation";
 import { NewsroomAuthError, requireNewsroomActor } from "@/lib/newsroom-auth";
 
 export const dynamic = "force-dynamic";
@@ -9,8 +11,12 @@ export const dynamic = "force-dynamic";
 function errorResponse(error: unknown) {
   if (error instanceof NewsroomAuthError) return Response.json({ error: error.message }, { status: error.status });
   const message = error instanceof Error ? error.message : "Unknown CMS error";
-  const status = message.startsWith("INVALID_CMS_") ? 400 : 500;
-  return Response.json({ error: message.replace(/^INVALID_CMS_/, "") }, { status });
+  const isValidation = message.startsWith("INVALID_CMS_");
+  const isConflict = /UNIQUE constraint failed/i.test(message);
+  return Response.json(
+    { error: translateCmsError(message), code: cmsErrorCode(message) },
+    { status: isConflict ? 409 : isValidation ? 400 : 500 },
+  );
 }
 
 function moduleFrom(value: unknown) {
@@ -44,7 +50,8 @@ export async function POST(request: Request) {
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, config.adminOnly ? CMS_ADMIN_ROLES : CMS_EDIT_ROLES);
     const id = typeof body.id === "string" && body.id.trim() ? body.id.trim() : null;
-    const data = body.data && typeof body.data === "object" && !Array.isArray(body.data) ? body.data as Record<string, unknown> : {};
+    const rawData = body.data && typeof body.data === "object" && !Array.isArray(body.data) ? body.data as Record<string, unknown> : {};
+    const data = await prepareCmsData(db, moduleKey, config, id, rawData);
     const entityId = await saveCmsRecord(db, actor, moduleKey, id, data);
     return Response.json({ ok: true, id: entityId });
   } catch (error) { return errorResponse(error); }
@@ -55,8 +62,8 @@ export async function DELETE(request: Request) {
     const body = await request.json() as { module?: unknown; id?: unknown };
     const { moduleKey } = moduleFrom(body.module);
     const id = typeof body.id === "string" ? body.id.trim() : "";
-    if (!id) return Response.json({ error: "ID_REQUIRED" }, { status: 400 });
-    if (moduleKey === "registrations") return Response.json({ error: "REGISTRATION_DELETE_DISABLED" }, { status: 400 });
+    if (!id) return Response.json({ error: translateCmsError("ID_REQUIRED"), code: "ID_REQUIRED" }, { status: 400 });
+    if (moduleKey === "registrations") return Response.json({ error: translateCmsError("REGISTRATION_DELETE_DISABLED"), code: "REGISTRATION_DELETE_DISABLED" }, { status: 400 });
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, CMS_ADMIN_ROLES);
     await deleteCmsRecord(db, actor, moduleKey, id);
