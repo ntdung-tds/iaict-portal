@@ -1,5 +1,5 @@
 import type { D1DatabaseLike } from "./cloudflare-db";
-import type { CmsModuleConfig } from "./cms-schema";
+import type { CmsField, CmsModuleConfig } from "./cms-schema";
 
 type CmsData = Record<string, unknown>;
 
@@ -11,12 +11,17 @@ function empty(value: unknown) {
   return value === undefined || value === null || (typeof value === "string" && value.trim() === "");
 }
 
+function slugify(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "d").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 120);
+}
+
 function normalizedUrl(key: string, value: unknown, httpsOnly = false) {
   if (empty(value)) return "";
   try {
     const url = new URL(String(value).trim());
     if (!["http:", "https:"].includes(url.protocol)) throw new Error("protocol");
-    if (httpsOnly && url.protocol !== "https:") invalid("MEDIA_HTTPS_REQUIRED");
+    if (httpsOnly && url.protocol !== "https:") invalid(`FIELD_${key.toUpperCase()}_HTTPS`);
     return url.toString();
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("INVALID_CMS_")) throw error;
@@ -41,13 +46,18 @@ function validateNumber(key: string, value: unknown) {
   if (!Number.isFinite(Number(value))) invalid(`FIELD_${key.toUpperCase()}_NUMBER`);
 }
 
+function validateDateTime(key: string, value: unknown) {
+  if (empty(value)) return;
+  if (Number.isNaN(new Date(String(value)).getTime())) invalid(`FIELD_${key.toUpperCase()}_DATETIME`);
+}
+
 function filenameFromUrl(value: unknown) {
   try {
     const url = new URL(String(value));
     const raw = url.pathname.split("/").filter(Boolean).at(-1);
     if (raw) return decodeURIComponent(raw).slice(0, 180);
   } catch {
-    // URL validation reports the user-facing error before this fallback is relevant.
+    // URL validation returns the user-facing error.
   }
   return `media-${crypto.randomUUID().slice(0, 8)}`;
 }
@@ -71,6 +81,19 @@ function mediaTypeFromMime(mime: string) {
   return null;
 }
 
+function effective(data: CmsData, current: CmsData | null, key: string) {
+  return data[key] !== undefined ? data[key] : current?.[key];
+}
+
+async function validateMediaReference(db: D1DatabaseLike, field: CmsField, value: unknown) {
+  if (empty(value) || !field.key.endsWith("_media_id")) return;
+  const row = await db.prepare(`SELECT id,type FROM media WHERE id=? LIMIT 1`).bind(String(value)).first<{ id: string; type: string }>();
+  if (!row) invalid(`FIELD_${field.key.toUpperCase()}_NOT_FOUND`);
+  if (["hero_media_id", "photo_media_id", "logo_media_id"].includes(field.key) && row.type !== "image") {
+    invalid(`FIELD_${field.key.toUpperCase()}_IMAGE_REQUIRED`);
+  }
+}
+
 export async function prepareCmsData(
   db: D1DatabaseLike,
   moduleKey: string,
@@ -86,32 +109,39 @@ export async function prepareCmsData(
     if (!current) invalid("NOT_FOUND");
   }
 
+  if (config.slugColumn) {
+    const supplied = data[config.slugColumn];
+    const title = effective(data, current, config.titleColumn);
+    if ((!id && empty(supplied)) || (id && supplied !== undefined && empty(supplied))) {
+      const generated = title ? slugify(String(title)) : "";
+      if (generated) data[config.slugColumn] = generated;
+    }
+  }
+
   if (moduleKey === "media") {
-    // storage_key is an internal persistence detail. Operators should not need to type or edit it.
     delete data.storage_key;
-    const effectiveUrl = data.public_url !== undefined ? data.public_url : current?.public_url;
+    const effectiveUrl = effective(data, current, "public_url");
     if (empty(effectiveUrl)) invalid("MEDIA_SOURCE_REQUIRED");
     const url = normalizedUrl("public_url", effectiveUrl, true);
     data.public_url = url;
 
     const duplicate = await db.prepare(`SELECT id FROM media WHERE public_url = ? AND id <> ? LIMIT 1`)
-      .bind(url, id ?? "")
-      .first<{ id: string }>();
+      .bind(url, id ?? "").first<{ id: string }>();
     if (duplicate) invalid("MEDIA_URL_DUPLICATE");
 
     if (!id) data.storage_key = `external/${crypto.randomUUID()}`;
-    const effectiveFilename = data.filename !== undefined ? data.filename : current?.filename;
+    const effectiveFilename = effective(data, current, "filename");
     if (empty(effectiveFilename)) data.filename = filenameFromUrl(url);
     const nextFilename = String(data.filename ?? effectiveFilename ?? "");
-    const effectiveMime = data.mime_type !== undefined ? data.mime_type : current?.mime_type;
+    const effectiveMime = effective(data, current, "mime_type");
     const inferredMime = empty(effectiveMime) ? mimeFromFilename(nextFilename) : String(effectiveMime).trim();
     if (inferredMime && empty(effectiveMime)) data.mime_type = inferredMime;
 
-    const effectiveType = String(data.type !== undefined ? data.type : current?.type ?? "").trim();
+    const effectiveType = String(effective(data, current, "type") ?? "").trim();
     const inferredType = inferredMime ? mediaTypeFromMime(inferredMime) : null;
     if (effectiveType && inferredType && effectiveType !== "other" && effectiveType !== inferredType) invalid("MEDIA_TYPE_MISMATCH");
 
-    const effectiveSize = data.size_bytes !== undefined ? data.size_bytes : current?.size_bytes;
+    const effectiveSize = effective(data, current, "size_bytes");
     if (!empty(effectiveSize)) {
       const parsedSize = Number(effectiveSize);
       if (!Number.isSafeInteger(parsedSize) || parsedSize < 0) invalid("MEDIA_SIZE_INVALID");
@@ -120,15 +150,53 @@ export async function prepareCmsData(
 
   for (const field of config.fields) {
     if (field.readonly) continue;
-    const value = data[field.key] !== undefined ? data[field.key] : current?.[field.key];
+    const value = effective(data, current, field.key);
     const generatedMediaStorageKey = moduleKey === "media" && field.key === "storage_key";
-    const effectiveTitle = data[config.titleColumn] !== undefined ? data[config.titleColumn] : current?.[config.titleColumn];
-    const slugCanAutofill = field.key === config.slugColumn && !empty(effectiveTitle);
-    if (field.required && !generatedMediaStorageKey && !slugCanAutofill && empty(value)) invalid(`FIELD_${field.key.toUpperCase()}_REQUIRED`);
+    if (field.required && !generatedMediaStorageKey && empty(value)) invalid(`FIELD_${field.key.toUpperCase()}_REQUIRED`);
+    if (!empty(value) && field.type === "select" && field.options?.length && !field.options.some((option) => option.value === String(value))) {
+      invalid(`FIELD_${field.key.toUpperCase()}_OPTION`);
+    }
     if (field.type === "url" && moduleKey !== "media") normalizedUrl(field.key, value);
     if (field.type === "email") validateEmail(field.key, value);
     if (field.type === "json") validateJson(field.key, value);
     if (field.type === "number") validateNumber(field.key, value);
+    if (field.type === "datetime") validateDateTime(field.key, value);
+    await validateMediaReference(db, field, value);
+  }
+
+  if (moduleKey === "events") {
+    const start = effective(data, current, "start_at");
+    const end = effective(data, current, "end_at");
+    if (!empty(start) && !empty(end) && new Date(String(end)).getTime() < new Date(String(start)).getTime()) invalid("EVENT_END_BEFORE_START");
+  }
+
+  if (moduleKey === "redirects") {
+    const source = String(effective(data, current, "source_path") ?? "").trim();
+    const destination = String(effective(data, current, "destination_path") ?? "").trim();
+    if (source && (!source.startsWith("/") || source.startsWith("//"))) invalid("REDIRECT_SOURCE_PATH");
+    if (destination && !destination.startsWith("/")) normalizedUrl("destination_path", destination);
+    if (source && destination && source === destination) invalid("REDIRECT_LOOP");
+  }
+
+  if (moduleKey === "navigation") {
+    const href = String(effective(data, current, "href") ?? "").trim();
+    if (href && !href.startsWith("/")) normalizedUrl("href", href);
+    const parentId = String(effective(data, current, "parent_id") ?? "").trim();
+    if (id && parentId === id) invalid("NAVIGATION_SELF_PARENT");
+    if (parentId) {
+      const parent = await db.prepare(`SELECT id FROM navigation_items WHERE id=? LIMIT 1`).bind(parentId).first<{ id: string }>();
+      if (!parent) invalid("NAVIGATION_PARENT_NOT_FOUND");
+    }
+    const sortOrder = effective(data, current, "sort_order");
+    if (!empty(sortOrder) && (!Number.isInteger(Number(sortOrder)) || Number(sortOrder) < 0)) invalid("NAVIGATION_SORT_ORDER");
+  }
+
+  if (moduleKey === "leads") {
+    const ownerId = String(effective(data, current, "owner_id") ?? "").trim();
+    if (ownerId) {
+      const owner = await db.prepare(`SELECT id FROM admin_users WHERE id=? AND is_active=1 LIMIT 1`).bind(ownerId).first<{ id: string }>();
+      if (!owner) invalid("LEAD_OWNER_NOT_FOUND");
+    }
   }
 
   return data;
