@@ -44,6 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           mv cloudflare.config.ts cloudflare.config.ts.pages-disabled
+          node scripts/prepare-pages-preview.mjs
           npx vinext build
 
       - name: Prepare GitHub Pages artifact
@@ -70,6 +71,7 @@ jobs:
           cp -a "$EXPORT_DIR"/. "$PAGES_DIR"/
 
           touch "$PAGES_DIR/.nojekyll"
+          GITHUB_PAGES=true NEXT_PUBLIC_CMS_URL=https://iaict-portal-staging.iaict-platform.workers.dev/admin node scripts/prepare-pages-preview.mjs --artifact "$PAGES_DIR"
           if [ ! -f "$PAGES_DIR/404.html" ]; then
             if [ -f dist/client/404.html ]; then
               cp dist/client/404.html "$PAGES_DIR/404.html"
