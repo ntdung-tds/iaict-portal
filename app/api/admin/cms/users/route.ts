@@ -94,8 +94,12 @@ export async function POST(request: Request) {
     if (!email || !email.includes("@")) invalid("USER_EMAIL");
     if (roles.length === 0) invalid("USER_ROLES");
 
+    if (id === actor.id && email !== actor.email.trim().toLowerCase()) invalid("USER_SELF_EMAIL_CHANGE");
     if (id === actor.id && !isActive) invalid("USER_SELF_DEACTIVATE");
     if (id === actor.id && !roles.includes("admin")) invalid("USER_SELF_ADMIN_REMOVE");
+
+    const emailOwner = await db.prepare(`SELECT id FROM admin_users WHERE lower(email)=lower(?) LIMIT 1`).bind(email).first<{ id: string }>();
+    if (emailOwner && emailOwner.id !== id) invalid("USER_EMAIL_IN_USE");
 
     const dbRoles = await db.prepare(`SELECT id,code FROM roles`).all<{ id: string; code: string }>();
     const roleMap = new Map(dbRoles.results.map((role) => [role.code, role.id]));
