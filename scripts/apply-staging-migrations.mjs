@@ -20,7 +20,7 @@ function runWrangler(args, { capture = false } = {}) {
     throw new Error(`wrangler ${args.join(" ")} failed with exit code ${result.status}${detail}`);
   }
 
-  return capture ? `${result.stdout ?? ""}\n${result.stderr ?? ""}` : "";
+  return capture ? (result.stdout ?? "") : "";
 }
 
 function executeCommand(sql, { capture = false, json = false } = {}) {
