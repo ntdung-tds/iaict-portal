@@ -6,19 +6,19 @@ import styles from "./home-hero.module.css";
 
 const slides = [
   {
-    kicker: "Applied Technology · Real-world Value",
-    title: "Ứng dụng công nghệ để tạo ra giá trị có thể triển khai.",
-    lead: "IAICT kết nối nghiên cứu ứng dụng, thiết kế giải pháp, triển khai hệ thống, chuyển giao và đào tạo trong một hành trình thống nhất.",
-    primary: { label: "Khám phá năng lực", href: "/giai-phap-dich-vu" },
-    secondary: { label: "Dự án tiêu biểu", href: "/du-an" },
+    kicker: "Applied Technology · End-to-end Capability",
+    title: "Từ nghiên cứu ứng dụng đến những hệ thống vận hành trong thực tế.",
+    lead: "IAICT kết nối nghiên cứu, kiến trúc giải pháp, phát triển hệ thống, triển khai hiện trường, chuyển giao và đào tạo trong một năng lực triển khai thống nhất.",
+    primary: { label: "Khám phá năng lực IAICT", href: "/giai-phap-dich-vu" },
+    secondary: { label: "Dự án & năng lực thực tế", href: "/du-an" },
     focus: "Applied Technology",
-    signal: "Research → Design → Prove → Transfer",
+    signal: "Research → Architecture → Build → Operate → Transfer",
     image: "https://images.unsplash.com/photo-1764835711461-117d67799a7d?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=82&w=2400",
   },
   {
     kicker: "AI · Data · Digital Workflow",
-    title: "Biến dữ liệu thành năng lực ra quyết định.",
-    lead: "Tổ chức dữ liệu, tự động hóa quy trình và ứng dụng AI có kiểm soát để hỗ trợ công việc, quản trị và ra quyết định.",
+    title: "Biến dữ liệu thành năng lực vận hành và ra quyết định.",
+    lead: "Từ tổ chức dữ liệu, tích hợp hệ thống đến AI có kiểm soát và tự động hóa quy trình — thiết kế để đi vào công việc thực, không dừng ở trình diễn công nghệ.",
     primary: { label: "AI & Dữ liệu", href: "/san-pham-nen-tang#ai-du-lieu" },
     secondary: { label: "Giải pháp & Dịch vụ", href: "/giai-phap-dich-vu" },
     focus: "AI & Data",
@@ -27,17 +27,24 @@ const slides = [
   },
   {
     kicker: "IoT · Field Systems · Traceability",
-    title: "Kết nối hiện trường với hệ thống số.",
-    lead: "Từ cảm biến, gateway và kết nối hiện trường đến server, cơ sở dữ liệu, giám sát, truy xuất nguồn gốc và quản lý vòng đời.",
-    primary: { label: "Trâm Rừng", href: "/du-an/tram-rung" },
+    title: "Kết nối thế giới thực với hạ tầng dữ liệu và nền tảng số.",
+    lead: "IAICT thiết kế chuỗi công nghệ từ cảm biến, gateway, kết nối hiện trường đến server, cơ sở dữ liệu, giám sát, truy xuất nguồn gốc và các ứng dụng khai thác dữ liệu.",
+    primary: { label: "Dự án Trâm Rừng", href: "/du-an/tram-rung" },
     secondary: { label: "IoT & Quan trắc", href: "/san-pham-nen-tang#iot-quan-trac" },
     focus: "IoT & Field Data",
-    signal: "Sense → Connect → Store → Understand",
+    signal: "Sense → Connect → Store → Understand → Act",
     image: "https://images.unsplash.com/photo-1783434640967-1e0098a362df?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=82&w=2400",
   },
 ];
 
-const topicLabels = ["Công nghệ ứng dụng", "AI & Dữ liệu", "IoT & Hiện trường"];
+const topicLabels = ["Năng lực triển khai", "AI & Dữ liệu", "IoT & Hiện trường"];
+const deliverySpectrum = [
+  ["01", "Strategy", "Bài toán · lộ trình"],
+  ["02", "Architecture", "Dữ liệu · hệ thống"],
+  ["03", "Engineering", "AI · IoT · software"],
+  ["04", "Deployment", "Cloud · field · integration"],
+  ["05", "Transfer", "Đào tạo · vận hành"],
+];
 const heroImageWidths = [960, 1600, 2200] as const;
 
 function responsiveImageUrl(source: string, width: number, quality = 76) {
@@ -116,15 +123,22 @@ export function HomeHero() {
           </div>
         </div>
 
-        <aside className={styles.sideCard} aria-label="Thông tin định vị IAICT">
-          <div className={styles.sideTop}><span>IAICT / Capability Focus</span><i aria-hidden="true" /></div>
+        <aside className={`${styles.sideCard} ia-v16-capability-panel`} aria-label="Phạm vi năng lực triển khai IAICT">
+          <div className={styles.sideTop}><span>IAICT / Delivery Spectrum</span><i aria-hidden="true" /></div>
           <strong>{slide.focus}</strong>
           <p>{slide.signal}</p>
-          <div className={styles.sideStats}>
-            <span><b>04</b><small>trụ cột năng lực</small></span>
-            <span><b>01</b><small>hành trình triển khai</small></span>
-            <span><b>360°</b><small>từ bài toán đến vận hành</small></span>
-            <span><b>IAICT</b><small>applied technology</small></span>
+          <div className="ia-v16-spectrum" aria-label="Các lớp năng lực triển khai">
+            {deliverySpectrum.map(([no, title, body]) => (
+              <div className="ia-v16-spectrum-row" key={no}>
+                <span>{no}</span>
+                <strong>{title}</strong>
+                <small>{body}</small>
+              </div>
+            ))}
+          </div>
+          <div className="ia-v16-capability-note">
+            <span>END-TO-END</span>
+            <p>Từ bài toán, dữ liệu và kiến trúc đến triển khai, vận hành và chuyển giao.</p>
           </div>
         </aside>
       </div>
