@@ -1,4 +1,5 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
+import { NEWSROOM_ADMIN_ROLES, NEWSROOM_READ_ROLES } from "@/lib/cms-roles";
 import {
   getNewsroomOverview,
   updateNewsroomSettings,
@@ -21,9 +22,7 @@ type SettingsBody = {
 };
 
 function errorResponse(error: unknown) {
-  if (error instanceof NewsroomAuthError) {
-    return Response.json({ error: error.message }, { status: error.status });
-  }
+  if (error instanceof NewsroomAuthError) return Response.json({ error: error.message }, { status: error.status });
   const message = error instanceof Error ? error.message : "Unknown newsroom error";
   const status = message.startsWith("INVALID_") ? 400 : 500;
   return Response.json({ error: message }, { status });
@@ -32,15 +31,8 @@ function errorResponse(error: unknown) {
 export async function GET(request: Request) {
   try {
     const db = getDatabaseBinding();
-    await requireNewsroomActor(request, db, [
-      "admin",
-      "editor",
-      "reviewer",
-      "news_admin",
-      "news_editor",
-      "news_reviewer",
-    ]);
-    return Response.json({ ok: true, ...(await getNewsroomOverview(db)) });
+    const actor = await requireNewsroomActor(request, db, NEWSROOM_READ_ROLES);
+    return Response.json({ ok: true, actor, ...(await getNewsroomOverview(db)) });
   } catch (error) {
     return errorResponse(error);
   }
@@ -49,7 +41,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const db = getDatabaseBinding();
-    const actor = await requireNewsroomActor(request, db, ["admin", "news_admin"]);
+    const actor = await requireNewsroomActor(request, db, NEWSROOM_ADMIN_ROLES);
     const body = await request.json() as SettingsBody;
 
     if (body.action === "update-settings") {
@@ -59,9 +51,7 @@ export async function POST(request: Request) {
 
     if (body.action === "update-source") {
       const sourceId = typeof body.sourceId === "string" ? body.sourceId.trim() : "";
-      const publicationMode = typeof body.publicationMode === "string"
-        ? body.publicationMode as NewsPublicationMode
-        : "inherit";
+      const publicationMode = typeof body.publicationMode === "string" ? body.publicationMode as NewsPublicationMode : "inherit";
       if (!sourceId) return Response.json({ error: "sourceId is required" }, { status: 400 });
 
       await updateNewsSourceSettings(db, actor, {
@@ -69,12 +59,8 @@ export async function POST(request: Request) {
         publicationMode,
         isActive: typeof body.isActive === "boolean" ? body.isActive : undefined,
         scheduleEnabled: typeof body.scheduleEnabled === "boolean" ? body.scheduleEnabled : undefined,
-        scheduleIntervalMinutes: typeof body.scheduleIntervalMinutes === "number"
-          ? body.scheduleIntervalMinutes
-          : undefined,
-        scheduleRetryMinutes: typeof body.scheduleRetryMinutes === "number"
-          ? body.scheduleRetryMinutes
-          : undefined,
+        scheduleIntervalMinutes: typeof body.scheduleIntervalMinutes === "number" ? body.scheduleIntervalMinutes : undefined,
+        scheduleRetryMinutes: typeof body.scheduleRetryMinutes === "number" ? body.scheduleRetryMinutes : undefined,
       });
       return Response.json({ ok: true });
     }
