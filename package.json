@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "verify": "npm run verify:migrations && npm run check:vinext && npm run typecheck && npm run test && npm run build",
-    "deploy:staging": "wrangler d1 migrations apply iaict-portal-staging-db --remote --config wrangler.staging-migrations.jsonc && vinext-cloudflare deploy --env staging --name iaict-portal-staging",
+    "migrate:staging": "node scripts/apply-staging-migrations.mjs",
+    "deploy:staging": "npm run migrate:staging && vinext-cloudflare deploy --env staging --name iaict-portal-staging",
     "deploy:production": "vinext-cloudflare deploy --env production --name iaict-portal"
   },
   "dependencies": {
