@@ -10,9 +10,20 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   return Response.json(
     {
-      version: "v16-news-workflow-3",
+      version: "v16-news-workflow-4",
       policy: getNewsWorkflowPolicy(),
       defaultSettings: DEFAULT_NEWS_WORKFLOW_SETTINGS,
+      backend: {
+        d1Binding: "DB",
+        repositoryReady: true,
+        accessFailClosed: true,
+        raceSafePublicationClaims: true,
+        adminEndpoints: [
+          "POST /api/admin/news/ingest",
+          "GET /api/admin/news/review",
+          "POST /api/admin/news/review/action",
+        ],
+      },
       cmsControls: {
         globalAutoPublishToggle: true,
         perSourcePublicationMode: ["inherit", "manual", "auto"],
@@ -24,6 +35,8 @@ export async function GET() {
           "valid-title",
           "valid-canonical-url",
           "source-attribution",
+          "valid-category",
+          "publication-claim",
         ],
       },
       adapters: NEWS_SOURCE_ADAPTERS.map((adapter) => ({
