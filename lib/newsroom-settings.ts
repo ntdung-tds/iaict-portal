@@ -16,10 +16,28 @@ export type NewsroomSourceSummary = {
   lastFetchedAt: string | null;
   lastSuccessAt: string | null;
   lastError: string | null;
+  scheduleEnabled: boolean;
+  scheduleIntervalMinutes: number;
+  scheduleRetryMinutes: number;
+  nextScheduledAt: string | null;
+  lastScheduledAt: string | null;
 };
 
 export type NewsroomCategory = { id: string; name: string; slug: string };
 export type NewsroomQueueCounts = Record<"pending" | "editing" | "approved" | "rejected" | "published", number>;
+export type NewsroomSchedulerRun = {
+  id: string;
+  scheduled_key: string;
+  cron_expression: string;
+  status: "running" | "succeeded" | "partial" | "failed" | "skipped";
+  due_count: number;
+  claimed_count: number;
+  succeeded_count: number;
+  failed_count: number;
+  skipped_count: number;
+  started_at: string;
+  finished_at: string | null;
+};
 
 function nowIso() {
   return new Date().toISOString();
@@ -49,7 +67,9 @@ export async function getNewsroomOverview(db: D1DatabaseLike) {
   const { results: sourceRows } = await db.prepare(`
     SELECT id, name, homepage_url, entry_url, fetch_strategy, trust_level,
       publication_mode, is_active, attribution_mode, default_category_id,
-      last_fetched_at, last_success_at, last_error
+      last_fetched_at, last_success_at, last_error,
+      schedule_enabled, schedule_interval_minutes, schedule_retry_minutes,
+      next_scheduled_at, last_scheduled_at
     FROM news_sources
     ORDER BY name ASC
   `).all<{
@@ -66,6 +86,11 @@ export async function getNewsroomOverview(db: D1DatabaseLike) {
     last_fetched_at: string | null;
     last_success_at: string | null;
     last_error: string | null;
+    schedule_enabled: number;
+    schedule_interval_minutes: number;
+    schedule_retry_minutes: number;
+    next_scheduled_at: string | null;
+    last_scheduled_at: string | null;
   }>();
 
   const sources: NewsroomSourceSummary[] = sourceRows.map((row) => ({
@@ -82,6 +107,11 @@ export async function getNewsroomOverview(db: D1DatabaseLike) {
     lastFetchedAt: row.last_fetched_at,
     lastSuccessAt: row.last_success_at,
     lastError: row.last_error,
+    scheduleEnabled: row.schedule_enabled === 1,
+    scheduleIntervalMinutes: row.schedule_interval_minutes,
+    scheduleRetryMinutes: row.schedule_retry_minutes,
+    nextScheduledAt: row.next_scheduled_at,
+    lastScheduledAt: row.last_scheduled_at,
   }));
 
   const { results: categoryRows } = await db.prepare(`
@@ -105,7 +135,15 @@ export async function getNewsroomOverview(db: D1DatabaseLike) {
     if (row.status in queueCounts) queueCounts[row.status] = Number(row.total) || 0;
   }
 
-  return { settings, sources, categories: categoryRows, queueCounts };
+  const { results: schedulerRuns } = await db.prepare(`
+    SELECT id, scheduled_key, cron_expression, status, due_count, claimed_count,
+      succeeded_count, failed_count, skipped_count, started_at, finished_at
+    FROM news_scheduler_runs
+    ORDER BY started_at DESC
+    LIMIT 10
+  `).all<NewsroomSchedulerRun>();
+
+  return { settings, sources, categories: categoryRows, queueCounts, schedulerRuns };
 }
 
 export function validateNewsroomSettings(input: Partial<NewsWorkflowSettings>): NewsWorkflowSettings {
@@ -123,6 +161,26 @@ export function validateNewsroomSettings(input: Partial<NewsWorkflowSettings>): 
     autoPublishMaxPerRun: cap,
     requireAttribution: input.requireAttribution !== false,
     requireSourcePublishedAt: Boolean(input.requireSourcePublishedAt),
+  };
+}
+
+export function validateNewsSourceSchedule(input: {
+  scheduleEnabled?: boolean;
+  scheduleIntervalMinutes?: number;
+  scheduleRetryMinutes?: number;
+}) {
+  const interval = input.scheduleIntervalMinutes;
+  if (interval !== undefined && (!Number.isInteger(interval) || interval < 15 || interval > 1440)) {
+    throw new Error("INVALID_SOURCE_SCHEDULE_INTERVAL");
+  }
+  const retry = input.scheduleRetryMinutes;
+  if (retry !== undefined && (!Number.isInteger(retry) || retry < 15 || retry > 360)) {
+    throw new Error("INVALID_SOURCE_SCHEDULE_RETRY");
+  }
+  return {
+    scheduleEnabled: input.scheduleEnabled,
+    scheduleIntervalMinutes: interval,
+    scheduleRetryMinutes: retry,
   };
 }
 
@@ -159,19 +217,50 @@ export async function updateNewsroomSettings(
 export async function updateNewsSourceSettings(
   db: D1DatabaseLike,
   actor: NewsroomActor,
-  input: { sourceId: string; publicationMode: NewsPublicationMode; isActive?: boolean },
+  input: {
+    sourceId: string;
+    publicationMode: NewsPublicationMode;
+    isActive?: boolean;
+    scheduleEnabled?: boolean;
+    scheduleIntervalMinutes?: number;
+    scheduleRetryMinutes?: number;
+  },
 ) {
   if (!["inherit", "manual", "auto"].includes(input.publicationMode)) {
     throw new Error("INVALID_SOURCE_PUBLICATION_MODE");
   }
+  const schedule = validateNewsSourceSchedule(input);
   const timestamp = nowIso();
   const activeValue = input.isActive === undefined ? null : input.isActive ? 1 : 0;
+  const scheduleEnabledValue = schedule.scheduleEnabled === undefined
+    ? null
+    : schedule.scheduleEnabled ? 1 : 0;
+
   await db.batch([
     db.prepare(`
       UPDATE news_sources
-      SET publication_mode=?, is_active=COALESCE(?, is_active), updated_at=?
+      SET publication_mode=?,
+          is_active=COALESCE(?, is_active),
+          schedule_enabled=COALESCE(?, schedule_enabled),
+          schedule_interval_minutes=COALESCE(?, schedule_interval_minutes),
+          schedule_retry_minutes=COALESCE(?, schedule_retry_minutes),
+          next_scheduled_at=CASE
+            WHEN COALESCE(?, schedule_enabled)=1 AND next_scheduled_at IS NULL THEN ?
+            ELSE next_scheduled_at
+          END,
+          updated_at=?
       WHERE id=?
-    `).bind(input.publicationMode, activeValue, timestamp, input.sourceId),
+    `).bind(
+      input.publicationMode,
+      activeValue,
+      scheduleEnabledValue,
+      schedule.scheduleIntervalMinutes ?? null,
+      schedule.scheduleRetryMinutes ?? null,
+      scheduleEnabledValue,
+      timestamp,
+      timestamp,
+      input.sourceId,
+    ),
     db.prepare(`
       INSERT INTO audit_logs (id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
       VALUES (?, ?, 'news.source.settings.update', 'news_sources', ?, ?, ?)
@@ -179,7 +268,13 @@ export async function updateNewsSourceSettings(
       crypto.randomUUID(),
       actor.id,
       input.sourceId,
-      JSON.stringify({ publicationMode: input.publicationMode, isActive: input.isActive ?? null }),
+      JSON.stringify({
+        publicationMode: input.publicationMode,
+        isActive: input.isActive ?? null,
+        scheduleEnabled: schedule.scheduleEnabled ?? null,
+        scheduleIntervalMinutes: schedule.scheduleIntervalMinutes ?? null,
+        scheduleRetryMinutes: schedule.scheduleRetryMinutes ?? null,
+      }),
       timestamp,
     ),
   ]);
