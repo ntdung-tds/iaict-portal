@@ -1,4 +1,4 @@
 IAICT V16 functional staging deployment trigger
-Requested: 2026-10-15T04:20Z
-Head before trigger: f02e4ec72e57dc6a42b416f66ba8a73ec6cf5f86
-Purpose: controlled Cloudflare Build after staging Worker ownership moved to Versions API; D1 verified 18/18; deploy prebuilt staging output.
+Requested: 2026-10-15T04:23Z
+Head before trigger: 620c0078b867d2fa5586fec5e6c810e2181af8d4
+Purpose: one-time clean Worker handoff — start controlled build, remove isolated bootstrap Worker during build, then let cf recreate iaict-portal-staging from validated V16 output; D1 remains 18/18.
