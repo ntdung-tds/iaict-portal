@@ -1,5 +1,5 @@
 import handler from "vinext/server/fetch-handler";
-import type { D1DatabaseLike } from "./lib/cloudflare-db";
+import { setDatabaseBinding, type D1DatabaseLike } from "./lib/cloudflare-db";
 import { runScheduledNewsIngestion } from "./lib/news-scheduler";
 
 type WorkerEnv = {
@@ -18,6 +18,7 @@ type ExecutionContextLike = {
 
 export default {
   async fetch(request: Request, env: WorkerEnv, ctx: ExecutionContextLike) {
+    setDatabaseBinding(env.DB);
     return handler.fetch(request, env, ctx);
   },
 
@@ -26,6 +27,7 @@ export default {
     env: WorkerEnv,
     ctx: ExecutionContextLike,
   ) {
+    setDatabaseBinding(env.DB);
     ctx.waitUntil(
       runScheduledNewsIngestion(env.DB, {
         cronExpression: controller.cron,
