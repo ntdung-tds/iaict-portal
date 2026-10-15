@@ -1,5 +1,5 @@
 // Runs only in the disposable GitHub Pages build checkout.
-import { readdir, rm, mkdir, writeFile } from 'node:fs/promises';
+import { readdir, readFile, rm, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 if (process.env.GITHUB_PAGES !== 'true') throw new Error('Pages preparation requires GITHUB_PAGES=true');
 const origin = new URL(process.env.NEXT_PUBLIC_CMS_URL).origin;
@@ -28,3 +28,9 @@ for (const route of ['/admin','/chuyen-gia','/doi-tac','/su-kien']) {
   await mkdir(dir,{recursive:true});
   await writeFile(`${dir}/page.tsx`,redirectPage(route));
 }
+
+const layoutPath = 'app/(public)/layout.tsx';
+await writeFile(layoutPath, (await readFile(layoutPath,'utf8')).replace('export const dynamic = "force-dynamic";', ''));
+const settingsPath = 'lib/public-site-settings.ts';
+const settings = await readFile(settingsPath,'utf8');
+await writeFile(settingsPath,settings.slice(0,settings.indexOf('export async function getPublicSiteSettings')) + 'export async function getPublicSiteSettings(): Promise<PublicSiteSettings> { return fallback; }\n');
