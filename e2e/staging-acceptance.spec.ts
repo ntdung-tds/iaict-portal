@@ -40,11 +40,13 @@ test("staging health and public workflow metadata are healthy", async ({ request
   expect(body.scheduler?.cronUtc).toBe("*/15 * * * *");
 });
 
-test("newsroom admin API fails closed without Cloudflare Access identity", async ({ request }) => {
-  const response = await request.get("/api/admin/news/settings");
-  expect(response.status()).toBe(401);
-  const body = await response.json() as { error?: string };
-  expect(body.error).toMatch(/Cloudflare Access authentication required/i);
+test("newsroom admin paths are protected by Cloudflare Access at the edge", async ({ request }) => {
+  for (const route of ["/admin/news", "/api/admin/news/settings"] as const) {
+    const response = await request.get(route, { maxRedirects: 0 });
+    expect([302, 303, 307, 308], `${route} should redirect to Cloudflare Access`).toContain(response.status());
+    const location = response.headers()["location"] ?? "";
+    expect(location, `${route} should redirect through the Access login flow`).toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+  }
 });
 
 test("all canonical public routes render successfully on staging", async ({ page }) => {

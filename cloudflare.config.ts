@@ -6,6 +6,8 @@ export default defineConfig({
     entrypoint: "./worker.ts",
     compatibilityDate: "2026-10-12",
     compatibilityFlags: ["nodejs_compat"],
+    workersDev: true,
+    previewUrls: false,
     assets: {
       htmlHandling: "none",
       notFoundHandling: "none",
