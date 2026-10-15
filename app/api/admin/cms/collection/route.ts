@@ -5,6 +5,10 @@ import { NewsroomAuthError, requireNewsroomActor } from "@/lib/newsroom-auth";
 
 export const dynamic = "force-dynamic";
 
+const ADMIN_ROLES = ["admin", "news_admin"] as const;
+const EDIT_ROLES = ["admin", "news_admin", "editor", "news_editor"] as const;
+const READ_ROLES = ["admin", "news_admin", "editor", "news_editor", "reviewer", "news_reviewer"] as const;
+
 function errorResponse(error: unknown) {
   if (error instanceof NewsroomAuthError) {
     return Response.json({ error: error.message }, { status: error.status });
@@ -26,8 +30,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const { moduleKey, config } = moduleFrom(url.searchParams.get("module"));
     const db = getDatabaseBinding();
-    const roles = config.adminOnly ? ["admin"] as const : ["admin", "editor", "reviewer"] as const;
-    const actor = await requireNewsroomActor(request, db, roles);
+    const actor = await requireNewsroomActor(request, db, config.adminOnly ? ADMIN_ROLES : READ_ROLES);
     const limitRaw = Number(url.searchParams.get("limit") ?? "80");
     const result = await listCmsRecords(db, moduleKey, {
       q: url.searchParams.get("q") ?? undefined,
@@ -45,8 +48,7 @@ export async function POST(request: Request) {
     const body = await request.json() as { module?: unknown; id?: unknown; data?: unknown };
     const { moduleKey, config } = moduleFrom(body.module);
     const db = getDatabaseBinding();
-    const roles = config.adminOnly ? ["admin"] as const : ["admin", "editor"] as const;
-    const actor = await requireNewsroomActor(request, db, roles);
+    const actor = await requireNewsroomActor(request, db, config.adminOnly ? ADMIN_ROLES : EDIT_ROLES);
     const id = typeof body.id === "string" && body.id.trim() ? body.id.trim() : null;
     const data = body.data && typeof body.data === "object" && !Array.isArray(body.data)
       ? body.data as Record<string, unknown>
@@ -65,7 +67,7 @@ export async function DELETE(request: Request) {
     const id = typeof body.id === "string" ? body.id.trim() : "";
     if (!id) return Response.json({ error: "ID_REQUIRED" }, { status: 400 });
     const db = getDatabaseBinding();
-    const actor = await requireNewsroomActor(request, db, ["admin"]);
+    const actor = await requireNewsroomActor(request, db, ADMIN_ROLES);
     await deleteCmsRecord(db, actor, moduleKey, id);
     return Response.json({ ok: true });
   } catch (error) {
