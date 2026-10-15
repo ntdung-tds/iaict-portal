@@ -21,6 +21,7 @@ import "./site-polish.css";
 import "./v16-premium.css";
 import "./v16-guardrails.css";
 import "./v16-impact.css";
+import "./v16-marketing.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
