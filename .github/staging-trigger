@@ -1,4 +1,4 @@
 IAICT V16 functional staging deployment trigger
-Requested: 2026-10-15T04:15Z
-Head before trigger: bfaabd9edb95f104daed750632bd89e03be0c8f1
-Purpose: controlled Cloudflare Build with staging-mode Build Output and cf prebuilt deploy; D1 verified 18/18.
+Requested: 2026-10-15T04:17Z
+Head before trigger: 5d55b8d3244de9f203ae8b8dd41b5221d490c907
+Purpose: controlled Cloudflare Build; staging-mode output; D1 18/18; cf prebuilt deploy without obsolete skip-build argument.
