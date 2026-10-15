@@ -118,18 +118,28 @@ export async function prepareCmsData(
     }
   }
 
-  if (moduleKey === "pages") {
+  if (moduleKey === "pages" || moduleKey === "products") {
+    const prefix = moduleKey === "pages" ? "PAGE" : "PRODUCT";
     const slug = String(effective(data, current, "slug") ?? "").trim();
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120) invalid("PAGE_SLUG_INVALID");
-    for (const key of ["layout_json", "seo_json"]) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120) invalid(`${prefix}_SLUG_INVALID`);
+    for (const key of moduleKey === "pages" ? ["layout_json", "seo_json"] : ["seo_json"]) {
       const raw = effective(data, current, key);
       if (empty(raw)) continue;
       validateJson(key, raw);
       const value = typeof raw === "string" ? JSON.parse(raw) : raw;
-      if (!value || typeof value !== "object" || Array.isArray(value)) invalid("PAGE_JSON_OBJECT_REQUIRED");
-      if (key === "seo_json" && ["title", "description"].some((name) => value[name] !== undefined && typeof value[name] !== "string")) invalid("PAGE_SEO_TEXT_REQUIRED");
+      if (!value || typeof value !== "object" || Array.isArray(value)) invalid(`${prefix}_JSON_OBJECT_REQUIRED`);
+      if (key === "seo_json" && ["title", "description"].some((name) => value[name] !== undefined && typeof value[name] !== "string")) invalid(`${prefix}_SEO_TEXT_REQUIRED`);
     }
-    const heroId = effective(data, current, "hero_media_id");
+    if (moduleKey === "products") {
+      for (const key of ["features_json", "technologies_json", "benefits_json"]) {
+        const raw = effective(data, current, key);
+        if (empty(raw)) continue;
+        validateJson(key, raw);
+        const list = typeof raw === "string" ? JSON.parse(raw) : raw;
+        if (!Array.isArray(list) || list.some((item) => typeof item !== "string" || !item.trim())) invalid("PRODUCT_LIST_TEXT_REQUIRED");
+      }
+    }
+    const heroId = moduleKey === "pages" ? effective(data, current, "hero_media_id") : null;
     if (!empty(heroId)) {
       const media = await db.prepare(`SELECT id,type,visibility,public_url FROM media WHERE id=? LIMIT 1`).bind(String(heroId)).first<{id:string;type:string;visibility:string;public_url:string|null}>();
       if (!media || media.type !== "image" || media.visibility !== "public" || !media.public_url?.startsWith("https://")) invalid("PAGE_HERO_PUBLIC_REQUIRED");

@@ -37,3 +37,14 @@ describe("Page module validation",()=>{
   it("rejects private hero images",async()=>{await expect(prepareCmsData(mockDb({mediaRef:{id:"m1",type:"image",visibility:"private",public_url:"https://example.com/photo.jpg"}}),"pages",moduleConfig("pages"),null,{...validPage,hero_media_id:"m1"})).rejects.toThrow("INVALID_CMS_PAGE_HERO_PUBLIC_REQUIRED");});
   it("accepts public hero images and partial page updates",async()=>{const current={...validPage,id:"p1",hero_media_id:"m1"};const result=await prepareCmsData(mockDb({current,mediaRef:{id:"m1",type:"image",visibility:"public",public_url:"https://example.com/photo.jpg"}}),"pages",moduleConfig("pages"),"p1",{body:"Nội dung mới"});expect(result.body).toBe("Nội dung mới");});
 });
+
+const validProduct={title:"Nền tảng IoT",slug:"nen-tang-iot",summary:"Giám sát dữ liệu hiện trường.",status:"draft",features_json:'["Thu thập dữ liệu"]',technologies_json:'["IoT"]',benefits_json:'["Giảm thao tác tổng hợp"]',seo_json:"{}"};
+describe("Product module validation",()=>{
+  it.each(["features_json","technologies_json","benefits_json"])("requires %s to be a text list",async key=>{
+    await expect(prepareCmsData(mockDb(),"products",moduleConfig("products"),null,{...validProduct,[key]:'[{"name":"Không phải chuỗi"}]'})).rejects.toThrow("INVALID_CMS_PRODUCT_LIST_TEXT_REQUIRED");
+  });
+  it("accepts empty optional lists",async()=>{const data=await prepareCmsData(mockDb(),"products",moduleConfig("products"),null,{...validProduct,features_json:"[]",technologies_json:"[]",benefits_json:"[]"});expect(data.features_json).toBe("[]");});
+  it("rejects an invalid product slug",async()=>{await expect(prepareCmsData(mockDb(),"products",moduleConfig("products"),null,{...validProduct,slug:"a/b"})).rejects.toThrow("INVALID_CMS_PRODUCT_SLUG_INVALID");});
+  it("requires object SEO",async()=>{await expect(prepareCmsData(mockDb(),"products",moduleConfig("products"),null,{...validProduct,seo_json:"[]"})).rejects.toThrow("INVALID_CMS_PRODUCT_JSON_OBJECT_REQUIRED");});
+  it("rejects a non-text SEO description",async()=>{await expect(prepareCmsData(mockDb(),"products",moduleConfig("products"),null,{...validProduct,seo_json:'{"description":42}'})).rejects.toThrow("INVALID_CMS_PRODUCT_SEO_TEXT_REQUIRED");});
+});
