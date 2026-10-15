@@ -1,7 +1,7 @@
 @media (max-width: 780px) {
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section {
     display: grid !important;
-    grid-template-columns: clamp(126px, 33vw, 180px) minmax(0, 1fr) !important;
+    grid-template-columns: clamp(118px, 30vw, 170px) minmax(0, 1fr) !important;
     align-items: start;
     min-height: 0 !important;
     overflow: visible !important;
@@ -11,10 +11,10 @@
     grid-column: 1 !important;
     grid-row: 1 / span 2 !important;
     position: sticky;
-    top: 10px;
+    top: 8px;
     align-self: start;
     z-index: 3;
-    max-height: calc(100dvh - 20px);
+    max-height: calc(100dvh - 16px);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
@@ -42,20 +42,20 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    min-height: 58px;
-    padding: 10px 11px;
+    min-height: 54px;
+    padding: 9px 10px;
     background: rgba(248, 251, 251, .97);
     backdrop-filter: blur(10px);
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside > div:first-child span {
-    font-size: 9px;
-    letter-spacing: .06em;
+    font-size: 8px;
+    letter-spacing: .05em;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside > div:first-child strong {
     margin-top: 3px;
-    font-size: 11px;
+    font-size: 10px;
     white-space: normal;
   }
 
@@ -65,11 +65,11 @@
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article {
-    padding: 12px 10px;
+    padding: 11px 9px;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:first-child {
-    gap: 7px;
+    gap: 6px;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:first-child > span {
@@ -78,10 +78,18 @@
     margin-top: 4px;
   }
 
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:first-child > div {
+    min-width: 0;
+  }
+
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:first-child strong {
-    font-size: 10.5px;
-    line-height: 1.35;
+    display: -webkit-box;
+    font-size: 10px;
+    line-height: 1.3;
+    overflow: hidden;
     overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:first-child small {
@@ -96,8 +104,8 @@
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article p {
-    margin: 8px 0 0;
-    font-size: 9px;
+    margin: 7px 0 0;
+    font-size: 8.5px;
     line-height: 1.35;
     overflow-wrap: anywhere;
   }
@@ -105,70 +113,100 @@
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:last-child {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 6px;
-    margin-top: 9px;
+    gap: 5px;
+    margin-top: 8px;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:last-child a,
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:last-child button {
     width: 100%;
     min-width: 0;
-    padding: 7px 6px;
+    min-height: 34px;
+    padding: 6px 5px;
     border-radius: 8px;
-    font-size: 9px;
-    line-height: 1.2;
+    font-size: 8.5px;
+    line-height: 1.15;
     text-align: center;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Hàng chờ biên tập"] > div:first-child,
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Trình biên tập"] > div:first-child {
-    min-height: 58px;
-    padding: 10px 12px;
+    min-height: 54px;
+    padding: 9px 10px;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Hàng chờ biên tập"] > div:last-child {
-    max-height: min(42dvh, 360px) !important;
+    max-height: min(40dvh, 340px) !important;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Hàng chờ biên tập"] button {
-    padding: 12px 11px;
+    padding: 11px 9px;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Hàng chờ biên tập"] button strong {
-    font-size: 11px;
-    line-height: 1.4;
+    font-size: 10.5px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Hàng chờ biên tập"] button span,
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Hàng chờ biên tập"] button small {
+    font-size: 8.5px;
+    overflow-wrap: anywhere;
+  }
+
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Trình biên tập"] > div:last-child {
+    padding: 13px 10px;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Trình biên tập"] textarea,
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Trình biên tập"] select {
+    min-width: 0;
     font-size: 12px;
   }
 }
 
 @media (max-width: 440px) {
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section {
-    grid-template-columns: 116px minmax(0, 1fr) !important;
+    grid-template-columns: 96px minmax(0, 1fr) !important;
   }
 
-  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:first-child small {
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:first-child small,
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:last-child a,
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article p {
     display: none;
   }
 
-  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:last-child a {
-    display: none;
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article {
+    padding: 10px 7px;
+  }
+
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:last-child button {
+    min-height: 32px;
+    padding-inline: 4px;
+    font-size: 8px;
   }
 
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Hàng chờ biên tập"] button {
-    padding: 11px 9px;
+    padding: 10px 8px;
+  }
+
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > section[aria-label="Trình biên tập"] > div:last-child {
+    padding-inline: 8px;
   }
 }
 
 @media (max-width: 360px) {
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section {
-    grid-template-columns: 108px minmax(0, 1fr) !important;
+    grid-template-columns: 84px minmax(0, 1fr) !important;
   }
 
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside > div:first-child,
   .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article {
-    padding-inline: 8px;
+    padding-inline: 6px;
+  }
+
+  .mobileAdminShell main > section[aria-label="Tổng quan hàng chờ"] + section > aside article > div:first-child strong {
+    font-size: 9px;
   }
 }
