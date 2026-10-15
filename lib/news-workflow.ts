@@ -7,6 +7,16 @@ export const NEWS_REVIEW_STATUSES = [
 ] as const;
 
 export type NewsReviewStatus = (typeof NEWS_REVIEW_STATUSES)[number];
+export type NewsTrustLevel = "official" | "verified" | "reference";
+export type NewsPublicationMode = "inherit" | "manual" | "auto";
+
+export type NewsWorkflowSettings = {
+  autoPublishEnabled: boolean;
+  autoPublishMinTrust: NewsTrustLevel;
+  autoPublishMaxPerRun: number;
+  requireAttribution: boolean;
+  requireSourcePublishedAt: boolean;
+};
 
 export type NewsSourceDefinition = {
   id: string;
@@ -14,8 +24,9 @@ export type NewsSourceDefinition = {
   homepageUrl: string;
   entryUrl: string;
   fetchStrategy: "html_discovery" | "rss" | "api" | "manual";
-  trustLevel: "official" | "verified" | "reference";
-  requiresEditorialReview: true;
+  trustLevel: NewsTrustLevel;
+  publicationMode: NewsPublicationMode;
+  requiresEditorialWorkflow: true;
   attributionMode: "source_link" | "source_name_and_link" | "custom";
   attributionText?: string;
   enabledByDefault: boolean;
@@ -41,6 +52,28 @@ export type NewsReviewDraft = {
   workflowStatus: "pending";
 };
 
+export type AutoPublishChecks = {
+  isDuplicate: boolean;
+  hasAttribution: boolean;
+  hasValidTitle: boolean;
+  hasValidCanonicalUrl: boolean;
+  hasSourcePublishedAt: boolean;
+};
+
+export type NewsPublicationDecision = {
+  mode: "manual" | "auto";
+  eligible: boolean;
+  reasons: string[];
+};
+
+export const DEFAULT_NEWS_WORKFLOW_SETTINGS: NewsWorkflowSettings = {
+  autoPublishEnabled: false,
+  autoPublishMinTrust: "official",
+  autoPublishMaxPerRun: 10,
+  requireAttribution: true,
+  requireSourcePublishedAt: false,
+};
+
 const TRACKING_QUERY_KEYS = new Set([
   "fbclid",
   "gclid",
@@ -58,12 +91,19 @@ const REVIEW_TRANSITIONS: Record<NewsReviewStatus, readonly NewsReviewStatus[]> 
   published: [],
 };
 
+const TRUST_SCORE: Record<NewsTrustLevel, number> = {
+  reference: 0,
+  verified: 1,
+  official: 2,
+};
+
 /**
  * Initial V16 source registry.
  *
- * These are discovery entry points only. V16 deliberately does not assume that
- * a site exposes a stable RSS/API endpoint until that endpoint is verified.
- * Every discovered item is editorial-review-only and can never auto-publish.
+ * Sources inherit the global CMS publication policy by default. The global
+ * auto-publish switch is OFF unless an administrator explicitly enables it.
+ * Every item still passes through the editorial workflow so manual and
+ * policy-driven approvals remain auditable.
  */
 export const DEFAULT_NEWS_SOURCES: readonly NewsSourceDefinition[] = [
   {
@@ -73,7 +113,8 @@ export const DEFAULT_NEWS_SOURCES: readonly NewsSourceDefinition[] = [
     entryUrl: "https://mst.gov.vn/",
     fetchStrategy: "html_discovery",
     trustLevel: "official",
-    requiresEditorialReview: true,
+    publicationMode: "inherit",
+    requiresEditorialWorkflow: true,
     attributionMode: "custom",
     attributionText: "Nguồn: Cổng Thông tin điện tử Bộ Khoa học và Công nghệ (mst.gov.vn)",
     enabledByDefault: true,
@@ -85,7 +126,8 @@ export const DEFAULT_NEWS_SOURCES: readonly NewsSourceDefinition[] = [
     entryUrl: "https://chinhphu.vn/",
     fetchStrategy: "html_discovery",
     trustLevel: "official",
-    requiresEditorialReview: true,
+    publicationMode: "inherit",
+    requiresEditorialWorkflow: true,
     attributionMode: "source_name_and_link",
     enabledByDefault: true,
   },
@@ -159,12 +201,46 @@ export function findProbableDuplicate(
   );
 }
 
-export function getNewsWorkflowPolicy() {
+export function resolveNewsPublicationDecision(
+  source: NewsSourceDefinition,
+  settings: NewsWorkflowSettings,
+  checks: AutoPublishChecks,
+): NewsPublicationDecision {
+  const reasons: string[] = [];
+
+  if (!settings.autoPublishEnabled) reasons.push("global-auto-publish-disabled");
+  if (source.publicationMode === "manual") reasons.push("source-forced-manual");
+  if (!source.enabledByDefault) reasons.push("source-disabled");
+  if (TRUST_SCORE[source.trustLevel] < TRUST_SCORE[settings.autoPublishMinTrust]) {
+    reasons.push("trust-level-below-threshold");
+  }
+  if (checks.isDuplicate) reasons.push("duplicate-detected");
+  if (!checks.hasValidTitle) reasons.push("invalid-title");
+  if (!checks.hasValidCanonicalUrl) reasons.push("invalid-canonical-url");
+  if (settings.requireAttribution && !checks.hasAttribution) reasons.push("missing-attribution");
+  if (settings.requireSourcePublishedAt && !checks.hasSourcePublishedAt) {
+    reasons.push("missing-source-published-at");
+  }
+
+  const sourceAllowsAuto = source.publicationMode === "inherit" || source.publicationMode === "auto";
+  const eligible = sourceAllowsAuto && reasons.length === 0;
+
   return {
-    autoPublish: false,
-    editorialReviewRequired: true,
+    mode: eligible ? "auto" : "manual",
+    eligible,
+    reasons,
+  };
+}
+
+export function getNewsWorkflowPolicy(settings = DEFAULT_NEWS_WORKFLOW_SETTINGS) {
+  return {
+    autoPublishAvailable: true,
+    autoPublishEnabled: settings.autoPublishEnabled,
+    autoPublishDefault: false,
+    editorialWorkflowAlwaysUsed: true,
+    autoApprovalRecorded: true,
     publishedIsTerminal: true,
-    sourceAttributionRequired: true,
+    sourceAttributionRequired: settings.requireAttribution,
     statuses: [...NEWS_REVIEW_STATUSES],
   } as const;
 }
