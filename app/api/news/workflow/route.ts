@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   return Response.json(
     {
-      version: "v16-news-workflow-4",
+      version: "v16-news-workflow-5",
       policy: getNewsWorkflowPolicy(),
       defaultSettings: DEFAULT_NEWS_WORKFLOW_SETTINGS,
       backend: {
@@ -22,11 +22,25 @@ export async function GET() {
           "POST /api/admin/news/ingest",
           "GET /api/admin/news/review",
           "POST /api/admin/news/review/action",
+          "GET /api/admin/news/settings",
+          "POST /api/admin/news/settings",
         ],
+      },
+      scheduler: {
+        ready: true,
+        cronUtc: "*/15 * * * *",
+        sourceSpecificCadence: true,
+        minimumSourceIntervalMinutes: 15,
+        idempotentScheduledKey: true,
+        perSourceLease: true,
+        failureIsolation: true,
+        retryBackoff: true,
+        operationalRunsInD1: true,
       },
       cmsControls: {
         globalAutoPublishToggle: true,
         perSourcePublicationMode: ["inherit", "manual", "auto"],
+        perSourceScheduleConfiguration: true,
         defaultMode: "manual",
         guardrails: [
           "source-active",
@@ -37,6 +51,8 @@ export async function GET() {
           "source-attribution",
           "valid-category",
           "publication-claim",
+          "scheduler-idempotency",
+          "scheduler-source-lease",
         ],
       },
       adapters: NEWS_SOURCE_ADAPTERS.map((adapter) => ({
