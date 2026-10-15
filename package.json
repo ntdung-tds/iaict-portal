@@ -18,7 +18,8 @@
     "test:e2e": "playwright test",
     "verify": "npm run verify:migrations && npm run check:vinext && npm run typecheck && npm run test && npm run build",
     "migrate:staging": "node scripts/apply-staging-migrations.mjs",
-    "deploy:staging": "npm run migrate:staging && cf deploy --prebuilt --mode staging",
+    "prepare:cf-output": "node scripts/prepare-cloudflare-build-output.mjs",
+    "deploy:staging": "npm run migrate:staging && npm run prepare:cf-output && vinext-cloudflare deploy --env staging --skip-build",
     "deploy:production": "vinext-cloudflare deploy --env production --name iaict-portal"
   },
   "dependencies": {
