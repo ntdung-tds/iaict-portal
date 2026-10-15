@@ -1,3 +1,4 @@
+import { NEWS_SOURCE_ADAPTERS } from "@/lib/news-source-adapters";
 import {
   DEFAULT_NEWS_SOURCES,
   DEFAULT_NEWS_WORKFLOW_SETTINGS,
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   return Response.json(
     {
-      version: "v16-news-workflow-2",
+      version: "v16-news-workflow-3",
       policy: getNewsWorkflowPolicy(),
       defaultSettings: DEFAULT_NEWS_WORKFLOW_SETTINGS,
       cmsControls: {
@@ -25,6 +26,15 @@ export async function GET() {
           "source-attribution",
         ],
       },
+      adapters: NEWS_SOURCE_ADAPTERS.map((adapter) => ({
+        sourceId: adapter.sourceId,
+        kind: adapter.kind,
+        entryUrl: adapter.entryUrl,
+        allowedHosts: adapter.allowedHosts,
+        maxItems: adapter.maxItems,
+        timeoutMs: adapter.timeoutMs,
+        maxResponseBytes: adapter.maxResponseBytes,
+      })),
       sources: DEFAULT_NEWS_SOURCES.map((source) => ({
         id: source.id,
         name: source.name,
