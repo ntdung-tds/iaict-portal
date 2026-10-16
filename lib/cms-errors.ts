@@ -73,6 +73,10 @@ const fixedMessages: Record<string, string> = {
   MEDIA_TYPE_MISMATCH: "Loại tệp đã chọn không phù hợp với định dạng được suy ra từ URL hoặc tên tệp.",
   MEDIA_SIZE_INVALID: "Dung lượng Media phải là số nguyên không âm tính theo byte.",
 
+  EVENT_SLUG_INVALID: "Đường dẫn sự kiện chỉ dùng chữ thường không dấu, số, dấu gạch nối và tối đa 120 ký tự.",
+  EVENT_JSON_OBJECT_REQUIRED: "SEO phải là đối tượng JSON trong dấu { }. Chưa dùng thì nhập {}.",
+  EVENT_SEO_TEXT_REQUIRED: "title và description trong SEO phải là chuỗi văn bản.",
+  EVENT_DATETIME: "Ngày giờ sự kiện chưa hợp lệ. Vui lòng nhập đầy đủ ngày và giờ theo giờ Việt Nam (UTC+7).",
   EVENT_END_BEFORE_START: "Thời gian kết thúc sự kiện phải sau thời gian bắt đầu.",
   REDIRECT_SOURCE_PATH: "URL nguồn phải là đường dẫn nội bộ bắt đầu bằng dấu /, ví dụ /trang-cu.",
   REDIRECT_LOOP: "URL nguồn và URL đích không được giống nhau.",

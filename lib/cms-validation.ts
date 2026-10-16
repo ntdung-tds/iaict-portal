@@ -1,3 +1,4 @@
+import { sessionDateIso } from "./cms-session-dates";
 import { expertFieldsError } from "./cms-expert-fields";
 import type { D1DatabaseLike } from "./cloudflare-db";
 import type { CmsField, CmsModuleConfig } from "./cms-schema";
@@ -119,8 +120,8 @@ export async function prepareCmsData(
     }
   }
 
-  if (["pages", "products", "solutions", "courses", "projects", "experts"].includes(moduleKey)) {
-    const prefix = moduleKey === "pages" ? "PAGE" : moduleKey === "products" ? "PRODUCT" : moduleKey === "solutions" ? "SOLUTION" : moduleKey === "projects" ? "PROJECT" : moduleKey === "experts" ? "EXPERT" : "COURSE";
+  if (["pages", "products", "solutions", "courses", "projects", "experts", "events"].includes(moduleKey)) {
+    const prefix = moduleKey === "pages" ? "PAGE" : moduleKey === "products" ? "PRODUCT" : moduleKey === "solutions" ? "SOLUTION" : moduleKey === "projects" ? "PROJECT" : moduleKey === "experts" ? "EXPERT" : moduleKey === "events" ? "EVENT" : "COURSE";
     const slug = String(effective(data, current, "slug") ?? "").trim();
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120) invalid(`${prefix}_SLUG_INVALID`);
     for (const key of moduleKey === "pages" ? ["layout_json", "seo_json"] : ["seo_json"]) {
@@ -224,9 +225,14 @@ export async function prepareCmsData(
   }
 
   if (moduleKey === "events") {
-    const start = effective(data, current, "start_at");
-    const end = effective(data, current, "end_at");
-    if (!empty(start) && !empty(end) && new Date(String(end)).getTime() < new Date(String(start)).getTime()) invalid("EVENT_END_BEFORE_START");
+    try {
+      for (const key of ["start_at", "end_at"]) data[key] = sessionDateIso(effective(data, current, key));
+    } catch { invalid("EVENT_DATETIME"); }
+    const start = data.start_at;
+    const end = data.end_at;
+    if (start && end && String(end) < String(start)) invalid("EVENT_END_BEFORE_START");
+    const registration = effective(data, current, "registration_url");
+    if (!empty(registration)) data.registration_url = normalizedUrl("registration_url", registration, true);
   }
 
   if (moduleKey === "redirects") {
