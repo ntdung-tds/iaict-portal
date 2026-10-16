@@ -20,7 +20,7 @@ test('Filters without losing unsaved status or reference labels, then saves sele
   await mock(page);const status=page.getByLabel('Trạng thái xử lý',{exact:true});
   await expect(status).toHaveValue('submitted');await status.selectOption('confirmed');
   await page.route('**/api/admin/cms/collection?*',route=>route.fulfill({json:{actor:{roles:['admin']},items:[],total:0,references:{courses:[],sessions:[]}}}));
-  await page.getByLabel('Trạng thái',{exact:true}).selectOption('cancelled');
+  await page.getByRole('combobox',{name:'Lọc theo trạng thái',exact:true}).selectOption('cancelled');
   await expect(page.getByText('Không có dữ liệu phù hợp.',{exact:true})).toBeVisible();
   await expect(status).toHaveValue('confirmed');
   await expect(page.getByLabel('Khóa học',{exact:true}).locator('option:checked')).toHaveText('AI cơ bản');
