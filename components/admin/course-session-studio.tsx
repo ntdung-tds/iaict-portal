@@ -1,33 +1,138 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { CmsRoleCode } from "@/lib/cms-roles";
+import { sessionDateInput, sessionDateIso, sessionDateLabel } from "@/lib/cms-session-dates";
 import styles from "./course-session-studio.module.css";
 
-type Course={id:string;title:string;code:string|null;status:string};
-type Session={id:string;course_id:string;course_title:string;course_code:string|null;status:string;start_at:string|null;end_at:string|null;registration_open_at:string|null;registration_close_at:string|null;location:string|null;online_url_private:string|null;capacity:number|null;notes_public:string|null;updated_at:string};
-const empty={course_id:"",status:"draft",start_at:"",end_at:"",registration_open_at:"",registration_close_at:"",location:"",online_url_private:"",capacity:"",notes_public:""};
-function inputDate(value:unknown){if(!value)return"";const date=new Date(String(value));return Number.isNaN(date.getTime())?String(value).slice(0,16):date.toISOString().slice(0,16);}
-function validHttps(value:unknown){const text=String(value??"").trim();if(!text)return true;try{return new URL(text).protocol==="https:";}catch{return false;}}
-function validate(draft:Record<string,unknown>,courses:Course[]){if(!String(draft.course_id??"").trim()||!courses.some(c=>c.id===draft.course_id))return"Vui lòng chọn khóa học hợp lệ.";const capacity=String(draft.capacity??"").trim();if(capacity&&(!Number.isSafeInteger(Number(capacity))||Number(capacity)<0))return"Sức chứa phải là số nguyên không âm.";const start=String(draft.start_at??"").trim();const end=String(draft.end_at??"").trim();if(start&&end&&new Date(end).getTime()<new Date(start).getTime())return"Thời gian kết thúc lớp phải sau thời gian bắt đầu.";const open=String(draft.registration_open_at??"").trim();const close=String(draft.registration_close_at??"").trim();if(open&&close&&new Date(close).getTime()<new Date(open).getTime())return"Thời gian đóng đăng ký phải sau thời gian mở đăng ký.";if(!validHttps(draft.online_url_private))return"URL học trực tuyến phải là URL HTTPS hợp lệ.";return null;}
-
-export function CourseSessionStudio(){
-  const[sessions,setSessions]=useState<Session[]>([]);const[courses,setCourses]=useState<Course[]>([]);const[roles,setRoles]=useState<CmsRoleCode[]>([]);const[selectedId,setSelectedId]=useState<string|null>(null);const[draft,setDraft]=useState<Record<string,unknown>>(empty);const[busy,setBusy]=useState(false);const[error,setError]=useState<string|null>(null);const[message,setMessage]=useState<string|null>(null);const selected=useMemo(()=>sessions.find(s=>s.id===selectedId)??null,[sessions,selectedId]);const canEdit=roles.includes("admin")||roles.includes("editor");const canDelete=roles.includes("admin");const validation=validate(draft,courses);
-  async function load(){const response=await fetch("/api/admin/cms/course-sessions",{cache:"no-store"});const payload=await response.json() as {sessions:Session[];courses:Course[];actor?:{roles?:CmsRoleCode[]};error?:string};if(!response.ok)throw new Error(payload.error||"Không thể tải lịch lớp.");setRoles(payload.actor?.roles??[]);setSessions(payload.sessions);setCourses(payload.courses);setSelectedId(current=>{const item=current?payload.sessions.find(s=>s.id===current):payload.sessions[0];setDraft(item?{...item,start_at:inputDate(item.start_at),end_at:inputDate(item.end_at),registration_open_at:inputDate(item.registration_open_at),registration_close_at:inputDate(item.registration_close_at),capacity:item.capacity??""}:{...empty,course_id:payload.courses[0]?.id??""});return item?.id??null;});}
-  useEffect(()=>{void load().catch(c=>setError(c instanceof Error?c.message:String(c)));},[]);
-  function select(item:Session){setSelectedId(item.id);setDraft({...item,start_at:inputDate(item.start_at),end_at:inputDate(item.end_at),registration_open_at:inputDate(item.registration_open_at),registration_close_at:inputDate(item.registration_close_at),capacity:item.capacity??""});setError(null);setMessage(null);}
-  function startNew(){if(!canEdit)return;setSelectedId(null);setDraft({...empty,course_id:courses[0]?.id??""});setError(null);setMessage(null);}
-  async function save(){if(!canEdit)return;if(validation){setError(validation);return;}setBusy(true);setError(null);setMessage(null);try{const response=await fetch("/api/admin/cms/course-sessions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:selectedId,data:draft})});const payload=await response.json() as {id?:string;error?:string};if(!response.ok)throw new Error(payload.error||"Không thể lưu lịch lớp.");setSelectedId(payload.id??selectedId);setMessage(selectedId?"Đã lưu lịch lớp.":"Đã tạo lịch lớp.");await load();}catch(c){setError(c instanceof Error?c.message:String(c));}finally{setBusy(false);}}
-  async function remove(){if(!canDelete||!selectedId||!window.confirm("Xóa lịch lớp này? Các đăng ký đã liên kết sẽ được giữ lại nhưng không còn gắn với phiên này."))return;setBusy(true);setError(null);try{const response=await fetch("/api/admin/cms/course-sessions",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:selectedId})});const payload=await response.json() as {error?:string};if(!response.ok)throw new Error(payload.error||"Không thể xóa lịch lớp.");setSelectedId(null);setMessage("Đã xóa lịch lớp.");await load();}catch(c){setError(c instanceof Error?c.message:String(c));}finally{setBusy(false);}}
-  const set=(key:string,value:unknown)=>{if(canEdit){setDraft(current=>({...current,[key]:value}));setMessage(null);}};const disabled=busy||!canEdit;
-  return <main id="main-content" className={styles.page}><header className={styles.header}><div><span>IAICT CMS / ACADEMY</span><h1>Lịch lớp & Phiên đào tạo</h1><p>Quản lý lịch mở lớp, thời gian đăng ký, địa điểm, sức chứa và trạng thái từng phiên đào tạo.</p></div>{canEdit?<button onClick={startNew} disabled={courses.length===0}>+ Lịch mới</button>:null}</header>{courses.length===0?<div className={styles.error}>Chưa có khóa học khả dụng. Hãy tạo khóa học trước khi tạo lịch lớp.</div>:null}{!canEdit&&roles.length?<div className={styles.success}>Chế độ chỉ đọc theo vai trò hiện tại.</div>:null}{(error||message)?<div className={error?styles.error:styles.success}>{error??message}</div>:null}<section className={styles.workspace}><aside className={styles.list}>{sessions.map(item=><button key={item.id} className={item.id===selectedId?styles.itemActive:styles.item} onClick={()=>select(item)}><small>{item.status} · {item.course_code||"KHÓA HỌC"}</small><strong>{item.course_title}</strong><span>{item.start_at?new Date(item.start_at).toLocaleString("vi-VN"):"Chưa chốt thời gian"}{item.location?` · ${item.location}`:""}</span></button>)}{sessions.length===0?<div className={styles.empty}>Chưa có lịch lớp.</div>:null}</aside><section className={styles.editor}><div className={styles.grid}>
-    <label className={styles.wide}><span>Khóa học *</span><select disabled={disabled} value={String(draft.course_id??"")} onChange={e=>set("course_id",e.target.value)}><option value="">Chọn khóa học</option>{courses.map(c=><option key={c.id} value={c.id}>{c.code?`${c.code} · `:""}{c.title}</option>)}</select><small>Chỉ hiển thị khóa học chưa được lưu trữ.</small></label>
-    <label><span>Trạng thái</span><select disabled={disabled} value={String(draft.status??"draft")} onChange={e=>set("status",e.target.value)}><option value="draft">Bản nháp</option><option value="open">Mở đăng ký</option><option value="closed">Đóng đăng ký</option><option value="completed">Đã hoàn thành</option><option value="cancelled">Đã hủy</option></select></label>
-    <label><span>Sức chứa</span><input disabled={disabled} type="number" min="0" step="1" value={String(draft.capacity??"")} onChange={e=>set("capacity",e.target.value)}/><small>Số người tối đa; để trống nếu chưa giới hạn.</small></label>
-    <label><span>Bắt đầu</span><input disabled={disabled} type="datetime-local" value={String(draft.start_at??"")} onChange={e=>set("start_at",e.target.value)}/></label><label><span>Kết thúc</span><input disabled={disabled} type="datetime-local" value={String(draft.end_at??"")} onChange={e=>set("end_at",e.target.value)}/></label>
-    <label><span>Mở đăng ký</span><input disabled={disabled} type="datetime-local" value={String(draft.registration_open_at??"")} onChange={e=>set("registration_open_at",e.target.value)}/></label><label><span>Đóng đăng ký</span><input disabled={disabled} type="datetime-local" value={String(draft.registration_close_at??"")} onChange={e=>set("registration_close_at",e.target.value)}/></label>
-    <label><span>Địa điểm</span><input disabled={disabled} value={String(draft.location??"")} onChange={e=>set("location",e.target.value)} placeholder="Ví dụ: Hà Nội hoặc Trực tuyến"/></label>
-    <label><span>URL học trực tuyến (riêng tư)</span><input disabled={disabled} type="url" value={String(draft.online_url_private??"")} onChange={e=>set("online_url_private",e.target.value)} placeholder="https://..."/><small>Chỉ lưu nội bộ trong CMS; không hiển thị công khai. URL phải dùng HTTPS.</small></label>
-    <label className={styles.wide}><span>Ghi chú công khai</span><textarea disabled={disabled} rows={5} value={String(draft.notes_public??"")} onChange={e=>set("notes_public",e.target.value)}/><small>Nội dung có thể dùng để thông báo cho học viên.</small></label>
-  </div>{canEdit?<div className={styles.actions}>{validation?<span>{validation}</span>:null}<button disabled={busy||Boolean(validation)} onClick={()=>void save()}>{busy?"Đang lưu…":selectedId?"Lưu thay đổi":"Tạo lịch lớp"}</button>{selected&&canDelete?<button className={styles.delete} disabled={busy} onClick={()=>void remove()}>Xóa</button>:null}</div>:null}</section></section></main>;
+type Course = { id: string; title: string; code: string | null; status: string };
+type Session = Record<string, unknown> & { id: string; course_id: string; course_title: string; course_code: string | null; status: string };
+type Draft = Record<string, string>;
+const empty: Draft = { course_id: "", status: "draft", start_at: "", end_at: "", registration_open_at: "", registration_close_at: "", location: "", online_url_private: "", capacity: "", notes_public: "" };
+const statuses: Record<string, string> = { draft: "Bản nháp", open: "Mở đăng ký", closed: "Đóng đăng ký", completed: "Đã hoàn thành", cancelled: "Đã hủy" };
+const dates = ["start_at", "end_at", "registration_open_at", "registration_close_at"];
+const fields = [
+  { key: "status", label: "Trạng thái", help: "Chọn giai đoạn của lớp. Trạng thái Mở đăng ký chưa tự tạo biểu mẫu đăng ký trên website." },
+  { key: "capacity", label: "Sức chứa", type: "number", help: "Số học viên dự kiến tối đa; để trống nếu chưa xác định. 0 nghĩa là không có chỗ. Trường này chưa tự chặn đăng ký vượt số lượng." },
+  { key: "start_at", label: "Bắt đầu", type: "datetime-local", help: "Ngày, giờ khai giảng theo giờ Việt Nam (UTC+7). Có thể để trống khi chưa chốt lịch." },
+  { key: "end_at", label: "Kết thúc", type: "datetime-local", help: "Ngày, giờ kết thúc theo giờ Việt Nam (UTC+7), không trước thời điểm bắt đầu." },
+  { key: "registration_open_at", label: "Mở đăng ký", type: "datetime-local", help: "Mốc bắt đầu tiếp nhận dự kiến, theo giờ Việt Nam (UTC+7). Không tự chuyển trạng thái lớp." },
+  { key: "registration_close_at", label: "Đóng đăng ký", type: "datetime-local", help: "Mốc kết thúc tiếp nhận dự kiến, theo giờ Việt Nam (UTC+7), không trước mốc mở đăng ký." },
+  { key: "location", label: "Địa điểm", placeholder: "Ví dụ: Hội trường tầng 2, Hà Nội hoặc Trực tuyến", help: "Ghi tên phòng và địa chỉ để học viên dễ tìm; nếu học online, ghi Trực tuyến." },
+  { key: "online_url_private", label: "URL học trực tuyến (riêng tư)", type: "url", placeholder: "https://meet.google.com/abc-defg-hij", help: "Liên kết HTTPS đến phòng học. Chỉ lưu nội bộ trong CMS, không hiển thị công khai; có thể để trống." },
+  { key: "notes_public", label: "Ghi chú công khai", type: "textarea", placeholder: "Ví dụ: Có mặt trước 15 phút, mang theo máy tính cá nhân.", help: "Nhập văn bản thường dành cho học viên. Không ghi mật khẩu phòng học hoặc thông tin cá nhân tại đây." },
+];
+function toDraft(item: Session): Draft {
+  return Object.fromEntries(Object.keys(empty).map(key => [key, dates.includes(key) ? sessionDateInput(item[key]) : String(item[key] ?? empty[key])]));
+}
+function validate(draft: Draft, courses: Course[]) {
+  if (!courses.some(course => course.id === draft.course_id)) return "Vui lòng chọn khóa học chưa được lưu trữ.";
+  if (!statuses[draft.status]) return "Trạng thái đã chọn không hợp lệ.";
+  if (draft.capacity.trim() && (!Number.isSafeInteger(Number(draft.capacity)) || Number(draft.capacity) < 0)) return "Sức chứa phải là số nguyên không âm.";
+  try {
+    const [start, end, open, close] = dates.map(key => sessionDateIso(draft[key]));
+    if (start && end && end < start) return "Thời gian kết thúc lớp không được trước thời gian bắt đầu.";
+    if (open && close && close < open) return "Thời gian đóng đăng ký không được trước thời gian mở đăng ký.";
+  } catch { return "Ngày giờ chưa hợp lệ. Vui lòng nhập ngày và giờ đầy đủ theo giờ Việt Nam (UTC+7)."; }
+  if (draft.online_url_private.trim()) {
+    try { if (new URL(draft.online_url_private.trim()).protocol !== "https:") return "URL học trực tuyến phải dùng HTTPS."; }
+    catch { return "URL học trực tuyến phải là URL HTTPS hợp lệ."; }
+  }
+  return null;
+}
+export function CourseSessionStudio() {
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [roles, setRoles] = useState<CmsRoleCode[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Draft>(empty);
+  const [baseline, setBaseline] = useState<Draft>(empty);
+  const [loading, setLoading] = useState(true);
+  const [reload, setReload] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const canEdit = roles.includes("admin") || roles.includes("editor");
+  const canDelete = roles.includes("admin");
+  const dirty = canEdit && JSON.stringify(draft) !== JSON.stringify(baseline);
+  const validation = validate(draft, courses);
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true); setError(null);
+    void (async () => {
+      try {
+        const response = await fetch("/api/admin/cms/course-sessions", { cache: "no-store", signal: controller.signal });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Không thể tải lịch lớp.");
+        if (controller.signal.aborted) return;
+        const initial = payload.sessions[0] ? toDraft(payload.sessions[0]) : { ...empty, course_id: payload.courses[0]?.id ?? "" };
+        setRoles(payload.actor?.roles ?? []); setSessions(payload.sessions); setCourses(payload.courses);
+        setSelectedId(payload.sessions[0]?.id ?? null); setDraft(initial); setBaseline(initial);
+      } catch (cause) { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : String(cause)); }
+      finally { if (!controller.signal.aborted) setLoading(false); }
+    })();
+    return () => controller.abort();
+  }, [reload]);
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+  function switchTo(item: Session | null) {
+    if (busy || (dirty && !window.confirm("Bạn có thay đổi chưa lưu. Bỏ thay đổi để chuyển lịch lớp?"))) return;
+    const next = item ? toDraft(item) : { ...empty, course_id: courses[0]?.id ?? "" };
+    setSelectedId(item?.id ?? null); setDraft(next); setBaseline(next); setError(null); setMessage(null);
+  }
+  async function save() {
+    if (!canEdit || busy) return;
+    if (validation) { setError(validation); return; }
+    setBusy(true); setError(null); setMessage(null);
+    try {
+      const data = { ...draft, ...Object.fromEntries(dates.map(key => [key, sessionDateIso(draft[key])])) };
+      const response = await fetch("/api/admin/cms/course-sessions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: selectedId, data }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể lưu lịch lớp.");
+      const record: Session = payload.record;
+      if (!record?.id) throw new Error("Chưa nhận được lịch lớp đã lưu. Vui lòng tải lại trang để kiểm tra.");
+      const next = toDraft(record);
+      setSessions(current => [record, ...current.filter(item => item.id !== record.id)]);
+      setSelectedId(record.id); setDraft(next); setBaseline(next);
+      setMessage(selectedId ? "Đã lưu lịch lớp." : "Đã tạo lịch lớp.");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
+    finally { setBusy(false); }
+  }
+  async function remove() {
+    if (!canDelete || busy || !selectedId || !window.confirm("Xóa lịch lớp này? Các đăng ký đã liên kết sẽ được giữ lại nhưng không còn gắn với lịch này.")) return;
+    setBusy(true); setError(null); setMessage(null);
+    try {
+      const response = await fetch("/api/admin/cms/course-sessions", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: selectedId }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể xóa lịch lớp.");
+      setSessions(current => current.filter(item => item.id !== selectedId));
+      const next = { ...empty, course_id: courses[0]?.id ?? "" };
+      setSelectedId(null); setDraft(next); setBaseline(next); setMessage("Đã xóa lịch lớp.");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
+    finally { setBusy(false); }
+  }
+  const disabled = busy || loading || !canEdit;
+  const set = (key: string, value: string) => { if (!disabled) { setDraft(current => ({ ...current, [key]: value })); setMessage(null); } };
+  return <main id="main-content" className={styles.page}>
+    <header className={styles.header}><div><span>IAICT CMS / ĐÀO TẠO</span><h1>Lịch lớp & Phiên đào tạo</h1><p>Quản lý từng đợt mở lớp. Tất cả ngày giờ hiển thị và nhập theo giờ Việt Nam (UTC+7).</p><p>Thông tin chương trình được quản lý riêng tại <a href="/admin/content/courses">Khóa học</a>.</p></div>{canEdit && <button onClick={() => switchTo(null)} disabled={disabled || courses.length === 0}>+ Lịch mới</button>}</header>
+    {loading && <div className={styles.success} role="status">Đang tải lịch lớp…</div>}
+    {!loading && !error && courses.length === 0 && <div className={styles.success}>Chưa có khóa học khả dụng. Hãy tạo khóa học trước khi tạo lịch lớp.</div>}
+    {!canEdit && roles.length > 0 && <div className={styles.success}>Chế độ chỉ đọc theo vai trò hiện tại.</div>}
+    {error && <div className={styles.error} role="alert">{error}{roles.length === 0 && <button onClick={() => setReload(value => value + 1)}>Thử lại</button>}</div>}
+    {message && <div className={styles.success} role="status">{message}</div>}
+    <section className={styles.workspace} aria-busy={loading || busy}>
+      <aside className={styles.list} aria-label="Danh sách lịch lớp">{sessions.map(item => <button key={item.id} disabled={busy} aria-pressed={item.id === selectedId} className={item.id === selectedId ? styles.itemActive : styles.item} onClick={() => switchTo(item)}><small>{statuses[item.status] ?? item.status} · {item.course_code || "KHÓA HỌC"}</small><strong>{item.course_title}</strong><span>{sessionDateLabel(item.start_at)}{item.location ? ` · ${item.location}` : ""}</span></button>)}{!loading && sessions.length === 0 && <div className={styles.empty}>Chưa có lịch lớp.</div>}</aside>
+      <section className={styles.editor}><div className={styles.grid}>
+        <label className={styles.wide} htmlFor="session-course_id"><span>Khóa học *</span><select id="session-course_id" aria-label="Khóa học" aria-describedby="help-course_id" required disabled={disabled} value={draft.course_id} onChange={event => set("course_id", event.target.value)}><option value="">Chọn khóa học</option>{draft.course_id && !courses.some(course => course.id === draft.course_id) && <option value={draft.course_id}>Khóa học đã lưu trữ — chọn khóa khác để lưu</option>}{courses.map(course => <option key={course.id} value={course.id}>{course.code ? `${course.code} · ` : ""}{course.title}</option>)}</select><small id="help-course_id">Bắt buộc. Chọn chương trình chưa được lưu trữ; mỗi chương trình có thể có nhiều lịch lớp.</small></label>
+        {fields.map(field => {
+          const props = { id: `session-${field.key}`, "aria-label": field.label, "aria-describedby": `help-${field.key}`, disabled, value: draft[field.key], onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => set(field.key, event.target.value) };
+          return <label key={field.key} htmlFor={props.id} className={field.type === "textarea" ? styles.wide : undefined}><span>{field.label}</span>{field.key === "status" ? <select {...props}>{Object.entries(statuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : field.type === "textarea" ? <textarea {...props} rows={5} placeholder={field.placeholder}/> : <input {...props} type={field.type ?? "text"} min={field.type === "number" ? 0 : undefined} step={field.type === "number" ? 1 : undefined} placeholder={field.placeholder}/>}<small id={`help-${field.key}`}>{field.help}</small></label>;
+        })}
+      </div>{canEdit && <div className={styles.actions}>{dirty && <span> Có thay đổi chưa lưu.</span>}{validation && <span>{validation}</span>}<button disabled={disabled || Boolean(validation)} onClick={() => void save()}>{busy ? "Đang xử lý…" : selectedId ? "Lưu thay đổi" : "Tạo lịch lớp"}</button>{selectedId && canDelete && <button className={styles.delete} disabled={disabled} onClick={() => void remove()}>Xóa</button>}</div>}</section>
+    </section>
+  </main>;
 }

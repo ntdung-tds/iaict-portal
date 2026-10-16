@@ -15,4 +15,4 @@ jobs:
           node-version: 22
       - run: npm ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test e2e/article-studio.spec.ts e2e/cms-json-hints.spec.ts e2e/cms-pages.spec.ts e2e/cms-products.spec.ts e2e/cms-solutions.spec.ts e2e/cms-courses.spec.ts
+      - run: npx playwright test e2e/article-studio.spec.ts e2e/cms-json-hints.spec.ts e2e/cms-pages.spec.ts e2e/cms-products.spec.ts e2e/cms-solutions.spec.ts e2e/cms-courses.spec.ts e2e/cms-sessions.spec.ts

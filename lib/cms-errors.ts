@@ -76,6 +76,7 @@ const fixedMessages: Record<string, string> = {
   HERO_MEDIA_NOT_FOUND: "Ảnh đại diện đã chọn không còn tồn tại.",
   HERO_MEDIA_IMAGE_REQUIRED: "Ảnh đại diện bài viết phải là Media loại Ảnh.",
 
+  DATETIME: "Ngày giờ chưa hợp lệ. Vui lòng nhập ngày và giờ đầy đủ theo giờ Việt Nam (UTC+7).",
   COURSE_REQUIRED: "Vui lòng chọn khóa học cho phiên đào tạo.",
   COURSE_NOT_FOUND: "Khóa học đã chọn không còn tồn tại.",
   CAPACITY: "Sức chứa phải là số nguyên không âm.",

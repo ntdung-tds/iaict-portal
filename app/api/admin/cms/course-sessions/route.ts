@@ -1,3 +1,4 @@
+import { sessionDateIso } from "@/lib/cms-session-dates";
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
 import { cmsErrorCode, translateCmsError } from "@/lib/cms-errors";
 import { CMS_ADMIN_ROLES, CMS_EDIT_ROLES, CMS_READ_ROLES } from "@/lib/cms-roles";
@@ -13,13 +14,6 @@ function errorResponse(error:unknown){
   const message=error instanceof Error?error.message:"Unknown course session error";
   const validation=message.startsWith("INVALID_SESSION_");
   return Response.json({error:translateCmsError(message),code:cmsErrorCode(message)},{status:validation?400:500});
-}
-function nullableDate(value:unknown){
-  const text=String(value??"").trim();
-  if(!text)return null;
-  const time=new Date(text).getTime();
-  if(Number.isNaN(time))invalid("DATETIME");
-  return text;
 }
 function validateHttps(value:unknown){
   const text=String(value??"").trim();
@@ -53,10 +47,10 @@ export async function POST(request:Request){
     const course=await db.prepare(`SELECT id FROM courses WHERE id=? AND status<>'archived'`).bind(courseId).first<{id:string}>();
     if(!course)invalid("COURSE_NOT_FOUND");
 
-    const startAt=nullableDate(data.start_at);
-    const endAt=nullableDate(data.end_at);
-    const registrationOpenAt=nullableDate(data.registration_open_at);
-    const registrationCloseAt=nullableDate(data.registration_close_at);
+    const startAt=sessionDateIso(data.start_at);
+    const endAt=sessionDateIso(data.end_at);
+    const registrationOpenAt=sessionDateIso(data.registration_open_at);
+    const registrationCloseAt=sessionDateIso(data.registration_close_at);
     if(startAt&&endAt&&new Date(endAt).getTime()<new Date(startAt).getTime())invalid("END_BEFORE_START");
     if(registrationOpenAt&&registrationCloseAt&&new Date(registrationCloseAt).getTime()<new Date(registrationOpenAt).getTime())invalid("REGISTRATION_CLOSE_BEFORE_OPEN");
 
@@ -75,7 +69,8 @@ export async function POST(request:Request){
       await db.prepare(`INSERT INTO course_sessions(id,course_id,status,start_at,end_at,registration_open_at,registration_close_at,location,online_url_private,capacity,notes_public,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(id,...values,timestamp,timestamp).run();
     }
     await audit(db,actor,body.id?"cms.course_session.update":"cms.course_session.create",id);
-    return Response.json({ok:true,id});
+    const record=await db.prepare(`SELECT s.*,c.title AS course_title,c.code AS course_code FROM course_sessions s JOIN courses c ON c.id=s.course_id WHERE s.id=?`).bind(id).first<Row>();
+    return Response.json({ok:true,id,record});
   }catch(error){return errorResponse(error);}
 }
 
