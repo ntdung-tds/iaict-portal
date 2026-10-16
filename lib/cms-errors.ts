@@ -36,6 +36,11 @@ const fixedMessages: Record<string, string> = {
   USER_EMAIL_IN_USE: "Email này đã được gán cho một người dùng CMS khác.",
   LAST_ACTIVE_ADMIN: "Không thể thực hiện vì hệ thống phải luôn còn ít nhất một Quản trị viên đang hoạt động.",
 
+  COURSE_SLUG_INVALID: "Đường dẫn khóa học chỉ dùng chữ thường không dấu, số, dấu gạch nối và tối đa 120 ký tự. Có thể để trống để tạo từ tên khóa học.",
+  COURSE_SLUG_RESERVED: "Đường dẫn co-quan-nha-nuoc đã dành cho trang chương trình cơ quan nhà nước. Hãy chọn đường dẫn khác.",
+  COURSE_JSON_OBJECT_REQUIRED: "SEO phải là đối tượng JSON trong dấu { }. Nếu chưa dùng, nhập {}.",
+  COURSE_SEO_TEXT_REQUIRED: "title và description trong SEO phải là chuỗi văn bản đặt trong dấu ngoặc kép.",
+  COURSE_LIST_TEXT_REQUIRED: "Các danh sách trong khóa học phải gồm chuỗi văn bản đặt trong dấu [ ]. Nếu chưa dùng, nhập [].",
   SOLUTION_SLUG_INVALID: "Đường dẫn giải pháp chỉ dùng chữ thường không dấu, số, dấu gạch nối và tối đa 120 ký tự. Có thể để trống để tạo từ tên giải pháp.",
   SOLUTION_JSON_OBJECT_REQUIRED: "SEO phải là đối tượng JSON trong dấu { }. Nếu chưa dùng, nhập {}.",
   SOLUTION_SEO_TEXT_REQUIRED: "title và description trong SEO phải là chuỗi văn bản đặt trong dấu ngoặc kép.",
@@ -159,6 +164,7 @@ export function translateCmsError(raw: string) {
   if (code.startsWith("USER_ROLE_NOT_SEEDED_")) {
     return "Danh mục vai trò trong cơ sở dữ liệu chưa đồng bộ. Vui lòng liên hệ Quản trị viên hệ thống.";
   }
+  if (/UNIQUE constraint failed: courses\.code/i.test(message)) return "Mã khóa học này đã được sử dụng. Vui lòng chọn mã khác hoặc để trống.";
   if (/UNIQUE constraint failed/i.test(message)) {
     return "Dữ liệu này đã tồn tại. Vui lòng kiểm tra lại các trường không được phép trùng lặp.";
   }

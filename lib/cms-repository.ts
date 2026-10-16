@@ -229,6 +229,8 @@ export async function saveCmsRecord(
     normalized[key] = normalizeFieldValue(field, rawValue);
   }
 
+  if (moduleKey === "courses" && normalized.code === "") normalized.code = null;
+
   if (config.slugColumn && !String(normalized[config.slugColumn] ?? "").trim()) {
     const source = normalized[config.titleColumn] ?? data[config.titleColumn];
     if (source) normalized[config.slugColumn] = slugify(String(source));

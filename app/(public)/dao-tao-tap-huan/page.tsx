@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { PublishedCmsCatalog } from "@/components/published-cms-catalog";
 import { CategoryLanding } from "@/components/category-landing";
 
 const trainingDimensions = [
@@ -23,6 +24,7 @@ export default function TrainingPage() {
       intro="IAICT thiết kế chương trình từ vị trí việc làm, nhiệm vụ và năng lực đầu ra; nội dung được chia thành module để có thể triển khai linh hoạt cho từng nhóm học viên và từng cấp quản lý."
       items={trainingDimensions}
     >
+      <PublishedCmsCatalog kind="course" />
       <section className="section section-tint">
         <div className="shell government-banner government-banner-light">
           <div>

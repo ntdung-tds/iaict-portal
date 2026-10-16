@@ -60,3 +60,15 @@ describe("Solution module validation",()=>{
   it("rejects non-text SEO title",async()=>{await expect(prepareCmsData(mockDb(),"solutions",moduleConfig("solutions"),null,{...validSolution,seo_json:'{"title":42}'})).rejects.toThrow("INVALID_CMS_SOLUTION_SEO_TEXT_REQUIRED");});
   it("validates a partial update against the saved solution",async()=>{const data=await prepareCmsData(mockDb({current:{...validSolution,id:"s1"}}),"solutions",moduleConfig("solutions"),"s1",{problem:"Khó tổng hợp dữ liệu hiện trường."});expect(data.problem).toBe("Khó tổng hợp dữ liệu hiện trường.");});
 });
+
+const validCourse={title:"Ứng dụng AI cấp xã",slug:"ung-dung-ai-cap-xa",summary:"Thực hành theo nhiệm vụ công việc.",status:"draft",seo_json:"{}"};
+describe("Course module validation",()=>{
+  it.each(["audiences_json","topics_json","objectives_json","modules_json","delivery_modes_json","materials_json"])("requires %s to be a text list",async key=>{
+    await expect(prepareCmsData(mockDb(),"courses",moduleConfig("courses"),null,{...validCourse,[key]:'[{"name":"Không phải chuỗi"}]'})).rejects.toThrow("INVALID_CMS_COURSE_LIST_TEXT_REQUIRED");
+  });
+  it("rejects a reserved course URL",async()=>{await expect(prepareCmsData(mockDb(),"courses",moduleConfig("courses"),null,{...validCourse,slug:"co-quan-nha-nuoc"})).rejects.toThrow("INVALID_CMS_COURSE_SLUG_RESERVED");});
+  it("detects a reserved auto-generated slug",async()=>{await expect(prepareCmsData(mockDb(),"courses",moduleConfig("courses"),null,{...validCourse,title:"Cơ quan nhà nước",slug:""})).rejects.toThrow("INVALID_CMS_COURSE_SLUG_RESERVED");});
+  it("requires object SEO",async()=>{await expect(prepareCmsData(mockDb(),"courses",moduleConfig("courses"),null,{...validCourse,seo_json:"[]"})).rejects.toThrow("INVALID_CMS_COURSE_JSON_OBJECT_REQUIRED");});
+  it("rejects non-text SEO description",async()=>{await expect(prepareCmsData(mockDb(),"courses",moduleConfig("courses"),null,{...validCourse,seo_json:'{"description":42}'})).rejects.toThrow("INVALID_CMS_COURSE_SEO_TEXT_REQUIRED");});
+  it("rejects an invalid course slug",async()=>{await expect(prepareCmsData(mockDb(),"courses",moduleConfig("courses"),null,{...validCourse,slug:"a/b"})).rejects.toThrow("INVALID_CMS_COURSE_SLUG_INVALID");});
+});

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import styles from './published-product-catalog.module.css';
 
-type CatalogKind = 'product' | 'solution';
+type CatalogKind = 'product' | 'solution' | 'course';
 type CatalogItem = { id: string; title: string; slug: string; summary: string | null };
 type CatalogState = { kind: CatalogKind; status: 'loading' | 'ready' | 'error'; items: CatalogItem[] };
 const catalogs = {
@@ -17,6 +17,11 @@ const catalogs = {
     id: 'published-solutions', path: '/giai-phap-dich-vu', endpoint: '/api/public/solutions',
     title: 'Giải pháp & dịch vụ đã công bố', name: 'giải pháp',
     description: 'Tìm hiểu bài toán, phạm vi triển khai, quy trình và các sản phẩm bàn giao.',
+  },
+  course: {
+    id: 'published-courses', path: '/dao-tao-tap-huan', endpoint: '/api/public/courses',
+    title: 'Khóa học & chương trình đã công bố', name: 'khóa học',
+    description: 'Tìm hiểu đối tượng, mục tiêu, chương trình học và hình thức tổ chức phù hợp.',
   },
 } as const;
 const previewCmsUrl = process.env.NEXT_PUBLIC_CMS_URL;
