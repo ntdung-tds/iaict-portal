@@ -4,10 +4,15 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import styles from './published-product-catalog.module.css';
 
-type CatalogKind = 'product' | 'solution' | 'course';
+type CatalogKind = 'product' | 'solution' | 'course' | 'project';
 type CatalogItem = { id: string; title: string; slug: string; summary: string | null };
 type CatalogState = { kind: CatalogKind; status: 'loading' | 'ready' | 'error'; items: CatalogItem[] };
 const catalogs = {
+  project: {
+    id: 'published-projects', path: '/du-an', endpoint: '/api/public/projects',
+    title: 'Dự án đã công bố', name: 'dự án',
+    description: 'Tìm hiểu bối cảnh, giải pháp, kết quả triển khai và khả năng nhân rộng của từng dự án.',
+  },
   product: {
     id: 'published-products', path: '/san-pham-nen-tang', endpoint: '/api/public/products',
     title: 'Sản phẩm & nền tảng đã công bố', name: 'sản phẩm',

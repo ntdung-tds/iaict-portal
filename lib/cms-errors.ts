@@ -36,6 +36,11 @@ const fixedMessages: Record<string, string> = {
   USER_EMAIL_IN_USE: "Email này đã được gán cho một người dùng CMS khác.",
   LAST_ACTIVE_ADMIN: "Không thể thực hiện vì hệ thống phải luôn còn ít nhất một Quản trị viên đang hoạt động.",
 
+  PROJECT_SLUG_INVALID: "Đường dẫn dự án chỉ dùng chữ thường không dấu, số, dấu gạch nối và tối đa 120 ký tự.",
+  PROJECT_SLUG_RESERVED: "Đường dẫn tram-rung đã dành cho trang Trâm Rừng. Hãy chọn đường dẫn khác.",
+  PROJECT_JSON_OBJECT_REQUIRED: "SEO phải là đối tượng JSON trong dấu { }. Nếu chưa dùng, nhập {}.",
+  PROJECT_SEO_TEXT_REQUIRED: "title và description trong SEO phải là chuỗi văn bản.",
+  PROJECT_LIST_TEXT_REQUIRED: "Phạm vi, Công nghệ và Kết quả phải là danh sách chuỗi văn bản trong dấu [ ]. Nếu chưa dùng, nhập [].",
   COURSE_SLUG_INVALID: "Đường dẫn khóa học chỉ dùng chữ thường không dấu, số, dấu gạch nối và tối đa 120 ký tự. Có thể để trống để tạo từ tên khóa học.",
   COURSE_SLUG_RESERVED: "Đường dẫn co-quan-nha-nuoc đã dành cho trang chương trình cơ quan nhà nước. Hãy chọn đường dẫn khác.",
   COURSE_JSON_OBJECT_REQUIRED: "SEO phải là đối tượng JSON trong dấu { }. Nếu chưa dùng, nhập {}.",

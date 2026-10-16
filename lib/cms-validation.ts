@@ -118,8 +118,8 @@ export async function prepareCmsData(
     }
   }
 
-  if (["pages", "products", "solutions", "courses"].includes(moduleKey)) {
-    const prefix = moduleKey === "pages" ? "PAGE" : moduleKey === "products" ? "PRODUCT" : moduleKey === "solutions" ? "SOLUTION" : "COURSE";
+  if (["pages", "products", "solutions", "courses", "projects"].includes(moduleKey)) {
+    const prefix = moduleKey === "pages" ? "PAGE" : moduleKey === "products" ? "PRODUCT" : moduleKey === "solutions" ? "SOLUTION" : moduleKey === "projects" ? "PROJECT" : "COURSE";
     const slug = String(effective(data, current, "slug") ?? "").trim();
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120) invalid(`${prefix}_SLUG_INVALID`);
     for (const key of moduleKey === "pages" ? ["layout_json", "seo_json"] : ["seo_json"]) {
@@ -130,8 +130,8 @@ export async function prepareCmsData(
       if (!value || typeof value !== "object" || Array.isArray(value)) invalid(`${prefix}_JSON_OBJECT_REQUIRED`);
       if (key === "seo_json" && ["title", "description"].some((name) => value[name] !== undefined && typeof value[name] !== "string")) invalid(`${prefix}_SEO_TEXT_REQUIRED`);
     }
-    if (["products", "solutions", "courses"].includes(moduleKey)) {
-      const listKeys = moduleKey === "products" ? ["features_json", "technologies_json", "benefits_json"] : moduleKey === "solutions" ? ["scope_json", "process_json", "deliverables_json", "technologies_json"] : ["audiences_json", "topics_json", "objectives_json", "modules_json", "delivery_modes_json", "materials_json"];
+    if (["products", "solutions", "courses", "projects"].includes(moduleKey)) {
+      const listKeys = moduleKey === "products" ? ["features_json", "technologies_json", "benefits_json"] : moduleKey === "solutions" ? ["scope_json", "process_json", "deliverables_json", "technologies_json"] : moduleKey === "projects" ? ["scope_json", "technologies_json", "results_json"] : ["audiences_json", "topics_json", "objectives_json", "modules_json", "delivery_modes_json", "materials_json"];
       for (const key of listKeys) {
         const raw = effective(data, current, key);
         if (empty(raw)) continue;
@@ -141,6 +141,7 @@ export async function prepareCmsData(
       }
     }
     if (moduleKey === "courses" && slug === "co-quan-nha-nuoc") invalid("COURSE_SLUG_RESERVED");
+    if (moduleKey === "projects" && slug === "tram-rung") invalid("PROJECT_SLUG_RESERVED");
     const heroId = moduleKey === "pages" ? effective(data, current, "hero_media_id") : null;
     if (!empty(heroId)) {
       const media = await db.prepare(`SELECT id,type,visibility,public_url FROM media WHERE id=? LIMIT 1`).bind(String(heroId)).first<{id:string;type:string;visibility:string;public_url:string|null}>();
