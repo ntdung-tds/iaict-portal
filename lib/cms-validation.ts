@@ -1,3 +1,4 @@
+import { redirectFieldsError } from "./cms-redirect-rules";
 import { isNavigationHref } from "./cms-navigation-link";
 import { sessionDateIso } from "./cms-session-dates";
 import { expertFieldsError } from "./cms-expert-fields";
@@ -239,9 +240,21 @@ export async function prepareCmsData(
   if (moduleKey === "redirects") {
     const source = String(effective(data, current, "source_path") ?? "").trim();
     const destination = String(effective(data, current, "destination_path") ?? "").trim();
-    if (source && (!source.startsWith("/") || source.startsWith("//"))) invalid("REDIRECT_SOURCE_PATH");
-    if (destination && !destination.startsWith("/")) normalizedUrl("destination_path", destination);
-    if (source && destination && source === destination) invalid("REDIRECT_LOOP");
+    const error = redirectFieldsError(source, destination);
+    if (error) invalid(error);
+    // Follow active internal rules before saving to reject cycles and excessive chains.
+    const active = effective(data, current, "is_active") ?? true;
+    const visited = new Set([source]);
+    let next = destination;
+    for (let hop = 0; [true, 1, "1"].includes(active as boolean | number | string) && next.startsWith("/"); hop++) {
+      const path = new URL(next, "https://redirect.invalid").pathname;
+      if (visited.has(path)) invalid("REDIRECT_LOOP");
+      if (hop >= 10) invalid("REDIRECT_CHAIN");
+      visited.add(path);
+      const row = await db.prepare(`SELECT id, destination_path FROM redirects WHERE source_path=? AND is_active=1 LIMIT 1`).bind(path).first<{id:string;destination_path:string}>();
+      if (!row || row.id === id) break;
+      next = row.destination_path;
+    }
   }
 
   if (moduleKey === "navigation") {

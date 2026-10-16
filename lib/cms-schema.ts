@@ -343,8 +343,8 @@ export const cmsModules: Record<string, CmsModuleConfig> = {
   },
   redirects: {
     key: "redirects",
-    label: "Redirects",
-    singular: "redirect",
+    label: "Chuyển hướng URL",
+    singular: "chuyển hướng",
     description: "Điều hướng URL cũ sang URL mới và kiểm soát mã trạng thái.",
     table: "redirects",
     titleColumn: "source_path",
@@ -352,15 +352,15 @@ export const cmsModules: Record<string, CmsModuleConfig> = {
     searchColumns: ["source_path", "destination_path"],
     orderBy: "created_at DESC",
     fields: [
-      { key: "source_path", label: "URL nguồn", type: "text", required: true, list: true },
-      { key: "destination_path", label: "URL đích", type: "text", required: true, list: true },
-      { key: "status_code", label: "Mã HTTP", type: "select", required: true, options: [
-        { value: "301", label: "301 — Permanent" },
-        { value: "302", label: "302 — Temporary" },
-        { value: "307", label: "307 — Temporary" },
-        { value: "308", label: "308 — Permanent" },
+      { key: "source_path", help: "Đường dẫn cũ bắt đầu bằng /, ví dụ /trang-cu. Không nhập tên miền, ?tham-số hoặc #mục; không dùng đường dẫn quản trị, API hay thư mục hệ thống.", placeholder: "/trang-cu", label: "URL nguồn", type: "text", required: true, list: true },
+      { key: "destination_path", help: "Nhập /trang-moi hoặc URL HTTPS đầy đủ. Tham số của URL cũ được giữ nếu đích chưa có tham số. Không được tạo vòng lặp.", placeholder: "/trang-moi", label: "URL đích", type: "text", required: true, list: true },
+      { key: "status_code", help: "302/307 dùng tạm thời để thử; 301/308 dùng khi chuyển vĩnh viễn và có thể được trình duyệt ghi nhớ. Website chỉ áp dụng cho GET/HEAD.", label: "Mã HTTP", type: "select", required: true, options: [
+        { value: "301", label: "301 — Vĩnh viễn" },
+        { value: "302", label: "302 — Tạm thời" },
+        { value: "307", label: "307 — Tạm thời, giữ phương thức" },
+        { value: "308", label: "308 — Vĩnh viễn, giữ phương thức" },
       ] },
-      { key: "is_active", label: "Kích hoạt", type: "boolean", list: true },
+      { key: "is_active", help: "Bật để áp dụng trên website; tắt để ngừng chuyển hướng. Cấu hình được cập nhật trong tối đa 60 giây, nhưng trình duyệt có thể đã nhớ chuyển hướng vĩnh viễn.", label: "Kích hoạt", type: "boolean", list: true },
     ],
   },
   users: {

@@ -78,8 +78,10 @@ const fixedMessages: Record<string, string> = {
   EVENT_SEO_TEXT_REQUIRED: "title và description trong SEO phải là chuỗi văn bản.",
   EVENT_DATETIME: "Ngày giờ sự kiện chưa hợp lệ. Vui lòng nhập đầy đủ ngày và giờ theo giờ Việt Nam (UTC+7).",
   EVENT_END_BEFORE_START: "Thời gian kết thúc sự kiện phải sau thời gian bắt đầu.",
-  REDIRECT_SOURCE_PATH: "URL nguồn phải là đường dẫn nội bộ bắt đầu bằng dấu /, ví dụ /trang-cu.",
-  REDIRECT_LOOP: "URL nguồn và URL đích không được giống nhau.",
+  REDIRECT_SOURCE_PATH: "URL nguồn phải là đường dẫn nội bộ chuẩn bắt đầu bằng /; không chứa tham số, dấu # hoặc trỏ vào quản trị/API/thư mục hệ thống.",
+  REDIRECT_DESTINATION_PATH: "URL đích phải bắt đầu bằng / hoặc là URL HTTPS hợp lệ; không dùng //, khoảng trắng hoặc dấu gạch chéo ngược.",
+  REDIRECT_CHAIN: "Chuỗi chuyển hướng quá dài. Hãy trỏ trực tiếp đến trang cuối cùng.",
+  REDIRECT_LOOP: "Quy tắc tạo vòng lặp chuyển hướng. Hãy chọn URL đích khác.",
   NAVIGATION_HREF: "Đường dẫn menu phải bắt đầu bằng / hoặc là URL HTTPS hợp lệ; không dùng //, khoảng trắng hoặc dấu gạch chéo ngược.",
   NAVIGATION_SELF_PARENT: "Một mục menu không thể tự chọn chính nó làm mục cha.",
   NAVIGATION_PARENT_NOT_FOUND: "Mục menu cha không còn tồn tại. Vui lòng chọn lại.",
@@ -185,6 +187,7 @@ export function translateCmsError(raw: string) {
   if (code.startsWith("USER_ROLE_NOT_SEEDED_")) {
     return "Danh mục vai trò trong cơ sở dữ liệu chưa đồng bộ. Vui lòng liên hệ Quản trị viên hệ thống.";
   }
+  if (/UNIQUE constraint failed: redirects\.source_path/i.test(message)) return "URL nguồn này đã có quy tắc chuyển hướng. Hãy sửa quy tắc hiện có.";
   if (/UNIQUE constraint failed: courses\.code/i.test(message)) return "Mã khóa học này đã được sử dụng. Vui lòng chọn mã khác hoặc để trống.";
   if (/UNIQUE constraint failed/i.test(message)) {
     return "Dữ liệu này đã tồn tại. Vui lòng kiểm tra lại các trường không được phép trùng lặp.";
