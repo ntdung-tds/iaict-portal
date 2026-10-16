@@ -1,5 +1,6 @@
 "use client";
 
+import { isNavigationHref } from "@/lib/cms-navigation-link";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -8,9 +9,6 @@ import styles from "./site-chrome.module.css";
 import headerStyles from "./site-header.module.css";
 
 const adminUrl = process.env.NEXT_PUBLIC_CMS_URL || "/admin";
-
-const preferredPrimaryHrefs = ["/gioi-thieu", "/giai-phap-dich-vu", "/san-pham-nen-tang", "/dao-tao-tap-huan"];
-const preferredMoreHrefs = ["/chuyen-giao-cong-nghe", "/du-an", "/tin-tuc"];
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -25,16 +23,8 @@ export function SiteHeader() {
       ?? fallbackNavigation.find((item) => item.href === "/lien-he")
       ?? { label: "Liên hệ & Hợp tác", href: "/lien-he" };
 
-    const primary = navigation.filter((item) => preferredPrimaryHrefs.includes(item.href));
-    const more = navigation.filter((item) => preferredMoreHrefs.includes(item.href));
-    const assigned = new Set([...primary.map((item) => item.href), ...more.map((item) => item.href), contact.href, "/"]);
-    const remaining = navigation.filter((item) => !assigned.has(item.href));
-
-    return {
-      primaryItems: primary.length > 0 ? primary : navigation.filter((item) => item.href !== "/" && item.href !== contact.href).slice(0, 4),
-      moreItems: [...more, ...remaining],
-      contactItem: contact,
-    };
+    const menu = navigation.filter(item => item.href !== "/" && item.href !== contact.href);
+    return { primaryItems: menu.slice(0, 4), moreItems: menu.slice(4), contactItem: contact };
   }, [navigation]);
 
   useEffect(() => setReady(true), []);
@@ -44,9 +34,9 @@ export function SiteHeader() {
     fetch("/api/public/navigation", { cache: "no-store" })
       .then(async (response) => {
         const payload = await response.json() as { ok?: boolean; items?: NavigationItem[] };
-        if (!active || !payload.ok || !Array.isArray(payload.items) || payload.items.length === 0) return;
-        const clean = payload.items.filter((item) => typeof item?.label === "string" && typeof item?.href === "string" && item.label.trim() && item.href.trim());
-        if (clean.length > 0) setNavigation(clean);
+        if (!active || !payload.ok || !Array.isArray(payload.items)) return;
+        const clean = payload.items.filter((item) => typeof item?.label === "string" && typeof item?.href === "string" && item.label.trim() && isNavigationHref(item.href));
+        setNavigation(clean);
       })
       .catch(() => {
         // Static navigation is the availability fallback if CMS/D1 is temporarily unavailable.
@@ -147,14 +137,14 @@ export function SiteHeader() {
 
         <nav className={styles.desktopNav} aria-label="Điều hướng chính">
           {primaryItems.map((item) => (
-            <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined} onClick={closeMenus}>{item.label}</Link>
+            <Link href={item.href} target={item.opensNewTab?"_blank":undefined} rel={item.opensNewTab?"noopener noreferrer":undefined} key={item.href} aria-current={current(item.href) ? "page" : undefined} onClick={closeMenus}>{item.label}</Link>
           ))}
           {moreItems.length > 0 ? (
             <details className={styles.dropdown}>
               <summary>Khám phá</summary>
               <div className={styles.dropdownPanel}>
                 {moreItems.map((item) => (
-                  <Link href={item.href} key={item.href} aria-current={current(item.href) ? "page" : undefined} onClick={closeMenus}>{item.label}</Link>
+                  <Link href={item.href} target={item.opensNewTab?"_blank":undefined} rel={item.opensNewTab?"noopener noreferrer":undefined} key={item.href} aria-current={current(item.href) ? "page" : undefined} onClick={closeMenus}>{item.label}</Link>
                 ))}
               </div>
             </details>
@@ -164,7 +154,7 @@ export function SiteHeader() {
 
         <div className={styles.actions}>
           <Link className={styles.search} href="/tim-kiem" aria-label="Tìm kiếm" onClick={closeMenus}>Tìm kiếm</Link>
-          <Link className={styles.cta} href={contactItem.href} onClick={closeMenus}>Liên hệ hợp tác</Link>
+          <Link className={styles.cta} href={contactItem.href} target={contactItem.opensNewTab?"_blank":undefined} rel={contactItem.opensNewTab?"noopener noreferrer":undefined} onClick={closeMenus}>Liên hệ hợp tác</Link>
           <div className={styles.mobileMenu}>
             <button
               ref={mobileToggleRef}
@@ -214,6 +204,8 @@ export function SiteHeader() {
                 <Link
                   className={`${styles.mobileNavItem} ${item.href === contactItem.href ? styles.mobileContact : ""}`}
                   href={item.href}
+                  target={item.opensNewTab?"_blank":undefined}
+                  rel={item.opensNewTab?"noopener noreferrer":undefined}
                   key={`${item.href}-${index}`}
                   aria-current={current(item.href) ? "page" : undefined}
                   onClick={() => setMobileOpen(false)}

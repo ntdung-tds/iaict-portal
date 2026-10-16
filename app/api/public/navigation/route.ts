@@ -8,9 +8,9 @@ export async function GET() {
     const db = getDatabaseBinding();
     const items = await getPublicNavigation(db);
     return Response.json({ ok: true, items }, {
-      headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
+      headers: { "Cache-Control": "no-store" },
     });
   } catch {
-    return Response.json({ ok: false, items: [] }, { status: 200 });
+    return Response.json({ ok: false, items: [] }, { status: 200, headers: { "Cache-Control": "no-store" } });
   }
 }

@@ -80,6 +80,7 @@ const fixedMessages: Record<string, string> = {
   EVENT_END_BEFORE_START: "Thời gian kết thúc sự kiện phải sau thời gian bắt đầu.",
   REDIRECT_SOURCE_PATH: "URL nguồn phải là đường dẫn nội bộ bắt đầu bằng dấu /, ví dụ /trang-cu.",
   REDIRECT_LOOP: "URL nguồn và URL đích không được giống nhau.",
+  NAVIGATION_HREF: "Đường dẫn menu phải bắt đầu bằng / hoặc là URL HTTPS hợp lệ; không dùng //, khoảng trắng hoặc dấu gạch chéo ngược.",
   NAVIGATION_SELF_PARENT: "Một mục menu không thể tự chọn chính nó làm mục cha.",
   NAVIGATION_PARENT_NOT_FOUND: "Mục menu cha không còn tồn tại. Vui lòng chọn lại.",
   NAVIGATION_SORT_ORDER: "Thứ tự menu phải là số nguyên không âm.",

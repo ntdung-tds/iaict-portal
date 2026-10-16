@@ -1,3 +1,4 @@
+import { isNavigationHref } from "./cms-navigation-link";
 import { sessionDateIso } from "./cms-session-dates";
 import { expertFieldsError } from "./cms-expert-fields";
 import type { D1DatabaseLike } from "./cloudflare-db";
@@ -245,7 +246,9 @@ export async function prepareCmsData(
 
   if (moduleKey === "navigation") {
     const href = String(effective(data, current, "href") ?? "").trim();
-    if (href && !href.startsWith("/")) normalizedUrl("href", href);
+    if (href && !isNavigationHref(href)) invalid("NAVIGATION_HREF");
+    if ("parent_id" in data && empty(data.parent_id)) data.parent_id = null;
+    if ("sort_order" in data && empty(data.sort_order)) data.sort_order = 0;
     const parentId = String(effective(data, current, "parent_id") ?? "").trim();
     if (id && parentId === id) invalid("NAVIGATION_SELF_PARENT");
     if (parentId) {

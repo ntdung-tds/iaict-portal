@@ -1,3 +1,4 @@
+import { isNavigationHref } from "./cms-navigation-link";
 import type { D1BindValue, D1DatabaseLike } from "./cloudflare-db";
 import { getCmsModule, type CmsField, type CmsModuleConfig } from "./cms-schema";
 import type { NewsroomActor } from "./newsroom-auth";
@@ -397,9 +398,9 @@ export async function saveCmsSettings(
 
 export async function getPublicNavigation(db: D1DatabaseLike) {
   const rows = await db.prepare(`
-    SELECT label, href FROM navigation_items
+    SELECT label, href, opens_new_tab FROM navigation_items
     WHERE group_name = 'main' AND is_active = 1
-    ORDER BY sort_order ASC, label ASC
-  `).all<{ label: string; href: string }>();
-  return rows.results;
+    ORDER BY sort_order ASC, label ASC, id ASC
+  `).all<{ label: string; href: string; opens_new_tab: number }>();
+  return rows.results.filter(row => isNavigationHref(row.href)).map(row => ({label:row.label,href:row.href,opensNewTab:row.opens_new_tab===1}));
 }
