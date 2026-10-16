@@ -150,6 +150,17 @@ export async function prepareCmsData(
     }
   }
 
+  if (moduleKey === "partners") {
+    const website = effective(data, current, "website");
+    if (!empty(website)) data.website = normalizedUrl("website", website, true);
+    const logoId = effective(data, current, "logo_media_id");
+    if ("logo_media_id" in data && empty(logoId)) data.logo_media_id = null;
+    if (!empty(logoId)) {
+      const media = await db.prepare(`SELECT id,type,visibility,public_url FROM media WHERE id=?`).bind(String(logoId)).first<{type:string;visibility:string;public_url:string|null}>();
+      if (!media || media.type !== "image" || media.visibility !== "public" || !media.public_url?.startsWith("https://")) invalid("PARTNER_LOGO");
+    }
+  }
+
   if (moduleKey === "experts") {
     const error = expertFieldsError({...current, ...data});
     if (error) invalid(error);

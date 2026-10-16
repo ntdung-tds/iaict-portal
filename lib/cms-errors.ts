@@ -36,6 +36,7 @@ const fixedMessages: Record<string, string> = {
   USER_EMAIL_IN_USE: "Email này đã được gán cho một người dùng CMS khác.",
   LAST_ACTIVE_ADMIN: "Không thể thực hiện vì hệ thống phải luôn còn ít nhất một Quản trị viên đang hoạt động.",
 
+  PARTNER_LOGO: "Logo phải là ảnh Công khai có URL HTTPS trong Thư viện Media.",
   EXPERT_SLUG_INVALID: "Đường dẫn chuyên gia chỉ dùng chữ thường không dấu, số, dấu gạch nối và tối đa 120 ký tự.",
   EXPERT_JSON_OBJECT_REQUIRED: "SEO phải là đối tượng JSON trong dấu { }. Nếu chưa dùng, nhập {}.",
   EXPERT_SEO_TEXT_REQUIRED: "title và description trong SEO phải là chuỗi văn bản.",

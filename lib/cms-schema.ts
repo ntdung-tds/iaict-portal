@@ -257,12 +257,12 @@ export const cmsModules: Record<string, CmsModuleConfig> = {
     searchColumns: ["name", "summary", "website"],
     orderBy: "updated_at DESC",
     fields: [
-      { key: "name", label: "Tên đơn vị", type: "text", required: true, list: true },
-      baseStatusField,
-      { key: "logo_media_id", label: "Logo Media ID", type: "text" },
-      { key: "summary", label: "Mô tả", type: "textarea" },
-      { key: "website", label: "Website", type: "url", list: true },
-      { key: "public_note", label: "Ghi chú công khai", type: "textarea" },
+      { key: "name", help: "Tên đầy đủ hoặc tên giao dịch của đơn vị được phép công bố.", label: "Tên đơn vị", type: "text", required: true, list: true },
+      { ...baseStatusField, help: "Chỉ Đã xuất bản mới xuất hiện trong danh sách đối tác. Bản nháp, Chờ duyệt và Lưu trữ không hiển thị công khai." },
+      { key: "logo_media_id", help: "Chọn ảnh logo Công khai có URL HTTPS trong Thư viện Media. Chọn Không chọn để bỏ logo.", label: "Logo", type: "text" },
+      { key: "summary", help: "Giới thiệu ngắn về đơn vị và lĩnh vực hợp tác. Nội dung hiển thị trong danh sách đối tác.", label: "Mô tả", type: "textarea" },
+      { key: "website", help: "Website chính thức, dùng URL HTTPS đầy đủ, ví dụ https://example.com. Có thể để trống nếu không công bố liên kết.", label: "Website", type: "url", list: true },
+      { key: "public_note", help: "Ghi chú bổ sung được hiển thị công khai cùng mô tả. Chỉ ghi thông tin được phép công bố; không nhập ghi chú nội bộ.", label: "Ghi chú công khai", type: "textarea" },
     ],
   },
   events: {
