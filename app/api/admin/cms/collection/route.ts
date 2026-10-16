@@ -28,7 +28,7 @@ function moduleFrom(value: unknown) {
 async function referencesFor(db: D1DatabaseLike, moduleKey: string, items: Array<Record<string, unknown>> = []) {
   const references: Record<string, Array<{ value: string; label: string; disabled?: boolean }>> = {};
   if (["pages", "experts", "partners"].includes(moduleKey)) {
-    const rows = await db.prepare(`SELECT id,COALESCE(filename,alt,id) AS label FROM media WHERE type='image' ${moduleKey === "pages" ? "AND visibility='public' AND public_url LIKE 'https://%'" : ""} ORDER BY updated_at DESC LIMIT 200`).all<{ id: string; label: string }>();
+    const rows = await db.prepare(`SELECT id,COALESCE(filename,alt,id) AS label FROM media WHERE type='image' ${["pages", "experts"].includes(moduleKey) ? "AND visibility='public' AND public_url LIKE 'https://%'" : ""} ORDER BY updated_at DESC LIMIT 200`).all<{ id: string; label: string }>();
     references.media = rows.results.map((row) => ({ value: row.id, label: row.label }));
   }
   if (moduleKey === "leads") {

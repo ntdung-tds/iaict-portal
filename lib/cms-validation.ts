@@ -1,3 +1,4 @@
+import { expertFieldsError } from "./cms-expert-fields";
 import type { D1DatabaseLike } from "./cloudflare-db";
 import type { CmsField, CmsModuleConfig } from "./cms-schema";
 
@@ -118,8 +119,8 @@ export async function prepareCmsData(
     }
   }
 
-  if (["pages", "products", "solutions", "courses", "projects"].includes(moduleKey)) {
-    const prefix = moduleKey === "pages" ? "PAGE" : moduleKey === "products" ? "PRODUCT" : moduleKey === "solutions" ? "SOLUTION" : moduleKey === "projects" ? "PROJECT" : "COURSE";
+  if (["pages", "products", "solutions", "courses", "projects", "experts"].includes(moduleKey)) {
+    const prefix = moduleKey === "pages" ? "PAGE" : moduleKey === "products" ? "PRODUCT" : moduleKey === "solutions" ? "SOLUTION" : moduleKey === "projects" ? "PROJECT" : moduleKey === "experts" ? "EXPERT" : "COURSE";
     const slug = String(effective(data, current, "slug") ?? "").trim();
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120) invalid(`${prefix}_SLUG_INVALID`);
     for (const key of moduleKey === "pages" ? ["layout_json", "seo_json"] : ["seo_json"]) {
@@ -146,6 +147,18 @@ export async function prepareCmsData(
     if (!empty(heroId)) {
       const media = await db.prepare(`SELECT id,type,visibility,public_url FROM media WHERE id=? LIMIT 1`).bind(String(heroId)).first<{id:string;type:string;visibility:string;public_url:string|null}>();
       if (!media || media.type !== "image" || media.visibility !== "public" || !media.public_url?.startsWith("https://")) invalid("PAGE_HERO_PUBLIC_REQUIRED");
+    }
+  }
+
+  if (moduleKey === "experts") {
+    const error = expertFieldsError({...current, ...data});
+    if (error) invalid(error);
+    const photoId = effective(data, current, "photo_media_id");
+    if ("photo_media_id" in data && empty(photoId)) data.photo_media_id = null;
+    if (!empty(photoId)) {
+      const media = await db.prepare(`SELECT id,type,visibility,public_url FROM media WHERE id=?`).bind(String(photoId)).first<{type:string;visibility:string;public_url:string|null}>();
+      if (media && media.type !== "image") invalid("FIELD_PHOTO_MEDIA_ID_IMAGE_REQUIRED");
+      if (!media || media.visibility !== "public" || !media.public_url?.startsWith("https://")) invalid("EXPERT_PHOTO");
     }
   }
 
