@@ -26,14 +26,14 @@ function moduleFrom(value: unknown) {
 }
 
 async function referencesFor(db: D1DatabaseLike, moduleKey: string, items: Array<Record<string, unknown>> = []) {
-  const references: Record<string, Array<{ value: string; label: string }>> = {};
+  const references: Record<string, Array<{ value: string; label: string; disabled?: boolean }>> = {};
   if (["pages", "experts", "partners"].includes(moduleKey)) {
     const rows = await db.prepare(`SELECT id,COALESCE(filename,alt,id) AS label FROM media WHERE type='image' ${moduleKey === "pages" ? "AND visibility='public' AND public_url LIKE 'https://%'" : ""} ORDER BY updated_at DESC LIMIT 200`).all<{ id: string; label: string }>();
     references.media = rows.results.map((row) => ({ value: row.id, label: row.label }));
   }
   if (moduleKey === "leads") {
-    const rows = await db.prepare(`SELECT id,COALESCE(display_name,email) AS label FROM admin_users WHERE is_active=1 ORDER BY lower(COALESCE(display_name,email))`).all<{ id: string; label: string }>();
-    references.users = rows.results.map((row) => ({ value: row.id, label: row.label }));
+    const rows = await db.prepare(`SELECT u.id,COALESCE(NULLIF(u.display_name,''),u.email) AS label,u.is_active FROM admin_users u WHERE u.is_active=1 OR EXISTS(SELECT 1 FROM leads l WHERE l.owner_id=u.id) ORDER BY u.is_active DESC,lower(COALESCE(u.display_name,u.email))`).all<{ id: string; label: string; is_active: number }>();
+    references.users = rows.results.map(row => ({value:row.id,label:row.is_active ? row.label : `${row.label} · Đã ngừng hoạt động`,disabled:!row.is_active}));
   }
   if (moduleKey === "registrations") {
     const courseIds = [...new Set(items.map(item => String(item.course_id ?? "")).filter(Boolean))];

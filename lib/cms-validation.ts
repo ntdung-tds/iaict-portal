@@ -227,7 +227,9 @@ export async function prepareCmsData(
 
   if (moduleKey === "leads") {
     const ownerId = String(effective(data, current, "owner_id") ?? "").trim();
-    if (ownerId) {
+    if ("owner_id" in data) data.owner_id = ownerId || null;
+    // An existing inactive assignee may remain on historical records; new assignments must be active.
+    if (ownerId && ownerId !== String(current?.owner_id ?? "")) {
       const owner = await db.prepare(`SELECT id FROM admin_users WHERE id=? AND is_active=1 LIMIT 1`).bind(ownerId).first<{ id: string }>();
       if (!owner) invalid("LEAD_OWNER_NOT_FOUND");
     }
