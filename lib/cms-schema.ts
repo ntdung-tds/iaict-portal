@@ -41,6 +41,14 @@ const statusOptions: CmsFieldOption[] = [
   { value: "archived", label: "Lưu trữ" },
 ];
 
+export const registrationStatusOptions: CmsFieldOption[] = [
+  { value: "submitted", label: "Mới đăng ký" },
+  { value: "contacted", label: "Đã liên hệ" },
+  { value: "confirmed", label: "Đã xác nhận" },
+  { value: "completed", label: "Đã hoàn thành" },
+  { value: "cancelled", label: "Đã hủy" },
+];
+
 const leadStatusOptions: CmsFieldOption[] = [
   { value: "new", label: "Mới" },
   { value: "contacted", label: "Đã liên hệ" },
@@ -410,17 +418,18 @@ export const cmsModules: Record<string, CmsModuleConfig> = {
     searchColumns: ["contact_name", "organization", "email", "phone"],
     orderBy: "created_at DESC",
     allowCreate: false,
+    allowDelete: false,
     fields: [
-      { key: "contact_name", label: "Người đăng ký", type: "text", readonly: true, list: true },
-      { key: "organization", label: "Đơn vị", type: "text", readonly: true, list: true },
-      { key: "job_title", label: "Chức vụ", type: "text", readonly: true },
-      { key: "phone", label: "Điện thoại", type: "text", readonly: true },
-      { key: "email", label: "Email", type: "email", readonly: true },
-      { key: "course_id", label: "Course ID", type: "text", readonly: true },
-      { key: "session_id", label: "Session ID", type: "text", readonly: true },
-      { key: "status", label: "Trạng thái", type: "text", list: true },
-      { key: "delivery_preference", label: "Hình thức mong muốn", type: "text", readonly: true },
-      { key: "notes", label: "Ghi chú", type: "textarea", readonly: true },
+      { key: "contact_name", help: "Họ tên người gửi đăng ký. Dữ liệu gốc chỉ xem, không sửa tại đây.", label: "Người đăng ký", type: "text", readonly: true, list: true },
+      { key: "organization", help: "Cơ quan hoặc đơn vị người đăng ký cung cấp; có thể để trống trong hồ sơ gốc.", label: "Đơn vị", type: "text", readonly: true, list: true },
+      { key: "job_title", help: "Chức vụ hoặc vị trí công tác do người đăng ký cung cấp.", label: "Chức vụ", type: "text", readonly: true },
+      { key: "phone", help: "Số điện thoại để liên hệ xác nhận nhu cầu; chỉ dùng trong quá trình xử lý đăng ký.", label: "Điện thoại", type: "text", readonly: true },
+      { key: "email", help: "Địa chỉ email do người đăng ký cung cấp. Đổi trạng thái không tự gửi email.", label: "Email", type: "email", readonly: true },
+      { key: "course_id", help: "Chương trình đã đăng ký. Đây là thông tin gốc, không đổi khóa học tại đây.", label: "Khóa học", type: "text", readonly: true },
+      { key: "session_id", help: "Lịch lớp đã chọn, hiển thị theo giờ Việt Nam (UTC+7). Không chọn nghĩa là chưa gắn lịch cụ thể hoặc lịch đã được xóa.", label: "Lịch lớp", type: "text", readonly: true },
+      { key: "status", help: "Mới đăng ký → Đã liên hệ → Đã xác nhận → Đã hoàn thành; chọn Đã hủy khi không tiếp tục. Trạng thái được lưu nội bộ, không tự gửi thông báo hay giữ chỗ.", label: "Trạng thái xử lý", type: "select", required: true, list: true, options: registrationStatusOptions },
+      { key: "delivery_preference", help: "Nguyện vọng hình thức học do người đăng ký cung cấp; chưa phải lịch tổ chức đã xác nhận.", label: "Hình thức mong muốn", type: "text", readonly: true },
+      { key: "notes", help: "Nội dung người đăng ký gửi kèm. Chỉ xem để bảo toàn hồ sơ gốc; không dùng làm ghi chú xử lý nội bộ.", label: "Ghi chú của người đăng ký", type: "textarea", readonly: true },
     ],
   },
   audit: {

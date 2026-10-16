@@ -1,3 +1,4 @@
+import { sessionDateLabel } from "@/lib/cms-session-dates";
 import { getDatabaseBinding, type D1DatabaseLike } from "@/lib/cloudflare-db";
 import { cmsErrorCode, translateCmsError } from "@/lib/cms-errors";
 import { deleteCmsRecord, listCmsRecords, saveCmsRecord } from "@/lib/cms-repository";
@@ -24,7 +25,7 @@ function moduleFrom(value: unknown) {
   return { moduleKey, config };
 }
 
-async function referencesFor(db: D1DatabaseLike, moduleKey: string) {
+async function referencesFor(db: D1DatabaseLike, moduleKey: string, items: Array<Record<string, unknown>> = []) {
   const references: Record<string, Array<{ value: string; label: string }>> = {};
   if (["pages", "experts", "partners"].includes(moduleKey)) {
     const rows = await db.prepare(`SELECT id,COALESCE(filename,alt,id) AS label FROM media WHERE type='image' ${moduleKey === "pages" ? "AND visibility='public' AND public_url LIKE 'https://%'" : ""} ORDER BY updated_at DESC LIMIT 200`).all<{ id: string; label: string }>();
@@ -35,10 +36,22 @@ async function referencesFor(db: D1DatabaseLike, moduleKey: string) {
     references.users = rows.results.map((row) => ({ value: row.id, label: row.label }));
   }
   if (moduleKey === "registrations") {
-    const courses = await db.prepare(`SELECT id,title AS label FROM courses ORDER BY title`).all<{ id: string; label: string }>();
-    const sessions = await db.prepare(`SELECT s.id,(c.title || CASE WHEN s.start_at IS NOT NULL THEN ' · ' || s.start_at ELSE '' END) AS label FROM course_sessions s JOIN courses c ON c.id=s.course_id ORDER BY COALESCE(s.start_at,s.created_at) DESC LIMIT 200`).all<{ id: string; label: string }>();
-    references.courses = courses.results.map((row) => ({ value: row.id, label: row.label }));
-    references.sessions = sessions.results.map((row) => ({ value: row.id, label: row.label }));
+    const courseIds = [...new Set(items.map(item => String(item.course_id ?? "")).filter(Boolean))];
+    const sessionIds = [...new Set(items.map(item => String(item.session_id ?? "")).filter(Boolean))];
+    // Keep each query below D1's bound-parameter limit, even for a full list page.
+    async function byIds<T>(ids: string[], query: (placeholders: string) => string): Promise<T[]> {
+      const rows: T[] = [];
+      for (let offset = 0; offset < ids.length; offset += 80) {
+        const batch = ids.slice(offset, offset + 80);
+        const result = await db.prepare(query(batch.map(() => "?").join(","))).bind(...batch).all<T>();
+        rows.push(...result.results);
+      }
+      return rows;
+    }
+    const courses = await byIds<{id:string;label:string}>(courseIds, placeholders => `SELECT id,title AS label FROM courses WHERE id IN (${placeholders}) ORDER BY title`);
+    const sessions = await byIds<{id:string;title:string;start_at:string|null}>(sessionIds, placeholders => `SELECT s.id,c.title,s.start_at FROM course_sessions s JOIN courses c ON c.id=s.course_id WHERE s.id IN (${placeholders})`);
+    references.courses = courses.map(row => ({value:row.id,label:row.label}));
+    references.sessions = sessions.map(row => ({value:row.id,label:`${row.title} · ${sessionDateLabel(row.start_at)} (giờ Việt Nam)`}));
   }
   return references;
 }
@@ -50,10 +63,8 @@ export async function GET(request: Request) {
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, config.adminOnly ? CMS_ADMIN_ROLES : CMS_READ_ROLES);
     const limitRaw = Number(url.searchParams.get("limit") ?? "80");
-    const [result, references] = await Promise.all([
-      listCmsRecords(db, moduleKey, { q: url.searchParams.get("q") ?? undefined, status: url.searchParams.get("status") ?? undefined, limit: Number.isFinite(limitRaw) ? limitRaw : 80 }),
-      referencesFor(db, moduleKey),
-    ]);
+    const result = await listCmsRecords(db, moduleKey, { q: url.searchParams.get("q") ?? undefined, status: url.searchParams.get("status") ?? undefined, limit: Number.isFinite(limitRaw) ? limitRaw : 80 });
+    const references = await referencesFor(db, moduleKey, result.items);
     return Response.json({ ok: true, module: config, actor, references, ...result });
   } catch (error) { return errorResponse(error); }
 }
