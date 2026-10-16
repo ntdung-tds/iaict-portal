@@ -33,7 +33,7 @@ test('Warns about unsaved notes and retains edits after filtering',async({page})
 });
 test('Shows inactive assignee without allowing reassignment to that account',async({page})=>{
  await mock(page,['admin'],{...lead,owner_id:'old'});const owner=page.getByLabel('Người phụ trách',{exact:true});await expect(owner).toHaveValue('old');
- await expect(owner.locator('option[value="old"]')).toBeDisabled();
+ await expect(owner.locator('option[value="old"]')).toHaveJSProperty('disabled',true);
  await page.getByLabel('Ghi chú nội bộ',{exact:true}).fill('Tiếp tục xử lý');await expect(page.getByRole('button',{name:'Lưu thay đổi',exact:true})).toBeEnabled();
  await owner.selectOption('u2');await expect(owner).toHaveValue('u2');
 });
