@@ -20,7 +20,7 @@ test('Creates a temporary redirect by default',async({page})=>{
  await mock(page);await page.getByRole('button',{name:'+ Tạo mới',exact:true}).click();await expect(page.getByLabel('Mã HTTP',{exact:true})).toHaveValue('302');
  await page.getByLabel('URL nguồn',{exact:true}).fill('/cu.html');await page.getByLabel('URL đích',{exact:true}).fill('https://example.com/new');await page.getByLabel('Kích hoạt',{exact:true}).check();
  await page.route('**/api/admin/cms/collection',async r=>{const data=r.request().postDataJSON().data;expect(data.status_code).toBe('302');expect(data.is_active).toBe(true);await r.fulfill({json:{ok:true,id:'r2',record:{...data,id:'r2'}}});});
- await page.getByRole('button',{name:'Tạo chuyển hướng',exact:true}).click();await expect(page.getByRole('status')).toHaveText('Đã lưu chuyển hướng.');
+ await page.getByRole('button',{name:'Tạo chuyển hướng',exact:true}).click();await expect(page.getByRole('status')).toHaveText('Đã tạo chuyển hướng.');
 });
 test('Preserves edits after canceled navigation and save failure',async({page})=>{
  await mock(page);const input=page.getByLabel('URL đích',{exact:true});await input.fill('/dang-sua');page.once('dialog',d=>d.dismiss());await page.getByRole('button',{name:'+ Tạo mới',exact:true}).click();await expect(input).toHaveValue('/dang-sua');
