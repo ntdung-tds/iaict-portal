@@ -34,7 +34,7 @@ export function AuditLogViewer(){
  return <main id="main-content" className={styles.page}>
   <header><span className={styles.eyebrow}>IAICT CMS · Giám sát</span><h1>Nhật ký hệ thống</h1><p>Tra cứu thao tác quản trị. Dữ liệu chỉ đọc; thời gian hiển thị theo giờ Việt Nam (UTC+7).</p></header>
   <form className={styles.toolbar} onSubmit={event=>{event.preventDefault();setOffset(0);setFilter(query.trim());setVersion(v=>v+1);}}>
-   <label htmlFor="audit-search">Tìm kiếm<input id="audit-search" value={query} onChange={event=>setQuery(event.target.value)} aria-describedby="audit-search-help" placeholder="Tên, email, mã hành động hoặc đối tượng…"/><small id="audit-search-help">Tìm theo tên/email người thực hiện, mã hành động (ví dụ cms.entity.update), loại/ID đối tượng hoặc nội dung chi tiết.</small></label>
+   <label htmlFor="audit-search">Tìm kiếm<input id="audit-search" aria-label="Tìm kiếm" value={query} onChange={event=>setQuery(event.target.value)} aria-describedby="audit-search-help" placeholder="Tên, email, mã hành động hoặc đối tượng…"/><small id="audit-search-help">Tìm theo tên/email người thực hiện, mã hành động (ví dụ cms.entity.update), loại/ID đối tượng hoặc nội dung chi tiết.</small></label>
    <button type="submit" disabled={busy}>Tìm kiếm</button><button type="button" disabled={busy} onClick={()=>setVersion(v=>v+1)}>Làm mới</button>
   </form>
   {error?<div role="alert" className={styles.error}>{error} <button type="button" onClick={()=>setVersion(v=>v+1)}>Thử lại</button></div>:null}
