@@ -336,9 +336,9 @@ export async function deleteCmsRecord(
   await writeAudit(db, actor, "cms.entity.delete", moduleKey, id);
 }
 
-export async function getCmsOverview(db: D1DatabaseLike) {
+export async function getCmsOverview(db: D1DatabaseLike, includeActivity = false) {
   const moduleKeys = ["pages", "products", "solutions", "courses", "projects", "experts", "partners", "events", "media", "leads", "registrations"];
-  const counts: Record<string, number> = {};
+  const counts: Record<string, number | null> = {};
   for (const key of moduleKeys) {
     const config = assertConfig(key);
     const row = await db.prepare(`SELECT COUNT(*) AS count FROM ${config.table}`).first<{ count: number }>();
@@ -348,7 +348,8 @@ export async function getCmsOverview(db: D1DatabaseLike) {
   const pendingNews = await db.prepare(`
     SELECT COUNT(*) AS count FROM news_review_queue WHERE workflow_status IN ('pending', 'editing', 'approved')
   `).first<{ count: number }>().catch(() => null);
-  counts.newsQueue = Number(pendingNews?.count ?? 0);
+  counts.newsQueue = pendingNews ? Number(pendingNews.count) : null;
+  for(const [key,table] of [["articles","articles"],["courseSessions","course_sessions"]]){const row=await db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).first<{count:number}>();counts[key]=Number(row?.count??0);}
 
   const published = await db.prepare(`
     SELECT
@@ -356,17 +357,21 @@ export async function getCmsOverview(db: D1DatabaseLike) {
       (SELECT COUNT(*) FROM solutions WHERE status = 'published') +
       (SELECT COUNT(*) FROM courses WHERE status = 'published') +
       (SELECT COUNT(*) FROM projects WHERE status = 'published') +
-      (SELECT COUNT(*) FROM pages WHERE status = 'published') AS count
+      (SELECT COUNT(*) FROM pages WHERE status = 'published') +
+      (SELECT COUNT(*) FROM articles WHERE status = 'published') +
+      (SELECT COUNT(*) FROM events WHERE status = 'published') +
+      (SELECT COUNT(*) FROM experts WHERE status = 'published') +
+      (SELECT COUNT(*) FROM partners WHERE status = 'published') AS count
   `).first<{ count: number }>();
 
-  const recentActivity = await db.prepare(`
+  const recentActivity = includeActivity ? await db.prepare(`
     SELECT a.id, a.action, a.entity_type, a.entity_id, a.created_at,
-           COALESCE(u.display_name, u.email, 'Hệ thống') AS actor
+           COALESCE(NULLIF(u.display_name,''), u.email, NULLIF(a.actor_user_id,''), 'Hệ thống') AS actor
     FROM audit_logs a
     LEFT JOIN admin_users u ON u.id = a.actor_user_id
-    ORDER BY a.created_at DESC
+    ORDER BY a.created_at DESC, a.id DESC
     LIMIT 12
-  `).all<CmsRow>();
+  `).all<CmsRow>() : {results:[]};
 
   return {
     counts,

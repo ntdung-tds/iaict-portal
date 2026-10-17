@@ -15,4 +15,4 @@ jobs:
           node-version: 22
       - run: npm ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test e2e/article-studio.spec.ts e2e/cms-json-hints.spec.ts e2e/cms-pages.spec.ts e2e/cms-products.spec.ts e2e/cms-solutions.spec.ts e2e/cms-courses.spec.ts e2e/cms-sessions.spec.ts e2e/cms-registrations.spec.ts e2e/cms-leads.spec.ts e2e/cms-projects.spec.ts e2e/cms-experts.spec.ts e2e/cms-partners.spec.ts e2e/cms-events.spec.ts e2e/cms-navigation.spec.ts e2e/cms-redirects.spec.ts e2e/cms-audit.spec.ts e2e/cms-revisions.spec.ts e2e/cms-settings.spec.ts
+      - run: npx playwright test e2e/article-studio.spec.ts e2e/cms-json-hints.spec.ts e2e/cms-pages.spec.ts e2e/cms-products.spec.ts e2e/cms-solutions.spec.ts e2e/cms-courses.spec.ts e2e/cms-sessions.spec.ts e2e/cms-registrations.spec.ts e2e/cms-leads.spec.ts e2e/cms-projects.spec.ts e2e/cms-experts.spec.ts e2e/cms-partners.spec.ts e2e/cms-events.spec.ts e2e/cms-navigation.spec.ts e2e/cms-redirects.spec.ts e2e/cms-audit.spec.ts e2e/cms-revisions.spec.ts e2e/cms-settings.spec.ts e2e/cms-dashboard.spec.ts
