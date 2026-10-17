@@ -63,9 +63,9 @@ export async function GET(request: Request) {
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, config.adminOnly ? CMS_ADMIN_ROLES : CMS_READ_ROLES);
     const limitRaw = Number(url.searchParams.get("limit") ?? "80");
-    const result = await listCmsRecords(db, moduleKey, { q: url.searchParams.get("q") ?? undefined, status: url.searchParams.get("status") ?? undefined, limit: Number.isFinite(limitRaw) ? limitRaw : 80 });
+    const result = await listCmsRecords(db, moduleKey, { q: url.searchParams.get("q") ?? undefined, status: url.searchParams.get("status") ?? undefined, offset: Number(url.searchParams.get("offset") ?? "0"), limit: Number.isFinite(limitRaw) ? limitRaw : 80 });
     const references = await referencesFor(db, moduleKey, result.items);
-    return Response.json({ ok: true, module: config, actor, references, ...result });
+    return Response.json({ ok: true, module: config, actor, references, ...result }, {headers:{"Cache-Control":"no-store"}});
   } catch (error) { return errorResponse(error); }
 }
 

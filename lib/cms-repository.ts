@@ -9,6 +9,7 @@ type ListOptions = {
   q?: string;
   status?: string;
   limit?: number;
+  offset?: number;
 };
 
 function invalid(message: string): never {
@@ -149,9 +150,24 @@ async function listUsers(db: D1DatabaseLike, options: ListOptions) {
   return { items: rows.results, total: Number(total?.count ?? rows.results.length) };
 }
 
+async function listAudit(db: D1DatabaseLike, options: ListOptions) {
+  const limit = Number.isFinite(options.limit) ? Math.min(Math.max(Math.trunc(options.limit!), 1), 200) : 40;
+  const offset = Number.isFinite(options.offset) ? Math.max(Math.trunc(options.offset!), 0) : 0;
+  const q = options.q?.trim().toLowerCase();
+  const columns = ["a.action", "a.entity_type", "a.entity_id", "a.metadata_json", "a.actor_user_id", "u.display_name", "u.email"];
+  const where = q ? ` WHERE (${columns.map(column => `lower(COALESCE(${column},'')) LIKE ? ESCAPE '\\'`).join(" OR ")})` : "";
+  const escaped = q?.replace(/[\\%_]/g, character => `\\${character}`);
+  const bindings = q ? columns.map(() => `%${escaped}%`) : [];
+  const from = `FROM audit_logs a LEFT JOIN admin_users u ON u.id=a.actor_user_id`;
+  const rows = await db.prepare(`SELECT a.*, COALESCE(NULLIF(u.display_name,''),u.email,NULLIF(a.actor_user_id,''),'Hệ thống') AS actor_name ${from}${where} ORDER BY a.created_at DESC,a.id DESC LIMIT ? OFFSET ?`).bind(...bindings,limit,offset).all<CmsRow>();
+  const total = await db.prepare(`SELECT COUNT(*) AS count ${from}${where}`).bind(...bindings).first<{count:number}>();
+  return {items:rows.results,total:Number(total?.count??0)};
+}
+
 export async function listCmsRecords(db: D1DatabaseLike, moduleKey: string, options: ListOptions = {}) {
   const config = assertConfig(moduleKey);
   if (moduleKey === "users") return listUsers(db, options);
+  if (moduleKey === "audit") return listAudit(db, options);
 
   const limit = Math.min(Math.max(options.limit ?? 80, 1), 200);
   const where = whereFor(config, options);
