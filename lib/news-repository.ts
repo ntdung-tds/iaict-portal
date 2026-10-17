@@ -207,7 +207,7 @@ export async function listReviewQueue(
       JOIN news_ingest_items i ON i.id = q.ingest_item_id
       JOIN news_sources s ON s.id = i.source_id
       WHERE q.workflow_status = ?
-      ORDER BY q.queued_at DESC
+      ORDER BY q.queued_at DESC, q.id DESC
       LIMIT ?
     `)
     .bind(status, limit)
@@ -292,7 +292,8 @@ export async function updateReviewDraft(
 
   const title = input.title?.trim();
   if (title !== undefined && title.length < 8) throw new Error("REVIEW_TITLE_TOO_SHORT");
-  const nextStatus: NewsReviewStatus = current.workflow_status === "approved" ? "editing" : "editing";
+  if(input.categoryId){const category=await db.prepare("SELECT id FROM article_categories WHERE id=?").bind(input.categoryId).first();if(!category)throw new Error("INVALID_REVIEW_CATEGORY");}
+  const nextStatus: NewsReviewStatus = "editing";
   if (current.workflow_status !== nextStatus && !canTransitionNewsReviewStatus(current.workflow_status, nextStatus)) {
     throw new Error("INVALID_REVIEW_TRANSITION");
   }
@@ -303,8 +304,8 @@ export async function updateReviewDraft(
       UPDATE news_review_queue
       SET edited_title = COALESCE(?, edited_title),
           edited_excerpt = ?,
-          suggested_category_id = COALESCE(?, suggested_category_id),
-          editor_notes = ?,
+          suggested_category_id = CASE WHEN ?=1 THEN ? ELSE suggested_category_id END,
+          editor_notes = CASE WHEN ?=1 THEN ? ELSE editor_notes END,
           assigned_to = COALESCE(assigned_to, ?),
           workflow_status = 'editing',
           updated_at = ?,
@@ -317,8 +318,10 @@ export async function updateReviewDraft(
       WHERE id = ? AND workflow_status IN ('pending', 'editing', 'approved')
     `).bind(
       title ?? null,
-      input.excerpt === undefined ? current.edited_excerpt : input.excerpt,
+      input.excerpt === undefined ? current.edited_excerpt : input.excerpt ?? "",
+      input.categoryId === undefined ? 0 : 1,
       input.categoryId ?? null,
+      input.notes === undefined ? 0 : 1,
       input.notes ?? null,
       actor.id,
       timestamp,

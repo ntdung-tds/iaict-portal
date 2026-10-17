@@ -336,3 +336,11 @@
 .sourceCard dt { color: #526a73; }
 .sourceActions a,.sourceActions button { font-size: 14px; min-height: 44px; display: inline-flex; align-items: center; }
 .sourceCard dl div { flex-wrap: wrap; }
+.fieldHelp { margin: -4px 0 18px; font-size: 13px; line-height: 1.6; color: #4b626a; overflow-wrap: anywhere; }
+.editorBody textarea,.editorBody select { font-size: 16px; box-sizing: border-box; }
+.editorBody label > span { font-size: 14px; color: #35545e; }
+.editorActions button,.draftNotice button { min-height: 44px; }
+.draftNotice { padding: 12px; background: #fff7df; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.queueMeta,.queueItem small,.queueItemActive small { font-size: 12px; }
+.queueItem strong,.queueItemActive strong { font-size: 15px; overflow-wrap: anywhere; }
+.editorBody :focus-visible { outline: 3px solid #0a8878; outline-offset: 3px; }

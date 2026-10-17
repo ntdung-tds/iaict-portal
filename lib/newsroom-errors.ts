@@ -1,4 +1,5 @@
 const messages:Record<string,string>={
+  INVALID_REVIEW_CATEGORY:"Chuyên mục không tồn tại. Hãy chọn lại chuyên mục.",
   INVALID_NEWSROOM_SETTINGS:"Cài đặt Newsroom phải là một đối tượng với các trường được hỗ trợ.",
   INVALID_NEWSROOM_BOOLEAN:"Các công tắc tự động hóa phải là giá trị bật/tắt hợp lệ.",
   NEWSROOM_SETTINGS_NOT_FOUND:"Chưa có bản cấu hình Newsroom trong hệ thống. Vui lòng liên hệ quản trị viên.",
