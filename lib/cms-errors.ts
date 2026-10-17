@@ -110,6 +110,7 @@ const fixedMessages: Record<string, string> = {
   CONTACT_EMAIL_INVALID: "Email liên hệ chưa đúng định dạng.",
   SOCIAL_LINK_INVALID: "Có liên kết mạng xã hội chưa đúng định dạng URL HTTPS.",
 
+  REVISION_TARGET_MISSING: "Bản ghi gốc đã bị xóa. Không thể tự tạo lại từ lịch sử phiên bản.",
   REVISION_ID_REQUIRED: "Vui lòng chọn phiên bản cần khôi phục.",
   REVISION_NOT_FOUND: "Không tìm thấy phiên bản cần khôi phục.",
   REVISION_NOT_RESTORABLE: "Loại dữ liệu này không hỗ trợ khôi phục tự động.",
