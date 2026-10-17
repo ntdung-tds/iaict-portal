@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { NewsWorkflowSettingsForm } from "./news-workflow-settings";
 import { NewsSourceSettings } from "./news-source-settings";
 import { auditTime } from "@/lib/cms-audit-display";
 import type { CmsRoleCode } from "@/lib/cms-roles";
@@ -118,7 +119,6 @@ async function readJson<T>(response: Response): Promise<T> {
 export function NewsroomAdmin() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [actor, setActor] = useState<Actor | null>(null);
-  const [settingsDraft, setSettingsDraft] = useState<WorkflowSettings | null>(null);
   const [status, setStatus] = useState<ReviewStatus>("pending");
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -149,7 +149,6 @@ export function NewsroomAdmin() {
     };
     setActor(payload.actor);
     setOverview(next);
-    setSettingsDraft(current => current ?? next.settings);
   }, []);
 
   const loadQueue = useCallback(async (nextStatus: ReviewStatus) => {
@@ -196,7 +195,7 @@ export function NewsroomAdmin() {
 
   function changeStatus(next: ReviewStatus) { setStatus(next); setSelectedId(null); }
 
-  if (!overview || !settingsDraft) {
+  if (!overview) {
     return <main id="main-content" className={styles.loading}><strong>IAICT Newsroom</strong><span>{error ? `Không thể tải CMS: ${error}` : "Đang tải dữ liệu quản trị…"}</span></main>;
   }
 
@@ -205,7 +204,7 @@ export function NewsroomAdmin() {
       <header className={styles.topbar}>
         <div><span className={styles.eyebrow}>IAICT CMS / V16.5</span><h1>Newsroom Control Center</h1><p>Lấy tin, biên tập, duyệt, xuất bản và theo dõi tự động hóa trong một luồng có truy vết.</p></div>
         <div className={styles.topActions}>
-          <span className={settingsDraft.autoPublishEnabled ? styles.autoOn : styles.autoOff}>Auto publish {settingsDraft.autoPublishEnabled ? "ON" : "OFF"}</span>
+          <span className={overview.settings.autoPublishEnabled ? styles.autoOn : styles.autoOff}>Tự xuất bản: {overview.settings.autoPublishEnabled ? "Bật" : "Tắt"}</span>
           <button type="button" onClick={() => void refresh().catch(cause=>setError(cause instanceof Error?cause.message:String(cause)))} disabled={busy !== null}>Làm mới</button>
         </div>
       </header>
@@ -275,15 +274,7 @@ export function NewsroomAdmin() {
       <section className={styles.settingsSection} aria-labelledby="newsroom-settings-title">
         <div className={styles.settingsIntro}><span className={styles.eyebrow}>Settings / Newsroom</span><h2 id="newsroom-settings-title">Tự động hóa có kiểm soát</h2><p>Cron kiểm tra mỗi 15 phút nhưng chỉ chạy các nguồn đến hạn theo lịch riêng trong D1. Thay đổi chính sách tự động hóa chỉ dành cho Quản trị viên Newsroom.</p></div>
         <div className={styles.settingsCard}>
-          {!canAdmin ? <div className={styles.empty}>Chế độ chỉ đọc. Bạn có thể theo dõi cấu hình và lịch chạy nhưng không thể thay đổi.</div> : null}
-          <label className={styles.switchRow}><div><strong>Auto publish</strong><span>Master switch toàn newsroom</span></div><input disabled={!canAdmin} type="checkbox" checked={settingsDraft.autoPublishEnabled} onChange={(event) => setSettingsDraft({ ...settingsDraft, autoPublishEnabled: event.target.checked })} /></label>
-          <div className={styles.settingsGrid}>
-            <label><span>Trust tối thiểu</span><select disabled={!canAdmin} value={settingsDraft.autoPublishMinTrust} onChange={(event) => setSettingsDraft({ ...settingsDraft, autoPublishMinTrust: event.target.value as TrustLevel })}><option value="official">Official</option><option value="verified">Verified</option><option value="reference">Reference</option></select></label>
-            <label><span>Tối đa / lượt</span><input disabled={!canAdmin} type="number" min={1} max={100} value={settingsDraft.autoPublishMaxPerRun} onChange={(event) => setSettingsDraft({ ...settingsDraft, autoPublishMaxPerRun: Number(event.target.value) })} /></label>
-            <label className={styles.checkRow}><input disabled={!canAdmin} type="checkbox" checked={settingsDraft.requireAttribution} onChange={(event) => setSettingsDraft({ ...settingsDraft, requireAttribution: event.target.checked })} /><span>Bắt buộc ghi nguồn</span></label>
-            <label className={styles.checkRow}><input disabled={!canAdmin} type="checkbox" checked={settingsDraft.requireSourcePublishedAt} onChange={(event) => setSettingsDraft({ ...settingsDraft, requireSourcePublishedAt: event.target.checked })} /><span>Bắt buộc có ngày nguồn</span></label>
-          </div>
-          {canAdmin ? <button type="button" className={styles.saveSettings} disabled={busy !== null} onClick={() => void runAction("save-settings", async () => { await post("/api/admin/news/settings", { action: "update-settings", settings: settingsDraft }); }, "Đã lưu cài đặt Newsroom.")}>Lưu cài đặt chung</button> : null}
+          <NewsWorkflowSettingsForm settings={overview.settings} canAdmin={canAdmin} locked={busy!==null} onBusy={saving=>setBusy(saving?'save-settings':null)} onSaved={settings=>setOverview(current=>current?{...current,settings}:current)}/>
 
           <div className={styles.sourceSettings}>
             {overview.sources.map(source=><NewsSourceSettings key={source.id} source={source} canAdmin={canAdmin} locked={busy!==null} onBusy={saving=>setBusy(saving?`source-${source.id}`:null)} onSaved={value=>setOverview(current=>current?{...current,sources:current.sources.map(item=>item.id===source.id?{...item,...value}:item)}:current)}/>)}

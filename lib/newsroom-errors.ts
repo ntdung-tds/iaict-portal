@@ -1,4 +1,7 @@
 const messages:Record<string,string>={
+  INVALID_NEWSROOM_SETTINGS:"Cài đặt Newsroom phải là một đối tượng với các trường được hỗ trợ.",
+  INVALID_NEWSROOM_BOOLEAN:"Các công tắc tự động hóa phải là giá trị bật/tắt hợp lệ.",
+  NEWSROOM_SETTINGS_NOT_FOUND:"Chưa có bản cấu hình Newsroom trong hệ thống. Vui lòng liên hệ quản trị viên.",
   INVALID_SOURCE_NOT_FOUND:"Nguồn tin không tồn tại. Hãy làm mới danh sách nguồn.",
   NEWS_SOURCE_NOT_ACTIVE:"Nguồn tin không tồn tại hoặc đang bị tắt.",
   REVIEW_ITEM_NOT_FOUND:"Không tìm thấy nội dung trong hàng chờ.",
