@@ -24,3 +24,4 @@
 .actions .secondary { background:#e5eeee; color:#31545d; }
 .actions button:disabled { opacity:.55; cursor:wait; }
 @media(max-width:780px){.page{padding:24px 12px 48px}.header{align-items:flex-start;flex-direction:column}.header small{white-space:normal}.grid{grid-template-columns:1fr;gap:12px}.card{grid-template-columns:1fr;padding:16px 14px}.wide{grid-column:auto}.actions{justify-content:stretch}.actions>span{flex-basis:100%;margin:0}.actions button{flex:1}}
+.card input,.card textarea{box-sizing:border-box;font-size:16px}.card label>span{font-size:14px}.card label>small{font-size:13px;color:#536c75}.intro p,.header p{font-size:15px}.header small{font-size:13px}.actions button{font-size:15px;min-height:44px}.error,.success,.actions>span{font-size:14px}.notice{max-width:1400px;margin:0 auto 20px;font-size:14px;line-height:1.6;color:#536c75}.page{overflow-wrap:anywhere}.page button:focus-visible{outline:3px solid #008b7b;outline-offset:3px}

@@ -106,6 +106,7 @@ const fixedMessages: Record<string, string> = {
   REGISTRATION_CLOSE_BEFORE_OPEN: "Thời gian đóng đăng ký phải sau thời gian mở đăng ký.",
   ONLINE_URL: "URL học trực tuyến chưa đúng định dạng.",
 
+  SETTINGS_INVALID: "Cấu hình chưa đúng định dạng. Các trường thông tin phải là văn bản và mạng xã hội phải là đối tượng liên kết.",
   ORGANIZATION_NAME_REQUIRED: "Vui lòng nhập tên tổ chức.",
   CONTACT_EMAIL_INVALID: "Email liên hệ chưa đúng định dạng.",
   SOCIAL_LINK_INVALID: "Có liên kết mạng xã hội chưa đúng định dạng URL HTTPS.",
