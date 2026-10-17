@@ -229,6 +229,8 @@ export async function updateNewsSourceSettings(
   if (!["inherit", "manual", "auto"].includes(input.publicationMode)) {
     throw new Error("INVALID_SOURCE_PUBLICATION_MODE");
   }
+  const existing = await db.prepare("SELECT id FROM news_sources WHERE id=?").bind(input.sourceId).first<{id:string}>();
+  if (!existing) throw new Error("INVALID_SOURCE_NOT_FOUND");
   const schedule = validateNewsSourceSchedule(input);
   const timestamp = nowIso();
   const activeValue = input.isActive === undefined ? null : input.isActive ? 1 : 0;

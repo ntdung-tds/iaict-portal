@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { NewsSourceSettings } from "./news-source-settings";
+import { auditTime } from "@/lib/cms-audit-display";
 import type { CmsRoleCode } from "@/lib/cms-roles";
 import styles from "./newsroom-admin.module.css";
 
@@ -98,9 +100,7 @@ const STATUS_ORDER: ReviewStatus[] = ["pending", "editing", "approved", "rejecte
 
 function formatTime(value: string | null) {
   if (!value) return "Chưa có";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(date);
+  return auditTime(value);
 }
 
 function schedulerStatusClass(status: SchedulerRun["status"]) {
@@ -149,7 +149,7 @@ export function NewsroomAdmin() {
     };
     setActor(payload.actor);
     setOverview(next);
-    setSettingsDraft(next.settings);
+    setSettingsDraft(current => current ?? next.settings);
   }, []);
 
   const loadQueue = useCallback(async (nextStatus: ReviewStatus) => {
@@ -206,7 +206,7 @@ export function NewsroomAdmin() {
         <div><span className={styles.eyebrow}>IAICT CMS / V16.5</span><h1>Newsroom Control Center</h1><p>Lấy tin, biên tập, duyệt, xuất bản và theo dõi tự động hóa trong một luồng có truy vết.</p></div>
         <div className={styles.topActions}>
           <span className={settingsDraft.autoPublishEnabled ? styles.autoOn : styles.autoOff}>Auto publish {settingsDraft.autoPublishEnabled ? "ON" : "OFF"}</span>
-          <button type="button" onClick={() => void refresh()} disabled={busy !== null}>Làm mới</button>
+          <button type="button" onClick={() => void refresh().catch(cause=>setError(cause instanceof Error?cause.message:String(cause)))} disabled={busy !== null}>Làm mới</button>
         </div>
       </header>
 
@@ -223,10 +223,10 @@ export function NewsroomAdmin() {
           <div className={styles.sourceList}>
             {overview.sources.map((source) => (
               <article className={styles.sourceCard} key={source.id}>
-                <div className={styles.sourceTitleRow}><span className={source.isActive ? styles.healthGood : styles.healthMuted} aria-hidden="true" /><div><strong>{source.name}</strong><small>{source.fetchStrategy.toUpperCase()} · {source.trustLevel}</small></div></div>
+                <div className={styles.sourceTitleRow}><span className={source.isActive ? styles.healthGood : styles.healthMuted} aria-hidden="true" /><div><strong>{source.name}</strong><small>{source.fetchStrategy.toUpperCase()} · {({official:"Chính thống",verified:"Đã xác minh",reference:"Tham khảo"} as const)[source.trustLevel]}</small></div></div>
                 <dl>
                   <div><dt>Lần lấy gần nhất</dt><dd>{formatTime(source.lastFetchedAt)}</dd></div>
-                  <div><dt>Chế độ</dt><dd>{source.publicationMode}</dd></div>
+                  <div><dt>Chế độ</dt><dd>{{inherit:"Theo cài đặt chung",manual:"Duyệt thủ công",auto:"Cho phép tự đăng"}[source.publicationMode]}</dd></div>
                   <div><dt>Lịch tự động</dt><dd>{source.scheduleEnabled ? `${source.scheduleIntervalMinutes} phút` : "Tắt"}</dd></div>
                   <div><dt>Lần kế tiếp</dt><dd>{source.scheduleEnabled ? formatTime(source.nextScheduledAt) : "—"}</dd></div>
                 </dl>
@@ -286,15 +286,7 @@ export function NewsroomAdmin() {
           {canAdmin ? <button type="button" className={styles.saveSettings} disabled={busy !== null} onClick={() => void runAction("save-settings", async () => { await post("/api/admin/news/settings", { action: "update-settings", settings: settingsDraft }); }, "Đã lưu cài đặt Newsroom.")}>Lưu cài đặt chung</button> : null}
 
           <div className={styles.sourceSettings}>
-            {overview.sources.map((source) => (
-              <div key={source.id} className={styles.sourceSettingRow}>
-                <div><strong>{source.name}</strong><span>{source.isActive ? "Đang hoạt động" : "Đang tắt"} · {source.scheduleEnabled ? `tự lấy mỗi ${source.scheduleIntervalMinutes} phút` : "không tự lấy"}</span></div>
-                <div style={{ display: "grid", gap: 8 }}>
-                  <select disabled={!canAdmin} aria-label={`Chế độ xuất bản ${source.name}`} value={source.publicationMode} onChange={(event) => { const mode = event.target.value as PublicationMode; void runAction(`source-mode-${source.id}`, async () => { await post("/api/admin/news/settings", { action: "update-source", sourceId: source.id, publicationMode: mode, isActive: source.isActive }); }, `Đã đổi chế độ ${source.name} sang ${mode}.`); }}><option value="inherit">Theo cài đặt chung</option><option value="manual">Luôn duyệt thủ công</option><option value="auto">Cho phép tự đăng</option></select>
-                  <select disabled={!canAdmin} aria-label={`Lịch lấy tin ${source.name}`} value={source.scheduleEnabled ? String(source.scheduleIntervalMinutes) : "off"} onChange={(event) => { const value = event.target.value; const enabled = value !== "off"; const interval = enabled ? Number(value) : source.scheduleIntervalMinutes; void runAction(`source-schedule-${source.id}`, async () => { await post("/api/admin/news/settings", { action: "update-source", sourceId: source.id, publicationMode: source.publicationMode, isActive: source.isActive, scheduleEnabled: enabled, scheduleIntervalMinutes: interval, scheduleRetryMinutes: source.scheduleRetryMinutes }); }, enabled ? `Đã đặt lịch ${source.name}: ${interval} phút/lần.` : `Đã tắt lịch tự động của ${source.name}.`); }}><option value="off">Tắt lấy tin tự động</option><option value="15">Mỗi 15 phút</option><option value="30">Mỗi 30 phút</option><option value="60">Mỗi 60 phút</option><option value="120">Mỗi 2 giờ</option><option value="240">Mỗi 4 giờ</option><option value="360">Mỗi 6 giờ</option><option value="720">Mỗi 12 giờ</option><option value="1440">Mỗi 24 giờ</option></select>
-                </div>
-              </div>
-            ))}
+            {overview.sources.map(source=><NewsSourceSettings key={source.id} source={source} canAdmin={canAdmin} locked={busy!==null} onBusy={saving=>setBusy(saving?`source-${source.id}`:null)} onSaved={value=>setOverview(current=>current?{...current,sources:current.sources.map(item=>item.id===source.id?{...item,...value}:item)}:current)}/>)}
           </div>
 
           <div className={styles.schedulerSummary}><h3>Hoạt động tự động gần nhất</h3>{overview.schedulerRuns.length === 0 ? <div className={styles.empty}>Chưa có Cron run nào được ghi nhận.</div> : overview.schedulerRuns.slice(0, 5).map((run) => <div className={styles.schedulerRun} key={run.id}><strong>{formatTime(run.started_at)}</strong><span className={schedulerStatusClass(run.status)}>{run.status}</span><span>Đến hạn {run.due_count}</span><span>OK {run.succeeded_count}</span><span>Lỗi {run.failed_count}</span></div>)}</div>

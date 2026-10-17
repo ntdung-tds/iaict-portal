@@ -317,3 +317,22 @@
 @media (prefers-reduced-motion: reduce) {
   .kpi, .kpiActive { transition: none; }
 }
+
+.sourceForm { padding: 24px 0; border-bottom: 1px solid #dce6e8; min-width: 0; overflow-wrap: anywhere; }
+.sourceForm h3 { margin: 0 0 8px; font-size: 18px; }
+.sourceForm p { font-size: 14px; line-height: 1.6; }
+.sourceForm fieldset { display: grid; gap: 8px; min-width: 0; padding: 0; margin: 16px 0; border: 0; }
+.sourceForm label { font-size: 15px; font-weight: 650; }
+.sourceForm small { color: #4b626a; font-size: 13px; line-height: 1.6; margin-bottom: 10px; }
+.sourceForm select,.sourceForm input[type="number"] { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; border: 1px solid #9aafb5; border-radius: 8px; padding: 10px; background: #fff; color: #173b46; font-size: 16px; }
+.sourceFormActions { display: flex; flex-wrap: wrap; gap: 10px; }
+.sourceFormActions button { min-height: 44px; padding: 10px 14px; border-radius: 8px; font: inherit; cursor: pointer; }
+.sourceForm :focus-visible { outline: 3px solid #0a8878; outline-offset: 3px; }
+.sourceForm :disabled { opacity: .65; cursor: not-allowed; }
+.sourceError { overflow-wrap: anywhere; }
+.settingsCard { min-width: 0; }
+.sourceTitleRow strong { font-size: 15px; }
+.sourceTitleRow small,.sourceCard dl div,.sourceError { font-size: 13px; }
+.sourceCard dt { color: #526a73; }
+.sourceActions a,.sourceActions button { font-size: 14px; min-height: 44px; display: inline-flex; align-items: center; }
+.sourceCard dl div { flex-wrap: wrap; }
