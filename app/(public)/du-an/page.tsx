@@ -1,3 +1,4 @@
+import { PublishedCmsCatalog } from "@/components/published-cms-catalog";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import styles from "@/components/public.module.css";
@@ -90,6 +91,8 @@ export default function ProjectsPage() {
           </article>
         </div>
       </section>
+
+      <PublishedCmsCatalog kind="project" />
 
       <section className={styles.sectionAlt}>
         <div className="shell">

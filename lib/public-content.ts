@@ -1,4 +1,5 @@
 export type NavigationItem = {
+  opensNewTab?: boolean;
   label: string;
   href: string;
 };

@@ -1,86 +1,16 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
-import {
-  getNewsroomOverview,
-  updateNewsroomSettings,
-  updateNewsSourceSettings,
-} from "@/lib/newsroom-settings";
-import { NewsroomAuthError, requireNewsroomActor } from "@/lib/newsroom-auth";
-import type { NewsPublicationMode, NewsWorkflowSettings } from "@/lib/news-workflow";
+import { NEWSROOM_ADMIN_ROLES,NEWSROOM_READ_ROLES } from "@/lib/cms-roles";
+import { translateNewsroomError } from "@/lib/newsroom-errors";
+import { getNewsroomOverview,updateNewsroomSettings,updateNewsSourceSettings } from "@/lib/newsroom-settings";
+import { NewsroomAuthError,requireNewsroomActor } from "@/lib/newsroom-auth";
+import type { NewsPublicationMode,NewsWorkflowSettings } from "@/lib/news-workflow";
 
-export const dynamic = "force-dynamic";
-
-type SettingsBody = {
-  action?: unknown;
-  settings?: Partial<NewsWorkflowSettings>;
-  sourceId?: unknown;
-  publicationMode?: unknown;
-  isActive?: unknown;
-  scheduleEnabled?: unknown;
-  scheduleIntervalMinutes?: unknown;
-  scheduleRetryMinutes?: unknown;
-};
-
-function errorResponse(error: unknown) {
-  if (error instanceof NewsroomAuthError) {
-    return Response.json({ error: error.message }, { status: error.status });
-  }
-  const message = error instanceof Error ? error.message : "Unknown newsroom error";
-  const status = message.startsWith("INVALID_") ? 400 : 500;
-  return Response.json({ error: message }, { status });
-}
-
-export async function GET(request: Request) {
-  try {
-    const db = getDatabaseBinding();
-    await requireNewsroomActor(request, db, [
-      "admin",
-      "editor",
-      "reviewer",
-      "news_admin",
-      "news_editor",
-      "news_reviewer",
-    ]);
-    return Response.json({ ok: true, ...(await getNewsroomOverview(db)) });
-  } catch (error) {
-    return errorResponse(error);
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const db = getDatabaseBinding();
-    const actor = await requireNewsroomActor(request, db, ["admin", "news_admin"]);
-    const body = await request.json() as SettingsBody;
-
-    if (body.action === "update-settings") {
-      const settings = await updateNewsroomSettings(db, actor, body.settings ?? {});
-      return Response.json({ ok: true, settings });
-    }
-
-    if (body.action === "update-source") {
-      const sourceId = typeof body.sourceId === "string" ? body.sourceId.trim() : "";
-      const publicationMode = typeof body.publicationMode === "string"
-        ? body.publicationMode as NewsPublicationMode
-        : "inherit";
-      if (!sourceId) return Response.json({ error: "sourceId is required" }, { status: 400 });
-
-      await updateNewsSourceSettings(db, actor, {
-        sourceId,
-        publicationMode,
-        isActive: typeof body.isActive === "boolean" ? body.isActive : undefined,
-        scheduleEnabled: typeof body.scheduleEnabled === "boolean" ? body.scheduleEnabled : undefined,
-        scheduleIntervalMinutes: typeof body.scheduleIntervalMinutes === "number"
-          ? body.scheduleIntervalMinutes
-          : undefined,
-        scheduleRetryMinutes: typeof body.scheduleRetryMinutes === "number"
-          ? body.scheduleRetryMinutes
-          : undefined,
-      });
-      return Response.json({ ok: true });
-    }
-
-    return Response.json({ error: "Unsupported settings action" }, { status: 400 });
-  } catch (error) {
-    return errorResponse(error);
-  }
-}
+export const dynamic="force-dynamic";
+type SettingsBody={action?:unknown;settings?:Partial<NewsWorkflowSettings>;sourceId?:unknown;publicationMode?:unknown;isActive?:unknown;scheduleEnabled?:unknown;scheduleIntervalMinutes?:unknown;scheduleRetryMinutes?:unknown};
+function errorResponse(error:unknown){if(error instanceof NewsroomAuthError)return Response.json({error:error.message},{status:error.status});const message=error instanceof Error?error.message:"Unknown newsroom error";const status=message.startsWith("INVALID_")?400:500;return Response.json({error:translateNewsroomError(message)},{status});}
+export async function GET(request:Request){try{const db=getDatabaseBinding();const actor=await requireNewsroomActor(request,db,NEWSROOM_READ_ROLES);return Response.json({ok:true,actor,...(await getNewsroomOverview(db))},{headers:{"Cache-Control":"no-store"}});}catch(error){return errorResponse(error);}}
+export async function POST(request:Request){try{const db=getDatabaseBinding();const actor=await requireNewsroomActor(request,db,NEWSROOM_ADMIN_ROLES);let raw:unknown;try{raw=await request.json();}catch{return Response.json({error:"Nội dung gửi lên phải là JSON hợp lệ."},{status:400});}if(!raw||typeof raw!=="object"||Array.isArray(raw))return Response.json({error:"Cấu hình gửi lên phải là một đối tượng."},{status:400});const body=raw as SettingsBody;if(body.action==="update-settings"){const settings=await updateNewsroomSettings(db,actor,body.settings as Partial<NewsWorkflowSettings>);return Response.json({ok:true,settings});}if(body.action==="update-source"){
+for(const field of ["isActive","scheduleEnabled"] as const){if(body[field]!==undefined&&typeof body[field]!=="boolean")return Response.json({error:"Trạng thái nguồn và lịch phải là giá trị bật/tắt."},{status:400});}
+for(const field of ["scheduleIntervalMinutes","scheduleRetryMinutes"] as const){if(body[field]!==undefined&&typeof body[field]!=="number")return Response.json({error:"Chu kỳ lấy tin và thời gian thử lại phải là số phút."},{status:400});}
+if(typeof body.publicationMode!=="string"||!["inherit","manual","auto"].includes(body.publicationMode))return Response.json({error:"Vui lòng chọn chế độ xuất bản hợp lệ."},{status:400});
+const sourceId=typeof body.sourceId==="string"?body.sourceId.trim():"";const publicationMode=typeof body.publicationMode==="string"?body.publicationMode as NewsPublicationMode:"inherit";if(!sourceId)return Response.json({error:"Vui lòng chọn nguồn tin cần cập nhật."},{status:400});await updateNewsSourceSettings(db,actor,{sourceId,publicationMode,isActive:typeof body.isActive==="boolean"?body.isActive:undefined,scheduleEnabled:typeof body.scheduleEnabled==="boolean"?body.scheduleEnabled:undefined,scheduleIntervalMinutes:typeof body.scheduleIntervalMinutes==="number"?body.scheduleIntervalMinutes:undefined,scheduleRetryMinutes:typeof body.scheduleRetryMinutes==="number"?body.scheduleRetryMinutes:undefined});return Response.json({ok:true});}return Response.json({error:"Thao tác cấu hình Newsroom không được hỗ trợ."},{status:400});}catch(error){return errorResponse(error);}}

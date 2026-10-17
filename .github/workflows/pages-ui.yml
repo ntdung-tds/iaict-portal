@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - ui-wow-production
+      - cms/v17-full-admin
   workflow_dispatch:
 
 permissions:
@@ -39,9 +40,12 @@ jobs:
           GITHUB_PAGES: "true"
           NEXT_PUBLIC_SITE_URL: "https://ntdung-tds.github.io/iaict-portal/"
           NEXT_PUBLIC_INDEXABLE_SITE: "false"
+          NEXT_PUBLIC_STATIC_PREVIEW: "true"
+          NEXT_PUBLIC_CMS_URL: "https://iaict-portal-staging.iaict-platform.workers.dev/admin"
         run: |
           set -euo pipefail
           mv cloudflare.config.ts cloudflare.config.ts.pages-disabled
+          node scripts/prepare-pages-preview.mjs
           npx vinext build
 
       - name: Prepare GitHub Pages artifact
@@ -68,6 +72,7 @@ jobs:
           cp -a "$EXPORT_DIR"/. "$PAGES_DIR"/
 
           touch "$PAGES_DIR/.nojekyll"
+          GITHUB_PAGES=true NEXT_PUBLIC_CMS_URL=https://iaict-portal-staging.iaict-platform.workers.dev/admin node scripts/prepare-pages-preview.mjs --artifact "$PAGES_DIR"
           if [ ! -f "$PAGES_DIR/404.html" ]; then
             if [ -f dist/client/404.html ]; then
               cp dist/client/404.html "$PAGES_DIR/404.html"
@@ -85,6 +90,11 @@ jobs:
           echo "CSS files: $(find "$PAGES_DIR/_next/static/css" -type f -name '*.css' | wc -l)"
           echo "JS files: $(find "$PAGES_DIR/_next/static/chunks" -type f -name '*.js' | wc -l)"
           find "$PAGES_DIR" -maxdepth 4 -type f | head -160
+
+      - name: Check CMS data in the exported Pages UI
+        run: |
+          npx playwright install --with-deps chromium
+          node scripts/check-pages-cms.mjs .pages-artifact
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

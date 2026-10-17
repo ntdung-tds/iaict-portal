@@ -1,0 +1,18 @@
+name: CMS interface checks
+on:
+  push:
+    branches: [cms/v17-full-admin]
+permissions:
+  contents: read
+jobs:
+  article-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test e2e/article-studio.spec.ts e2e/cms-json-hints.spec.ts e2e/cms-pages.spec.ts e2e/cms-products.spec.ts e2e/cms-solutions.spec.ts e2e/cms-courses.spec.ts e2e/cms-sessions.spec.ts e2e/cms-registrations.spec.ts e2e/cms-leads.spec.ts e2e/cms-projects.spec.ts e2e/cms-experts.spec.ts e2e/cms-partners.spec.ts e2e/cms-events.spec.ts e2e/cms-navigation.spec.ts e2e/cms-redirects.spec.ts e2e/cms-audit.spec.ts e2e/cms-revisions.spec.ts e2e/cms-settings.spec.ts e2e/cms-dashboard.spec.ts e2e/cms-news-sources.spec.ts e2e/cms-news-policy.spec.ts e2e/cms-news-review.spec.ts e2e/cms-news-pagination.spec.ts

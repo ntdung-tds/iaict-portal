@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CategoryLanding } from "@/components/category-landing";
+import { PublishedCmsCatalog } from "@/components/published-cms-catalog";
 import { solutionGroups } from "@/lib/public-content";
 
 export const metadata: Metadata = {
@@ -15,6 +16,8 @@ export default function SolutionsPage() {
       title="Giải pháp & Dịch vụ"
       intro="IAICT bắt đầu từ bài toán vận hành, dữ liệu và tiêu chí thành công; sau đó mới lựa chọn kiến trúc, công nghệ và lộ trình triển khai phù hợp."
       items={solutionGroups}
-    />
+    >
+      <PublishedCmsCatalog kind="solution" />
+    </CategoryLanding>
   );
 }

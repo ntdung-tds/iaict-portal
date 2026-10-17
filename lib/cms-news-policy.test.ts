@@ -1,0 +1,16 @@
+import { beforeEach, expect, it, vi } from 'vitest';
+import { validateNewsroomSettings, updateNewsroomSettings } from './newsroom-settings';
+import { POST } from '../app/api/admin/news/settings/route';
+import type { D1DatabaseLike } from './cloudflare-db';
+const current={auto_publish_enabled:1,auto_publish_min_trust:'verified',auto_publish_max_per_run:25,require_attribution:0,require_source_published_at:1};
+let writes:unknown[][]=[];let missing=false;
+const db={prepare:()=>({first:async()=>missing?null:current,bind:(...values:unknown[])=>({run:async()=>{writes.push(values);return {success:true};}})}),batch:async(statements:{run:()=>Promise<unknown>}[])=>Promise.all(statements.map(s=>s.run()))} as unknown as D1DatabaseLike;
+vi.mock('./cloudflare-db',()=>({getDatabaseBinding:()=>db}));
+vi.mock('./newsroom-auth',async original=>({...await original<typeof import('./newsroom-auth')>(),requireNewsroomActor:vi.fn(async()=>({id:'u',roles:['news_admin']}))}));
+beforeEach(()=>{writes=[];missing=false;});
+it.each([null,[],false,'false',{autoPublishEnabled:'false'},{requireAttribution:0},{requireSourcePublishedAt:'true'},{autoPublishMaxPerRun:'10'},{autoPublishMaxPerRun:0},{autoPublishMaxPerRun:101},{autoPublishMaxPerRun:1.5},{autoPublishMinTrust:'unknown'},{unknown:true}])('rejects invalid settings %j',input=>{expect(()=>validateNewsroomSettings(input as never)).toThrow();});
+it('merges partial updates with stored settings instead of resetting them',async()=>{const saved=await updateNewsroomSettings(db,{id:'u'} as never,{autoPublishMaxPerRun:30});expect(saved).toEqual({autoPublishEnabled:true,autoPublishMinTrust:'verified',autoPublishMaxPerRun:30,requireAttribution:false,requireSourcePublishedAt:true});expect(writes).toHaveLength(2);expect(writes[0].slice(0,5)).toEqual([1,'verified',30,0,1]);expect(JSON.parse(writes[1][2] as string)).toEqual(saved);});
+it('does not claim success if the stored configuration is missing',async()=>{missing=true;await expect(updateNewsroomSettings(db,{id:'u'} as never,{})).rejects.toThrow('NEWSROOM_SETTINGS_NOT_FOUND');expect(writes).toHaveLength(0);});
+it('API rejects omitted settings without writing defaults',async()=>{const response=await POST(new Request('https://example.com',{method:'POST',body:JSON.stringify({action:'update-settings'})}));expect(response.status).toBe(400);expect(writes).toHaveLength(0);});
+it('API preserves explicit false values and returns saved configuration',async()=>{const response=await POST(new Request('https://example.com',{method:'POST',body:JSON.stringify({action:'update-settings',settings:{autoPublishEnabled:false}})}));expect(response.status).toBe(200);const payload=await response.json();expect(payload.settings.autoPublishEnabled).toBe(false);expect(payload.settings.autoPublishMaxPerRun).toBe(25);});
+it('API denies writes to a viewer',async()=>{const {requireNewsroomActor,NewsroomAuthError}=await import('./newsroom-auth');vi.mocked(requireNewsroomActor).mockRejectedValueOnce(new NewsroomAuthError(403,'Không có quyền'));const response=await POST(new Request('https://example.com',{method:'POST',body:JSON.stringify({action:'update-settings',settings:{autoPublishEnabled:true}})}));expect(response.status).toBe(403);expect(writes).toHaveLength(0);});

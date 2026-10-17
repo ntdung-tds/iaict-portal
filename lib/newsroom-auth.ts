@@ -1,12 +1,7 @@
 import type { D1DatabaseLike } from "./cloudflare-db";
+import { CMS_ROLE_CODES, isCmsRoleCode, type CmsRoleCode } from "./cms-roles";
 
-export type NewsroomRole =
-  | "admin"
-  | "editor"
-  | "reviewer"
-  | "news_admin"
-  | "news_editor"
-  | "news_reviewer";
+export type NewsroomRole = CmsRoleCode;
 
 export type NewsroomActor = {
   id: string;
@@ -37,14 +32,7 @@ function normalizeRoleCodes(value: string | null): NewsroomRole[] {
   return value
     .split(",")
     .map((item) => item.trim())
-    .filter((item): item is NewsroomRole => [
-      "admin",
-      "editor",
-      "reviewer",
-      "news_admin",
-      "news_editor",
-      "news_reviewer",
-    ].includes(item));
+    .filter(isCmsRoleCode);
 }
 
 export async function requireNewsroomActor(
@@ -55,9 +43,6 @@ export async function requireNewsroomActor(
   const email = request.headers.get("Cf-Access-Authenticated-User-Email")?.trim();
   const assertion = request.headers.get("Cf-Access-Jwt-Assertion")?.trim();
 
-  // Fail closed unless the route is reached through Cloudflare Access. Production
-  // must protect /api/admin/* with an Access policy; these headers are only an
-  // identity bridge after that edge policy has authenticated the request.
   if (!email || !assertion) {
     throw new NewsroomAuthError(401, "Cloudflare Access authentication required");
   }
@@ -79,11 +64,11 @@ export async function requireNewsroomActor(
     .bind(email)
     .first<ActorRow>();
 
-  if (!row) throw new NewsroomAuthError(403, "User is not an active CMS administrator");
+  if (!row) throw new NewsroomAuthError(403, "User is not an active CMS user");
 
   const roles = normalizeRoleCodes(row.role_codes);
   const isAllowed = roles.some((role) => allowedRoles.includes(role));
-  if (!isAllowed) throw new NewsroomAuthError(403, "Insufficient newsroom role");
+  if (!isAllowed) throw new NewsroomAuthError(403, "Insufficient CMS role");
 
   return {
     id: row.id,
@@ -92,3 +77,5 @@ export async function requireNewsroomActor(
     roles,
   };
 }
+
+export { CMS_ROLE_CODES };

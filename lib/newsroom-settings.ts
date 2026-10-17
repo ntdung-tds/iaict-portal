@@ -147,11 +147,19 @@ export async function getNewsroomOverview(db: D1DatabaseLike) {
 }
 
 export function validateNewsroomSettings(input: Partial<NewsWorkflowSettings>): NewsWorkflowSettings {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("INVALID_NEWSROOM_SETTINGS");
+  const fields = ["autoPublishEnabled", "autoPublishMinTrust", "autoPublishMaxPerRun", "requireAttribution", "requireSourcePublishedAt"];
+  if (Object.keys(input).some(key=>!fields.includes(key))) throw new Error("INVALID_NEWSROOM_SETTINGS");
+  for (const field of ["autoPublishEnabled", "requireAttribution", "requireSourcePublishedAt"] as const) {
+    if (input[field] !== undefined && typeof input[field] !== "boolean") throw new Error("INVALID_NEWSROOM_BOOLEAN");
+  }
+  if (input.autoPublishMinTrust !== undefined && typeof input.autoPublishMinTrust !== "string") throw new Error("INVALID_AUTO_PUBLISH_TRUST_LEVEL");
+  if (input.autoPublishMaxPerRun !== undefined && typeof input.autoPublishMaxPerRun !== "number") throw new Error("INVALID_AUTO_PUBLISH_CAP");
   const trust = input.autoPublishMinTrust ?? "official";
   if (!["official", "verified", "reference"].includes(trust)) {
     throw new Error("INVALID_AUTO_PUBLISH_TRUST_LEVEL");
   }
-  const cap = Number(input.autoPublishMaxPerRun ?? 10);
+  const cap = input.autoPublishMaxPerRun ?? 10;
   if (!Number.isInteger(cap) || cap < 1 || cap > 100) {
     throw new Error("INVALID_AUTO_PUBLISH_CAP");
   }
@@ -189,7 +197,18 @@ export async function updateNewsroomSettings(
   actor: NewsroomActor,
   input: Partial<NewsWorkflowSettings>,
 ) {
-  const settings = validateNewsroomSettings(input);
+  validateNewsroomSettings(input);
+  const current = await db.prepare(`SELECT auto_publish_enabled, auto_publish_min_trust, auto_publish_max_per_run,
+    require_attribution, require_source_published_at FROM news_workflow_settings WHERE id='default'`).first<{
+      auto_publish_enabled:number;auto_publish_min_trust:NewsTrustLevel;auto_publish_max_per_run:number;require_attribution:number;require_source_published_at:number;
+    }>();
+  if (!current) throw new Error("NEWSROOM_SETTINGS_NOT_FOUND");
+  const provided=Object.fromEntries(Object.entries(input).filter(([,value])=>value!==undefined));
+  const settings = validateNewsroomSettings({
+    autoPublishEnabled:current.auto_publish_enabled===1,autoPublishMinTrust:current.auto_publish_min_trust,
+    autoPublishMaxPerRun:current.auto_publish_max_per_run,requireAttribution:current.require_attribution===1,
+    requireSourcePublishedAt:current.require_source_published_at===1,...provided,
+  });
   const timestamp = nowIso();
   await db.batch([
     db.prepare(`
@@ -229,6 +248,8 @@ export async function updateNewsSourceSettings(
   if (!["inherit", "manual", "auto"].includes(input.publicationMode)) {
     throw new Error("INVALID_SOURCE_PUBLICATION_MODE");
   }
+  const existing = await db.prepare("SELECT id FROM news_sources WHERE id=?").bind(input.sourceId).first<{id:string}>();
+  if (!existing) throw new Error("INVALID_SOURCE_NOT_FOUND");
   const schedule = validateNewsSourceSchedule(input);
   const timestamp = nowIso();
   const activeValue = input.isActive === undefined ? null : input.isActive ? 1 : 0;

@@ -1,6 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { NewsWorkflowSettingsForm } from "./news-workflow-settings";
+import { NewsSourceSettings } from "./news-source-settings";
+import { auditTime } from "@/lib/cms-audit-display";
+import type { CmsRoleCode } from "@/lib/cms-roles";
 import styles from "./newsroom-admin.module.css";
 
 type ReviewStatus = "pending" | "editing" | "approved" | "rejected" | "published";
@@ -38,6 +42,7 @@ type Source = {
 
 type Category = { id: string; name: string; slug: string };
 type QueueCounts = Record<ReviewStatus, number>;
+type Actor = { id: string; email: string; displayName: string | null; roles: CmsRoleCode[] };
 
 type SchedulerRun = {
   id: string;
@@ -64,6 +69,7 @@ type ReviewItem = {
   edited_excerpt: string | null;
   approval_mode: "manual" | "auto";
   editor_notes: string | null;
+  review_reason?: string | null;
   source_id: string;
   source_name: string;
   source_url: string;
@@ -96,12 +102,7 @@ const STATUS_ORDER: ReviewStatus[] = ["pending", "editing", "approved", "rejecte
 
 function formatTime(value: string | null) {
   if (!value) return "Chưa có";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("vi-VN", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return auditTime(value);
 }
 
 function schedulerStatusClass(status: SchedulerRun["status"]) {
@@ -118,7 +119,7 @@ async function readJson<T>(response: Response): Promise<T> {
 
 export function NewsroomAdmin() {
   const [overview, setOverview] = useState<Overview | null>(null);
-  const [settingsDraft, setSettingsDraft] = useState<WorkflowSettings | null>(null);
+  const [actor, setActor] = useState<Actor | null>(null);
   const [status, setStatus] = useState<ReviewStatus>("pending");
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -129,15 +130,29 @@ export function NewsroomAdmin() {
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [queueLoading,setQueueLoading]=useState(false);
+  const [queueOffset,setQueueOffset]=useState(0);
+  const [queueTotal,setQueueTotal]=useState(0);
+  const [queueError,setQueueError]=useState<string|null>(null);
+  const queueController=useRef<AbortController|null>(null);
+  const actionLock=useRef(false);
 
-  const selected = useMemo(
-    () => items.find((item) => item.queue_id === selectedId) ?? null,
-    [items, selectedId],
-  );
+  const selected = useMemo(() => items.find((item) => item.queue_id === selectedId) ?? null, [items, selectedId]);
+  const roles = actor?.roles ?? [];
+  const canAdmin = roles.includes("admin") || roles.includes("news_admin");
+  const canEdit = roles.some((role) => ["admin", "editor", "news_admin", "news_editor"].includes(role));
+  const canReview = roles.some((role) => ["admin", "reviewer", "news_admin", "news_reviewer"].includes(role));
+  const editable=!!selected && ["pending","editing","approved"].includes(selected.workflow_status);
+  const canWriteNotes = editable && (canEdit || canReview);
+  const contentDirty=!!selected && (editTitle!==(selected.edited_title??selected.suggested_title)||editExcerpt!==(selected.edited_excerpt??selected.suggested_excerpt??"")||editCategory!==(selected.suggested_category_id??""));
+  const dirty=contentDirty || (!!selected && editNotes!==(selected.editor_notes??""));
+  useEffect(()=>{if(!dirty)return;const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};window.addEventListener("beforeunload",warn);return()=>window.removeEventListener("beforeunload",warn);},[dirty]);
+  useEffect(()=>()=>queueController.current?.abort(),[]);
+  function discard(){return !dirty||window.confirm("Bỏ thay đổi chưa lưu của bài đang biên tập?");}
 
   const loadOverview = useCallback(async () => {
     const response = await fetch("/api/admin/news/settings", { cache: "no-store" });
-    const payload = await readJson<{ ok: true } & Overview>(response);
+    const payload = await readJson<{ ok: true; actor: Actor } & Overview>(response);
     const next: Overview = {
       settings: payload.settings,
       sources: payload.sources,
@@ -145,35 +160,35 @@ export function NewsroomAdmin() {
       queueCounts: payload.queueCounts,
       schedulerRuns: payload.schedulerRuns ?? [],
     };
+    setActor(payload.actor);
     setOverview(next);
-    setSettingsDraft(next.settings);
   }, []);
 
-  const loadQueue = useCallback(async (nextStatus: ReviewStatus) => {
-    const response = await fetch(`/api/admin/news/review?status=${nextStatus}&limit=60`, {
-      cache: "no-store",
-    });
-    const payload = await readJson<{ ok: true; items: ReviewItem[] }>(response);
-    setItems(payload.items);
-    setSelectedId((current) => {
-      if (current && payload.items.some((item) => item.queue_id === current)) return current;
-      return payload.items[0]?.queue_id ?? null;
-    });
+  const loadQueue = useCallback(async (nextStatus: ReviewStatus,offset=0) => {
+    queueController.current?.abort();
+    const controller=new AbortController();queueController.current=controller;setQueueLoading(true);setQueueError(null);
+    try {
+      const response=await fetch(`/api/admin/news/review?status=${nextStatus}&limit=60&offset=${offset}`,{cache:"no-store",signal:controller.signal});
+      const payload=await readJson<{ok:true;items:ReviewItem[];total?:number;offset?:number}>(response);
+      if(controller.signal.aborted)return;
+      setQueueTotal(payload.total??payload.items.length);
+      setQueueOffset(payload.offset??offset);
+      setItems(payload.items);
+      setSelectedId(current=>current&&payload.items.some(item=>item.queue_id===current)?current:payload.items[0]?.queue_id??null);
+    }catch(cause){if(!controller.signal.aborted){setQueueError(cause instanceof Error?cause.message:"Không thể tải hàng chờ.");throw cause;}}finally{if(!controller.signal.aborted)setQueueLoading(false);}
   }, []);
 
   const refresh = useCallback(async () => {
     setError(null);
-    await Promise.all([loadOverview(), loadQueue(status)]);
-  }, [loadOverview, loadQueue, status]);
+    await Promise.all([loadOverview(), loadQueue(status,queueOffset)]);
+  }, [loadOverview, loadQueue, status,queueOffset]);
 
   useEffect(() => {
-    void refresh().catch((cause: unknown) => {
-      setError(cause instanceof Error ? cause.message : String(cause));
-    });
+    void refresh().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : String(cause)));
   }, [refresh]);
 
   useEffect(() => {
-    if (!selected) return;
+    if (!selected) {setEditTitle("");setEditExcerpt("");setEditCategory("");setEditNotes("");return;}
     setEditTitle(selected.edited_title ?? selected.suggested_title);
     setEditExcerpt(selected.edited_excerpt ?? selected.suggested_excerpt ?? "");
     setEditCategory(selected.suggested_category_id ?? "");
@@ -189,244 +204,114 @@ export function NewsroomAdmin() {
   }
 
   async function runAction(key: string, task: () => Promise<void>, success: string) {
-    setBusy(key);
-    setError(null);
-    setMessage(null);
-    try {
-      await task();
-      setMessage(success);
-      await refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
-    } finally {
-      setBusy(null);
-    }
+    if(actionLock.current)return;
+    if(key.startsWith("ingest-")&&!discard())return;
+    actionLock.current=true;
+    setBusy(key); setError(null); setMessage(null);
+    try { await task(); setMessage(success); await refresh(); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
+    finally { actionLock.current=false;setBusy(null); }
   }
 
-  function changeStatus(next: ReviewStatus) {
-    setStatus(next);
-    setSelectedId(null);
+  function changeStatus(next: ReviewStatus) { if(next===status||busy||!discard())return;setItems([]);setQueueOffset(0);setQueueTotal(0);setStatus(next);setSelectedId(null); }
+  function changePage(nextOffset:number){if(busy||queueLoading||!discard())return;setItems([]);setSelectedId(null);setQueueOffset(Math.max(0,nextOffset));}
+  async function reviewAction(action:"edit"|"approve"|"reject"|"publish"){
+    if(!selected||busy)return;
+    if(action==="edit"&&editTitle.trim().length<8){setError("Tiêu đề phải có ít nhất 8 ký tự.");return;}
+    if(action!=="edit"&&contentDirty){setError("Hãy lưu bản biên tập trước khi duyệt, từ chối hoặc xuất bản.");return;}
+    if(action==="publish"&&dirty){setError("Hãy lưu hoặc hủy ghi chú chưa lưu trước khi xuất bản.");return;}
+    if(action==="reject"&&!editNotes.trim()){setError("Vui lòng nhập lý do từ chối vào ô ghi chú.");return;}
+    if(action==="publish"&&!window.confirm(`Xuất bản bài “${selected.edited_title??selected.suggested_title}” lên website công khai?`))return;
+    if(action==="reject"&&!window.confirm("Từ chối bài đang chọn? Nội dung sẽ chuyển sang danh sách Từ chối."))return;
+    const body=action==="edit"?{action,queueId:selected.queue_id,title:editTitle,excerpt:editExcerpt,categoryId:editCategory||null,notes:editNotes||null}:{action,queueId:selected.queue_id,...(action==="publish"?{}:{reason:editNotes.trim()||null})};
+    const messages={edit:"Đã lưu bản biên tập và chuyển sang Đang biên tập.",approve:"Nội dung đã được duyệt, chưa xuất bản.",reject:"Nội dung đã được chuyển sang Từ chối.",publish:"Đã xuất bản bài viết."};
+    await runAction(`${action}-${selected.queue_id}`,async()=>{await post("/api/admin/news/review/action",body);},messages[action]);
   }
 
-  if (!overview || !settingsDraft) {
-    return (
-      <main id="main-content" className={styles.loading}>
-        <strong>IAICT Newsroom</strong>
-        <span>{error ? `Không thể tải CMS: ${error}` : "Đang tải dữ liệu quản trị…"}</span>
-      </main>
-    );
+  if (!overview) {
+    return <main id="main-content" className={styles.loading}><strong>IAICT Newsroom</strong><span role={error?"alert":"status"}>{error ? `Không thể tải CMS: ${error}` : "Đang tải dữ liệu quản trị…"}</span>{error?<button type="button" onClick={()=>void refresh().catch(cause=>setError(cause instanceof Error?cause.message:String(cause)))}>Thử lại</button>:null}</main>;
   }
 
   return (
     <main id="main-content" className={styles.page}>
       <header className={styles.topbar}>
-        <div>
-          <span className={styles.eyebrow}>IAICT CMS / V16.5</span>
-          <h1>Newsroom Control Center</h1>
-          <p>Lấy tin, biên tập, duyệt, xuất bản và theo dõi tự động hóa trong một luồng có truy vết.</p>
-        </div>
+        <div><span className={styles.eyebrow}>IAICT CMS / V16.5</span><h1>Newsroom Control Center</h1><p>Lấy tin, biên tập, duyệt, xuất bản và theo dõi tự động hóa trong một luồng có truy vết.</p></div>
         <div className={styles.topActions}>
-          <span className={settingsDraft.autoPublishEnabled ? styles.autoOn : styles.autoOff}>
-            Auto publish {settingsDraft.autoPublishEnabled ? "ON" : "OFF"}
-          </span>
-          <button type="button" onClick={() => void refresh()} disabled={busy !== null}>Làm mới</button>
+          <span className={overview.settings.autoPublishEnabled ? styles.autoOn : styles.autoOff}>Tự xuất bản: {overview.settings.autoPublishEnabled ? "Bật" : "Tắt"}</span>
+          <button type="button" onClick={() => {if(discard())void refresh().catch(cause=>setError(cause instanceof Error?cause.message:String(cause)));}} disabled={busy !== null}>Làm mới</button>
         </div>
       </header>
 
-      {(message || error) && (
-        <div className={error ? styles.alertError : styles.alertSuccess} role="status">
-          {error ?? message}
-        </div>
-      )}
+      {actor ? <div className={styles.alertSuccess} role="status">Quyền hiện tại: {actor.roles.join(" · ")} · {canAdmin ? "Quản trị Newsroom" : canReview && canEdit ? "Biên tập + duyệt" : canReview ? "Duyệt/xuất bản" : canEdit ? "Biên tập" : "Chỉ xem"}</div> : null}
+      {(message || error) && <div className={error ? styles.alertError : styles.alertSuccess} role={error?"alert":"status"}>{error ?? message}</div>}
 
       <section className={styles.kpiGrid} aria-label="Tổng quan hàng chờ">
-        {STATUS_ORDER.map((entry) => (
-          <button
-            type="button"
-            key={entry}
-            className={entry === status ? styles.kpiActive : styles.kpi}
-            onClick={() => changeStatus(entry)}
-          >
-            <span>{STATUS_LABELS[entry]}</span>
-            <strong>{overview.queueCounts[entry]}</strong>
-          </button>
-        ))}
+        {STATUS_ORDER.map((entry) => <button type="button" key={entry} disabled={busy!==null} aria-pressed={entry===status} className={entry === status ? styles.kpiActive : styles.kpi} onClick={() => changeStatus(entry)}><span>{STATUS_LABELS[entry]}</span><strong>{overview.queueCounts[entry]}</strong></button>)}
       </section>
 
       <section className={styles.workspace}>
         <aside className={styles.sourcesPanel}>
-          <div className={styles.panelHead}>
-            <div><span>Nguồn tin</span><strong>{overview.sources.length} nguồn</strong></div>
-          </div>
+          <div className={styles.panelHead}><div><span>Nguồn tin</span><strong>{overview.sources.length} nguồn</strong></div></div>
           <div className={styles.sourceList}>
             {overview.sources.map((source) => (
               <article className={styles.sourceCard} key={source.id}>
-                <div className={styles.sourceTitleRow}>
-                  <span className={source.isActive ? styles.healthGood : styles.healthMuted} aria-hidden="true" />
-                  <div><strong>{source.name}</strong><small>{source.fetchStrategy.toUpperCase()} · {source.trustLevel}</small></div>
-                </div>
+                <div className={styles.sourceTitleRow}><span className={source.isActive ? styles.healthGood : styles.healthMuted} aria-hidden="true" /><div><strong>{source.name}</strong><small>{source.fetchStrategy.toUpperCase()} · {({official:"Chính thống",verified:"Đã xác minh",reference:"Tham khảo"} as const)[source.trustLevel]}</small></div></div>
                 <dl>
                   <div><dt>Lần lấy gần nhất</dt><dd>{formatTime(source.lastFetchedAt)}</dd></div>
-                  <div><dt>Chế độ</dt><dd>{source.publicationMode}</dd></div>
+                  <div><dt>Chế độ</dt><dd>{{inherit:"Theo cài đặt chung",manual:"Duyệt thủ công",auto:"Cho phép tự đăng"}[source.publicationMode]}</dd></div>
                   <div><dt>Lịch tự động</dt><dd>{source.scheduleEnabled ? `${source.scheduleIntervalMinutes} phút` : "Tắt"}</dd></div>
                   <div><dt>Lần kế tiếp</dt><dd>{source.scheduleEnabled ? formatTime(source.nextScheduledAt) : "—"}</dd></div>
                 </dl>
                 {source.lastError && <p className={styles.sourceError}>{source.lastError}</p>}
                 <div className={styles.sourceActions}>
                   <a href={source.homepageUrl} target="_blank" rel="noreferrer">Mở nguồn</a>
-                  <button
-                    type="button"
-                    disabled={!source.isActive || busy !== null}
-                    onClick={() => void runAction(
-                      `ingest-${source.id}`,
-                      async () => { await post("/api/admin/news/ingest", { sourceId: source.id }); },
-                      `Đã hoàn tất lấy tin từ ${source.name}.`,
-                    )}
-                  >
-                    {busy === `ingest-${source.id}` ? "Đang lấy…" : "Lấy tin ngay"}
-                  </button>
+                  {canAdmin ? <button type="button" disabled={!source.isActive || busy !== null} onClick={() => void runAction(`ingest-${source.id}`, async () => { await post("/api/admin/news/ingest", { sourceId: source.id }); }, `Đã hoàn tất lấy tin từ ${source.name}.`)}>{busy === `ingest-${source.id}` ? "Đang lấy…" : "Lấy tin ngay"}</button> : null}
                 </div>
               </article>
             ))}
           </div>
         </aside>
 
-        <section className={styles.queuePanel} aria-label="Hàng chờ biên tập">
-          <div className={styles.panelHead}>
-            <div><span>{STATUS_LABELS[status]}</span><strong>{items.length} mục đang hiển thị</strong></div>
-          </div>
+        <section className={styles.queuePanel} aria-label="Hàng chờ biên tập" aria-busy={queueLoading}>
+          <div className={styles.panelHead}><div><span>{STATUS_LABELS[status]}</span><strong>{queueLoading?"Đang tải…":queueError?"Chưa tải được danh sách":`${items.length?queueOffset+1:0}–${items.length?queueOffset+items.length:0} / ${queueTotal} bài`}</strong></div></div>
+          <p className={styles.paginationHelp}>60 bài mỗi trang, bài được đưa vào hàng chờ gần nhất hiển thị trước. Chọn trạng thái phía trên để lọc.</p>
+          {queueError?<div className={styles.paginationError}><p role="alert">{queueError}</p><button type="button" disabled={queueLoading||busy!==null} onClick={()=>{if(discard()){setError(null);void loadQueue(status,queueOffset).catch(()=>{});}}}>Thử tải lại hàng chờ</button></div>:null}
           <div className={styles.queueList}>
-            {items.length === 0 && <div className={styles.empty}>Không có nội dung ở trạng thái này.</div>}
-            {items.map((item) => (
-              <button
-                type="button"
-                key={item.queue_id}
-                className={item.queue_id === selectedId ? styles.queueItemActive : styles.queueItem}
-                onClick={() => setSelectedId(item.queue_id)}
-              >
-                <span className={styles.queueMeta}>{item.source_name} · {formatTime(item.queued_at)}</span>
-                <strong>{item.edited_title ?? item.suggested_title}</strong>
-                <small>{item.approval_mode === "auto" ? "Policy approval" : STATUS_LABELS[item.workflow_status]}</small>
-              </button>
-            ))}
+            {queueLoading?<div className={styles.empty} role="status">Đang tải hàng chờ…</div>:null}
+            {!queueLoading && !queueError && items.length === 0 && <div className={styles.empty}>Không có nội dung ở trạng thái này.</div>}
+            {items.map((item) => <button type="button" key={item.queue_id} disabled={busy!==null||queueLoading} aria-pressed={item.queue_id===selectedId} className={item.queue_id === selectedId ? styles.queueItemActive : styles.queueItem} onClick={() => {if(item.queue_id!==selectedId&&discard())setSelectedId(item.queue_id);}}><span className={styles.queueMeta}>{item.source_name} · {formatTime(item.queued_at)}</span><strong>{item.edited_title ?? item.suggested_title}</strong><small>{item.approval_mode === "auto" ? "Duyệt tự động" : STATUS_LABELS[item.workflow_status]}</small></button>)}
           </div>
+          <nav className={styles.queuePagination} aria-label="Phân trang hàng chờ">
+            <button type="button" disabled={busy!==null||queueLoading||queueOffset===0} onClick={()=>changePage(queueOffset-60)}>Trang trước</button>
+            <span role="status">Trang {Math.floor(queueOffset/60)+1} / {Math.max(1,Math.ceil(queueTotal/60))}</span>
+            <button type="button" disabled={busy!==null||queueLoading||queueError!==null||queueOffset+60>=queueTotal} onClick={()=>changePage(queueOffset+60)}>Trang sau</button>
+          </nav>
         </section>
 
         <section className={styles.editorPanel} aria-label="Trình biên tập">
-          <div className={styles.panelHead}>
-            <div><span>Biên tập & duyệt</span><strong>{selected ? selected.source_name : "Chưa chọn nội dung"}</strong></div>
-          </div>
-          {!selected ? (
-            <div className={styles.empty}>Chọn một mục trong hàng chờ để xem và xử lý.</div>
-          ) : (
+          <div className={styles.panelHead}><div><span>Biên tập & duyệt</span><strong>{selected ? selected.source_name : "Chưa chọn nội dung"}</strong></div></div>
+          {!selected ? <div className={styles.empty}>Chọn một mục trong hàng chờ để xem và xử lý.</div> : (
             <div className={styles.editorBody}>
-              <div className={styles.sourceStrip}>
-                <span>{STATUS_LABELS[selected.workflow_status]}</span>
-                <a href={selected.canonical_url} target="_blank" rel="noreferrer">Xem bài gốc ↗</a>
-              </div>
+              <div className={styles.sourceStrip}><span>{STATUS_LABELS[selected.workflow_status]}</span><a href={selected.canonical_url} target="_blank" rel="noreferrer">Xem bài gốc ↗</a></div>
+              <label><span>Tiêu đề</span><textarea aria-label="Tiêu đề" aria-describedby="review-title-help" disabled={!canEdit||!editable||busy!==null||queueLoading} value={editTitle} onChange={event=>setEditTitle(event.target.value)} rows={3}/></label>
+              <p id="review-title-help" className={styles.fieldHelp}>Ít nhất 8 ký tự. Lưu thay đổi trước khi duyệt. Sửa bài đã duyệt sẽ đưa bài về Đang biên tập và cần duyệt lại.</p>
+              <label><span>Tóm tắt</span><textarea aria-label="Tóm tắt" aria-describedby="review-excerpt-help" disabled={!canEdit||!editable||busy!==null||queueLoading} value={editExcerpt} onChange={event=>setEditExcerpt(event.target.value)} rows={5}/></label>
+              <p id="review-excerpt-help" className={styles.fieldHelp}>Giới thiệu ngắn nội dung bài. Có thể để trống; nội dung đã xóa sẽ được giữ trống khi lưu.</p>
+              <label><span>Chuyên mục</span><select aria-label="Chuyên mục" aria-describedby="review-category-help" disabled={!canEdit||!editable||busy!==null||queueLoading} value={editCategory} onChange={event=>setEditCategory(event.target.value)}><option value="">Dùng chuyên mục mặc định của nguồn</option>{editCategory&&!overview.categories.some(c=>c.id===editCategory)?<option value={editCategory} disabled>Chuyên mục không còn tồn tại</option>:null}{overview.categories.map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+              <p id="review-category-help" className={styles.fieldHelp}>Bài cần có chuyên mục để xuất bản. Nếu để trống, hệ thống dùng chuyên mục mặc định của nguồn (nếu đã cấu hình).</p>
+              <label><span>Ghi chú nội bộ / lý do từ chối</span><textarea aria-label="Ghi chú nội bộ / lý do từ chối" aria-describedby="review-notes-help" disabled={!canWriteNotes||busy!==null||queueLoading} value={editNotes} onChange={event=>setEditNotes(event.target.value)} rows={3}/></label>
+              <p id="review-notes-help" className={styles.fieldHelp}>Ghi chú chỉ dùng nội bộ. Khi duyệt hoặc từ chối, nội dung ô này được lưu làm lý do quyết định; từ chối phải có lý do.</p>
+              {selected.review_reason?<p className={styles.fieldHelp}>Lý do quyết định đã lưu: {selected.review_reason}</p>:null}
+              {dirty?<div className={styles.draftNotice}><span>Thay đổi chưa lưu.</span><button type="button" disabled={busy!==null} onClick={()=>{if(discard()){setEditTitle(selected.edited_title??selected.suggested_title);setEditExcerpt(selected.edited_excerpt??selected.suggested_excerpt??"");setEditCategory(selected.suggested_category_id??"");setEditNotes(selected.editor_notes??"");}}}>Hủy thay đổi bài</button></div>:null}
 
-              <label>
-                <span>Tiêu đề</span>
-                <textarea value={editTitle} onChange={(event) => setEditTitle(event.target.value)} rows={3} />
-              </label>
-              <label>
-                <span>Tóm tắt</span>
-                <textarea value={editExcerpt} onChange={(event) => setEditExcerpt(event.target.value)} rows={5} />
-              </label>
-              <label>
-                <span>Chuyên mục</span>
-                <select value={editCategory} onChange={(event) => setEditCategory(event.target.value)}>
-                  <option value="">Chọn chuyên mục</option>
-                  {overview.categories.map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>Ghi chú nội bộ / lý do từ chối</span>
-                <textarea value={editNotes} onChange={(event) => setEditNotes(event.target.value)} rows={3} />
-              </label>
-
-              <div className={styles.provenanceBox}>
-                <div><span>Nguồn</span><strong>{selected.source_name}</strong></div>
-                <div><span>Ngày nguồn</span><strong>{formatTime(selected.source_published_at)}</strong></div>
-                <div><span>Thu thập</span><strong>{formatTime(selected.fetched_at)}</strong></div>
-              </div>
+              <div className={styles.provenanceBox}><div><span>Nguồn</span><strong>{selected.source_name}</strong></div><div><span>Ngày nguồn</span><strong>{formatTime(selected.source_published_at)}</strong></div><div><span>Thu thập</span><strong>{formatTime(selected.fetched_at)}</strong></div></div>
 
               <div className={styles.editorActions}>
-                {(["pending", "editing", "approved"] as ReviewStatus[]).includes(selected.workflow_status) && (
-                  <button
-                    type="button"
-                    disabled={busy !== null}
-                    onClick={() => void runAction(
-                      `edit-${selected.queue_id}`,
-                      async () => {
-                        await post("/api/admin/news/review/action", {
-                          action: "edit",
-                          queueId: selected.queue_id,
-                          title: editTitle,
-                          excerpt: editExcerpt || null,
-                          categoryId: editCategory || null,
-                          notes: editNotes || null,
-                        });
-                      },
-                      "Đã lưu bản biên tập.",
-                    )}
-                  >Lưu biên tập</button>
-                )}
-                {(["pending", "editing"] as ReviewStatus[]).includes(selected.workflow_status) && (
-                  <button
-                    type="button"
-                    className={styles.approveButton}
-                    disabled={busy !== null}
-                    onClick={() => void runAction(
-                      `approve-${selected.queue_id}`,
-                      async () => {
-                        await post("/api/admin/news/review/action", {
-                          action: "approve",
-                          queueId: selected.queue_id,
-                          reason: editNotes || null,
-                        });
-                      },
-                      "Nội dung đã được duyệt.",
-                    )}
-                  >Duyệt</button>
-                )}
-                {(["pending", "editing", "approved"] as ReviewStatus[]).includes(selected.workflow_status) && (
-                  <button
-                    type="button"
-                    className={styles.rejectButton}
-                    disabled={busy !== null}
-                    onClick={() => void runAction(
-                      `reject-${selected.queue_id}`,
-                      async () => {
-                        await post("/api/admin/news/review/action", {
-                          action: "reject",
-                          queueId: selected.queue_id,
-                          reason: editNotes || "Từ chối từ Newsroom CMS",
-                        });
-                      },
-                      "Nội dung đã được chuyển sang Từ chối.",
-                    )}
-                  >Từ chối</button>
-                )}
-                {selected.workflow_status === "approved" && (
-                  <button
-                    type="button"
-                    className={styles.publishButton}
-                    disabled={busy !== null}
-                    onClick={() => void runAction(
-                      `publish-${selected.queue_id}`,
-                      async () => {
-                        await post("/api/admin/news/review/action", {
-                          action: "publish",
-                          queueId: selected.queue_id,
-                        });
-                      },
-                      "Đã xuất bản và lưu provenance/audit.",
-                    )}
-                  >Xuất bản</button>
-                )}
+                {canEdit&&editable?<button type="button" disabled={busy!==null||queueLoading||!dirty} onClick={()=>void reviewAction("edit")}>Lưu biên tập</button>:null}
+                {canReview&&["pending","editing"].includes(selected.workflow_status)?<button type="button" className={styles.approveButton} disabled={busy!==null||queueLoading} onClick={()=>void reviewAction("approve")}>Duyệt</button>:null}
+                {canReview&&editable?<button type="button" className={styles.rejectButton} disabled={busy!==null||queueLoading} onClick={()=>void reviewAction("reject")}>Từ chối</button>:null}
+                {canReview&&selected.workflow_status==="approved"?<button type="button" className={styles.publishButton} disabled={busy!==null||queueLoading} onClick={()=>void reviewAction("publish")}>Xuất bản</button>:null}
+                {!editable?<span>Bài ở trạng thái này chỉ có thể xem.</span>:!canEdit&&!canReview?<span>Vai trò hiện tại chỉ có quyền xem Newsroom.</span>:null}
               </div>
             </div>
           )}
@@ -434,112 +319,15 @@ export function NewsroomAdmin() {
       </section>
 
       <section className={styles.settingsSection} aria-labelledby="newsroom-settings-title">
-        <div className={styles.settingsIntro}>
-          <span className={styles.eyebrow}>Settings / Newsroom</span>
-          <h2 id="newsroom-settings-title">Tự động hóa có kiểm soát</h2>
-          <p>Auto publish mặc định tắt. Cron kiểm tra mỗi 15 phút nhưng chỉ chạy các nguồn đến hạn theo lịch riêng trong D1.</p>
-        </div>
+        <div className={styles.settingsIntro}><span className={styles.eyebrow}>Settings / Newsroom</span><h2 id="newsroom-settings-title">Tự động hóa có kiểm soát</h2><p>Cron kiểm tra mỗi 15 phút nhưng chỉ chạy các nguồn đến hạn theo lịch riêng trong D1. Thay đổi chính sách tự động hóa chỉ dành cho Quản trị viên Newsroom.</p></div>
         <div className={styles.settingsCard}>
-          <label className={styles.switchRow}>
-            <div><strong>Auto publish</strong><span>Master switch toàn newsroom</span></div>
-            <input
-              type="checkbox"
-              checked={settingsDraft.autoPublishEnabled}
-              onChange={(event) => setSettingsDraft({ ...settingsDraft, autoPublishEnabled: event.target.checked })}
-            />
-          </label>
-          <div className={styles.settingsGrid}>
-            <label><span>Trust tối thiểu</span><select value={settingsDraft.autoPublishMinTrust} onChange={(event) => setSettingsDraft({ ...settingsDraft, autoPublishMinTrust: event.target.value as TrustLevel })}><option value="official">Official</option><option value="verified">Verified</option><option value="reference">Reference</option></select></label>
-            <label><span>Tối đa / lượt</span><input type="number" min={1} max={100} value={settingsDraft.autoPublishMaxPerRun} onChange={(event) => setSettingsDraft({ ...settingsDraft, autoPublishMaxPerRun: Number(event.target.value) })} /></label>
-            <label className={styles.checkRow}><input type="checkbox" checked={settingsDraft.requireAttribution} onChange={(event) => setSettingsDraft({ ...settingsDraft, requireAttribution: event.target.checked })} /><span>Bắt buộc ghi nguồn</span></label>
-            <label className={styles.checkRow}><input type="checkbox" checked={settingsDraft.requireSourcePublishedAt} onChange={(event) => setSettingsDraft({ ...settingsDraft, requireSourcePublishedAt: event.target.checked })} /><span>Bắt buộc có ngày nguồn</span></label>
-          </div>
-          <button
-            type="button"
-            className={styles.saveSettings}
-            disabled={busy !== null}
-            onClick={() => void runAction(
-              "save-settings",
-              async () => { await post("/api/admin/news/settings", { action: "update-settings", settings: settingsDraft }); },
-              "Đã lưu cài đặt Newsroom.",
-            )}
-          >Lưu cài đặt chung</button>
+          <NewsWorkflowSettingsForm settings={overview.settings} canAdmin={canAdmin} locked={busy!==null} onBusy={saving=>setBusy(saving?'save-settings':null)} onSaved={settings=>setOverview(current=>current?{...current,settings}:current)}/>
 
           <div className={styles.sourceSettings}>
-            {overview.sources.map((source) => (
-              <div key={source.id} className={styles.sourceSettingRow}>
-                <div>
-                  <strong>{source.name}</strong>
-                  <span>{source.isActive ? "Đang hoạt động" : "Đang tắt"} · {source.scheduleEnabled ? `tự lấy mỗi ${source.scheduleIntervalMinutes} phút` : "không tự lấy"}</span>
-                </div>
-                <div style={{ display: "grid", gap: 8 }}>
-                  <select
-                    aria-label={`Chế độ xuất bản ${source.name}`}
-                    value={source.publicationMode}
-                    onChange={(event) => {
-                      const mode = event.target.value as PublicationMode;
-                      void runAction(
-                        `source-mode-${source.id}`,
-                        async () => { await post("/api/admin/news/settings", { action: "update-source", sourceId: source.id, publicationMode: mode, isActive: source.isActive }); },
-                        `Đã đổi chế độ ${source.name} sang ${mode}.`,
-                      );
-                    }}
-                  >
-                    <option value="inherit">Theo cài đặt chung</option>
-                    <option value="manual">Luôn duyệt thủ công</option>
-                    <option value="auto">Cho phép tự đăng</option>
-                  </select>
-                  <select
-                    aria-label={`Lịch lấy tin ${source.name}`}
-                    value={source.scheduleEnabled ? String(source.scheduleIntervalMinutes) : "off"}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      const enabled = value !== "off";
-                      const interval = enabled ? Number(value) : source.scheduleIntervalMinutes;
-                      void runAction(
-                        `source-schedule-${source.id}`,
-                        async () => { await post("/api/admin/news/settings", {
-                          action: "update-source",
-                          sourceId: source.id,
-                          publicationMode: source.publicationMode,
-                          isActive: source.isActive,
-                          scheduleEnabled: enabled,
-                          scheduleIntervalMinutes: interval,
-                          scheduleRetryMinutes: source.scheduleRetryMinutes,
-                        }); },
-                        enabled ? `Đã đặt lịch ${source.name}: ${interval} phút/lần.` : `Đã tắt lịch tự động của ${source.name}.`,
-                      );
-                    }}
-                  >
-                    <option value="off">Tắt lấy tin tự động</option>
-                    <option value="15">Mỗi 15 phút</option>
-                    <option value="30">Mỗi 30 phút</option>
-                    <option value="60">Mỗi 60 phút</option>
-                    <option value="120">Mỗi 2 giờ</option>
-                    <option value="240">Mỗi 4 giờ</option>
-                    <option value="360">Mỗi 6 giờ</option>
-                    <option value="720">Mỗi 12 giờ</option>
-                    <option value="1440">Mỗi 24 giờ</option>
-                  </select>
-                </div>
-              </div>
-            ))}
+            {overview.sources.map(source=><NewsSourceSettings key={source.id} source={source} canAdmin={canAdmin} locked={busy!==null} onBusy={saving=>setBusy(saving?`source-${source.id}`:null)} onSaved={value=>setOverview(current=>current?{...current,sources:current.sources.map(item=>item.id===source.id?{...item,...value}:item)}:current)}/>)}
           </div>
 
-          <div className={styles.schedulerSummary}>
-            <h3>Hoạt động tự động gần nhất</h3>
-            {overview.schedulerRuns.length === 0 ? (
-              <div className={styles.empty}>Chưa có Cron run nào được ghi nhận.</div>
-            ) : overview.schedulerRuns.slice(0, 5).map((run) => (
-              <div className={styles.schedulerRun} key={run.id}>
-                <strong>{formatTime(run.started_at)}</strong>
-                <span className={schedulerStatusClass(run.status)}>{run.status}</span>
-                <span>Đến hạn {run.due_count}</span>
-                <span>OK {run.succeeded_count}</span>
-                <span>Lỗi {run.failed_count}</span>
-              </div>
-            ))}
-          </div>
+          <div className={styles.schedulerSummary}><h3>Hoạt động tự động gần nhất</h3>{overview.schedulerRuns.length === 0 ? <div className={styles.empty}>Chưa có Cron run nào được ghi nhận.</div> : overview.schedulerRuns.slice(0, 5).map((run) => <div className={styles.schedulerRun} key={run.id}><strong>{formatTime(run.started_at)}</strong><span className={schedulerStatusClass(run.status)}>{run.status}</span><span>Đến hạn {run.due_count}</span><span>OK {run.succeeded_count}</span><span>Lỗi {run.failed_count}</span></div>)}</div>
         </div>
       </section>
     </main>

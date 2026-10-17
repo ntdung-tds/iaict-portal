@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CategoryLanding } from "@/components/category-landing";
+import { PublishedProductCatalog } from "@/components/published-product-catalog";
 import { productGroups } from "@/lib/public-content";
 
 export const metadata: Metadata = {
@@ -15,6 +16,8 @@ export default function ProductsPage() {
       title="Sản phẩm & Nền tảng"
       intro="Các nhóm công nghệ được tổ chức theo lớp năng lực có thể tích hợp: từ thiết bị và dữ liệu hiện trường đến AI, ứng dụng nghiệp vụ, truy xuất và quản lý vòng đời."
       items={productGroups}
-    />
+    >
+      <PublishedProductCatalog />
+    </CategoryLanding>
   );
 }

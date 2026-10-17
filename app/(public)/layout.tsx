@@ -1,9 +1,25 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { absoluteSiteUrl, isIndexableSite, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/site-config";
+import { absoluteSiteUrl, isIndexableSite } from "@/lib/site-config";
+import { getPublicSiteSettings } from "@/lib/public-site-settings";
 
-export default function PublicLayout({ children }: Readonly<{ children: ReactNode }>) {
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getPublicSiteSettings();
+  return {
+    title: {
+      default: settings.defaultSeoTitle || settings.siteTitle,
+      template: `%s · ${settings.siteTitle}`,
+    },
+    description: settings.defaultSeoDescription || settings.siteDescription,
+  };
+}
+
+export default async function PublicLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const settings = await getPublicSiteSettings();
   const siteUrl = absoluteSiteUrl("/");
   const searchUrl = absoluteSiteUrl("/tim-kiem");
   const structuredData = isIndexableSite && siteUrl
@@ -11,15 +27,19 @@ export default function PublicLayout({ children }: Readonly<{ children: ReactNod
         {
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "Viện Ứng dụng Công nghệ Thông tin và Truyền thông",
+          name: settings.organizationName,
           alternateName: "IAICT",
           url: siteUrl.toString(),
-          description: SITE_DESCRIPTION,
+          description: settings.siteDescription,
+          ...(settings.contactEmail ? { email: settings.contactEmail } : {}),
+          ...(settings.contactPhone ? { telephone: settings.contactPhone } : {}),
+          ...(settings.address ? { address: settings.address } : {}),
+          ...(Object.values(settings.socialLinks).length ? { sameAs: Object.values(settings.socialLinks) } : {}),
         },
         {
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: SITE_TITLE,
+          name: settings.siteTitle,
           alternateName: "IAICT",
           url: siteUrl.toString(),
           inLanguage: "vi-VN",

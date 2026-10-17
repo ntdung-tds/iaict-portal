@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { pillars } from "@/lib/public-content";
+import { getPublicSiteSettings } from "@/lib/public-site-settings";
 import styles from "./site-chrome.module.css";
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const settings = await getPublicSiteSettings();
   return (
     <footer className={`${styles.footer} ia-footer`}>
       <div className={`shell ${styles.footerTop}`}>
@@ -12,11 +14,18 @@ export function SiteFooter() {
             <strong>IAICT</strong>
           </div>
           <div className="ia-footer-institute">
-            <strong>Viện Ứng dụng Công nghệ Thông tin và Truyền thông</strong>
+            <strong>{settings.organizationName}</strong>
             <span>Institute of Applied Information and Communication Technology</span>
           </div>
-          <p className={styles.footerIntro}>Kết nối công nghệ, giải pháp, chuyển giao và đào tạo trong một hệ sinh thái ứng dụng thống nhất.</p>
-          <p className={styles.address}>Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội</p>
+          <p className={styles.footerIntro}>{settings.siteDescription || "Kết nối công nghệ, giải pháp, chuyển giao và đào tạo trong một hệ sinh thái ứng dụng thống nhất."}</p>
+          {settings.address ? <p className={styles.address}>{settings.address}</p> : <p className={styles.address}>Số 7 Tôn Thất Thuyết, phường Cầu Giấy, Hà Nội</p>}
+          {(settings.contactEmail || settings.contactPhone) ? (
+            <p className={styles.address}>
+              {settings.contactPhone ? <a href={`tel:${settings.contactPhone.replace(/\s+/g, "")}`}>{settings.contactPhone}</a> : null}
+              {settings.contactPhone && settings.contactEmail ? " · " : null}
+              {settings.contactEmail ? <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a> : null}
+            </p>
+          ) : null}
           <div className="ia-footer-signature"><i aria-hidden="true" /><span>Applied Technology · Real-world Value</span></div>
         </div>
 

@@ -317,3 +317,36 @@
 @media (prefers-reduced-motion: reduce) {
   .kpi, .kpiActive { transition: none; }
 }
+
+.sourceForm { padding: 24px 0; border-bottom: 1px solid #dce6e8; min-width: 0; overflow-wrap: anywhere; }
+.sourceForm h3 { margin: 0 0 8px; font-size: 18px; }
+.sourceForm p { font-size: 14px; line-height: 1.6; }
+.sourceForm fieldset { display: grid; gap: 8px; min-width: 0; padding: 0; margin: 16px 0; border: 0; }
+.sourceForm label { font-size: 15px; font-weight: 650; }
+.sourceForm small { color: #4b626a; font-size: 13px; line-height: 1.6; margin-bottom: 10px; }
+.sourceForm select,.sourceForm input[type="number"] { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; border: 1px solid #9aafb5; border-radius: 8px; padding: 10px; background: #fff; color: #173b46; font-size: 16px; }
+.sourceFormActions { display: flex; flex-wrap: wrap; gap: 10px; }
+.sourceFormActions button { min-height: 44px; padding: 10px 14px; border-radius: 8px; font: inherit; cursor: pointer; }
+.sourceForm :focus-visible { outline: 3px solid #0a8878; outline-offset: 3px; }
+.sourceForm :disabled { opacity: .65; cursor: not-allowed; }
+.sourceError { overflow-wrap: anywhere; }
+.settingsCard { min-width: 0; }
+.sourceTitleRow strong { font-size: 15px; }
+.sourceTitleRow small,.sourceCard dl div,.sourceError { font-size: 13px; }
+.sourceCard dt { color: #526a73; }
+.sourceActions a,.sourceActions button { font-size: 14px; min-height: 44px; display: inline-flex; align-items: center; }
+.sourceCard dl div { flex-wrap: wrap; }
+.fieldHelp { margin: -4px 0 18px; font-size: 13px; line-height: 1.6; color: #4b626a; overflow-wrap: anywhere; }
+.editorBody textarea,.editorBody select { font-size: 16px; box-sizing: border-box; }
+.editorBody label > span { font-size: 14px; color: #35545e; }
+.editorActions button,.draftNotice button { min-height: 44px; }
+.draftNotice { padding: 12px; background: #fff7df; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.queueMeta,.queueItem small,.queueItemActive small { font-size: 12px; }
+.queueItem strong,.queueItemActive strong { font-size: 15px; overflow-wrap: anywhere; }
+.editorBody :focus-visible { outline: 3px solid #0a8878; outline-offset: 3px; }
+.paginationHelp { padding: 0 18px; font-size: 13px; line-height: 1.6; color: #4b626a; }
+.queuePagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 16px; border-top: 1px solid #dce6e8; font-size: 14px; }
+.queuePagination button,.paginationError button { min-height: 44px; border: 1px solid #a3b9bf; background: #fff; color: #173b46; border-radius: 8px; padding: 8px 12px; font: inherit; cursor: pointer; }
+.queuePagination button:disabled { opacity: .5; cursor: not-allowed; }
+.queuePagination button:focus-visible,.paginationError button:focus-visible { outline: 3px solid #0a8878; outline-offset: 3px; }
+.paginationError { padding: 12px 18px; color: #9a3f35; font-size: 14px; overflow-wrap: anywhere; }
