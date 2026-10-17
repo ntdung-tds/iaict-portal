@@ -344,3 +344,9 @@
 .queueMeta,.queueItem small,.queueItemActive small { font-size: 12px; }
 .queueItem strong,.queueItemActive strong { font-size: 15px; overflow-wrap: anywhere; }
 .editorBody :focus-visible { outline: 3px solid #0a8878; outline-offset: 3px; }
+.paginationHelp { padding: 0 18px; font-size: 13px; line-height: 1.6; color: #4b626a; }
+.queuePagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 16px; border-top: 1px solid #dce6e8; font-size: 14px; }
+.queuePagination button,.paginationError button { min-height: 44px; border: 1px solid #a3b9bf; background: #fff; color: #173b46; border-radius: 8px; padding: 8px 12px; font: inherit; cursor: pointer; }
+.queuePagination button:disabled { opacity: .5; cursor: not-allowed; }
+.queuePagination button:focus-visible,.paginationError button:focus-visible { outline: 3px solid #0a8878; outline-offset: 3px; }
+.paginationError { padding: 12px 18px; color: #9a3f35; font-size: 14px; overflow-wrap: anywhere; }

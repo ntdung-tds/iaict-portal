@@ -131,6 +131,9 @@ export function NewsroomAdmin() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [queueLoading,setQueueLoading]=useState(false);
+  const [queueOffset,setQueueOffset]=useState(0);
+  const [queueTotal,setQueueTotal]=useState(0);
+  const [queueError,setQueueError]=useState<string|null>(null);
   const queueController=useRef<AbortController|null>(null);
   const actionLock=useRef(false);
 
@@ -161,22 +164,24 @@ export function NewsroomAdmin() {
     setOverview(next);
   }, []);
 
-  const loadQueue = useCallback(async (nextStatus: ReviewStatus) => {
+  const loadQueue = useCallback(async (nextStatus: ReviewStatus,offset=0) => {
     queueController.current?.abort();
-    const controller=new AbortController();queueController.current=controller;setQueueLoading(true);
+    const controller=new AbortController();queueController.current=controller;setQueueLoading(true);setQueueError(null);
     try {
-      const response=await fetch(`/api/admin/news/review?status=${nextStatus}&limit=60`,{cache:"no-store",signal:controller.signal});
-      const payload=await readJson<{ok:true;items:ReviewItem[]}>(response);
+      const response=await fetch(`/api/admin/news/review?status=${nextStatus}&limit=60&offset=${offset}`,{cache:"no-store",signal:controller.signal});
+      const payload=await readJson<{ok:true;items:ReviewItem[];total?:number;offset?:number}>(response);
       if(controller.signal.aborted)return;
+      setQueueTotal(payload.total??payload.items.length);
+      setQueueOffset(payload.offset??offset);
       setItems(payload.items);
       setSelectedId(current=>current&&payload.items.some(item=>item.queue_id===current)?current:payload.items[0]?.queue_id??null);
-    }catch(cause){if(!controller.signal.aborted)throw cause;}finally{if(!controller.signal.aborted)setQueueLoading(false);}
+    }catch(cause){if(!controller.signal.aborted){setQueueError(cause instanceof Error?cause.message:"Không thể tải hàng chờ.");throw cause;}}finally{if(!controller.signal.aborted)setQueueLoading(false);}
   }, []);
 
   const refresh = useCallback(async () => {
     setError(null);
-    await Promise.all([loadOverview(), loadQueue(status)]);
-  }, [loadOverview, loadQueue, status]);
+    await Promise.all([loadOverview(), loadQueue(status,queueOffset)]);
+  }, [loadOverview, loadQueue, status,queueOffset]);
 
   useEffect(() => {
     void refresh().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : String(cause)));
@@ -208,7 +213,8 @@ export function NewsroomAdmin() {
     finally { actionLock.current=false;setBusy(null); }
   }
 
-  function changeStatus(next: ReviewStatus) { if(next===status||busy||!discard())return;setItems([]);setStatus(next);setSelectedId(null); }
+  function changeStatus(next: ReviewStatus) { if(next===status||busy||!discard())return;setItems([]);setQueueOffset(0);setQueueTotal(0);setStatus(next);setSelectedId(null); }
+  function changePage(nextOffset:number){if(busy||queueLoading||!discard())return;setItems([]);setSelectedId(null);setQueueOffset(Math.max(0,nextOffset));}
   async function reviewAction(action:"edit"|"approve"|"reject"|"publish"){
     if(!selected||busy)return;
     if(action==="edit"&&editTitle.trim().length<8){setError("Tiêu đề phải có ít nhất 8 ký tự.");return;}
@@ -266,13 +272,20 @@ export function NewsroomAdmin() {
           </div>
         </aside>
 
-        <section className={styles.queuePanel} aria-label="Hàng chờ biên tập">
-          <div className={styles.panelHead}><div><span>{STATUS_LABELS[status]}</span><strong>{items.length} / {overview.queueCounts[status]} mục (tối đa 60)</strong></div></div>
+        <section className={styles.queuePanel} aria-label="Hàng chờ biên tập" aria-busy={queueLoading}>
+          <div className={styles.panelHead}><div><span>{STATUS_LABELS[status]}</span><strong>{queueLoading?"Đang tải…":queueError?"Chưa tải được danh sách":`${items.length?queueOffset+1:0}–${items.length?queueOffset+items.length:0} / ${queueTotal} bài`}</strong></div></div>
+          <p className={styles.paginationHelp}>60 bài mỗi trang, bài được đưa vào hàng chờ gần nhất hiển thị trước. Chọn trạng thái phía trên để lọc.</p>
+          {queueError?<div className={styles.paginationError}><p role="alert">{queueError}</p><button type="button" disabled={queueLoading||busy!==null} onClick={()=>{if(discard()){setError(null);void loadQueue(status,queueOffset).catch(()=>{});}}}>Thử tải lại hàng chờ</button></div>:null}
           <div className={styles.queueList}>
             {queueLoading?<div className={styles.empty} role="status">Đang tải hàng chờ…</div>:null}
-            {!queueLoading && items.length === 0 && <div className={styles.empty}>Không có nội dung ở trạng thái này.</div>}
+            {!queueLoading && !queueError && items.length === 0 && <div className={styles.empty}>Không có nội dung ở trạng thái này.</div>}
             {items.map((item) => <button type="button" key={item.queue_id} disabled={busy!==null||queueLoading} aria-pressed={item.queue_id===selectedId} className={item.queue_id === selectedId ? styles.queueItemActive : styles.queueItem} onClick={() => {if(item.queue_id!==selectedId&&discard())setSelectedId(item.queue_id);}}><span className={styles.queueMeta}>{item.source_name} · {formatTime(item.queued_at)}</span><strong>{item.edited_title ?? item.suggested_title}</strong><small>{item.approval_mode === "auto" ? "Duyệt tự động" : STATUS_LABELS[item.workflow_status]}</small></button>)}
           </div>
+          <nav className={styles.queuePagination} aria-label="Phân trang hàng chờ">
+            <button type="button" disabled={busy!==null||queueLoading||queueOffset===0} onClick={()=>changePage(queueOffset-60)}>Trang trước</button>
+            <span role="status">Trang {Math.floor(queueOffset/60)+1} / {Math.max(1,Math.ceil(queueTotal/60))}</span>
+            <button type="button" disabled={busy!==null||queueLoading||queueError!==null||queueOffset+60>=queueTotal} onClick={()=>changePage(queueOffset+60)}>Trang sau</button>
+          </nav>
         </section>
 
         <section className={styles.editorPanel} aria-label="Trình biên tập">

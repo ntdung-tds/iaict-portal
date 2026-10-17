@@ -167,12 +167,20 @@ export async function getNewsWorkflowSettings(db: D1DatabaseLike): Promise<NewsW
   };
 }
 
+export async function countReviewQueue(db:D1DatabaseLike,status:NewsReviewStatus):Promise<number>{
+  const row=await db.prepare(`SELECT COUNT(*) AS total FROM news_review_queue q
+    JOIN news_ingest_items i ON i.id=q.ingest_item_id
+    JOIN news_sources s ON s.id=i.source_id WHERE q.workflow_status=?`).bind(status).first<{total:number}>();
+  return row?.total??0;
+}
+
 export async function listReviewQueue(
   db: D1DatabaseLike,
-  input: { status?: NewsReviewStatus; limit?: number } = {},
+  input: { status?: NewsReviewStatus; limit?: number; offset?: number } = {},
 ): Promise<ReviewQueueItem[]> {
   const limit = Math.min(Math.max(input.limit ?? 30, 1), 100);
   const status = input.status ?? "pending";
+  const offset = Math.max(0, Math.floor(input.offset ?? 0));
   const { results } = await db
     .prepare(`
       SELECT
@@ -208,9 +216,9 @@ export async function listReviewQueue(
       JOIN news_sources s ON s.id = i.source_id
       WHERE q.workflow_status = ?
       ORDER BY q.queued_at DESC, q.id DESC
-      LIMIT ?
+      LIMIT ? OFFSET ?
     `)
-    .bind(status, limit)
+    .bind(status, limit, offset)
     .all<ReviewQueueItem>();
   return results;
 }
