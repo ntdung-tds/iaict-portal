@@ -91,6 +91,11 @@ jobs:
           echo "JS files: $(find "$PAGES_DIR/_next/static/chunks" -type f -name '*.js' | wc -l)"
           find "$PAGES_DIR" -maxdepth 4 -type f | head -160
 
+      - name: Check CMS data in the exported Pages UI
+        run: |
+          npx playwright install --with-deps chromium
+          node scripts/check-pages-cms.mjs .pages-artifact
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
         with:

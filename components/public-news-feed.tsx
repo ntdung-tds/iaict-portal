@@ -1,5 +1,7 @@
 "use client";
 
+import { publicApiUrl, publicContentUrl } from "@/lib/public-preview";
+
 import { useEffect, useState } from "react";
 import publicStyles from "./public.module.css";
 import liveStyles from "./public-news-live.module.css";
@@ -29,7 +31,7 @@ export function PublicNewsFeed() {
 
   useEffect(() => {
     const controller = new AbortController();
-    void fetch("/api/news/public?limit=12", { cache: "no-store", signal: controller.signal })
+    void fetch(publicApiUrl("/api/news/public?limit=12"), { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
         const payload = await response.json() as { items?: PublishedNewsItem[]; error?: string };
         if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
@@ -62,7 +64,7 @@ export function PublicNewsFeed() {
         <article className={publicStyles.newsCard} key={item.id} data-news-slug={item.slug}>
           <span>{item.sourceName ?? "IAICT Newsroom"}</span>
           <h3>
-            <a className={liveStyles.cardLink} href={`/tin-tuc/${item.slug}`}>{item.title}</a>
+            <a className={liveStyles.cardLink} href={publicContentUrl(`/tin-tuc/${encodeURIComponent(item.slug)}`)}>{item.title}</a>
           </h3>
           <p>{item.excerpt ?? "Bài viết đã được duyệt và xuất bản từ IAICT Newsroom."}</p>
           <small>{formatDate(item.publishedAt)} · Có truy vết nguồn</small>

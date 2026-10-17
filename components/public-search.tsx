@@ -1,5 +1,7 @@
 "use client";
 
+import { publicApiUrl, publicContentUrl } from "@/lib/public-preview";
+
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import staticEntries from "@/lib/search-index.json";
@@ -9,7 +11,7 @@ const categories=["Tất cả","Công nghệ","Giải pháp","Đào tạo","Dự
 export function PublicSearch(){
   const[draft,setDraft]=useState("");const[query,setQuery]=useState("");const[category,setCategory]=useState("Tất cả");const[ready,setReady]=useState(false);const[liveEntries,setLiveEntries]=useState<SearchEntry[]>([]);const input=useRef<HTMLInputElement>(null);
   useEffect(()=>{const sync=()=>{const params=new URLSearchParams(window.location.search);const q=(params.get("q")??"").slice(0,120);const group=params.get("nhom")??"Tất cả";setDraft(q);setQuery(q);setCategory(categories.includes(group)?group:"Tất cả");};sync();setReady(true);window.addEventListener("popstate",sync);return()=>window.removeEventListener("popstate",sync);},[]);
-  useEffect(()=>{const controller=new AbortController();void fetch("/api/public/cms-search",{cache:"no-store",signal:controller.signal}).then(async response=>{const payload=await response.json() as {ok?:boolean;items?:SearchEntry[]};if(!response.ok||!payload.ok||!Array.isArray(payload.items))return;setLiveEntries(payload.items.filter(item=>item&&typeof item.title==="string"&&typeof item.href==="string"));}).catch(()=>{});return()=>controller.abort();},[]);
+  useEffect(()=>{const controller=new AbortController();void fetch(publicApiUrl("/api/public/cms-search"),{cache:"no-store",signal:controller.signal}).then(async response=>{const payload=await response.json() as {ok?:boolean;items?:SearchEntry[]};if(!response.ok||!payload.ok||!Array.isArray(payload.items))return;setLiveEntries(payload.items.filter(item=>item&&typeof item.title==="string"&&typeof item.href==="string"));}).catch(()=>{});return()=>controller.abort();},[]);
   const entries=useMemo(()=>{const map=new Map<string,SearchEntry>();for(const item of staticEntries as SearchEntry[])map.set(`${item.href}|${item.title}`,item);for(const item of liveEntries)map.set(`${item.href}|${item.title}`,item);return [...map.values()];},[liveEntries]);
   function search(value:string,group=category){const q=value.trim().slice(0,120);setDraft(q);setQuery(q);setCategory(group);const url=new URL(window.location.href);if(q)url.searchParams.set("q",q);else url.searchParams.delete("q");if(group!=="Tất cả")url.searchParams.set("nhom",group);else url.searchParams.delete("nhom");window.history.pushState(null,"",url);}
   const results=searchPublicContent(entries,query,category);
@@ -17,7 +19,7 @@ export function PublicSearch(){
     <div className="public-search-suggestions" role="group" aria-label="Gợi ý tìm kiếm"><span>Gợi ý:</span>{suggestions.map(value=><button disabled={!ready} type="button" key={value} aria-controls={resultsId} onClick={()=>search(value,"Tất cả")}>{value}</button>)}</div>
     <div className="public-search-filters" role="group" aria-label="Lọc nhóm nội dung">{categories.map(value=><button disabled={!ready} type="button" key={value} aria-controls={resultsId} aria-pressed={category===value} onClick={()=>search(query,value)}>{value}</button>)}</div>
     <div className="public-search-status"><p role="status" aria-live="polite" aria-atomic="true">{results.length} kết quả{query?` cho “${query}”`:" trong nội dung đang công khai"}</p>{(query||category!=="Tất cả")&&<button type="button" aria-controls={resultsId} onClick={()=>{search("","Tất cả");input.current?.focus();}}>Xóa tìm kiếm & bộ lọc</button>}</div>
-    <div id={resultsId} className="public-search-results" role="region" aria-label="Kết quả tìm kiếm IAICT">{results.map(item=><article key={item.href+item.title}><span>{item.category}</span><h3><Link href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link></h3><p>{item.summary}</p></article>)}</div>
+    <div id={resultsId} className="public-search-results" role="region" aria-label="Kết quả tìm kiếm IAICT">{results.map(item=><article key={item.href+item.title}><span>{item.category}</span><h3><Link href={publicContentUrl(item.href)}>{item.title}<span aria-hidden="true">↗</span></Link></h3><p>{item.summary}</p></article>)}</div>
     {results.length===0&&<div className="public-search-empty"><h3>Chưa tìm thấy nội dung phù hợp.</h3><p>Thử từ khóa ngắn hơn hoặc chọn “Tất cả”. Bạn cũng có thể xem các nhóm nội dung bên dưới.</p><button type="button" aria-controls={resultsId} onClick={()=>{search("","Tất cả");input.current?.focus();}}>Xem tất cả nội dung</button></div>}
   </div>;
 }

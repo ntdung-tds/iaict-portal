@@ -1,5 +1,7 @@
 "use client";
 
+import { publicApiUrl, publicContentUrl } from "@/lib/public-preview";
+
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import styles from './published-product-catalog.module.css';
@@ -29,22 +31,16 @@ const catalogs = {
     description: 'Tìm hiểu đối tượng, mục tiêu, chương trình học và hình thức tổ chức phù hợp.',
   },
 } as const;
-const previewCmsUrl = process.env.NEXT_PUBLIC_CMS_URL;
-const previewOrigin = process.env.NEXT_PUBLIC_STATIC_PREVIEW === 'true' && previewCmsUrl
-  ? new URL(previewCmsUrl).origin : null;
-
 export function PublishedCmsCatalog({ kind }: { kind: CatalogKind }) {
   const catalog = catalogs[kind];
-  const liveCatalogUrl = previewOrigin ? `${previewOrigin}${catalog.path}#${catalog.id}` : null;
   const [result, setResult] = useState<CatalogState>({ kind, status: 'loading', items: [] });
   const [attempt, setAttempt] = useState(0);
   const current = result.kind === kind ? result : { kind, status: 'loading', items: [] };
 
   useEffect(() => {
-    if (liveCatalogUrl) return;
     const controller = new AbortController();
     setResult({ kind, status: 'loading', items: [] });
-    void fetch(catalog.endpoint, { cache: 'no-store', signal: controller.signal })
+    void fetch(publicApiUrl(catalog.endpoint), { cache: 'no-store', signal: controller.signal })
       .then(async response => {
         if (!response.ok) throw new Error('Catalog unavailable');
         const payload = await response.json() as { items?: unknown };
@@ -61,25 +57,23 @@ export function PublishedCmsCatalog({ kind }: { kind: CatalogKind }) {
       })
       .catch(() => { if (!controller.signal.aborted) setResult({ kind, status: 'error', items: [] }); });
     return () => controller.abort();
-  }, [attempt, catalog.endpoint, kind, liveCatalogUrl]);
+  }, [attempt, catalog.endpoint, kind]);
 
   return <section id={catalog.id} className={`shell ${styles.catalog}`} aria-labelledby={`${catalog.id}-title`}>
     <div className={styles.heading}>
       <div><span>Danh mục IAICT</span><h2 id={`${catalog.id}-title`}>{catalog.title}</h2></div>
       <p>{catalog.description}</p>
     </div>
-    {liveCatalogUrl ? <div className={styles.notice}>
-      <p>Xem danh mục được cập nhật trên hệ thống IAICT.</p><a href={liveCatalogUrl}>Mở danh mục {catalog.name} ↗</a>
-    </div> : current.status === 'loading' ? <p className={styles.notice} role="status">Đang tải danh mục {catalog.name}…</p>
+    {current.status === 'loading' ? <p className={styles.notice} role="status">Đang tải danh mục {catalog.name}…</p>
       : current.status === 'error' ? <div className={styles.notice} role="status">
         <p>Chưa tải được danh mục {catalog.name}.</p><button type="button" onClick={() => setAttempt(value => value + 1)}>Thử lại</button>
       </div> : current.items.length === 0 ? <p className={styles.notice}>
         Thông tin {catalog.name} đang được cập nhật. Vui lòng liên hệ IAICT để trao đổi nhu cầu.
       </p> : <div className={styles.grid}>{current.items.map((item, index) => <article key={item.id} className={styles.card}>
         <span className={styles.number} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-        <h3><Link href={`${catalog.path}/${encodeURIComponent(item.slug)}`}>{item.title}</Link></h3>
+        <h3><Link href={publicContentUrl(`${catalog.path}/${encodeURIComponent(item.slug)}`)}>{item.title}</Link></h3>
         {item.summary ? <p>{item.summary}</p> : null}
-        <Link className={styles.detail} aria-label={`Xem chi tiết: ${item.title}`} href={`${catalog.path}/${encodeURIComponent(item.slug)}`}>
+        <Link className={styles.detail} aria-label={`Xem chi tiết: ${item.title}`} href={publicContentUrl(`${catalog.path}/${encodeURIComponent(item.slug)}`)}>
           Xem chi tiết<span aria-hidden="true"> ↗</span>
         </Link>
       </article>)}</div>}

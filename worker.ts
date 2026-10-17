@@ -1,3 +1,4 @@
+import { withPublicPreviewCors } from "./lib/cms-public-cors";
 import handler from "vinext/server/fetch-handler";
 import { setDatabaseBinding, type D1DatabaseLike } from "./lib/cloudflare-db";
 import { runScheduledNewsIngestion } from "./lib/news-scheduler";
@@ -22,7 +23,7 @@ export default {
     setDatabaseBinding(env.DB);
     const redirect = await resolvePublicRedirect(request, env.DB);
     if (redirect) return redirect;
-    return handler.fetch(request, env, ctx);
+    return withPublicPreviewCors(request, await handler.fetch(request, env, ctx));
   },
 
   async scheduled(

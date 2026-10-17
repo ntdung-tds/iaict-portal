@@ -1,5 +1,7 @@
 "use client";
 
+import { publicApiUrl } from "@/lib/public-preview";
+
 import { isNavigationHref } from "@/lib/cms-navigation-link";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -31,7 +33,7 @@ export function SiteHeader() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/public/navigation", { cache: "no-store" })
+    fetch(publicApiUrl("/api/public/navigation"), { cache: "no-store" })
       .then(async (response) => {
         const payload = await response.json() as { ok?: boolean; items?: NavigationItem[] };
         if (!active || !payload.ok || !Array.isArray(payload.items)) return;
