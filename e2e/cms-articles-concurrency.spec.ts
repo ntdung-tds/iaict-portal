@@ -48,7 +48,10 @@ test("category editing sends unmodified original category snapshot on 409", asyn
   const captured: Array<Record<string, unknown>> = [];
   await mockStudio(page, body => captured.push(body));
   await page.goto("/admin/articles");
+  // Wait for the initial CMS fetch; otherwise switching tabs can race app hydration.
+  await expect(page.getByRole("textbox", { name: "Tiêu đề *" })).toHaveValue(article.title);
   await page.getByRole("button", { name: "Chuyên mục", exact: true }).click();
+  await expect(page.getByText(category.name, { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Sửa", exact: true }).click();
   const name = page.getByRole("textbox", { name: "Tên chuyên mục *" });
   await expect(name).toHaveValue(category.name);
