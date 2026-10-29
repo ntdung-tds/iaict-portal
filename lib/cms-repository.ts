@@ -342,25 +342,27 @@ export async function saveCmsRecord(
     }
 
     if (locking) {
-      // Atomic compare-and-swap: both revision and audit are conditional on
-      // the matching old/new version, so stale requests leave NO side effects.
+      // Atomic compare-and-swap: a fresh revision ID serves as the mutation
+      // witness. Audit rows are conditional on THIS revision, not the new
+      // updated_at timestamp (two writers may generate the same millisecond).
+      const revisionId = crypto.randomUUID();
       statements.push(db.prepare(`
         INSERT INTO cms_revisions(id,entity_type,entity_id,actor_user_id,snapshot_json,created_at)
         SELECT ?,?,?,?,?,? FROM ${config.table} WHERE id=? AND updated_at IS ?
-      `).bind(crypto.randomUUID(), moduleKey, id, actor.id, JSON.stringify(current), nowIso(), id, expected));
+      `).bind(revisionId, moduleKey, id, actor.id, JSON.stringify(current), nowIso(), id, expected));
       statements.push(db.prepare(`
         UPDATE ${config.table} SET ${assignments.join(", ")} WHERE id=? AND updated_at IS ?
       `).bind(...values, id, expected));
       statements.push(db.prepare(`
         INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at)
-        SELECT ?,?,?,?,?,?,? FROM ${config.table} WHERE id=? AND updated_at=?
-      `).bind(crypto.randomUUID(), actor.id, action, moduleKey, entityId, JSON.stringify(auditMeta), nowIso(), id, timestamp));
+        SELECT ?,?,?,?,?,?,? FROM cms_revisions WHERE id=?
+      `).bind(crypto.randomUUID(), actor.id, action, moduleKey, entityId, JSON.stringify(auditMeta), nowIso(), revisionId));
       if (options.restoreRevisionId) {
         statements.push(db.prepare(`
           INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at)
-          SELECT ?,?,?,?,?,?,? FROM ${config.table} WHERE id=? AND updated_at=?
+          SELECT ?,?,?,?,?,?,? FROM cms_revisions WHERE id=?
         `).bind(crypto.randomUUID(), actor.id, "cms.revision.restore", moduleKey, entityId,
-          JSON.stringify({ revisionId: options.restoreRevisionId }), nowIso(), id, timestamp));
+          JSON.stringify({ revisionId: options.restoreRevisionId }), nowIso(), revisionId));
       }
     } else {
       statements.push(revisionStatement(db, actor, moduleKey, id, current));
