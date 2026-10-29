@@ -144,3 +144,49 @@ Biên bản `docs/STAGING_AUDIT_2026-10-29.md` trước đó phân tích nhánh 
 - Cloudflare (READ-ONLY): GET Workers script settings, deployments, versions, schedules, Access apps/policies, D1 metadata; POST D1 `/query` chỉ với `SELECT`, `PRAGMA quick_check(1)`, `pragma_foreign_key_check`, thống kê tổng hợp. Tất cả D1 queries trả `rows_written:0`.
 
 **Báo cáo này không phải kết luận nghiệm thu; mọi hạng mục cần test vẫn giữ trạng thái open.**
+
+
+---
+
+## Phụ lục A — Đối chiếu provenance và các kiểm tra code bổ sung (29/10/2026)
+
+### A1. Worker v42 và nhánh CMS v17
+
+- GitHub `cms/v17-full-admin` HEAD: `482392113d40592e0499f4e850defb937c367318`, commit timestamp `2026-10-17T10:24:15Z`, thông điệp `fix(newsroom): paginate review queue with filtered counts and recovery`.
+- Cloudflare Worker v42 (version ID `293841c3-5e16-4cb2-bd10-5ae38d299f42`) tạo lúc `2026-10-17T10:25:30.40592Z`, deployment lúc `2026-10-17T10:25:31.282046Z`, `source=cf_cli`.
+- Version resource script có `etag=497c4938cba77b4c0c5495e0238af94337f5608d138d00ec026c88c407e7eed8`, `last_deployed_from=cf_cli`, handlers `fetch` và `scheduled`. ETag của Cloudflare **không phải** Git commit SHA; chỉ tương quan thời gian **không chứng minh code identical**.
+- API Workers version/deployment đã kiểm tra không trả Git SHA. Cần bổ sung release manifest / `APP_VERSION` được nhúng vào artifact CI và đối chiếu endpoint runtime để xác thực các lần deploy sau. **Trước khi deploy lại, phải pin snapshot v42 và lập phương án rollback**.
+- Trình đọc web từ công cụ hiện tại không truy cập được URL workers.dev, nên chưa thể xác minh HTTP `/api/health` hoặc `/api/news/workflow` trong đợt này. Đây là giới hạn công cụ, **không có nghĩa website lỗi**.
+
+### A2. Bằng chứng chính xác hơn về rủi ro quyền xuất bản
+
+**`lib/cms-roles.ts`**: `CMS_EDIT_ROLES=['admin','editor']`, còn vai trò `reviewer` được mô tả là duyệt/xuất bản. **`app/api/admin/cms/collection/route.ts`** (`POST`) dùng `CMS_EDIT_ROLES` cho các module không phải `adminOnly` rồi gọi `prepareCmsData` và `saveCmsRecord`. **`lib/cms-repository.ts`** trực tiếp chấp nhận `status='published'` và thiết lập `published_at`. **`app/api/admin/cms/articles/route.ts`** (POST) cũng dùng `CMS_EDIT_ROLES`, chấp nhận `status='published'` không phân biệt actor roles.
+
+**Đánh giá:** rủi ro bypass *quy trình hai người duyệt* nếu workflow đó là yêu cầu nghiệp vụ. Chưa có bằng chứng một editor đã làm việc này trên staging; không gửi POST thử vì chỉ đọc. Cần chốt policy: nếu editor được phép tự xuất bản thì đây không phải lỗi; nếu yêu cầu phê duyệt tách biệt thì triển khai state machine và chặn HTTP 403 tại backend.
+
+### A3. Bằng chứng chính xác hơn về rủi ro giao dịch
+
+**`lib/cms-repository.ts`**:
+- Khi sửa bản ghi: `recordRevision` (INSERT độc lập) → `UPDATE`/ `DELETE` (độc lập) → `writeAudit` (INSERT độc lập).
+- Khi sửa user roles: `DELETE FROM admin_user_roles` chạy độc lập trước `db.batch(INSERT...)`.
+- **`app/api/admin/cms/users/route.ts`** làm tương tự: `snapshotUser` → `UPDATE admin_users` → `DELETE admin_user_roles` → `db.batch(INSERT roles)` → `writeAudit`.
+
+**Đánh giá:** lỗi/hết hạn thực thi ở giữa có thể tạo trạng thái chỉ cập nhật một phần. Các cặp `db.batch` đã dùng trong một phần đoạn mã nhưng **chưa bao trùm toàn bộ mutation**. Nên thiết kế lại thành transaction/batch nguyên tử có xác thực, kèm rollback test và CAS/version check.
+
+### A4. Phạm vi quyền dữ liệu CRM có căn cứ
+
+- `lib/cms-schema.ts`: `leads` và `registrations` không đặt `adminOnly=true`; chứa các trường phone/email/message.
+- `app/api/admin/cms/collection/route.ts`: GET cho module không adminOnly dùng `CMS_READ_ROLES=['admin','editor','reviewer','viewer']`.
+- `lib/cms-repository.ts`: `listCmsRecords` trả `SELECT *` cho module (bao gồm leads/registrations), không thấy field-level projection theo role.
+
+**Đánh giá:** một tài khoản viewer **đã được Cloudflare Access xác thực và có role viewer trong D1** có thể đọc thông tin liên hệ qua API. Đây là vấn đề phân quyền nghiệp vụ nội bộ, không phải bằng chứng dữ liệu công khai ra Internet. Đề xuất tách `crm.view` / `crm.manage` khỏi `cms.view`, lọc trường PII theo phạm vi việc làm và kiểm soát export/audit.
+
+### A5. Kiểm chứng bổ sung cần triển khai ở môi trường test biệt lập
+
+1. **RBAC negative test:** actor `editor` yêu cầu đổi trạng thái sang `published` → 403 nếu yêu cầu hai người duyệt; `viewer` chỉ đọc không thể POST; kiểm thử role tổ hợp.
+2. **Transaction failure injection:** giả lập lỗi sau `recordRevision` / sau `DELETE admin_user_roles`; không được tạo snapshot hoặc mất role không tương thích.
+3. **CAS/concurrent test:** hai actors cùng sửa một bản ghi → một mutation bị từ chối đúng cách (409) hoặc có merge có chủ đích, không silent lost update.
+4. **PII access test:** viewer không có `crm.view` truy vấn leads/registrations → 403 hoặc dữ liệu được redaction; nếu có quyền `crm.view`, chỉ xem đúng scope.
+5. **Source provenance check:** artifact build chứa commit SHA cố định; `/api/health` có build identity; đối chiếu Workers deployment versions trước/ sau release.
+
+**Không chạy các test có ghi trên D1 đang sử dụng; sử dụng D1 test riêng và dữ liệu mẫu.**
