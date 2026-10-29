@@ -178,10 +178,16 @@ test("search accepts typed Vietnamese text and keyboard submission", async ({ pa
   await expect(page.locator('.public-search-results a[href="/du-an/tram-rung"]')).toBeVisible();
 });
 
-test("unauthenticated CMS API is protected even when admin root displays a shell", async ({ request }) => {
-  const entry = await request.get("/admin", { maxRedirects: 0 });
-  console.log(`[admin-root] status=${entry.status()} location=${entry.headers()["location"] ?? ""}`);
-  const api = await request.get("/api/admin/cms/overview", { maxRedirects: 0 });
-  console.log(`[admin-api] status=${api.status()} location=${api.headers()["location"] ?? ""}`);
-  expect([302, 303, 307, 308, 401, 403], "Unauthenticated CMS overview must not be exposed").toContain(api.status());
+test("unauthenticated CMS root, subpaths, and APIs require Cloudflare Access", async ({ request }) => {
+  for (const route of [
+    "/admin",
+    "/admin/news",
+    "/api/admin/cms/overview",
+    "/api/admin/news/settings",
+  ] as const) {
+    const response = await request.get(route, { maxRedirects: 0 });
+    expect([302, 303, 307, 308], `${route} should require Access login`).toContain(response.status());
+    const location = response.headers()["location"] ?? "";
+    expect(location, `${route} must redirect to Cloudflare Access`).toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+  }
 });
