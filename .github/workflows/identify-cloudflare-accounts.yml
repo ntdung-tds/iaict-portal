@@ -63,6 +63,38 @@ jobs:
               throw new Error("Cloudflare returned an invalid account lookup response.");
             }
 
+            // Check that the staging credentials point to the expected workers.dev
+            // subdomain and an enabled staging Worker, not merely an account with a name.
+            if (target === "staging") {
+              const base = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}`;
+              const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+
+              const subdomainResponse = await fetch(`${base}/workers/subdomain`, {
+                headers,
+                signal: AbortSignal.timeout(15000),
+              });
+              if (!subdomainResponse.ok) {
+                throw new Error("Cloudflare Workers subdomain lookup failed; check token permissions.");
+              }
+              const subdomainData = await subdomainResponse.json();
+              if (subdomainData?.success !== true || subdomainData?.result?.subdomain !== "iaict-platform") {
+                throw new Error("Staging credentials do not match workers.dev subdomain iaict-platform.");
+              }
+
+              const workerResponse = await fetch(`${base}/workers/scripts/iaict-portal-staging/subdomain`, {
+                headers,
+                signal: AbortSignal.timeout(15000),
+              });
+              if (!workerResponse.ok) {
+                throw new Error("Could not verify the staging Worker in this account.");
+              }
+              const workerData = await workerResponse.json();
+              if (workerData?.success !== true || workerData?.result?.enabled !== true) {
+                throw new Error("Staging Worker is not enabled on workers.dev in this account.");
+              }
+              console.log("Verified staging URL: https://iaict-portal-staging.iaict-platform.workers.dev");
+            }
+
             console.log(`GitHub environment: ${target}`);
             console.log(`Cloudflare account name: ${JSON.stringify(data.result.name)}`);
           }
@@ -73,6 +105,10 @@ jobs:
               "Required Cloudflare credentials are missing for this environment.",
               "Configured Cloudflare Account ID has an invalid format.",
               "Cloudflare returned an invalid account lookup response.",
+              "Cloudflare Workers subdomain lookup failed; check token permissions.",
+              "Staging credentials do not match workers.dev subdomain iaict-platform.",
+              "Could not verify the staging Worker in this account.",
+              "Staging Worker is not enabled on workers.dev in this account.",
             ];
             const message =
               knownMessages.includes(error.message) ||
