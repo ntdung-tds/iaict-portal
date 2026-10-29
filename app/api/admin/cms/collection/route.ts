@@ -14,7 +14,7 @@ function errorResponse(error: unknown) {
   if (error instanceof NewsroomAuthError) return Response.json({ error: error.message }, { status: error.status });
   const message = error instanceof Error ? error.message : "Unknown CMS error";
   const isValidation = message.startsWith("INVALID_CMS_");
-  const isConflict = /UNIQUE constraint failed/i.test(message);
+  const isConflict = /UNIQUE constraint failed/i.test(message) || message === "INVALID_CMS_CONFLICT";
   return Response.json({ error: translateCmsError(message), code: cmsErrorCode(message) }, { status: isConflict ? 409 : isValidation ? 400 : 500 });
 }
 
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { module?: unknown; id?: unknown; data?: unknown };
+    const body = await request.json() as { module?: unknown; id?: unknown; data?: unknown; expectedUpdatedAt?: unknown };
     const { moduleKey, config } = moduleFrom(body.module);
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, config.adminOnly ? CMS_ADMIN_ROLES : CMS_EDIT_ROLES);
@@ -87,7 +87,9 @@ export async function POST(request: Request) {
         throw new NewsroomAuthError(403, "Only a CMS administrator may modify published content");
       }
     }
-    const entityId = await saveCmsRecord(db, actor, moduleKey, id, data);
+    // Legacy callers may omit this precondition. The CMS UI sends it on edits.
+    const expectedUpdatedAt = typeof body.expectedUpdatedAt === "string" ? body.expectedUpdatedAt : undefined;
+    const entityId = await saveCmsRecord(db, actor, moduleKey, id, data, { expectedUpdatedAt });
     const record = await db.prepare(`SELECT * FROM ${config.table} WHERE id=? LIMIT 1`).bind(entityId).first<Record<string, unknown>>();
     return Response.json({ ok: true, id: entityId, record });
   } catch (error) { return errorResponse(error); }
@@ -95,14 +97,15 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const body = await request.json() as { module?: unknown; id?: unknown };
+    const body = await request.json() as { module?: unknown; id?: unknown; expectedUpdatedAt?: unknown };
     const { moduleKey } = moduleFrom(body.module);
     const id = typeof body.id === "string" ? body.id.trim() : "";
     if (!id) return Response.json({ error: translateCmsError("ID_REQUIRED"), code: "ID_REQUIRED" }, { status: 400 });
     if (moduleKey === "registrations") return Response.json({ error: translateCmsError("REGISTRATION_DELETE_DISABLED"), code: "REGISTRATION_DELETE_DISABLED" }, { status: 400 });
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, CMS_ADMIN_ROLES);
-    await deleteCmsRecord(db, actor, moduleKey, id);
+    const expectedUpdatedAt = typeof body.expectedUpdatedAt === "string" ? body.expectedUpdatedAt : undefined;
+    await deleteCmsRecord(db, actor, moduleKey, id, { expectedUpdatedAt });
     return Response.json({ ok: true });
   } catch (error) { return errorResponse(error); }
 }
