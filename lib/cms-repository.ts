@@ -1,5 +1,5 @@
 import { isNavigationHref } from "./cms-navigation-link";
-import type { D1BindValue, D1DatabaseLike } from "./cloudflare-db";
+import type { D1BindValue, D1DatabaseLike, D1PreparedStatementLike } from "./cloudflare-db";
 import { getCmsModule, type CmsField, type CmsModuleConfig } from "./cms-schema";
 import type { NewsroomActor } from "./newsroom-auth";
 
@@ -97,6 +97,60 @@ async function recordRevision(
     JSON.stringify(snapshot),
     nowIso(),
   ).run();
+}
+
+type CmsMutationOptions = {
+  /** Timestamp of the selected record in the editor before any changes. */
+  expectedUpdatedAt?: string | null;
+  /** Restore audit must be committed in the same batch as the content change. */
+  restoreRevisionId?: string;
+};
+
+function auditStatement(
+  db: D1DatabaseLike,
+  actor: NewsroomActor,
+  action: string,
+  entityType: string,
+  entityId: string,
+  metadata: Record<string, unknown> = {},
+): D1PreparedStatementLike {
+  return db.prepare(`
+    INSERT INTO audit_logs(id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).bind(crypto.randomUUID(), actor.id, action, entityType, entityId, JSON.stringify(metadata), nowIso());
+}
+
+function revisionStatement(
+  db: D1DatabaseLike,
+  actor: NewsroomActor,
+  entityType: string,
+  entityId: string,
+  snapshot: CmsRow,
+): D1PreparedStatementLike {
+  return db.prepare(`
+    INSERT INTO cms_revisions(id, entity_type, entity_id, actor_user_id, snapshot_json, created_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).bind(crypto.randomUUID(), entityType, entityId, actor.id, JSON.stringify(snapshot), nowIso());
+}
+
+/** Every save moves the version forward even when two writes occur in the same millisecond. */
+function nextUpdatedAt(previous: unknown): string {
+  const last = typeof previous === "string" ? Date.parse(previous) : Number.NaN;
+  return new Date(Number.isFinite(last) ? Math.max(Date.now(), last + 1) : Date.now()).toISOString();
+}
+
+function conflict(): never {
+  throw new Error("INVALID_CMS_CONFLICT");
+}
+
+/**
+ * Read the affected-row count provided by Cloudflare D1 batch().
+ * An in-memory D1 adapter used by older unit tests may omit meta.changes;
+ * those callers do not submit optimistic-locking tokens.
+ */
+function assertChanged(result: Awaited<ReturnType<D1DatabaseLike["batch"]>>, index: number): void {
+  const changes = result[index]?.meta?.changes;
+  if (typeof changes === "number" && changes === 0) conflict();
 }
 
 function assertConfig(moduleKey: string) {
@@ -230,6 +284,7 @@ export async function saveCmsRecord(
   moduleKey: string,
   id: string | null,
   data: CmsRow,
+  options: CmsMutationOptions = {},
 ) {
   const config = assertConfig(moduleKey);
   if (config.readOnly) invalid("READ_ONLY");
@@ -239,13 +294,11 @@ export async function saveCmsRecord(
   const editableFields = config.fields.filter((field) => !field.readonly);
   const fieldByKey = new Map(editableFields.map((field) => [field.key, field]));
   const normalized: Record<string, D1BindValue> = {};
-
   for (const [key, rawValue] of Object.entries(data)) {
     const field = fieldByKey.get(key);
     if (!field) continue;
     normalized[key] = normalizeFieldValue(field, rawValue);
   }
-
   if (moduleKey === "courses" && normalized.code === "") normalized.code = null;
 
   if (config.slugColumn && !String(normalized[config.slugColumn] ?? "").trim()) {
@@ -260,18 +313,25 @@ export async function saveCmsRecord(
     }
   }
 
-  const timestamp = nowIso();
   const entityId = id ?? crypto.randomUUID();
+  const action = id ? "cms.entity.update" : "cms.entity.create";
+  const auditMeta = { changedFields: Object.keys(normalized) };
+  const statements: D1PreparedStatementLike[] = [];
+
   if (id) {
     const current = await db.prepare(`SELECT * FROM ${config.table} WHERE id = ?`).bind(id).first<CmsRow>();
     if (!current) invalid("NOT_FOUND");
-    await recordRevision(db, actor, moduleKey, id, current);
+    const hasUpdatedAt = moduleKey !== "redirects";
+    const locking = hasUpdatedAt && options.expectedUpdatedAt !== undefined;
+    const expected = options.expectedUpdatedAt ?? null;
+    if (locking && (current.updated_at ?? null) !== expected) conflict();
 
     const updates = Object.keys(normalized);
-    if (updates.length === 0) invalid("NO_FIELDS");
-    const values = updates.map((key) => normalized[key]);
-    const hasUpdatedAt = !["redirects"].includes(moduleKey);
-    const assignments = updates.map((key) => `${key} = ?`);
+    if (!updates.length) invalid("NO_FIELDS");
+    const values = updates.map(key => normalized[key]);
+    const assignments = updates.map(key => `${key} = ?`);
+    const timestamp = nextUpdatedAt(current.updated_at);
+
     if (hasUpdatedAt) {
       assignments.push("updated_at = ?");
       values.push(timestamp);
@@ -280,13 +340,48 @@ export async function saveCmsRecord(
       assignments.push(`${config.publishColumn} = ?`);
       values.push(timestamp);
     }
-    await db.prepare(`UPDATE ${config.table} SET ${assignments.join(", ")} WHERE id = ?`)
-      .bind(...values, id)
-      .run();
+
+    if (locking) {
+      // Atomic compare-and-swap: a fresh revision ID serves as the mutation
+      // witness. Audit rows are conditional on THIS revision, not the new
+      // updated_at timestamp (two writers may generate the same millisecond).
+      const revisionId = crypto.randomUUID();
+      statements.push(db.prepare(`
+        INSERT INTO cms_revisions(id,entity_type,entity_id,actor_user_id,snapshot_json,created_at)
+        SELECT ?,?,?,?,?,? FROM ${config.table} WHERE id=? AND updated_at IS ?
+      `).bind(revisionId, moduleKey, id, actor.id, JSON.stringify(current), nowIso(), id, expected));
+      statements.push(db.prepare(`
+        UPDATE ${config.table} SET ${assignments.join(", ")} WHERE id=? AND updated_at IS ?
+      `).bind(...values, id, expected));
+      statements.push(db.prepare(`
+        INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at)
+        SELECT ?,?,?,?,?,?,? FROM cms_revisions WHERE id=?
+      `).bind(crypto.randomUUID(), actor.id, action, moduleKey, entityId, JSON.stringify(auditMeta), nowIso(), revisionId));
+      if (options.restoreRevisionId) {
+        statements.push(db.prepare(`
+          INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at)
+          SELECT ?,?,?,?,?,?,? FROM cms_revisions WHERE id=?
+        `).bind(crypto.randomUUID(), actor.id, "cms.revision.restore", moduleKey, entityId,
+          JSON.stringify({ revisionId: options.restoreRevisionId }), nowIso(), revisionId));
+      }
+    } else {
+      statements.push(revisionStatement(db, actor, moduleKey, id, current));
+      statements.push(db.prepare(`UPDATE ${config.table} SET ${assignments.join(", ")} WHERE id=?`)
+        .bind(...values, id));
+      statements.push(auditStatement(db, actor, action, moduleKey, entityId, auditMeta));
+      if (options.restoreRevisionId) {
+        statements.push(auditStatement(db, actor, "cms.revision.restore", moduleKey, id,
+          { revisionId: options.restoreRevisionId }));
+      }
+    }
+
+    const result = await db.batch(statements);
+    if (locking) assertChanged(result, 1);
   } else {
+    const timestamp = nowIso();
     const columns = ["id", ...Object.keys(normalized)];
     const values: D1BindValue[] = [entityId, ...Object.values(normalized)];
-    if (!["redirects"].includes(moduleKey)) {
+    if (moduleKey !== "redirects") {
       columns.push("created_at", "updated_at");
       values.push(timestamp, timestamp);
     } else {
@@ -297,15 +392,13 @@ export async function saveCmsRecord(
       columns.push(config.publishColumn);
       values.push(timestamp);
     }
-    await db.prepare(`
+    statements.push(db.prepare(`
       INSERT INTO ${config.table}(${columns.join(", ")})
       VALUES (${columns.map(() => "?").join(", ")})
-    `).bind(...values).run();
+    `).bind(...values));
+    statements.push(auditStatement(db, actor, action, moduleKey, entityId, auditMeta));
+    await db.batch(statements);
   }
-
-  await writeAudit(db, actor, id ? "cms.entity.update" : "cms.entity.create", moduleKey, entityId, {
-    changedFields: Object.keys(normalized),
-  });
   return entityId;
 }
 
@@ -314,6 +407,7 @@ export async function deleteCmsRecord(
   actor: NewsroomActor,
   moduleKey: string,
   id: string,
+  options: CmsMutationOptions = {},
 ) {
   const config = assertConfig(moduleKey);
   if (config.readOnly || config.allowDelete === false) invalid("DELETE_DISABLED");
@@ -323,17 +417,42 @@ export async function deleteCmsRecord(
     if (id === actor.id) invalid("USER_SELF_DELETE");
     const current = await db.prepare(`SELECT * FROM admin_users WHERE id = ?`).bind(id).first<CmsRow>();
     if (!current) invalid("NOT_FOUND");
-    await recordRevision(db, actor, moduleKey, id, current);
-    await db.prepare(`UPDATE admin_users SET is_active = 0, updated_at = ? WHERE id = ?`).bind(nowIso(), id).run();
-    await writeAudit(db, actor, "cms.user.deactivate", moduleKey, id);
+    await db.batch([
+      revisionStatement(db, actor, moduleKey, id, current),
+      db.prepare(`UPDATE admin_users SET is_active=0, updated_at=? WHERE id=?`)
+        .bind(nextUpdatedAt(current.updated_at), id),
+      auditStatement(db, actor, "cms.user.deactivate", moduleKey, id),
+    ]);
     return;
   }
 
-  const current = await db.prepare(`SELECT * FROM ${config.table} WHERE id = ?`).bind(id).first<CmsRow>();
+  const current = await db.prepare(`SELECT * FROM ${config.table} WHERE id=?`).bind(id).first<CmsRow>();
   if (!current) invalid("NOT_FOUND");
-  await recordRevision(db, actor, moduleKey, id, current);
-  await db.prepare(`DELETE FROM ${config.table} WHERE id = ?`).bind(id).run();
-  await writeAudit(db, actor, "cms.entity.delete", moduleKey, id);
+  const locking = moduleKey !== "redirects" && options.expectedUpdatedAt !== undefined;
+  const expected = options.expectedUpdatedAt ?? null;
+  if (locking && (current.updated_at ?? null) !== expected) conflict();
+
+  if (locking) {
+    const revisionId = crypto.randomUUID();
+    const results = await db.batch([
+      db.prepare(`
+        INSERT INTO cms_revisions(id,entity_type,entity_id,actor_user_id,snapshot_json,created_at)
+        SELECT ?,?,?,?,?,? FROM ${config.table} WHERE id=? AND updated_at IS ?
+      `).bind(revisionId, moduleKey, id, actor.id, JSON.stringify(current), nowIso(), id, expected),
+      db.prepare(`DELETE FROM ${config.table} WHERE id=? AND updated_at IS ?`).bind(id, expected),
+      db.prepare(`
+        INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at)
+        SELECT ?,?,?,?,?,?,? FROM cms_revisions WHERE id=?
+      `).bind(crypto.randomUUID(), actor.id, "cms.entity.delete", moduleKey, id, "{}", nowIso(), revisionId),
+    ]);
+    assertChanged(results, 1);
+  } else {
+    await db.batch([
+      revisionStatement(db, actor, moduleKey, id, current),
+      db.prepare(`DELETE FROM ${config.table} WHERE id=?`).bind(id),
+      auditStatement(db, actor, "cms.entity.delete", moduleKey, id),
+    ]);
+  }
 }
 
 export async function getCmsOverview(db: D1DatabaseLike, includeActivity = false) {
@@ -402,18 +521,20 @@ export async function saveCmsSettings(
   organizationName: string,
   settings: Record<string, unknown>,
 ) {
-  const timestamp = nowIso();
   const current = await db.prepare(`SELECT * FROM site_settings WHERE id = 'default'`).first<CmsRow>();
-  if (current) await recordRevision(db, actor, "site_settings", "default", current);
-  await db.prepare(`
+  const timestamp = nextUpdatedAt(current?.updated_at);
+  const statements: D1PreparedStatementLike[] = [];
+  if (current) statements.push(revisionStatement(db, actor, "site_settings", "default", current));
+  statements.push(db.prepare(`
     INSERT INTO site_settings(id, organization_name, settings_json, updated_at)
     VALUES ('default', ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       organization_name = excluded.organization_name,
       settings_json = excluded.settings_json,
       updated_at = excluded.updated_at
-  `).bind(organizationName.trim(), JSON.stringify(settings), timestamp).run();
-  await writeAudit(db, actor, "cms.settings.update", "site_settings", "default", { organizationName });
+  `).bind(organizationName.trim(), JSON.stringify(settings), timestamp));
+  statements.push(auditStatement(db, actor, "cms.settings.update", "site_settings", "default", { organizationName }));
+  await db.batch(statements);
   return getCmsSettings(db);
 }
 

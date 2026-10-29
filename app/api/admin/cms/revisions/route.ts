@@ -54,8 +54,7 @@ export async function POST(request:Request){
     const snapshot=snapshotObject(revision.snapshot_json);if(!snapshot||!hasRestorableFields(revision.entity_type,snapshot))invalid("REVISION_SNAPSHOT_INVALID");
     const current=await db.prepare(`SELECT id FROM ${config.table} WHERE id=?`).bind(revision.entity_id).first<{id:string}>();if(!current)invalid("REVISION_TARGET_MISSING");
     const prepared=await prepareCmsData(db,revision.entity_type,config,revision.entity_id,snapshot);
-    await saveCmsRecord(db,actor,revision.entity_type,revision.entity_id,prepared);
-    await db.prepare(`INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?)`).bind(crypto.randomUUID(),actor.id,"cms.revision.restore",revision.entity_type,revision.entity_id,JSON.stringify({revisionId}),new Date().toISOString()).run();
+    await saveCmsRecord(db, actor, revision.entity_type, revision.entity_id, prepared, { restoreRevisionId: revisionId });
     return Response.json({ok:true});
   }catch(error){return errorResponse(error);}
 }
