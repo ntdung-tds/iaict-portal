@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const isActive = body.isActive === false || body.isActive === 0 || body.isActive === "0" ? 0 : 1;
     const roles = normalizeRoleSelection(body.roles);
 
-    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) invalid("USER_EMAIL");
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) invalid("USER_EMAIL");
     if (roles.length === 0) invalid("USER_ROLES");
     if (id === actor.id && email !== actor.email.trim().toLowerCase()) invalid("USER_SELF_EMAIL_CHANGE");
     if (id === actor.id && !isActive) invalid("USER_SELF_DEACTIVATE");
