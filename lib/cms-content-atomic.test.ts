@@ -226,6 +226,49 @@ describe("CMS two-writer optimistic concurrency", () => {
   });
 });
 
+describe("CMS editor publication race protection", () => {
+  function editorSave(id: string, data: Record<string, unknown>, expectedUpdatedAt?: string) {
+    return saveCollection(new Request("https://cms.test/api/admin/cms/collection", {
+      method: "POST",
+      headers: { "x-test-role": "editor", "content-type": "application/json" },
+      body: JSON.stringify({ module: "products", id, data, expectedUpdatedAt }),
+    }));
+  }
+
+  it("rejects legacy editor updates without a version token", async () => {
+    const id = await create();
+    const response = await editorSave(id, { title: "Unsafe legacy edit", status: "draft" });
+    expect(response.status).toBe(409);
+    expect((await response.json() as { code: string }).code).toBe("CONFLICT");
+    expect(record(id)?.title).toBe(sample.title);
+    expect(totals()).toEqual({ revisions: 0, audits: 1 });
+  });
+
+  it("rejects a stale editor when an admin publishes after the initial checks", async () => {
+    const id = await create();
+    const old = String(record(id)?.updated_at);
+    beforeBatch = () => {
+      sqlite.prepare("UPDATE products SET status=?,updated_at=? WHERE id=?")
+        .run("published", new Date(Date.parse(old) + 10000).toISOString(), id);
+    };
+    const response = await editorSave(id, { title: "Stale editorial edit", status: "draft" }, old);
+    expect(response.status).toBe(409);
+    expect(record(id)?.status).toBe("published");
+    expect(record(id)?.title).toBe(sample.title);
+    expect(totals()).toEqual({ revisions: 0, audits: 1 });
+  });
+
+  it("allows a fresh editor update to a draft with a version token", async () => {
+    const id = await create();
+    const response = await editorSave(id, { title: "Revised draft", status: "review" },
+      String(record(id)?.updated_at));
+    expect(response.status).toBe(200);
+    expect(record(id)?.status).toBe("review");
+    expect(record(id)?.title).toBe("Revised draft");
+    expect(totals()).toEqual({ revisions: 1, audits: 2 });
+  });
+});
+
 describe("CMS settings and restore audit atomicity", () => {
   it("rolls back site settings and snapshot when audit insertion fails", async () => {
     const before = sqlite.prepare("SELECT * FROM site_settings WHERE id='default'").get();
