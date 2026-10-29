@@ -22,6 +22,7 @@ const fixedMessages: Record<string, string> = {
   ID_REQUIRED: "Vui lòng chọn bản ghi cần xử lý.",
   NOT_FOUND: "Không tìm thấy dữ liệu cần xử lý.",
   NO_FIELDS: "Không có thay đổi nào để lưu.",
+  CONFLICT: "Nội dung đã được người khác cập nhật sau khi bạn mở trang. Bản nháp của bạn vẫn được giữ; hãy tải lại dữ liệu để so sánh trước khi lưu.",
   REGISTRATION_DELETE_DISABLED: "Đăng ký khóa học không được xóa trực tiếp. Hãy cập nhật trạng thái thay vì xóa.",
 
   USER_EMAIL: "Vui lòng nhập địa chỉ email hợp lệ.",
