@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { absoluteSiteUrl, isIndexableSite } from "@/lib/site-config";
+import { createPublicLayoutTitle } from "@/lib/public-metadata";
 import { getPublicSiteSettings } from "@/lib/public-site-settings";
 
 export const dynamic = "force-dynamic";
@@ -10,10 +11,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSiteSettings();
   return {
-    title: {
-      default: settings.defaultSeoTitle || settings.siteTitle,
-      template: `%s · ${settings.siteTitle}`,
-    },
+    title: createPublicLayoutTitle(settings.siteTitle, settings.defaultSeoTitle),
     description: settings.defaultSeoDescription || settings.siteDescription,
   };
 }

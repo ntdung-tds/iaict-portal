@@ -149,3 +149,45 @@ test("published newsroom content reaches the public site with provenance", async
   await expect(page.locator("h1").first()).toHaveText(target.title);
   await expect(page.locator('[data-news-provenance="ready"]')).toBeVisible();
 });
+
+
+test("mobile menu opens and follows a public navigation link", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const response = await page.goto("/", { waitUntil: "domcontentloaded" });
+  expect(response?.status()).toBe(200);
+  const toggle = page.getByRole("button", { name: "Mở điều hướng" });
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+  await expect(page.locator("#mobile-navigation")).toBeVisible();
+  const target = page.locator('#mobile-navigation a[href="/gioi-thieu"]');
+  await expect(target).toBeVisible();
+  await target.click();
+  await expect(page).toHaveURL(/\/gioi-thieu$/);
+  await expect(page.locator("#mobile-navigation")).toHaveCount(0);
+  await expect(page.locator("h1").first()).toBeVisible();
+});
+
+test("search accepts typed Vietnamese text and keyboard submission", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/tim-kiem", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".public-search")).toHaveAttribute("data-ready", "true");
+  const input = page.getByRole("searchbox", { name: "Tìm trong nội dung IAICT" });
+  await input.fill("Trâm rừng");
+  await input.press("Enter");
+  await expect(page).toHaveURL(/q=Tr%C3%A2m(?:\+|%20)r%E1%BB%ABng/);
+  await expect(page.locator('.public-search-results a[href="/du-an/tram-rung"]')).toBeVisible();
+});
+
+test("unauthenticated CMS root, subpaths, and APIs require Cloudflare Access", async ({ request }) => {
+  for (const route of [
+    "/admin",
+    "/admin/news",
+    "/api/admin/cms/overview",
+    "/api/admin/news/settings",
+  ] as const) {
+    const response = await request.get(route, { maxRedirects: 0 });
+    expect([302, 303, 307, 308], `${route} should require Access login`).toContain(response.status());
+    const location = response.headers()["location"] ?? "";
+    expect(location, `${route} must redirect to Cloudflare Access`).toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+  }
+});

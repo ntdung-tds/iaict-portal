@@ -1,6 +1,7 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
 import { cmsErrorCode, translateCmsError } from "@/lib/cms-errors";
 import { CMS_ADMIN_ROLES, CMS_EDIT_ROLES, CMS_READ_ROLES } from "@/lib/cms-roles";
+import { canMutatePublication } from "@/lib/cms-publication-permissions";
 import { NewsroomAuthError, requireNewsroomActor, type NewsroomActor } from "@/lib/newsroom-auth";
 
 export const dynamic = "force-dynamic";
@@ -113,6 +114,9 @@ export async function POST(request: Request) {
 
     if (!title || !categoryId || !slug || !articleBody) invalid("REQUIRED_FIELDS");
     if (!["draft", "review", "published", "archived"].includes(status)) invalid("STATUS");
+    if (!canMutatePublication(actor.roles, null, status)) {
+      throw new NewsroomAuthError(403, "Only a CMS administrator may publish articles");
+    }
     const category = await db.prepare(`SELECT id FROM article_categories WHERE id=?`).bind(categoryId).first<{id:string}>();
     if (!category) invalid("CATEGORY_NOT_FOUND");
     if (heroMediaId) {
@@ -126,6 +130,9 @@ export async function POST(request: Request) {
     if (body.id) {
       const current = await db.prepare(`SELECT * FROM articles WHERE id=?`).bind(id).first<Row>();
       if (!current) invalid("NOT_FOUND");
+      if (!canMutatePublication(actor.roles, current.status, status)) {
+        throw new NewsroomAuthError(403, "Only a CMS administrator may modify published articles");
+      }
       await revision(db, actor, "articles", id, current);
       const publishedAt = status === "published" ? String(current.published_at ?? timestamp) : current.published_at;
       await db.prepare(`UPDATE articles SET title=?,slug=?,category_id=?,status=?,body=?,excerpt=?,tags_json=?,hero_media_id=?,seo_json=?,featured=?,updated_at=?,published_at=? WHERE id=?`)

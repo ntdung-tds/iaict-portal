@@ -392,6 +392,7 @@ export const cmsModules: Record<string, CmsModuleConfig> = {
     statusColumn: "status",
     searchColumns: ["contact_name", "organization", "email", "phone", "message"],
     orderBy: "created_at DESC",
+    adminOnly: true,
     allowCreate: false,
     allowDelete: false,
     fields: [
@@ -417,6 +418,7 @@ export const cmsModules: Record<string, CmsModuleConfig> = {
     statusColumn: "status",
     searchColumns: ["contact_name", "organization", "email", "phone"],
     orderBy: "created_at DESC",
+    adminOnly: true,
     allowCreate: false,
     allowDelete: false,
     fields: [

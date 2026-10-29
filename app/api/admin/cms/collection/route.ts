@@ -4,6 +4,7 @@ import { cmsErrorCode, translateCmsError } from "@/lib/cms-errors";
 import { deleteCmsRecord, listCmsRecords, saveCmsRecord } from "@/lib/cms-repository";
 import { CMS_ADMIN_ROLES, CMS_EDIT_ROLES, CMS_READ_ROLES } from "@/lib/cms-roles";
 import { getCmsModule } from "@/lib/cms-schema";
+import { canMutatePublication, PUBLICATION_MODULES } from "@/lib/cms-publication-permissions";
 import { prepareCmsData } from "@/lib/cms-validation";
 import { NewsroomAuthError, requireNewsroomActor } from "@/lib/newsroom-auth";
 
@@ -78,6 +79,14 @@ export async function POST(request: Request) {
     const id = typeof body.id === "string" && body.id.trim() ? body.id.trim() : null;
     const rawData = body.data && typeof body.data === "object" && !Array.isArray(body.data) ? body.data as Record<string, unknown> : {};
     const data = await prepareCmsData(db, moduleKey, config, id, rawData);
+    if (PUBLICATION_MODULES.has(moduleKey) && !actor.roles.includes("admin")) {
+      const current = id
+        ? await db.prepare(`SELECT status FROM ${config.table} WHERE id = ? LIMIT 1`).bind(id).first<{ status: string }>()
+        : null;
+      if (!canMutatePublication(actor.roles, current?.status, data.status)) {
+        throw new NewsroomAuthError(403, "Only a CMS administrator may modify published content");
+      }
+    }
     const entityId = await saveCmsRecord(db, actor, moduleKey, id, data);
     const record = await db.prepare(`SELECT * FROM ${config.table} WHERE id=? LIMIT 1`).bind(entityId).first<Record<string, unknown>>();
     return Response.json({ ok: true, id: entityId, record });

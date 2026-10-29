@@ -1,6 +1,7 @@
 name: staging-acceptance
 
 on:
+  pull_request:
   push:
     branches: [ui-v16-functional]
   workflow_dispatch:
