@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> **ĐÍNH CHÍNH 29/10/2026 — Báo cáo bên dưới chỉ phản ánh code trên GitHub `main` cũ; KHÔNG phải kết luận về bản CMS v17 trên staging.**
+> Kiểm tra trực tiếp D1 staging cho thấy **21 migrations** (tới `0021_v17_admin_role_normalization.sql`), đúng bộ migration trên nhánh `cms/v17-full-admin`, trong khi `main` chỉ có 11. CMS v17 sử dụng D1; các nhận định bên dưới về Vercel Blob và luồng CMS cũ **không được coi là áp dụng cho Worker đang chạy** khi chưa có xác minh artifact. **Không triển khai từ `main` cũ lên staging.**
+> **Xem báo cáo mới thay thế việc đánh giá runtime:** [CMS v17 / Staging Audit — Đợt 1](CMS_V17_STAGING_AUDIT_PHASE1_2026-10-29.md).
+
+---
+
 # IAICT Portal Staging — Biên bản rà soát kỹ thuật (lưu tạm)
 
 > **Ngày kiểm tra:** 29/10/2026 (Asia/Ho_Chi_Minh).  
