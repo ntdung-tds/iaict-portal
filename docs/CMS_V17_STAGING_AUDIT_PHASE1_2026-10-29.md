@@ -190,3 +190,36 @@ Biên bản `docs/STAGING_AUDIT_2026-10-29.md` trước đó phân tích nhánh 
 5. **Source provenance check:** artifact build chứa commit SHA cố định; `/api/health` có build identity; đối chiếu Workers deployment versions trước/ sau release.
 
 **Không chạy các test có ghi trên D1 đang sử dụng; sử dụng D1 test riêng và dữ liệu mẫu.**
+
+
+---
+
+## Phụ lục B — Kiểm thử đã thực thi (29/10/2026)
+
+### B1. Kết quả CI đầy đủ tại đúng commit ứng viên
+
+- GitHub Actions URL: https://github.com/ntdung-tds/iaict-portal/actions/runs/39024765073
+- Git commit: `482392113d40592e0499f4e850defb937c367318` (branch `cms/v17-full-admin`).
+- CI run `portal-ci` hoàn thành `success`; job `verify` bao gồm: migration integrity, npm install, vinext compatibility, TypeScript typecheck, Vitest unit tests, build, kiểm tra Cloudflare output (dry-run).
+- GitHub Actions job logs ghi: **27 Vitest test files PASSED / 286 tests PASSED**, không có test failed.
+- Đây là CI chạy trên GitHub ngày 17/10/2026, **không phải** full build chạy được trên máy ảo hiện tại; không chứng minh live staging browser acceptance hoặc không có lỗi RBAC.
+
+### B2. Kiểm thử Node cục bộ trong máy ảo của ChatGPT
+
+- Máy ảo: Node.js v22.16.0, npm 10.9.2, Node `--experimental-transform-types` + `node:test`.
+- Dựng harness độc lập sử dụng mã logic trích từ bốn module `lib/cms-roles.ts`, `lib/newsroom-auth.ts`, `lib/public-search.ts`, `lib/cms-public-cors.ts`; có thay đổi đường dẫn import và định dạng để chạy độc lập, **không byte-identical** với source repo.
+- D1 được mock trong bộ nhớ; request tổng hợp; không có credentials, không ghi vào staging/production.
+- **28 test / 28 PASS**, gồm normalization role, kiểm tra thiếu Access headers, quyền viewer/editor/admin/newsroom, tìm kiếm Unicode tiếng Việt và CORS whitelist.
+- **Kiểm chứng hành vi rủi ro:** `requireNewsroomActor` chấp nhận chuỗi JWT tùy ý (ví dụ `not-a-real-jwt`) nếu có email và token header, đồng thời tài khoản D1 mock có vai trò được cấp. Điều này xác nhận function thiếu xác minh cryptographic JWT; không thể suy ra Cloudflare Access ở edge có thể bị bypass.
+- Không thể `git clone` hoặc `npm ci` nguyên repository trong máy ảo này vì DNS `github.com` và `registry.npmjs.org` lỗi `EAI_AGAIN`. Không tuyên bố full repo tests đã chạy locally.
+- Log và source-extracted harness đã được xuất thành bộ ZIP trong phiên ChatGPT để tham chiếu/kiểm tra lại, không được tự động gửi lên GitHub.
+
+### B3. Vấn đề phải kiểm thử tiếp trên bản sao D1, không trên dữ liệu staging thật
+
+1. Negative integration test: `editor` POST `status='published'` phải tuân thủ chính sách duyệt; kết quả hiện chưa được test bằng route runtime.
+2. Failpoint tests: lỗi sau `recordRevision` và lỗi giữa thay đổi `admin_user_roles` phải không để lại trạng thái dở dang.
+3. Two-writer concurrency: mọi mutation phải có CAS/transaction và kiểm tra version trước khi được coi là race-safe.
+4. CRM viewer role: chặn đọc `leads`/`registrations` nếu chưa được phân quyền `crm.read`, kiểm chứng redaction/least-privilege.
+5. Browser acceptance: verify route redirect Cloudflare Access, public search/news and responsive on staging; không gửi POST ghi D1 thật.
+
+**Nhắc lại:** phát hiện kiểm tra JWT ở tầng ứng dụng chỉ là defense-in-depth; edge Access đang cấu hình theo domain/path và phải được kiểm chứng thêm bằng E2E không xâm hại.
