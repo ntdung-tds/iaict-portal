@@ -519,18 +519,20 @@ export async function saveCmsSettings(
   organizationName: string,
   settings: Record<string, unknown>,
 ) {
-  const timestamp = nowIso();
   const current = await db.prepare(`SELECT * FROM site_settings WHERE id = 'default'`).first<CmsRow>();
-  if (current) await recordRevision(db, actor, "site_settings", "default", current);
-  await db.prepare(`
+  const timestamp = nextUpdatedAt(current?.updated_at);
+  const statements: D1PreparedStatementLike[] = [];
+  if (current) statements.push(revisionStatement(db, actor, "site_settings", "default", current));
+  statements.push(db.prepare(`
     INSERT INTO site_settings(id, organization_name, settings_json, updated_at)
     VALUES ('default', ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       organization_name = excluded.organization_name,
       settings_json = excluded.settings_json,
       updated_at = excluded.updated_at
-  `).bind(organizationName.trim(), JSON.stringify(settings), timestamp).run();
-  await writeAudit(db, actor, "cms.settings.update", "site_settings", "default", { organizationName });
+  `).bind(organizationName.trim(), JSON.stringify(settings), timestamp));
+  statements.push(auditStatement(db, actor, "cms.settings.update", "site_settings", "default", { organizationName }));
+  await db.batch(statements);
   return getCmsSettings(db);
 }
 
