@@ -89,6 +89,12 @@ export async function POST(request: Request) {
     }
     // Legacy callers may omit this precondition. The CMS UI sends it on edits.
     const expectedUpdatedAt = typeof body.expectedUpdatedAt === "string" ? body.expectedUpdatedAt : undefined;
+    // Editors may edit drafts, but must present the version they actually read.
+    // Otherwise a legacy client could pass the earlier publication gate while
+    // an administrator publishes the record, then overwrite it without CAS.
+    if (id && PUBLICATION_MODULES.has(moduleKey) && !actor.roles.includes("admin") && expectedUpdatedAt === undefined) {
+      throw new Error("INVALID_CMS_CONFLICT");
+    }
     const entityId = await saveCmsRecord(db, actor, moduleKey, id, data, { expectedUpdatedAt });
     const record = await db.prepare(`SELECT * FROM ${config.table} WHERE id=? LIMIT 1`).bind(entityId).first<Record<string, unknown>>();
     return Response.json({ ok: true, id: entityId, record });
