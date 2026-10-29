@@ -28,6 +28,7 @@ vi.mock("./newsroom-auth", async (importOriginal) => {
 });
 
 let sqlite: DatabaseSync;
+let beforeBatch: (() => void) | null = null;
 
 function adapter(database: DatabaseSync): D1DatabaseLike {
   return {
@@ -51,6 +52,7 @@ function adapter(database: DatabaseSync): D1DatabaseLike {
     async batch(statements) {
       // Model Cloudflare D1 batch's transactional success/failure contract
       // rather than Promise.all, which can conceal partial writes.
+      if (beforeBatch) { const concurrent = beforeBatch; beforeBatch = null; concurrent(); }
       database.exec("BEGIN");
       try {
         const results: D1RunResult[] = [];
@@ -97,6 +99,7 @@ function counts() {
 }
 
 beforeEach(() => {
+  beforeBatch = null;
   sqlite = new DatabaseSync(":memory:");
   sqlite.exec(readFileSync("cloudflare/migrations/0001_core.sql", "utf8"));
   sqlite.exec(readFileSync("cloudflare/migrations/0019_v17_full_cms.sql", "utf8"));
@@ -115,6 +118,7 @@ beforeEach(() => {
   setDatabaseBinding(adapter(sqlite));
 });
 afterEach(() => {
+  beforeBatch = null;
   delete (globalThis as { __IAICT_D1_DB__?: D1DatabaseLike }).__IAICT_D1_DB__;
   sqlite.close();
 });
@@ -219,6 +223,49 @@ describe("CMS user management — D1 transactional integrity", () => {
     expect(response.status).toBe(400);
     expect(roleCodes()).toEqual(["admin"]);
     expect(counts()).toEqual({ revisions: 0, audits: 0 });
+  });
+
+  it("blocks stale concurrent admin demotion within the D1 batch", async () => {
+    // Both accounts are admins when the outer pre-check is performed.
+    sqlite.exec("DELETE FROM admin_user_roles WHERE user_id='qa-user'; INSERT INTO admin_user_roles(user_id,role_id) VALUES('qa-user','role-admin')");
+    beforeBatch = () => {
+      // Another administrator completed demotion before this batch began.
+      sqlite.exec("DELETE FROM admin_user_roles WHERE user_id='qa-admin'; INSERT INTO admin_user_roles(user_id,role_id) VALUES('qa-admin','role-viewer')");
+    };
+    const result = await post({
+      id: "qa-user", email: "qa-user@example.test", displayName: "Demotion blocked",
+      isActive: true, roles: ["viewer"],
+    });
+    expect(result.status).toBe(400);
+    expect((await result.json() as { code?: string }).code).toBe("LAST_ACTIVE_ADMIN");
+    expect(roleCodes()).toEqual(["admin"]);
+    expect(roleCodes("qa-admin")).toEqual(["viewer"]);
+    expect(counts()).toEqual({ revisions: 0, audits: 0 });
+  });
+
+  it("blocks stale concurrent deactivation of the last admin", async () => {
+    sqlite.exec("DELETE FROM admin_user_roles WHERE user_id='qa-user'; INSERT INTO admin_user_roles(user_id,role_id) VALUES('qa-user','role-admin')");
+    beforeBatch = () => {
+      sqlite.exec("DELETE FROM admin_user_roles WHERE user_id='qa-admin'; INSERT INTO admin_user_roles(user_id,role_id) VALUES('qa-admin','role-viewer')");
+    };
+    const result = await deactivate("qa-user");
+    expect(result.status).toBe(400);
+    expect((await result.json() as { code?: string }).code).toBe("LAST_ACTIVE_ADMIN");
+    expect(userState()?.is_active).toBe(1);
+    expect(roleCodes()).toEqual(["admin"]);
+    expect(counts()).toEqual({ revisions: 0, audits: 0 });
+  });
+
+  it("allows admin demotion when another active admin remains at commit time", async () => {
+    sqlite.exec("DELETE FROM admin_user_roles WHERE user_id='qa-user'; INSERT INTO admin_user_roles(user_id,role_id) VALUES('qa-user','role-admin')");
+    const response = await post({
+      id: "qa-user", email: "qa-user@example.test", displayName: "Viewer",
+      isActive: true, roles: ["viewer"],
+    });
+    expect(response.status).toBe(200);
+    expect(roleCodes()).toEqual(["viewer"]);
+    expect(roleCodes("qa-admin")).toEqual(["admin"]);
+    expect(counts()).toEqual({ revisions: 1, audits: 1 });
   });
 
   it("rejects viewer access without writes", async () => {
