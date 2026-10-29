@@ -40,3 +40,17 @@ export function createPublicMetadata({
     },
   };
 }
+
+/**
+ * The public layout needs an absolute title, otherwise a parent root-layout
+ * title template can turn the homepage into "IAICT | IAICT".
+ * Descendant public pages still use the CMS-configured siteTitle suffix.
+ */
+export function createPublicLayoutTitle(siteTitle: string, defaultSeoTitle: string): NonNullable<Metadata["title"]> {
+  const brand = siteTitle.trim();
+  const homeTitle = defaultSeoTitle.trim() || brand;
+  return {
+    absolute: homeTitle,
+    template: `%s · ${brand}`,
+  };
+}
