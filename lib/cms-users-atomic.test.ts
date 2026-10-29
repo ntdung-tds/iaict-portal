@@ -102,6 +102,9 @@ beforeEach(() => {
   sqlite.exec(readFileSync("cloudflare/migrations/0019_v17_full_cms.sql", "utf8"));
   sqlite.exec(readFileSync("cloudflare/migrations/0020_v17_cms_roles.sql", "utf8"));
   sqlite.exec(readFileSync("cloudflare/migrations/0021_v17_admin_role_normalization.sql", "utf8"));
+  // The complete production migration chain seeds Newsroom roles in 0016.
+  // This focused in-memory fixture imports only core and CMS schema migrations.
+  sqlite.exec("INSERT OR IGNORE INTO roles(id,code,name) VALUES('role-news-editor','news_editor','Newsroom Editor')");
   sqlite.exec(`
     INSERT INTO admin_users(id,email,display_name,is_active,created_at,updated_at) VALUES
       ('qa-admin','qa-admin@example.test','Admin',1,'2026-10-29','2026-10-29'),
