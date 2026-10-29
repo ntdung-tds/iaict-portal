@@ -45,7 +45,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Check browser-rendered contrast and SEO locally
-        run: npx playwright test e2e/public-visual-seo.spec.ts --workers=1
+        run: npx playwright test e2e/public-visual-seo.spec.ts e2e/cms-users-atomic.spec.ts --workers=1
       - name: Save Playwright traces on failure
         if: failure()
         uses: actions/upload-artifact@v4
