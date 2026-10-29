@@ -1,0 +1,89 @@
+name: identify-cloudflare-accounts
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  identify:
+    name: Check Cloudflare CLI (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [staging, production]
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify Cloudflare account and Worker with Wrangler CLI
+        env:
+          TARGET_ENVIRONMENT: ${{ matrix.target }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
+            echo "Missing Cloudflare credentials in this GitHub environment."
+            exit 1
+          fi
+          if [[ ! "$CLOUDFLARE_ACCOUNT_ID" =~ ^[a-fA-F0-9]{32}$ ]]; then
+            echo "Invalid Cloudflare Account ID format."
+            exit 1
+          fi
+          echo "::add-mask::$CLOUDFLARE_ACCOUNT_ID"
+          if [[ "$TARGET_ENVIRONMENT" == staging ]]; then
+            WORKER_NAME=iaict-portal-staging
+          else
+            WORKER_NAME=iaict-portal
+          fi
+          export WORKER_NAME
+
+          # Keep raw CLI output (which can contain IDs) out of public logs.
+          if ! npx --yes wrangler@4.149.0 whoami --json \
+              > "$RUNNER_TEMP/cloudflare-whoami.json" 2> "$RUNNER_TEMP/cloudflare-whoami.err"; then
+            echo "Wrangler authentication failed; verify token and account permissions."
+            exit 1
+          fi
+
+          if ! npx --yes wrangler@4.149.0 deployments list --name "$WORKER_NAME" --json \
+              > "$RUNNER_TEMP/cloudflare-deployments.json" 2> "$RUNNER_TEMP/cloudflare-deployments.err"; then
+            echo "Wrangler could not read deployments for the expected Worker."
+            exit 1
+          fi
+
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          const data = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + "/cloudflare-whoami.json", "utf8"));
+          const targetId = process.env.CLOUDFLARE_ACCOUNT_ID.toLowerCase();
+          let accountName;
+          function visit(value) {
+            if (!value || typeof value !== "object") return;
+            if (!Array.isArray(value)) {
+              const id = value.id ?? value.account_id ?? value.accountId;
+              if (typeof id === "string" && id.toLowerCase() === targetId && typeof value.name === "string") {
+                accountName = value.name;
+              }
+            }
+            for (const child of Object.values(value)) visit(child);
+          }
+          visit(data);
+          const target = process.env.TARGET_ENVIRONMENT;
+          const worker = process.env.WORKER_NAME;
+          console.log("GitHub environment:", target);
+          console.log("Expected Cloudflare Worker:", worker);
+          console.log("Wrangler CLI authenticated and read Worker deployments successfully.");
+          if (accountName) {
+            console.log("Cloudflare account name:", JSON.stringify(accountName));
+          } else {
+            console.log("Cloudflare account name: not available in Wrangler whoami JSON output.");
+          }
+          if (target === "staging") {
+            console.log("Configured staging URL: https://iaict-portal-staging.iaict-platform.workers.dev");
+            console.log("Note: Worker deployment access does not prove the workers.dev subdomain mapping.");
+          }
+          NODE
