@@ -21,6 +21,27 @@ function errorResponse(error:unknown){
   const conflict=/UNIQUE constraint failed/i.test(message);
   return Response.json({error:translateCmsError(message),code:cmsErrorCode(message)},{status:conflict?409:validation?400:500});
 }
+/**
+ * A D1 batch is atomic. When removing an ACTIVE admin, its UPDATE must
+ * re-check that another active admin still exists INSIDE the transaction.
+ * A NULL value violates admin_users.is_active NOT NULL and aborts the batch.
+ * Unlike a preflight SELECT, this check cannot race a concurrent role change.
+ */
+const otherActiveAdminExists = `EXISTS (
+  SELECT 1 FROM admin_users remaining
+  JOIN admin_user_roles assignments ON assignments.user_id = remaining.id
+  JOIN roles assigned_role ON assigned_role.id = assignments.role_id
+  WHERE remaining.id <> ? AND remaining.is_active = 1 AND assigned_role.code = 'admin'
+)`;
+
+function userMutationError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/NOT NULL constraint failed: admin_users\.is_active/i.test(message)) {
+    return errorResponse(new Error("INVALID_CMS_LAST_ACTIVE_ADMIN"));
+  }
+  return errorResponse(error);
+}
+
 async function listUsers(db:ReturnType<typeof getDatabaseBinding>){
   const rows=await db.prepare(`SELECT u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at,COALESCE(group_concat(r.code),'') AS roles FROM admin_users u LEFT JOIN admin_user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id GROUP BY u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at ORDER BY u.is_active DESC,lower(COALESCE(u.display_name,u.email)),lower(u.email)`).all<UserRow>();
   return rows.results.map(row=>({...row,roles:row.roles?row.roles.split(",").filter(Boolean):[]}));
@@ -93,14 +114,20 @@ export async function POST(request: Request) {
 
       // Validate before *any* mutation. Previously a rejected last-admin edit
       // still created a revision row.
-      const removesAdmin = previousRoles.includes("admin") && (!roles.includes("admin") || !isActive);
+      const removesAdmin = current.is_active === 1 && previousRoles.includes("admin") && (!roles.includes("admin") || !isActive);
       if (removesAdmin && await countActiveAdmins(db, id) === 0) invalid("LAST_ACTIVE_ADMIN");
 
-      statements.push(
-        snapshotStatement(db, actor.id, current, previousRoles),
-        db.prepare(`UPDATE admin_users SET email=?,display_name=?,is_active=?,updated_at=? WHERE id=?`)
-          .bind(email, displayName || null, isActive, timestamp, id),
-      );
+      statements.push(snapshotStatement(db, actor.id, current, previousRoles));
+      if (removesAdmin) {
+        statements.push(db.prepare(`
+          UPDATE admin_users SET email=?,display_name=?,
+            is_active=CASE WHEN ${otherActiveAdminExists} THEN ? ELSE NULL END,
+            updated_at=? WHERE id=?
+        `).bind(email, displayName || null, id, isActive, timestamp, id));
+      } else {
+        statements.push(db.prepare(`UPDATE admin_users SET email=?,display_name=?,is_active=?,updated_at=? WHERE id=?`)
+          .bind(email, displayName || null, isActive, timestamp, id));
+      }
     } else {
       statements.push(
         db.prepare(`INSERT INTO admin_users(id,email,display_name,is_active,created_at,updated_at) VALUES(?,?,?,?,?,?)`)
@@ -123,7 +150,7 @@ export async function POST(request: Request) {
     await db.batch(statements);
     return Response.json({ ok: true, id: entityId });
   } catch (error) {
-    return errorResponse(error);
+    return userMutationError(error);
   }
 }
 
@@ -146,13 +173,19 @@ export async function DELETE(request: Request) {
     if (roles.includes("admin") && current.is_active === 1 &&
         await countActiveAdmins(db, id) === 0) invalid("LAST_ACTIVE_ADMIN");
 
+    const removingActiveAdmin = roles.includes("admin") && current.is_active === 1;
+    const disableStatement = removingActiveAdmin
+      ? db.prepare(`UPDATE admin_users SET
+          is_active=CASE WHEN ${otherActiveAdminExists} THEN 0 ELSE NULL END,
+          updated_at=? WHERE id=?`).bind(id, nowIso(), id)
+      : db.prepare(`UPDATE admin_users SET is_active=0,updated_at=? WHERE id=?`).bind(nowIso(), id);
     await db.batch([
       snapshotStatement(db, actor.id, current, roles),
-      db.prepare(`UPDATE admin_users SET is_active=0,updated_at=? WHERE id=?`).bind(nowIso(), id),
+      disableStatement,
       auditStatement(db, actor.id, "cms.user.deactivate", id, { email: current.email, roles }),
     ]);
     return Response.json({ ok: true });
   } catch (error) {
-    return errorResponse(error);
+    return userMutationError(error);
   }
 }
