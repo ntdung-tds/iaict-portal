@@ -181,6 +181,25 @@ describe("CMS two-writer optimistic concurrency", () => {
     expect(record(id)?.title).toBe("Competing writer");
     expect(totals()).toEqual({ revisions: 0, audits: 1 });
   });
+  it("never records a false audit even if a competing writer picks the same new timestamp", async () => {
+    const id = await create();
+    const old = String(record(id)?.updated_at);
+    const timestamp = new Date(Date.parse(old) + 1).toISOString();
+    const now = vi.spyOn(Date, "now").mockReturnValue(Date.parse(old));
+    try {
+      beforeBatch = () => {
+        sqlite.prepare("UPDATE products SET title=?,updated_at=? WHERE id=?")
+          .run("Already saved by another editor", timestamp, id);
+      };
+      const result = await save(id, { title: "Stale second edit" }, old);
+      expect(result.status).toBe(409);
+      expect(record(id)?.title).toBe("Already saved by another editor");
+      expect(totals()).toEqual({ revisions: 0, audits: 1 });
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   it("prevents delete races after the initial read", async () => {
     const id = await create();
     const old = String(record(id)?.updated_at);
