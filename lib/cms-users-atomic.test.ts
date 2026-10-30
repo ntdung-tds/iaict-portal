@@ -70,7 +70,7 @@ function adapter(database: DatabaseSync): D1DatabaseLike {
 function makeRequest(method: "GET" | "POST" | "DELETE", body?: unknown, role = "admin") {
   return new Request("https://qa.example.test/api/admin/cms/users", {
     method,
-    headers: { "x-test-role": role, ...(body ? { "content-type": "application/json" } : {}) },
+    headers: { "x-test-role": role, ...(body ? { "content-type": "application/json", origin: "https://qa.example.test" } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
 }
@@ -105,6 +105,7 @@ beforeEach(() => {
   sqlite.exec(readFileSync("cloudflare/migrations/0019_v17_full_cms.sql", "utf8"));
   sqlite.exec(readFileSync("cloudflare/migrations/0020_v17_cms_roles.sql", "utf8"));
   sqlite.exec(readFileSync("cloudflare/migrations/0021_v17_admin_role_normalization.sql", "utf8"));
+  sqlite.exec(readFileSync("cloudflare/migrations/0022_iaict_native_auth.sql", "utf8"));
   // The complete production migration chain seeds Newsroom roles in 0016.
   // This focused in-memory fixture imports only core and CMS schema migrations.
   sqlite.exec("INSERT OR IGNORE INTO roles(id,code,name) VALUES('role-news-editor','news_editor','Newsroom Editor')");
@@ -281,5 +282,97 @@ describe("CMS user management — D1 transactional integrity", () => {
   it("rejects self-deactivation before any SQL update", async () => {
     expect((await deactivate("qa-admin")).status).toBe(400);
     expect(counts()).toEqual({ revisions: 0, audits: 0 });
+  });
+});
+
+
+describe("CMS users — native session and CSRF safeguards", () => {
+  function seedSession(token = "token-1", user = "qa-user") {
+    sqlite.prepare("INSERT INTO iaict_auth_sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)")
+      .run(token, user, Date.now(), Date.now() + 3600000);
+  }
+  function countSessions(user = "qa-user") {
+    return Number(sqlite.prepare("SELECT COUNT(*) AS n FROM iaict_auth_sessions WHERE user_id=?").get(user)?.n);
+  }
+
+  it("identifies which accounts have independently established native credentials without exposing hashes", async () => {
+    const noCredentials = await GET(makeRequest("GET"));
+    expect(noCredentials.status).toBe(200);
+    expect((await noCredentials.json() as {users:Array<{hasNativePassword:boolean}>}).users.every(user => !user.hasNativePassword)).toBe(true);
+    sqlite.prepare(
+      "INSERT INTO iaict_password_credentials(user_id,salt,password_hash,iterations,updated_at) VALUES(?,?,?,?,?)",
+    ).run("qa-user", "a".repeat(32), "b".repeat(64), 600000, "2026-10-30");
+    const ready = await GET(makeRequest("GET"));
+    const payload = await ready.json() as {users:Array<{id:string;hasNativePassword:boolean}>};
+    expect(payload.users.find(user => user.id==="qa-user")?.hasNativePassword).toBe(true);
+    expect(JSON.stringify(payload)).not.toContain("b".repeat(64));
+    expect(ready.headers.get("cache-control")).toContain("no-store");
+  });
+
+  it("atomically revokes active sessions when a user's CMS role changes", async () => {
+    seedSession();
+    expect(countSessions()).toBe(1);
+    const res = await post({id:"qa-user",email:"qa-user@example.test",displayName:"Editor",
+      isActive:true,roles:["viewer"]});
+    expect(res.status).toBe(200);
+    expect(roleCodes()).toEqual(["viewer"]);
+    expect(countSessions()).toBe(0);
+  });
+
+  it("keeps existing sessions when changing only the display name", async () => {
+    seedSession();
+    const res = await post({id:"qa-user",email:"qa-user@example.test",displayName:"Renamed",
+      isActive:true,roles:["editor"]});
+    expect(res.status).toBe(200);
+    expect(countSessions()).toBe(1);
+  });
+
+  it("deactivation immediately invalidates all native sessions in the same transaction", async () => {
+    seedSession();
+    const res = await deactivate("qa-user");
+    expect(res.status).toBe(200);
+    expect(countSessions()).toBe(0);
+    expect(userState()?.is_active).toBe(0);
+  });
+
+  it("rolls back both user and session state when audit fails after a role change", async () => {
+    seedSession();
+    sqlite.exec("CREATE TRIGGER reject_audit BEFORE INSERT ON audit_logs WHEN NEW.action='cms.user.update' BEGIN SELECT RAISE(ABORT,'refuse audit'); END;");
+    const res = await post({id:"qa-user",email:"qa-user@example.test",displayName:"",isActive:false,roles:["viewer"]});
+    expect(res.status).toBe(500);
+    expect(countSessions()).toBe(1);
+    expect(roleCodes()).toEqual(["editor"]);
+    expect(userState()?.is_active).toBe(1);
+  });
+
+  it("administrator can revoke another user's sessions without changing their roles", async () => {
+    seedSession();
+    const res = await post({action:"revokeSessions",id:"qa-user"});
+    expect(res.status).toBe(200);
+    expect(countSessions()).toBe(0);
+    expect(roleCodes()).toEqual(["editor"]);
+    expect(sqlite.prepare("SELECT action FROM audit_logs").get()?.action).toBe("cms.user.sessions.revoke");
+  });
+
+  it("rejects cross-site or missing-Origin user mutations without DB changes", async () => {
+    for(const origin of ["https://evil.invalid", "null", ""]) {
+      const request = new Request("https://qa.example.test/api/admin/cms/users", {
+        method:"POST",
+        headers:{"content-type":"application/json",...(origin?{origin}:{})},
+        body:JSON.stringify({id:"qa-user",email:"qa-user@example.test",roles:["viewer"]}),
+      });
+      const response = await POST(request);
+      expect(response.status).toBe(400);
+      expect(roleCodes()).toEqual(["editor"]);
+    }
+  });
+
+  it("forbids arbitrary actions, malformed payloads and oversized user fields", async () => {
+    const action = await post({action:"makeAdministrator",id:"qa-user"});
+    expect(action.status).toBe(400);
+    const invalidName = await post({id:"qa-user",email:"qa-user@example.test",
+      displayName:"x".repeat(161),roles:["editor"]});
+    expect(invalidName.status).toBe(400);
+    expect(counts()).toEqual({revisions:0,audits:0});
   });
 });
