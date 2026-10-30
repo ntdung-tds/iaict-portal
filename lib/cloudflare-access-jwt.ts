@@ -138,7 +138,11 @@ export async function verifyCloudflareAccessRequest(
       "jwk", candidate, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"],
     );
     const bytes = new TextEncoder().encode(`${chunks[0]}.${chunks[1]}`);
-    const verified = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", publicKey, decodeBase64Url(chunks[2]), bytes);
+    // Copy into an ArrayBuffer-backed view (not SharedArrayBufferLike) for WebCrypto.
+    const encodedSignature = decodeBase64Url(chunks[2]);
+    const signature = new Uint8Array(new ArrayBuffer(encodedSignature.byteLength));
+    signature.set(encodedSignature);
+    const verified = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", publicKey, signature, bytes);
     if (!verified) return fail();
   } catch {
     return fail();
