@@ -112,7 +112,7 @@ async function setNextSourceRun(
     ? source.schedule_interval_minutes
     : source.schedule_retry_minutes;
   const next = computeNextNewsSchedule(now, delay);
-  await db.prepare(`
+  const result = await db.prepare(`
     UPDATE news_sources
     SET last_scheduled_at=?, next_scheduled_at=?, updated_at=?
     WHERE id=? AND EXISTS (
@@ -121,6 +121,9 @@ async function setNextSourceRun(
         AND julianday(claim.lease_until) > julianday(?)
     )
   `).bind(now, next, now, source.id, leaseToken, iso()).run();
+  // A runner can finish ingestion after another runner takes its expired lease.
+  // Such a run must not be reported as successfully scheduled.
+  return result.meta?.changes === 1;
 }
 
 export async function runScheduledNewsIngestion(
@@ -170,7 +173,7 @@ export async function runScheduledNewsIngestion(
   const sourceResults: NewsSchedulerResult["sources"] = [];
 
   for (const source of dueSources) {
-    const token = await tryClaimSource(db, source.id, runId, startedAt);
+    const token = await tryClaimSource(db, source.id, runId, iso());
     if (!token) {
       skipped += 1;
       sourceResults.push({ sourceId: source.id, status: "skipped" });
@@ -180,24 +183,36 @@ export async function runScheduledNewsIngestion(
     claimed += 1;
     try {
       const summary = await ingestNewsSource(db, source.id);
-      succeeded += 1;
-      await setNextSourceRun(db, source, scheduledAt, true, token);
-      sourceResults.push({ sourceId: source.id, status: "succeeded", summary });
+      const stillOwnsLease = await setNextSourceRun(db, source, scheduledAt, true, token);
+      if (stillOwnsLease) {
+        succeeded += 1;
+        sourceResults.push({ sourceId: source.id, status: "succeeded", summary });
+      } else {
+        skipped += 1;
+        sourceResults.push({ sourceId: source.id, status: "skipped", summary,
+          error: "NEWS_SCHEDULER_LEASE_LOST" });
+      }
     } catch (error) {
-      failed += 1;
-      await setNextSourceRun(db, source, scheduledAt, false, token);
-      sourceResults.push({
-        sourceId: source.id,
-        status: "failed",
-        error: (error instanceof Error ? error.message : String(error)).slice(0, 500),
-      });
+      const stillOwnsLease = await setNextSourceRun(db, source, scheduledAt, false, token);
+      if (stillOwnsLease) {
+        failed += 1;
+        sourceResults.push({
+          sourceId: source.id,
+          status: "failed",
+          error: (error instanceof Error ? error.message : String(error)).slice(0, 500),
+        });
+      } else {
+        skipped += 1;
+        sourceResults.push({ sourceId: source.id, status: "skipped",
+          error: "NEWS_SCHEDULER_LEASE_LOST" });
+      }
     } finally {
       await releaseSourceClaim(db, source.id, token);
     }
   }
 
   const finishedAt = iso();
-  const status: NewsSchedulerResult["status"] = dueSources.length === 0 || claimed === 0
+  const status: NewsSchedulerResult["status"] = dueSources.length === 0 || claimed === 0 || (succeeded === 0 && failed === 0)
     ? "skipped"
     : failed === 0
       ? "succeeded"
