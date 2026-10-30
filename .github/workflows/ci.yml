@@ -57,7 +57,7 @@ jobs:
   rc-ancestry:
     # An entirely separate verification of the complete Git history (round 2).
     # It does not deploy, write to D1, or create screenshot artifacts.
-    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'rc/')
+    if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'rc/') || startsWith(github.base_ref, 'rc/'))
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
