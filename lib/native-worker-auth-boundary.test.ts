@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { D1BindValue, D1DatabaseLike, D1PreparedStatementLike } from "./cloudflare-db";
+import type { D1BindValue, D1DatabaseLike, D1PreparedStatementLike, D1RunResult } from "./cloudflare-db";
 import { NATIVE_COOKIE, NATIVE_VERIFIED_EMAIL_HEADER } from "./native-auth";
 
 vi.mock("vinext/server/fetch-handler", () => ({
@@ -31,7 +31,7 @@ import worker from "../worker";
 class Prepared implements D1PreparedStatementLike {
   bound: D1BindValue[] = [];
   constructor(readonly sql: string, private readonly owner: FakeDb) {}
-  bind(...values: D1BindValue[]) { this.bound = values; return this; }
+  bind(...values: D1BindValue[]): D1PreparedStatementLike { this.bound = values; return this; }
   async first<T>(): Promise<T | null> {
     if (this.sql.includes("FROM iaict_auth_sessions s")) {
       this.owner.sessionReads += 1;
@@ -53,8 +53,8 @@ class Prepared implements D1PreparedStatementLike {
     }
     throw new Error("Unexpected SQL / prohibited business read");
   }
-  async all<T>() { throw new Error("Prohibited SQL all"); return { results: [] as T[] }; }
-  async run() { throw new Error("Prohibited write"); }
+  async all<T>(): Promise<{ results: T[] }> { throw new Error("Prohibited SQL all"); }
+  async run(): Promise<D1RunResult> { throw new Error("Prohibited write"); }
 }
 class FakeDb implements D1DatabaseLike {
   sessionActive = true;
@@ -65,8 +65,8 @@ class FakeDb implements D1DatabaseLike {
   sessionBind: D1BindValue[] = [];
   roleBind: D1BindValue[] = [];
   sessionSql = "";
-  prepare(sql: string) { return new Prepared(sql, this); }
-  async batch() { throw new Error("Prohibited D1 writes"); return []; }
+  prepare(sql: string): D1PreparedStatementLike { return new Prepared(sql, this); }
+  async batch(): Promise<D1RunResult[]> { throw new Error("Prohibited D1 writes"); }
 }
 let db: FakeDb;
 beforeEach(() => { db = new FakeDb(); });
