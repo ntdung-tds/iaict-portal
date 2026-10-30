@@ -430,12 +430,14 @@ async function publishReviewRow(
   input: {
     mode: "manual" | "auto";
     actorId: string | null;
+    expectedUpdatedAt?: string;
     policySnapshot?: Record<string, unknown>;
     autoReason?: string | null;
   },
 ) {
   const expectedStatus: NewsReviewStatus = input.mode === "auto" ? "pending" : "approved";
   if (row.workflow_status !== expectedStatus) throw new Error("NEWS_PUBLICATION_STATE_CONFLICT");
+  if (input.mode === "manual") assertReviewUpdatedAt(input.expectedUpdatedAt ?? "", row.updated_at);
 
   const categoryId = row.suggested_category_id ?? row.default_category_id;
   if (!categoryId) throw new Error("NEWS_PUBLICATION_CATEGORY_REQUIRED");
@@ -457,12 +459,22 @@ async function publishReviewRow(
     policy: input.policySnapshot ?? null,
   });
 
-  const statements: D1PreparedStatementLike[] = [
-    db.prepare(`
-      INSERT INTO news_publication_claims (id, queue_id, expected_status, approval_mode, created_at)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(claimId, row.queue_id, expectedStatus, input.mode, timestamp),
-  ];
+  // A manual publisher must claim the exact review revision they saw.
+  // NULL on a stale revision violates queue_id NOT NULL inside the same D1 batch,
+  // aborting article, provenance and audit writes together.
+  const claim = input.mode === "manual"
+    ? db.prepare(`
+        INSERT INTO news_publication_claims (id, queue_id, expected_status, approval_mode, created_at)
+        VALUES (?, CASE WHEN EXISTS (
+          SELECT 1 FROM news_review_queue
+          WHERE id=? AND updated_at=? AND workflow_status='approved' AND article_id IS NULL
+        ) THEN ? ELSE NULL END, ?, ?, ?)
+      `).bind(claimId, row.queue_id, input.expectedUpdatedAt!, row.queue_id, expectedStatus, input.mode, timestamp)
+    : db.prepare(`
+        INSERT INTO news_publication_claims (id, queue_id, expected_status, approval_mode, created_at)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(claimId, row.queue_id, expectedStatus, input.mode, timestamp);
+  const statements: D1PreparedStatementLike[] = [claim];
 
   if (input.mode === "auto") {
     statements.push(
@@ -561,10 +573,11 @@ export async function publishApprovedReviewItem(
   db: D1DatabaseLike,
   actor: NewsroomActor,
   queueId: string,
+  expectedUpdatedAt: string,
 ) {
   const row = await getReviewPublicationRow(db, queueId);
   if (!row) throw new Error("REVIEW_ITEM_NOT_FOUND");
-  return publishReviewRow(db, row, { mode: "manual", actorId: actor.id });
+  return publishReviewRow(db, row, { mode: "manual", actorId: actor.id, expectedUpdatedAt });
 }
 
 async function findExistingDuplicate(db: D1DatabaseLike, canonicalUrl: string, normalizedTitle: string) {
