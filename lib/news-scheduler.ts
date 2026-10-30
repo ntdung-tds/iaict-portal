@@ -106,6 +106,7 @@ async function setNextSourceRun(
   source: ScheduledNewsSource,
   now: string,
   succeeded: boolean,
+  leaseToken: string,
 ) {
   const delay = succeeded
     ? source.schedule_interval_minutes
@@ -114,8 +115,12 @@ async function setNextSourceRun(
   await db.prepare(`
     UPDATE news_sources
     SET last_scheduled_at=?, next_scheduled_at=?, updated_at=?
-    WHERE id=?
-  `).bind(now, next, now, source.id).run();
+    WHERE id=? AND EXISTS (
+      SELECT 1 FROM news_scheduler_claims claim
+      WHERE claim.source_id=news_sources.id AND claim.lease_token=?
+        AND julianday(claim.lease_until) > julianday(?)
+    )
+  `).bind(now, next, now, source.id, leaseToken, iso()).run();
 }
 
 export async function runScheduledNewsIngestion(
@@ -176,11 +181,11 @@ export async function runScheduledNewsIngestion(
     try {
       const summary = await ingestNewsSource(db, source.id);
       succeeded += 1;
-      await setNextSourceRun(db, source, scheduledAt, true);
+      await setNextSourceRun(db, source, scheduledAt, true, token);
       sourceResults.push({ sourceId: source.id, status: "succeeded", summary });
     } catch (error) {
       failed += 1;
-      await setNextSourceRun(db, source, scheduledAt, false);
+      await setNextSourceRun(db, source, scheduledAt, false, token);
       sourceResults.push({
         sourceId: source.id,
         status: "failed",
