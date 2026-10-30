@@ -9,11 +9,9 @@ const git = (...args) => execFileSync("git", args, {
 const releaseBranch = "release/staging-v17-hardened-20261029";
 const release = "refs/remotes/origin/" + releaseBranch;
 const head = git("rev-parse", "HEAD");
-const intended = process.env.IAICT_FROZEN_CANDIDATE_SHA;
 // On the audit branch, head includes audit documentation commits. Its ancestor
 // must still contain the original audited full CMS release candidate commit.
 const sourceCandidate = "5fd56b8609f3dd8049f5826f0f402d741a5a574b";
-const shaValid = /^[a-f0-9]{40}$/i.test(head);
 const exists = (...args) => {
   try { execFileSync("git", args, {stdio:"ignore"}); return true; }
   catch { return false; }
@@ -27,17 +25,17 @@ const migrationDelta = git("diff", "--name-only", release, "HEAD")
 const fromRelease = (path) => git("show", `${release}:${path}`);
 const result = evaluateStagingRelease({
   releaseBranch,
-  candidateSha: shaValid ? head : "",
+  candidateSha: sourceCandidate,
   releaseAncestor: baseAncestor,
   changedCanonicalMigrations: migrationDelta,
   releaseWorkflow: fromRelease(".github/workflows/release-staging-once-20261029.yml"),
   manualDeployWorkflow: fromRelease(".github/workflows/deploy-staging.yml"),
-  approvedCandidateSha: intended,
+  approvedCandidateSha: undefined, // No separate operator approval has been recorded.
   realAccessJwtAcceptance: false,  // Cannot be certified without live new Worker.
   authorizedQaIdentity: false,     // Real non-admin identity matrix incomplete.
   productionAccessRootsReady: false, // Explicit production exact root coverage missing.
 });
-console.log(`[release-audit] AUDIT_COMPLETED decision=${result.decision} candidate_sha=${head}`);
+console.log(`[release-audit] AUDIT_COMPLETED decision=${result.decision} frozen_source_sha=${sourceCandidate} audit_head_sha=${head}`);
 for (const blocker of result.stagingBlockers) {
   console.log(`[release-audit] BLOCKER ${blocker.code}: ${blocker.detail}`);
 }
