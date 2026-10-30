@@ -28,11 +28,18 @@ type JwtClaims = {
 };
 
 const CERT_CACHE_DURATION_MS = 5 * 60 * 1000;
+// Unknown-kid refreshes need throttling; otherwise forged JWTs can repeatedly
+// trigger outbound JWKS fetches. Real rotations can be delayed by at most 10s.
+const UNKNOWN_KID_REFRESH_COOLDOWN_MS = 10_000;
 const certCache = new Map<string, { until: number; keys: AccessJwk[] }>();
+const pendingCertFetches = new Map<string, Promise<AccessJwk[]>>();
+const lastUnknownKidRefresh = new Map<string, number>();
 
 /** Explicitly reset only for isolated unit tests. */
 export function clearAccessCertificateCache() {
   certCache.clear();
+  pendingCertFetches.clear();
+  lastUnknownKidRefresh.clear();
 }
 
 function fail(): never {
@@ -75,26 +82,53 @@ function decodeJson<T>(part: string): T {
   }
 }
 
-async function certificateKeys(issuer: string, get: typeof fetch): Promise<AccessJwk[]> {
+async function certificateKeys(
+  issuer: string,
+  get: typeof fetch,
+  forceUnknownKidRefresh = false,
+): Promise<AccessJwk[]> {
   const cache = certCache.get(issuer);
-  if (cache && cache.until > Date.now()) return cache.keys;
-  // Match the key's JWT kid against the JWKS; Cloudflare rotates keys.
-  const response = await get(`${issuer}/cdn-cgi/access/certs`, {
-    headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(4000),
-  });
-  if (!response.ok) return fail();
-  const body = await response.json() as Certificates;
-  if (!Array.isArray(body?.keys) || body.keys.length === 0 || body.keys.length > 10) return fail();
-  const keys = body.keys.filter(key => (
-    key && key.kty === "RSA" && typeof key.n === "string" &&
-    typeof key.e === "string" && typeof key.kid === "string" &&
-    (key.alg === undefined || key.alg === "RS256") &&
-    (key.use === undefined || key.use === "sig")
-  ));
-  if (keys.length === 0) return fail();
-  certCache.set(issuer, { keys, until: Date.now() + CERT_CACHE_DURATION_MS });
-  return keys;
+  if (!forceUnknownKidRefresh && cache && cache.until > Date.now()) return cache.keys;
+
+  // Coalesce parallel requests, especially during certificate rotation.
+  const inFlight = pendingCertFetches.get(issuer);
+  if (inFlight) return inFlight;
+
+  if (forceUnknownKidRefresh) {
+    const previous = lastUnknownKidRefresh.get(issuer) ?? 0;
+    if (Date.now() - previous < UNKNOWN_KID_REFRESH_COOLDOWN_MS) {
+      return cache?.keys ?? fail();
+    }
+    lastUnknownKidRefresh.set(issuer, Date.now());
+  }
+
+  const loading = (async () => {
+    // The certificate endpoint is PINNED to the configured Cloudflare team.
+    // Never read jku, x5u or other untrusted key-source hints from a JWT.
+    const response = await get(`${issuer}/cdn-cgi/access/certs`, {
+      headers: { accept: "application/json" },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!response.ok) return fail();
+    const body = await response.json() as Certificates;
+    if (!Array.isArray(body?.keys) || body.keys.length === 0 || body.keys.length > 10) return fail();
+    const keys = body.keys.filter(key => (
+      key && key.kty === "RSA" && typeof key.n === "string" &&
+      typeof key.e === "string" && typeof key.kid === "string" &&
+      (key.alg === undefined || key.alg === "RS256") &&
+      (key.use === undefined || key.use === "sig")
+    ));
+    if (keys.length === 0) return fail();
+    certCache.set(issuer, { keys, until: Date.now() + CERT_CACHE_DURATION_MS });
+    return keys;
+  })();
+
+  pendingCertFetches.set(issuer, loading);
+  try {
+    return await loading;
+  } finally {
+    if (pendingCertFetches.get(issuer) === loading) pendingCertFetches.delete(issuer);
+  }
 }
 
 /**
@@ -132,7 +166,16 @@ export async function verifyCloudflareAccessRequest(
   ) return fail();
 
   try {
-    const candidate = (await certificateKeys(issuer, fetchCertificates)).find(key => key.kid === header.kid);
+    // A token with a new kid can arrive before the five-minute cache expires.
+    // Refresh ONCE only if this request started with a valid cached keyset.
+    const existingCache = certCache.get(issuer);
+    const hadValidCache = !!existingCache && existingCache.until > Date.now();
+    const keys = await certificateKeys(issuer, fetchCertificates);
+    let candidate = keys.find(key => key.kid === header.kid);
+    if (!candidate && hadValidCache) {
+      const refreshed = await certificateKeys(issuer, fetchCertificates, true);
+      candidate = refreshed.find(key => key.kid === header.kid);
+    }
     if (!candidate) return fail();
     const publicKey = await crypto.subtle.importKey(
       "jwk", candidate, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"],

@@ -68,6 +68,21 @@ const remote = rows.map((r) => r.name).sort();
 assert(remote.length === local.length && remote.every((name, i) => name === local[i]),
   "Staging database migration history does not match the release. No deployment.");
 
+// Validate the authorization database is ready without reading identities.
+// A valid Access session would still be locked out if no active CMS admin exists.
+const adminResult = await cf("POST", `${root}/d1/database/${databaseId}/query`, {
+  sql: `SELECT COUNT(DISTINCT u.id) AS active_admins
+    FROM admin_users u
+    JOIN admin_user_roles ur ON ur.user_id=u.id
+    JOIN roles r ON r.id=ur.role_id
+    WHERE u.is_active=1 AND r.code='admin'`,
+});
+const adminRows = Array.isArray(adminResult) ? adminResult[0]?.results : adminResult?.results;
+const activeAdmins = Number(adminRows?.[0]?.active_admins);
+assert(Number.isSafeInteger(activeAdmins) && activeAdmins >= 1,
+  "No active CMS administrator in staging D1; would lock out all Access-authenticated admins. No deployment.");
+console.log(`[staging-preflight] Active CMS admin readiness PASS (${activeAdmins} present; identities not read).`);
+
 // Cloudflare Access public destinations have to include BOTH exact roots and
 // descendants. The /api/admin/* wildcard is not treated as proof for /api/admin.
 // The newer destinations array supersedes deprecated self_hosted_domains.

@@ -51,6 +51,8 @@ jobs:
         run: npm run verify
       - name: Read-only live Worker and D1 preflight
         run: node scripts/verify-staging-release.mjs
+      - name: Verify public Access signing keys before changing Worker
+        run: node scripts/verify-access-jwks-readiness.mjs
       - name: Build staging only
         run: npm run build:staging
       - name: Prepare Cloudflare module graph

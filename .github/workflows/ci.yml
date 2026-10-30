@@ -23,6 +23,8 @@ jobs:
         run: npm run verify:release-safety
       - name: Audit Cloudflare Access application root and path coverage
         run: npm run verify:access-paths
+      - name: Independently probe live public Cloudflare Access signing keys
+        run: node scripts/verify-access-jwks-readiness.mjs
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: vinext compatibility check

@@ -60,6 +60,8 @@ jobs:
       - name: Verify live staging baseline and D1 are unchanged
         id: preflight
         run: node scripts/verify-staging-release.mjs
+      - name: Verify public Access signing keys before changing Worker
+        run: node scripts/verify-access-jwks-readiness.mjs
 
       - name: Build Cloudflare staging artifact
         run: npm run build:staging
