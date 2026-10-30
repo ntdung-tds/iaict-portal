@@ -36,3 +36,5 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 7
+      # Screenshots stay ephemeral on the CI runner. They must never be
+      # uploaded to GitHub Artifacts; persistent QA images belong in Google Drive.

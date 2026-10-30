@@ -191,3 +191,116 @@ test("unauthenticated CMS root, subpaths, and APIs require Cloudflare Access", a
     expect(location, `${route} must redirect to Cloudflare Access`).toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
   }
 });
+
+
+// Additional read-only, real-Chromium acceptance checks. No authenticated mutations.
+const additionalMobileRoutes = [
+  "/gioi-thieu",
+  "/san-pham-nen-tang",
+  "/giai-phap-dich-vu",
+  "/chuyen-giao-cong-nghe",
+  "/dao-tao-tap-huan",
+  "/dao-tao-tap-huan/co-quan-nha-nuoc",
+  "/du-an",
+] as const;
+
+for (const width of [320, 390, 768] as const) {
+  test(`remaining seven public routes fit ${width}px on live staging`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of additionalMobileRoutes) {
+      const response = await page.goto(route, { waitUntil: "domcontentloaded" });
+      expect(response?.status(), `${route} @ ${width}px must load`).toBeLessThan(400);
+      await expect(page.locator("#main-content")).toBeVisible();
+      await expect(page.locator("h1").first()).toBeVisible();
+      const size = await page.evaluate(() => ({
+        viewport: window.innerWidth,
+        document: document.documentElement.scrollWidth,
+      }));
+      expect(size.document, `${route} @ ${width}px overflows: ${JSON.stringify(size)}`).toBeLessThanOrEqual(size.viewport);
+    }
+  });
+}
+
+test("live public search filters and resets without leaving stale URL state", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/tim-kiem?q=tram%20rung", { waitUntil: "domcontentloaded" });
+  const search = page.locator(".public-search");
+  await expect(search).toHaveAttribute("data-ready", "true");
+  await expect(search.locator('a[href="/du-an/tram-rung"]')).toBeVisible();
+  const projects = search.getByRole("group", { name: "Lọc nhóm nội dung" })
+    .getByRole("button", { name: "Dự án", exact: true });
+  await projects.click();
+  await expect(projects).toHaveAttribute("aria-pressed", "true");
+  expect(new URL(page.url()).searchParams.get("nhom")).toBe("Dự án");
+  await expect(search.locator('a[href="/du-an/tram-rung"]')).toBeVisible();
+  await search.getByRole("button", { name: "Xóa tìm kiếm & bộ lọc" }).click();
+  await expect(search.getByRole("searchbox", { name: "Tìm trong nội dung IAICT" })).toHaveValue("");
+  await expect(search.getByRole("group", { name: "Lọc nhóm nội dung" })
+    .getByRole("button", { name: "Tất cả", exact: true })).toHaveAttribute("aria-pressed", "true");
+  const parsed = new URL(page.url());
+  expect(parsed.searchParams.has("q")).toBe(false);
+  expect(parsed.searchParams.has("nhom")).toBe(false);
+});
+
+test("contact page's collaboration anchor navigates without sending a form", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/lien-he", { waitUntil: "domcontentloaded" });
+  await page.getByRole("link", { name: /Các hướng hợp tác/ }).click();
+  await expect(page).toHaveURL(/#contact-scope$/);
+  await expect(page.locator("#contact-scope")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Các hướng hợp tác" }).getByRole("listitem")).toHaveCount(4);
+});
+
+test("news feed article link opens a provenance-backed public detail page", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/tin-tuc", { waitUntil: "domcontentloaded" });
+  const feed = page.locator('[data-public-news-state="ready"]');
+  await expect(feed).toBeVisible();
+  const firstLink = feed.locator('[data-news-slug] h3 a').first();
+  await expect(firstLink).toBeVisible();
+  const expectedTitle = (await firstLink.innerText()).trim();
+  await firstLink.click();
+  await expect(page.locator('[data-public-news-detail="ready"]')).toBeVisible();
+  await expect(page.locator("h1").first()).toHaveText(expectedTitle);
+  await expect(page.locator('[data-news-provenance="ready"]')).toBeVisible();
+  await page.goBack({ waitUntil: "domcontentloaded" });
+  await expect(page.locator('[data-public-news-state="ready"]')).toBeVisible();
+});
+
+test("public pages do not produce uncaught JavaScript exceptions in live Chromium", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const route of ["/", "/tin-tuc", "/tim-kiem?q=AI", "/du-an/tram-rung", "/lien-he"]) {
+    const response = await page.goto(route, { waitUntil: "domcontentloaded" });
+    expect(response?.status()).toBeLessThan(400);
+    await expect(page.locator("#main-content")).toBeVisible();
+    if (route.startsWith("/tin-tuc")) {
+      await expect(page.locator('[data-public-news-state="ready"]')).toBeVisible();
+    }
+    if (route.startsWith("/tim-kiem")) {
+      await expect(page.locator(".public-search")).toHaveAttribute("data-ready", "true");
+    }
+  }
+  expect(errors, `uncaught exceptions: ${JSON.stringify(errors)}`).toEqual([]);
+});
+
+test("save public staging browser screenshots as reproducible visual evidence", async ({ page }) => {
+  const { mkdirSync } = await import("node:fs");
+  mkdirSync("browser-evidence/staging", { recursive: true });
+  for (const item of [
+    { route: "/", name: "home-desktop", width: 1440, height: 900 },
+    { route: "/", name: "home-mobile", width: 390, height: 844 },
+    { route: "/tin-tuc", name: "news-mobile", width: 390, height: 844 },
+    { route: "/tim-kiem?q=tram%20rung", name: "search-mobile", width: 390, height: 844 },
+    { route: "/lien-he", name: "contact-mobile", width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize({ width: item.width, height: item.height });
+    const response = await page.goto(item.route, { waitUntil: "domcontentloaded" });
+    expect(response?.status()).toBeLessThan(400);
+    await expect(page.locator("#main-content")).toBeVisible();
+    if (item.route.startsWith("/tin-tuc")) await expect(page.locator('[data-public-news-state="ready"]')).toBeVisible();
+    if (item.route.startsWith("/tim-kiem")) await expect(page.locator(".public-search")).toHaveAttribute("data-ready", "true");
+    await page.screenshot({ path: `browser-evidence/staging/${item.name}.png`, animations: "disabled" });
+  }
+});
