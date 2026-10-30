@@ -53,6 +53,8 @@ Read-only Cloudflare API observations, 30 October 2026:
 
 [Existing staging Chromium #41005137436](https://github.com/ntdung-tds/iaict-portal/actions/runs/41005137436): **18/18 PASS**, including unauthenticated staging Access redirects, but tests the **old deployed Worker**, not the RC. Thus it cannot establish that new signed JWT/CMS code passed a real authenticated session.
 
+**New live-browser anomaly during this audit:** [staging-acceptance #41006478659](https://github.com/ntdung-tds/iaict-portal/actions/runs/41006478659) initially produced **14/18 PASS** with intermittent HTTP **503** on public pages `/` and `/giai-phap-dich-vu`; staging Access redirect checks remained correct. A re-run of **only the failed job** against the **same old deployed staging Worker** achieved **18/18 PASS** without any deployment, but does **not** prove the underlying 503 cause is fixed. Recorded separately as [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) for Worker/platform/upstream investigation; release remains **NO-GO** independently of this anomaly. Do not misreport the initial red attempt as a first-time PASS.
+
 No screenshots, videos, traces or ZIP files are stored in GitHub QA artifacts. Prior public screenshot PNGs reside separately in [IAICT QA Google Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3); new ephemeral CI screenshots have not been automatically transferred. Private Access cookies and authenticated screenshots must never be uploaded.
 
 ## 5. Decision, release strategy and stop conditions
