@@ -109,6 +109,9 @@ for (const name of manualWorkflows) {
 if (!read(join(workflowsDir, "ci.yml")).includes("verify-access-jwks-readiness.mjs")) {
   fail("Every PR must exercise the read-only public Access key readiness probe");
 }
+if (!read(join(workflowsDir, "ci.yml")).includes("npm run verify:staging-rollback")) {
+  fail("Every PR must run approved-SHA and rollback regression tests independently");
+}
 
 if (issues.length) {
   for (const issue of issues) console.error(`[release-safety] FAIL: ${issue}`);
