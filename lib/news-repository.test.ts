@@ -43,6 +43,7 @@ class FakeDb implements D1DatabaseLike {
           queue_id: "queue-1",
           ingest_item_id: "item-1",
           workflow_status: "approved",
+          updated_at: "2026-10-15T02:00:00.000Z",
           suggested_title: "IAICT thử nghiệm quy trình xuất bản tin nguồn",
           suggested_excerpt: "Tóm tắt ngắn phục vụ kiểm thử.",
           suggested_category_id: "cat-khoa-hoc-cong-nghe",
@@ -78,7 +79,7 @@ const actor: NewsroomActor = {
 describe("V16 newsroom publication repository", () => {
   it("publishes an approved item in one race-safe D1 batch", async () => {
     const db = new FakeDb();
-    const result = await publishApprovedReviewItem(db, actor, "queue-1");
+    const result = await publishApprovedReviewItem(db, actor, "queue-1", "2026-10-15T02:00:00.000Z");
 
     expect(result.articleId).toBeTruthy();
     expect(result.slug).toContain("iaict-thu-nghiem-quy-trinh-xuat-ban-tin-nguon");

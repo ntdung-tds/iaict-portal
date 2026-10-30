@@ -9,6 +9,7 @@ const messages:Record<string,string>={
   REVIEW_ITEM_NOT_EDITABLE:"Nội dung này không còn ở trạng thái có thể biên tập.",
   REVIEW_TITLE_TOO_SHORT:"Tiêu đề sau biên tập phải có ít nhất 8 ký tự.",
   INVALID_REVIEW_TRANSITION:"Không thể chuyển nội dung sang trạng thái này từ trạng thái hiện tại.",
+  NEWS_REVIEW_VERSION_CONFLICT:"Nội dung đã được chỉnh sửa hoặc chuyển trạng thái ở phiên xử lý khác. Hãy làm mới hàng đợi trước khi tiếp tục; bản nháp chưa lưu vẫn được giữ.",
   NEWS_PUBLICATION_STATE_CONFLICT:"Nội dung đã thay đổi trạng thái ở một phiên xử lý khác. Hãy làm mới trước khi xuất bản.",
   NEWS_PUBLICATION_CATEGORY_REQUIRED:"Vui lòng chọn chuyên mục trước khi xuất bản.",
   NEWS_PUBLICATION_TITLE_INVALID:"Tiêu đề chưa hợp lệ để xuất bản.",

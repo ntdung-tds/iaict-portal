@@ -41,6 +41,7 @@ type ReviewPublicationRow = {
   queue_id: string;
   ingest_item_id: string;
   workflow_status: NewsReviewStatus;
+  updated_at: string;
   suggested_title: string;
   suggested_excerpt: string | null;
   suggested_category_id: string | null;
@@ -84,6 +85,20 @@ export type IngestSummary = {
 function nowIso() {
   return new Date().toISOString();
 }
+
+function nextReviewUpdatedAt(previous: string): string {
+  const last = Date.parse(previous);
+  return new Date(Number.isFinite(last) ? Math.max(Date.now(), last + 1) : Date.now()).toISOString();
+}
+
+function assertReviewUpdatedAt(expected: string, current: string) {
+  if (!expected || expected !== current) throw new Error("NEWS_REVIEW_VERSION_CONFLICT");
+}
+
+function assertReviewBatchChanged(results: Awaited<ReturnType<D1DatabaseLike["batch"]>>) {
+  if (results[0]?.meta?.changes === 0) throw new Error("NEWS_REVIEW_VERSION_CONFLICT");
+}
+
 
 function sourceRowToDefinition(row: NewsSourceRow): NewsSourceDefinition {
   return {
@@ -230,6 +245,7 @@ async function getReviewPublicationRow(db: D1DatabaseLike, queueId: string) {
         q.id AS queue_id,
         q.ingest_item_id,
         q.workflow_status,
+        q.updated_at,
         q.suggested_title,
         q.suggested_excerpt,
         q.suggested_category_id,
@@ -286,6 +302,7 @@ export async function updateReviewDraft(
   actor: NewsroomActor,
   input: {
     queueId: string;
+    expectedUpdatedAt: string;
     title?: string;
     excerpt?: string | null;
     categoryId?: string | null;
@@ -294,6 +311,7 @@ export async function updateReviewDraft(
 ) {
   const current = await getReviewPublicationRow(db, input.queueId);
   if (!current) throw new Error("REVIEW_ITEM_NOT_FOUND");
+  assertReviewUpdatedAt(input.expectedUpdatedAt, current.updated_at);
   if (!["pending", "editing", "approved"].includes(current.workflow_status)) {
     throw new Error("REVIEW_ITEM_NOT_EDITABLE");
   }
@@ -306,8 +324,8 @@ export async function updateReviewDraft(
     throw new Error("INVALID_REVIEW_TRANSITION");
   }
 
-  const timestamp = nowIso();
-  await db.batch([
+  const timestamp = nextReviewUpdatedAt(current.updated_at);
+  const outcomes = await db.batch([
     db.prepare(`
       UPDATE news_review_queue
       SET edited_title = COALESCE(?, edited_title),
@@ -315,7 +333,10 @@ export async function updateReviewDraft(
           suggested_category_id = CASE WHEN ?=1 THEN ? ELSE suggested_category_id END,
           editor_notes = CASE WHEN ?=1 THEN ? ELSE editor_notes END,
           assigned_to = COALESCE(assigned_to, ?),
-          workflow_status = 'editing',
+          workflow_status = CASE
+            WHEN workflow_status IN ('pending','editing','approved') AND updated_at = ? THEN 'editing'
+            ELSE NULL
+          END,
           updated_at = ?,
           reviewed_at = NULL,
           reviewed_by = NULL,
@@ -323,7 +344,7 @@ export async function updateReviewDraft(
           approval_mode = 'manual',
           policy_snapshot_json = '{}',
           auto_publish_reason = NULL
-      WHERE id = ? AND workflow_status IN ('pending', 'editing', 'approved')
+      WHERE id = ?
     `).bind(
       title ?? null,
       input.excerpt === undefined ? current.edited_excerpt : input.excerpt ?? "",
@@ -332,53 +353,62 @@ export async function updateReviewDraft(
       input.notes === undefined ? 0 : 1,
       input.notes ?? null,
       actor.id,
+      input.expectedUpdatedAt,
       timestamp,
       input.queueId,
     ),
     db.prepare(`
       INSERT INTO audit_logs (id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
-      VALUES (?, ?, 'news.review.edit', 'news_review_queue', ?, ?, ?)
+      SELECT ?, ?, 'news.review.edit', 'news_review_queue', ?, ?, ?
+      FROM news_review_queue WHERE id = ? AND updated_at = ? AND workflow_status = 'editing'
     `).bind(
       crypto.randomUUID(),
       actor.id,
       input.queueId,
       JSON.stringify({ categoryId: input.categoryId ?? null }),
       timestamp,
+      input.queueId,
+      timestamp,
     ),
   ]);
+  assertReviewBatchChanged(outcomes);
 }
 
 export async function setReviewDecision(
   db: D1DatabaseLike,
   actor: NewsroomActor,
-  input: { queueId: string; decision: "approved" | "rejected"; reason?: string | null },
+  input: { queueId: string; expectedUpdatedAt: string; decision: "approved" | "rejected"; reason?: string | null },
 ) {
   const current = await getReviewPublicationRow(db, input.queueId);
   if (!current) throw new Error("REVIEW_ITEM_NOT_FOUND");
+  assertReviewUpdatedAt(input.expectedUpdatedAt, current.updated_at);
   if (!canTransitionNewsReviewStatus(current.workflow_status, input.decision)) {
     throw new Error("INVALID_REVIEW_TRANSITION");
   }
 
-  const timestamp = nowIso();
-  await db.batch([
+  const timestamp = nextReviewUpdatedAt(current.updated_at);
+  const outcomes = await db.batch([
     db.prepare(`
       UPDATE news_review_queue
-      SET workflow_status = ?, approval_mode = 'manual', reviewed_by = ?,
+      SET workflow_status = CASE WHEN workflow_status = ? AND updated_at = ? THEN ? ELSE NULL END,
+          approval_mode = 'manual', reviewed_by = ?,
           review_reason = ?, reviewed_at = ?, updated_at = ?,
           policy_snapshot_json = '{}', auto_publish_reason = NULL
-      WHERE id = ? AND workflow_status = ?
+      WHERE id = ?
     `).bind(
+      current.workflow_status,
+      input.expectedUpdatedAt,
       input.decision,
       actor.id,
       input.reason ?? null,
       timestamp,
       timestamp,
       input.queueId,
-      current.workflow_status,
     ),
     db.prepare(`
       INSERT INTO audit_logs (id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
-      VALUES (?, ?, ?, 'news_review_queue', ?, ?, ?)
+      SELECT ?, ?, ?, 'news_review_queue', ?, ?, ?
+      FROM news_review_queue WHERE id = ? AND updated_at = ? AND workflow_status = ?
     `).bind(
       crypto.randomUUID(),
       actor.id,
@@ -386,8 +416,12 @@ export async function setReviewDecision(
       input.queueId,
       JSON.stringify({ from: current.workflow_status, reason: input.reason ?? null }),
       timestamp,
+      input.queueId,
+      timestamp,
+      input.decision,
     ),
   ]);
+  assertReviewBatchChanged(outcomes);
 }
 
 async function publishReviewRow(
@@ -396,12 +430,14 @@ async function publishReviewRow(
   input: {
     mode: "manual" | "auto";
     actorId: string | null;
+    expectedUpdatedAt?: string;
     policySnapshot?: Record<string, unknown>;
     autoReason?: string | null;
   },
 ) {
   const expectedStatus: NewsReviewStatus = input.mode === "auto" ? "pending" : "approved";
   if (row.workflow_status !== expectedStatus) throw new Error("NEWS_PUBLICATION_STATE_CONFLICT");
+  if (input.mode === "manual") assertReviewUpdatedAt(input.expectedUpdatedAt ?? "", row.updated_at);
 
   const categoryId = row.suggested_category_id ?? row.default_category_id;
   if (!categoryId) throw new Error("NEWS_PUBLICATION_CATEGORY_REQUIRED");
@@ -423,12 +459,22 @@ async function publishReviewRow(
     policy: input.policySnapshot ?? null,
   });
 
-  const statements: D1PreparedStatementLike[] = [
-    db.prepare(`
-      INSERT INTO news_publication_claims (id, queue_id, expected_status, approval_mode, created_at)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(claimId, row.queue_id, expectedStatus, input.mode, timestamp),
-  ];
+  // A manual publisher must claim the exact review revision they saw.
+  // NULL on a stale revision violates queue_id NOT NULL inside the same D1 batch,
+  // aborting article, provenance and audit writes together.
+  const claim = input.mode === "manual"
+    ? db.prepare(`
+        INSERT INTO news_publication_claims (id, queue_id, expected_status, approval_mode, created_at)
+        VALUES (?, CASE WHEN EXISTS (
+          SELECT 1 FROM news_review_queue
+          WHERE id=? AND updated_at=? AND workflow_status='approved' AND article_id IS NULL
+        ) THEN ? ELSE NULL END, ?, ?, ?)
+      `).bind(claimId, row.queue_id, input.expectedUpdatedAt!, row.queue_id, expectedStatus, input.mode, timestamp)
+    : db.prepare(`
+        INSERT INTO news_publication_claims (id, queue_id, expected_status, approval_mode, created_at)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(claimId, row.queue_id, expectedStatus, input.mode, timestamp);
+  const statements: D1PreparedStatementLike[] = [claim];
 
   if (input.mode === "auto") {
     statements.push(
@@ -527,10 +573,11 @@ export async function publishApprovedReviewItem(
   db: D1DatabaseLike,
   actor: NewsroomActor,
   queueId: string,
+  expectedUpdatedAt: string,
 ) {
   const row = await getReviewPublicationRow(db, queueId);
   if (!row) throw new Error("REVIEW_ITEM_NOT_FOUND");
-  return publishReviewRow(db, row, { mode: "manual", actorId: actor.id });
+  return publishReviewRow(db, row, { mode: "manual", actorId: actor.id, expectedUpdatedAt });
 }
 
 async function findExistingDuplicate(db: D1DatabaseLike, canonicalUrl: string, normalizedTitle: string) {

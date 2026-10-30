@@ -62,6 +62,7 @@ type ReviewItem = {
   queue_id: string;
   ingest_item_id: string;
   workflow_status: ReviewStatus;
+  updated_at: string;
   suggested_title: string;
   suggested_excerpt: string | null;
   suggested_category_id: string | null;
@@ -223,7 +224,7 @@ export function NewsroomAdmin() {
     if(action==="reject"&&!editNotes.trim()){setError("Vui lòng nhập lý do từ chối vào ô ghi chú.");return;}
     if(action==="publish"&&!window.confirm(`Xuất bản bài “${selected.edited_title??selected.suggested_title}” lên website công khai?`))return;
     if(action==="reject"&&!window.confirm("Từ chối bài đang chọn? Nội dung sẽ chuyển sang danh sách Từ chối."))return;
-    const body=action==="edit"?{action,queueId:selected.queue_id,title:editTitle,excerpt:editExcerpt,categoryId:editCategory||null,notes:editNotes||null}:{action,queueId:selected.queue_id,...(action==="publish"?{}:{reason:editNotes.trim()||null})};
+    const body=action==="edit"?{action,queueId:selected.queue_id,expectedUpdatedAt:selected.updated_at,title:editTitle,excerpt:editExcerpt,categoryId:editCategory||null,notes:editNotes||null}:{action,queueId:selected.queue_id,expectedUpdatedAt:selected.updated_at,...(action==="publish"?{}:{reason:editNotes.trim()||null})};
     const messages={edit:"Đã lưu bản biên tập và chuyển sang Đang biên tập.",approve:"Nội dung đã được duyệt, chưa xuất bản.",reject:"Nội dung đã được chuyển sang Từ chối.",publish:"Đã xuất bản bài viết."};
     await runAction(`${action}-${selected.queue_id}`,async()=>{await post("/api/admin/news/review/action",body);},messages[action]);
   }
