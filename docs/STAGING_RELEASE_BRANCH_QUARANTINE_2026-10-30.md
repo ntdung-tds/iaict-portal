@@ -33,3 +33,16 @@ Individual public PNGs belong in the existing private Google Drive folder: https
 ## Stop conditions
 
 Abort preparation if any workflow, approval, source SHA, D1 baseline, Worker version, Access destination or QA identity cannot be proven. No Worker rollback, D1 Time Travel restore, GitHub branch merge, Worker deploy, Access write or database write is authorized by this document.
+
+## Operator-only GitHub workflow shutdown checklist (not executed)
+
+The connected GitHub interface here supports read-only workflow-run inspection but **does not expose workflow disable/enable, branch ruleset management or cancel-running-workflow actions**. The checks in this PR cannot disable an already-active remote workflow; a repository maintainer must perform and verify that separate GitHub administrative action.
+
+1. Open **GitHub repository → Actions**; choose workflow `one-time-staging-cms-v17-release` (file `release-staging-once-20261029.yml`). Open the workflow's `...` menu and choose **Disable workflow**. Repeat for `deploy-staging` (file `deploy-staging.yml`). If a workflow is not visible, STOP; absence from the sidebar is not proof that it is disabled.
+2. Verify both workflow registrations show **disabled** through repository Actions state or a privileged GitHub API read. GitHub's documented REST/CLI management allows disabling without pushing a commit. Disabling **does not cancel already-running jobs**, so independently verify no queued/in-progress/waiting staging deployment run remains.
+3. Create/apply a branch protection rule or repository ruleset targeting precisely `release/staging-v17-hardened-20261029`, requiring reviewed pull requests and passing required status checks; block direct pushes/force pushes and minimize bypass privileges. **As of this review, the release branch is NOT protected.** Rules are not a substitute for disabling the old deployment workflows.
+4. Re-check current release branch SHA and deployed staging Worker version, then request separate authorization for a **non-deploying merge of this quarantine PR**. Do not merge before all controls above are demonstrably in effect.
+
+After the quarantine is actually integrated, its CI guard `scripts/verify-release-quarantine.mjs` will enforce exact, fail-closed legacy YAML and prohibit GitHub QA artifact upload for any discovered workflow. The guard has standalone positive/negative tests and runs as a dedicated step in `portal-ci`. No CI success authorizes deploy.
+
+Official GitHub reference: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows ; https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches
