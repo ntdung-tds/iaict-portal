@@ -58,7 +58,7 @@ function userMutationError(error: unknown) {
 }
 
 async function listUsers(db:ReturnType<typeof getDatabaseBinding>){
-  const rows=await db.prepare(`SELECT u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at,COALESCE(group_concat(r.code),'') AS roles, MAX(CASE WHEN pc.user_id IS NOT NULL THEN 1 ELSE 0 END) AS native_ready FROM admin_users u LEFT JOIN admin_user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id LEFT JOIN iaict_password_credentials pc ON pc.user_id=u.id GROUP BY u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at ORDER BY u.is_active DESC,lower(COALESCE(u.display_name,u.email)),lower(u.email)`).all<UserRow>();
+  const rows=await db.prepare(`SELECT u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at,COALESCE(group_concat(r.code),'') AS roles, MAX(CASE WHEN pc.user_id IS NOT NULL THEN 1 ELSE 0 END) AS native_ready FROM admin_users u LEFT JOIN admin_user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id LEFT JOIN iaict_password_credentials_v2 pc ON pc.user_id=u.id GROUP BY u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at ORDER BY u.is_active DESC,lower(COALESCE(u.display_name,u.email)),lower(u.email)`).all<UserRow>();
   return rows.results.map(row=>({...row,hasNativePassword:row.native_ready===1,roles:row.roles?row.roles.split(",").filter(Boolean):[]}));
 }
 async function countActiveAdmins(db:ReturnType<typeof getDatabaseBinding>,excludeUserId?:string){
