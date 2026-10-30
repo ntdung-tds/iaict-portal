@@ -3,7 +3,8 @@ import type { D1DatabaseLike } from "./cloudflare-db";
 /** Set only by worker.ts after verifying a D1-backed cookie. */
 export const NATIVE_VERIFIED_EMAIL_HEADER = "X-IAICT-Verified-Email";
 export const NATIVE_COOKIE = "__Host-iaict_session";
-export const PBKDF2_ITERATIONS = 600_000;
+// Workerd limits PBKDF2 to 100,000 iterations per WebCrypto invocation.
+export const PBKDF2_ITERATIONS = 100_000;
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const MAX_FAILURES = 5;
@@ -29,7 +30,7 @@ export function validPassword(value: unknown): value is string {
     !/[\u0000-\u001f\u007f]/.test(value);
 }
 async function derivePassword(password: string, saltHex: string, iterations: number): Promise<string> {
-  if (!/^[0-9a-f]{32,128}$/.test(saltHex) || iterations < 310_000 || iterations > 1_200_000) {
+  if (!/^[0-9a-f]{32,128}$/.test(saltHex) || iterations !== PBKDF2_ITERATIONS) {
     throw new Error("INVALID_PASSWORD_CREDENTIAL");
   }
   const salt = new Uint8Array(saltHex.match(/../g)!.map(part => Number.parseInt(part, 16)));
@@ -104,7 +105,7 @@ export async function authenticateNativePassword(
   if (Number(attempts?.blocked_until ?? 0) > now) return null;
   const user = await db.prepare(
     "SELECT u.id,c.salt,c.password_hash,c.iterations FROM admin_users u " +
-    "JOIN iaict_password_credentials c ON c.user_id=u.id " +
+    "JOIN iaict_password_credentials_v2 c ON c.user_id=u.id " +
     "WHERE lower(u.email)=? AND u.is_active=1 AND EXISTS(" +
     "SELECT 1 FROM admin_user_roles ar WHERE ar.user_id=u.id) LIMIT 1",
   ).bind(normalized).first<CredentialRow>();
@@ -126,7 +127,7 @@ export async function setNativePassword(
   db: D1DatabaseLike, actor: {id: string; email: string}, password: string, currentPassword?: string,
 ): Promise<"created"|"rotated"> {
   if (!validPassword(password)) throw new Error("INVALID_PASSWORD_LENGTH");
-  const old = await db.prepare("SELECT salt,password_hash,iterations FROM iaict_password_credentials WHERE user_id=?")
+  const old = await db.prepare("SELECT salt,password_hash,iterations FROM iaict_password_credentials_v2 WHERE user_id=?")
     .bind(actor.id).first<{salt:string;password_hash:string;iterations:number}>();
   if (old && (!currentPassword || !(await verifyPasswordHash(currentPassword, old)))) {
     throw new Error("INVALID_CURRENT_PASSWORD");
@@ -135,7 +136,7 @@ export async function setNativePassword(
   const now = new Date().toISOString();
   await db.batch([
     db.prepare(
-      "INSERT INTO iaict_password_credentials(user_id,salt,password_hash,iterations,updated_at) " +
+      "INSERT INTO iaict_password_credentials_v2(user_id,salt,password_hash,iterations,updated_at) " +
       "VALUES(?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET " +
       "salt=excluded.salt,password_hash=excluded.password_hash," +
       "iterations=excluded.iterations,updated_at=excluded.updated_at",
