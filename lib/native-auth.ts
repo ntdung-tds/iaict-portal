@@ -91,7 +91,7 @@ async function failLogin(db: D1DatabaseLike, key: string, now: number) {
     "blocked_until=CASE WHEN ?-window_start>? THEN 0 " +
     "WHEN failures+1>=? THEN ? ELSE blocked_until END",
   ).bind(key, now, now, LOGIN_WINDOW_MS, now, now, LOGIN_WINDOW_MS,
-    now, now, LOGIN_WINDOW_MS, MAX_FAILURES, now + LOGIN_WINDOW_MS).run();
+    now, LOGIN_WINDOW_MS, MAX_FAILURES, now + LOGIN_WINDOW_MS).run();
 }
 export async function authenticateNativePassword(
   db: D1DatabaseLike, email: string, password: string,
