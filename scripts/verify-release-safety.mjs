@@ -38,6 +38,11 @@ for (const name of manualWorkflows) {
       !source.includes("IAICT_EXPECTED_STAGING_WORKER_VERSION")) {
     fail(`${name}: explicitly pinned live staging Worker version required`);
   }
+  if (!source.includes("approved_release_sha") ||
+      !source.includes("IAICT_APPROVED_STAGING_COMMIT") ||
+      !source.includes('test "$GITHUB_SHA" = "$IAICT_APPROVED_STAGING_COMMIT"')) {
+    fail(`${name}: explicit immutable release SHA approval must match GitHub dispatch SHA`);
+  }
   if (!source.includes("scripts/verify-staging-release.mjs")) {
     fail(`${name}: read-only Cloudflare/D1 preflight required`);
   }
@@ -56,6 +61,13 @@ const preflight = read("scripts/verify-staging-release.mjs");
 if (!preflight.includes("IAICT_EXPECTED_STAGING_WORKER_VERSION") ||
     !preflight.includes("deployedVersion === expectedWorkerVersion")) {
   fail("staging preflight must compare manually pinned Worker version to live deployment");
+}
+if (!preflight.includes("validateApprovedStagingCommit") ||
+    !preflight.includes("GITHUB_SHA") ||
+    !preflight.includes("validateRollbackReadiness") ||
+    !preflight.includes("/versions/") ||
+    !preflight.includes("/time_travel/bookmark")) {
+  fail("Staging preflight must verify reviewed source SHA, retrievable Worker rollback and D1 bookmark");
 }
 if (!preflight.includes('remote.length === local.length') ||
     !preflight.includes('remote.every((name, i) => name === local[i])')) {
