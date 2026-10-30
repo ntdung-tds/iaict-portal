@@ -433,6 +433,11 @@ async function publishReviewRow(
     expectedUpdatedAt?: string;
     policySnapshot?: Record<string, unknown>;
     autoReason?: string | null;
+    autoGuard?: {
+      settings: NewsWorkflowSettings;
+      source: NewsSourceRow;
+      ordinal: number;
+    };
   },
 ) {
   const expectedStatus: NewsReviewStatus = input.mode === "auto" ? "pending" : "approved";
@@ -462,6 +467,9 @@ async function publishReviewRow(
   // A manual publisher must claim the exact review revision they saw.
   // NULL on a stale revision violates queue_id NOT NULL inside the same D1 batch,
   // aborting article, provenance and audit writes together.
+  if (input.mode === "auto" && !input.autoGuard) {
+    throw new Error("NEWS_AUTO_PUBLISH_GUARD_REQUIRED");
+  }
   const claim = input.mode === "manual"
     ? db.prepare(`
         INSERT INTO news_publication_claims (id, queue_id, expected_status, approval_mode, created_at)
@@ -472,8 +480,36 @@ async function publishReviewRow(
       `).bind(claimId, row.queue_id, input.expectedUpdatedAt!, row.queue_id, expectedStatus, input.mode, timestamp)
     : db.prepare(`
         INSERT INTO news_publication_claims (id, queue_id, expected_status, approval_mode, created_at)
-        VALUES (?, ?, ?, ?, ?)
-      `).bind(claimId, row.queue_id, expectedStatus, input.mode, timestamp);
+        VALUES (?, CASE WHEN EXISTS (
+          SELECT 1 FROM news_workflow_settings w
+          JOIN news_sources s ON s.id=?
+          WHERE w.id='default' AND w.auto_publish_enabled=1
+            AND w.auto_publish_min_trust=?
+            AND w.auto_publish_max_per_run=?
+            AND w.auto_publish_max_per_run>=?
+            AND w.require_attribution=?
+            AND w.require_source_published_at=?
+            AND s.is_active=1 AND s.publication_mode IN ('inherit', 'auto')
+            AND s.publication_mode=? AND s.trust_level=?
+            AND s.default_category_id=?
+            AND s.attribution_mode=?
+            AND COALESCE(s.attribution_text,'')=COALESCE(?,'')
+        ) THEN ? ELSE NULL END, ?, ?, ?)
+      `).bind(
+        claimId,
+        row.source_id,
+        input.autoGuard!.settings.autoPublishMinTrust,
+        input.autoGuard!.settings.autoPublishMaxPerRun,
+        input.autoGuard!.ordinal,
+        input.autoGuard!.settings.requireAttribution ? 1 : 0,
+        input.autoGuard!.settings.requireSourcePublishedAt ? 1 : 0,
+        input.autoGuard!.source.publication_mode,
+        input.autoGuard!.source.trust_level,
+        input.autoGuard!.source.default_category_id,
+        input.autoGuard!.source.attribution_mode,
+        input.autoGuard!.source.attribution_text,
+        row.queue_id, expectedStatus, input.mode, timestamp,
+      );
   const statements: D1PreparedStatementLike[] = [claim];
 
   if (input.mode === "auto") {
@@ -737,19 +773,32 @@ export async function ingestNewsSource(
         if (decision.eligible) {
           const row = await getReviewPublicationRow(db, queueId);
           if (row) {
-            await publishReviewRow(db, row, {
-              mode: "auto",
-              actorId: null,
-              policySnapshot: {
-                settings,
-                sourceId,
-                publicationMode: source.publicationMode,
-                trustLevel: source.trustLevel,
-              },
-              autoReason: "policy-eligible-after-ingest",
-            });
-            autoPublished += 1;
-            queued -= 1;
+            try {
+              // This claim revalidates the policy INSIDE the D1 publication batch.
+              // A setting/source change while fetching keeps the candidate in review.
+              await publishReviewRow(db, row, {
+                mode: "auto",
+                actorId: null,
+                policySnapshot: {
+                  settings,
+                  sourceId,
+                  publicationMode: source.publicationMode,
+                  trustLevel: source.trustLevel,
+                },
+                autoGuard: { settings, source: sourceRow, ordinal: autoPublished + 1 },
+                autoReason: "policy-eligible-after-ingest",
+              });
+              autoPublished += 1;
+              queued -= 1;
+            } catch (error) {
+              // NULL queue_id fails the guard inside the atomic D1 batch.
+              // The item was already saved as a pending manual-review candidate.
+              // Do not misclassify a policy revocation as an ingestion failure.
+              if (!(error instanceof Error &&
+                /NOT NULL constraint failed: news_publication_claims\.queue_id/i.test(error.message))) {
+                throw error;
+              }
+            }
           }
         }
       }
