@@ -7,19 +7,34 @@ import {
   type CmsRoleCode,
 } from "@/lib/cms-roles";
 import { NewsroomAuthError, requireNewsroomActor } from "@/lib/newsroom-auth";
+import { sameOriginPost } from "@/lib/native-auth";
 
 export const dynamic = "force-dynamic";
 
-type UserRow = { id:string; email:string; display_name:string|null; access_subject:string|null; is_active:number; created_at:string; updated_at:string; roles:string; };
-type UserBody = { id?:unknown; email?:unknown; displayName?:unknown; isActive?:unknown; roles?:unknown; };
+type UserRow = { id:string; email:string; display_name:string|null; access_subject:string|null; is_active:number; created_at:string; updated_at:string; roles:string; native_ready?:number; };
+type UserBody = { id?:unknown; email?:unknown; displayName?:unknown; isActive?:unknown; roles?:unknown; action?:unknown; };
 function nowIso(){return new Date().toISOString();}
+const noStore = { "Cache-Control": "no-store" };
+function requireMutationRequest(request:Request){
+  if(!sameOriginPost(request)) invalid("REQUEST_ORIGIN");
+  if(!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) invalid("REQUEST_CONTENT_TYPE");
+  if(Number(request.headers.get("content-length")||0)>16_384) invalid("REQUEST_TOO_LARGE");
+}
+async function readMutationBody(request:Request):Promise<UserBody>{
+  const raw=await request.text();
+  if(raw.length>16_384) invalid("REQUEST_TOO_LARGE");
+  let value:unknown;
+  try{value=JSON.parse(raw);}catch{invalid("REQUEST_JSON");}
+  if(!value||typeof value!=="object"||Array.isArray(value)) invalid("REQUEST_JSON");
+  return value as UserBody;
+}
 function invalid(message:string):never{throw new Error(`INVALID_CMS_${message}`);}
 function errorResponse(error:unknown){
-  if(error instanceof NewsroomAuthError)return Response.json({error:error.message},{status:error.status});
+  if(error instanceof NewsroomAuthError)return Response.json({error:error.message},{status:error.status,headers:noStore});
   const message=error instanceof Error?error.message:"Unknown user-management error";
   const validation=message.startsWith("INVALID_CMS_");
   const conflict=/UNIQUE constraint failed/i.test(message);
-  return Response.json({error:translateCmsError(message),code:cmsErrorCode(message)},{status:conflict?409:validation?400:500});
+  return Response.json({error:translateCmsError(message),code:cmsErrorCode(message)},{status:conflict?409:validation?400:500,headers:noStore});
 }
 /**
  * A D1 batch is atomic. When removing an ACTIVE admin, its UPDATE must
@@ -43,8 +58,8 @@ function userMutationError(error: unknown) {
 }
 
 async function listUsers(db:ReturnType<typeof getDatabaseBinding>){
-  const rows=await db.prepare(`SELECT u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at,COALESCE(group_concat(r.code),'') AS roles FROM admin_users u LEFT JOIN admin_user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id GROUP BY u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at ORDER BY u.is_active DESC,lower(COALESCE(u.display_name,u.email)),lower(u.email)`).all<UserRow>();
-  return rows.results.map(row=>({...row,roles:row.roles?row.roles.split(",").filter(Boolean):[]}));
+  const rows=await db.prepare(`SELECT u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at,COALESCE(group_concat(r.code),'') AS roles, MAX(CASE WHEN pc.user_id IS NOT NULL THEN 1 ELSE 0 END) AS native_ready FROM admin_users u LEFT JOIN admin_user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id LEFT JOIN iaict_password_credentials pc ON pc.user_id=u.id GROUP BY u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at ORDER BY u.is_active DESC,lower(COALESCE(u.display_name,u.email)),lower(u.email)`).all<UserRow>();
+  return rows.results.map(row=>({...row,hasNativePassword:row.native_ready===1,roles:row.roles?row.roles.split(",").filter(Boolean):[]}));
 }
 async function countActiveAdmins(db:ReturnType<typeof getDatabaseBinding>,excludeUserId?:string){
   const row=await db.prepare(`SELECT COUNT(DISTINCT u.id) AS count FROM admin_users u JOIN admin_user_roles ur ON ur.user_id=u.id JOIN roles r ON r.id=ur.role_id WHERE u.is_active=1 AND r.code='admin' ${excludeUserId?"AND u.id <> ?":""}`).bind(...(excludeUserId?[excludeUserId]:[])).first<{count:number}>();
@@ -71,20 +86,35 @@ function snapshotStatement(
     .bind(crypto.randomUUID(), "users", user.id, actorId, JSON.stringify({ ...user, roles }), nowIso());
 }
 
-export async function GET(request:Request){try{const db=getDatabaseBinding();const actor=await requireNewsroomActor(request,db,CMS_ADMIN_ROLES);return Response.json({ok:true,actor,users:await listUsers(db),roles:CMS_ROLE_DEFINITIONS});}catch(error){return errorResponse(error);}}
+export async function GET(request:Request){try{const db=getDatabaseBinding();const actor=await requireNewsroomActor(request,db,CMS_ADMIN_ROLES);return Response.json({ok:true,actor,users:await listUsers(db),roles:CMS_ROLE_DEFINITIONS},{headers:noStore});}catch(error){return errorResponse(error);}}
 
 export async function POST(request: Request) {
   try {
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, CMS_ADMIN_ROLES);
-    const body = await request.json() as UserBody;
+    requireMutationRequest(request);
+    const body = await readMutationBody(request);
+    if (body.action === "revokeSessions") {
+      const target = typeof body.id === "string" ? body.id.trim() : "";
+      if (!target || target.length > 128) invalid("USER_ID");
+      const exists = await db.prepare("SELECT id FROM admin_users WHERE id=? LIMIT 1").bind(target).first<{id:string}>();
+      if (!exists) invalid("USER_NOT_FOUND");
+      await db.batch([
+        db.prepare("DELETE FROM iaict_auth_sessions WHERE user_id=?").bind(target),
+        auditStatement(db, actor.id, "cms.user.sessions.revoke", target, { self: target===actor.id }),
+      ]);
+      return Response.json({ok:true,revoked:true},{headers:noStore});
+    }
+    if(body.action!==undefined) invalid("USER_ACTION");
     const id = typeof body.id === "string" && body.id.trim() ? body.id.trim() : null;
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
     const displayName = typeof body.displayName === "string" ? body.displayName.trim() : "";
     const isActive = body.isActive === false || body.isActive === 0 || body.isActive === "0" ? 0 : 1;
     const roles = normalizeRoleSelection(body.roles);
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) invalid("USER_EMAIL");
+    if (!email || email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) invalid("USER_EMAIL");
+    if (displayName.length > 160) invalid("USER_DISPLAY_NAME");
+    if (id && id.length > 128) invalid("USER_ID");
     if (roles.length === 0) invalid("USER_ROLES");
     if (id === actor.id && email !== actor.email.trim().toLowerCase()) invalid("USER_SELF_EMAIL_CHANGE");
     if (id === actor.id && !isActive) invalid("USER_SELF_DEACTIVATE");
@@ -103,6 +133,7 @@ export async function POST(request: Request) {
     const entityId = id ?? crypto.randomUUID();
     const statements: D1PreparedStatementLike[] = [];
     let previousRoles: string[] = [];
+    let revokeExistingSessions = false;
 
     if (id) {
       const current = await db.prepare(`SELECT * FROM admin_users WHERE id=?`).bind(id).first<UserRow>();
@@ -111,6 +142,9 @@ export async function POST(request: Request) {
         SELECT r.code FROM admin_user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=?
       `).bind(id).all<{ code: string }>();
       previousRoles = oldRoles.results.map(row => row.code);
+      revokeExistingSessions = current.email.toLowerCase()!==email ||
+        current.is_active!==isActive ||
+        previousRoles.slice().sort().join(",")!==roles.slice().sort().join(",");
 
       // Validate before *any* mutation. Previously a rejected last-admin edit
       // still created a revision row.
@@ -135,6 +169,10 @@ export async function POST(request: Request) {
       );
     }
 
+    if(revokeExistingSessions){
+      // Same D1 transaction: privileges and all previously minted sessions change together.
+      statements.push(db.prepare("DELETE FROM iaict_auth_sessions WHERE user_id=?").bind(entityId));
+    }
     statements.push(db.prepare(`DELETE FROM admin_user_roles WHERE user_id=?`).bind(entityId));
     for (const role of roles) {
       statements.push(
@@ -148,7 +186,7 @@ export async function POST(request: Request) {
     // A single D1 batch runs as one transaction. If any role INSERT or audit
     // fails, previous roles, account data, and revision are rolled back.
     await db.batch(statements);
-    return Response.json({ ok: true, id: entityId });
+    return Response.json({ ok: true, id: entityId },{headers:noStore});
   } catch (error) {
     return userMutationError(error);
   }
@@ -158,9 +196,10 @@ export async function DELETE(request: Request) {
   try {
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, CMS_ADMIN_ROLES);
-    const body = await request.json() as { id?: unknown };
+    requireMutationRequest(request);
+    const body = await readMutationBody(request);
     const id = typeof body.id === "string" ? body.id.trim() : "";
-    if (!id) invalid("USER_ID");
+    if (!id || id.length>128) invalid("USER_ID");
     if (id === actor.id) invalid("USER_SELF_DEACTIVATE");
 
     const current = await db.prepare(`SELECT * FROM admin_users WHERE id=?`).bind(id).first<UserRow>();
@@ -182,9 +221,10 @@ export async function DELETE(request: Request) {
     await db.batch([
       snapshotStatement(db, actor.id, current, roles),
       disableStatement,
+      db.prepare("DELETE FROM iaict_auth_sessions WHERE user_id=?").bind(id),
       auditStatement(db, actor.id, "cms.user.deactivate", id, { email: current.email, roles }),
     ]);
-    return Response.json({ ok: true });
+    return Response.json({ ok: true },{headers:noStore});
   } catch (error) {
     return userMutationError(error);
   }
