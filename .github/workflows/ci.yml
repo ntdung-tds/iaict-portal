@@ -19,6 +19,8 @@ jobs:
           node-version: 22
       - name: Verify canonical migrations
         run: node scripts/verify-migrations.mjs
+      - name: Reject unsafe staging release and GitHub QA uploads
+        run: npm run verify:release-safety
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: vinext compatibility check
@@ -46,11 +48,6 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Check browser-rendered contrast and SEO locally
         run: npx playwright test e2e/public-visual-seo.spec.ts e2e/cms-users-atomic.spec.ts e2e/cms-content-concurrency.spec.ts e2e/cms-articles-concurrency.spec.ts e2e/cms-news-review.spec.ts --workers=1
-      - name: Save Playwright traces on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: public-visual-seo-playwright
-          path: test-results
-          if-no-files-found: ignore
-          retention-days: 7
+      # Test screenshots, videos, traces and HTML reports remain ephemeral on CI.
+      # Do NOT upload QA assets to GitHub; retain only explicit individual PNGs in
+      # the dedicated private Google Drive QA folder after authorized transfer.

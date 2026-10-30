@@ -9,7 +9,12 @@ import { readdirSync, readFileSync } from "node:fs";
 const accountId = "bad2f1dcbd36ca891c3e312d610a22cd";
 const databaseId = "aa4a97e7-60c5-4da4-9f0b-d469ece811b4";
 const worker = "iaict-portal-staging";
-const expectedWorkerVersion = "293841c3-5e16-4cb2-bd10-5ae38d299f42";
+const expectedWorkerVersion = process.env.IAICT_EXPECTED_STAGING_WORKER_VERSION;
+// A human must identify the exact live Worker version when explicitly starting
+// the staging release. Never use a stale version hardcoded in an old workflow.
+if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(expectedWorkerVersion ?? "")) {
+  throw new Error("[staging-preflight] Expected Worker version UUID is required. No deployment permitted.");
+}
 const token = process.env.CLOUDFLARE_API_TOKEN;
 
 function assert(ok, message) {
@@ -51,7 +56,7 @@ const deployments = await cf("GET", `${root}/workers/scripts/${worker}/deploymen
 const deployedVersion = deployments.deployments?.[0]?.versions?.[0]?.version_id;
 assert(deployments.deployments?.[0]?.versions?.[0]?.percentage === 100, "Staging Worker currently split across versions.");
 assert(deployedVersion === expectedWorkerVersion,
-  `Worker changed from pinned v42. Expected ${expectedWorkerVersion}, got ${deployedVersion || "none"}.`);
+  `Worker changed from the explicitly pinned live staging version. Expected ${expectedWorkerVersion}, got ${deployedVersion || "none"}.`);
 
 const result = await cf("POST", `${root}/d1/database/${databaseId}/query`, {
   sql: "SELECT name FROM d1_migrations ORDER BY name",
@@ -61,7 +66,7 @@ assert(Array.isArray(rows), "Could not read staging D1 migration history.");
 const remote = rows.map((r) => r.name).sort();
 assert(remote.length === local.length && remote.every((name, i) => name === local[i]),
   "Staging database migration history does not match the release. No deployment.");
-console.log(`[staging-preflight] PASS: account, Worker v42, D1 ID, ${remote.length} matching migrations.`);
+console.log(`[staging-preflight] PASS: account, pinned staging Worker, D1 ID, ${remote.length} matching migrations.`);
 
 try {
   const bookmark = await cf("GET", `${root}/d1/database/${databaseId}/time_travel/bookmark`);

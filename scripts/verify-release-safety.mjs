@@ -1,0 +1,70 @@
+/**
+ * Read-only static release safety policy, run on EVERY pull request.
+ * The runner may generate screenshots, but GitHub must not retain QA media.
+ * Authenticated direct-to-Drive PNG uploads need separately approved CI credentials.
+ */
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+
+const workflowsDir = ".github/workflows";
+const workflows = readdirSync(workflowsDir)
+  .filter(name => /\.ya?ml$/.test(name));
+const issues = [];
+const read = path => readFileSync(path, "utf8");
+const fail = reason => issues.push(reason);
+
+for (const name of workflows) {
+  const file = join(workflowsDir, name);
+  const source = read(file);
+  // Never use GitHub Actions artifact storage for test images, videos or traces.
+  // GitHub Pages deployable-site artifact is a separate publishing format.
+  if (/uses:\s*actions\/upload-artifact@/i.test(source)) {
+    fail(`${file}: QA artifact upload to GitHub is prohibited`);
+  }
+}
+
+const manualWorkflows = [
+  "deploy-staging.yml",
+  "release-staging-once-20261029.yml",
+];
+for (const name of manualWorkflows) {
+  const source = read(join(workflowsDir, name));
+  const trigger = source.match(/^on:\s*\n([\s\S]*?)(?=^permissions:|^concurrency:|^jobs:)/m)?.[1];
+  if (!trigger || !/^[ \t]+workflow_dispatch:\s*$/m.test(trigger) ||
+      /^[ \t]+(?:push|pull_request|schedule):\s*$/m.test(trigger)) {
+    fail(`${name}: staging deployment must be dispatch-only`);
+  }
+  if (!source.includes("expected_worker_version") ||
+      !source.includes("IAICT_EXPECTED_STAGING_WORKER_VERSION")) {
+    fail(`${name}: explicitly pinned live staging Worker version required`);
+  }
+  if (!source.includes("scripts/verify-staging-release.mjs")) {
+    fail(`${name}: read-only Cloudflare/D1 preflight required`);
+  }
+  if (!source.includes("refs/heads/release/staging-v17-hardened-20261029")) {
+    fail(`${name}: restrict deployment to authorized release branch`);
+  }
+  if (!source.includes("environment: staging")) {
+    fail(`${name}: staging GitHub environment required`);
+  }
+  if (/npm run deploy:staging|migrate:staging|migrate:production|deploy:production/.test(source)) {
+    fail(`${name}: release may not implicitly migrate D1 or deploy production`);
+  }
+}
+
+const preflight = read("scripts/verify-staging-release.mjs");
+if (!preflight.includes("IAICT_EXPECTED_STAGING_WORKER_VERSION") ||
+    !preflight.includes("deployedVersion === expectedWorkerVersion")) {
+  fail("staging preflight must compare manually pinned Worker version to live deployment");
+}
+if (!preflight.includes('remote.length === local.length') ||
+    !preflight.includes('remote.every((name, i) => name === local[i])')) {
+  fail("staging preflight must fail if D1 migration histories diverge");
+}
+
+if (issues.length) {
+  for (const issue of issues) console.error(`[release-safety] FAIL: ${issue}`);
+  process.exitCode = 1;
+} else {
+  console.log(`[release-safety] PASS: ${workflows.length} workflow files, no GitHub QA uploads, staging manual-only and fail-closed`);
+}

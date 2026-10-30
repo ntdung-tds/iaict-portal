@@ -26,15 +26,6 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run live staging acceptance
         run: npx playwright test --config playwright.staging.config.ts
-      - name: Upload Playwright report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-acceptance-report
-          path: |
-            playwright-report-staging
-            test-results
-          if-no-files-found: ignore
-          retention-days: 7
-      # Screenshots stay ephemeral on the CI runner. They must never be
-      # uploaded to GitHub Artifacts; persistent QA images belong in Google Drive.
+      # Test screenshots, videos, traces and HTML reports remain ephemeral on CI.
+      # Do NOT upload QA assets to GitHub; retain only explicit individual PNGs in
+      # the dedicated private Google Drive QA folder after authorized transfer.
