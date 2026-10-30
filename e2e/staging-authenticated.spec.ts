@@ -18,7 +18,7 @@ test("real Access session reaches Worker and maps to expected active CMS roles",
   expect(ok).toBe(true);
   expect(typeof actor?.id).toBe("string");
   expect((actor?.id ?? "").length).toBeGreaterThan(0);
-  expect([...actor?.roles ?? []].sort(), "D1 roles must exactly match approved role expectation")
+  expect((actor?.roles ?? []).slice().sort(), "D1 roles must exactly match approved role expectation")
     .toEqual([...expected].sort());
   // Never print email, cookies, JWTs, session JSON or identity headers.
 });
