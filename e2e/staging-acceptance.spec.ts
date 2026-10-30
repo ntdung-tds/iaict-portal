@@ -332,3 +332,34 @@ test("save public staging browser screenshots as reproducible visual evidence", 
     await page.screenshot({ path: `browser-evidence/staging/${item.name}.png`, animations: "disabled" });
   }
 });
+
+
+test("native IAICT login is publicly accessible on staging, mobile-responsive, and does not expose self-registration", async ({ page }) => {
+  for (const width of [320, 390, 768, 1440] as const) {
+    await page.setViewportSize({ width, height: 844 });
+    const response = await page.goto("/login", { waitUntil: "domcontentloaded" });
+    expect(response?.status(), "public IAICT login must not need Cloudflare Access").toBe(200);
+    await expect(page.getByRole("heading", { name: "Đăng nhập quản trị" })).toBeVisible();
+    await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Mật khẩu", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Đăng nhập", exact: true })).toBeVisible();
+    await expect(page.locator("form")).toHaveCount(1);
+    await expect(page.getByRole("link", { name: /đăng ký|register|sign up/i })).toHaveCount(0);
+    const bounds = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+    }));
+    expect(bounds.documentWidth, "IAICT login overflows at " + width + "px").toBeLessThanOrEqual(bounds.viewportWidth);
+  }
+});
+
+test("native login never exposes credentials via GET and bootstrap stays behind Access", async ({ request }) => {
+  const login = await request.get("/api/auth/login", { maxRedirects: 0 });
+  expect(login.status()).toBe(405);
+  expect(login.headers()["cache-control"]).toContain("no-store");
+  for (const path of ["/admin/security", "/api/admin/cms/auth-setup"] as const) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect([302, 303, 307, 308]).toContain(response.status());
+    expect(response.headers()["location"] ?? "").toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+  }
+});
