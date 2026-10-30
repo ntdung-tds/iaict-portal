@@ -8,7 +8,7 @@ for a controlled cutover. No production authentication changes are authorized.
 - IAICT manages its own users and permissions in D1; no public signup.
 - An existing signed Cloudflare Access administrator can visit /admin/security
   and establish a *private* IAICT password without sharing it with QA, GitHub or ChatGPT.
-- The native login page /login and its API use PBKDF2-SHA256 with a random salt;
+- IAICT passwords require **8–128 characters** (12+ recommended); the native login page /login and its API use PBKDF2-SHA256 with a random salt;
   rate-limit repeated failures; store only SHA-256 hashes of 256-bit opaque session tokens;
   use a Secure, HttpOnly, SameSite=Lax, __Host- session cookie.
 - The Worker, not caller headers, verifies native session cookies. Existing
