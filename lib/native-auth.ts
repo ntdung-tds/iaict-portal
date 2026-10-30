@@ -25,7 +25,7 @@ export function normalizeLoginEmail(value: unknown): string | null {
   return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
 }
 export function validPassword(value: unknown): value is string {
-  return typeof value === "string" && value.length >= 14 && value.length <= 128 &&
+  return typeof value === "string" && value.length >= 8 && value.length <= 128 &&
     !/[\u0000-\u001f\u007f]/.test(value);
 }
 async function derivePassword(password: string, saltHex: string, iterations: number): Promise<string> {
