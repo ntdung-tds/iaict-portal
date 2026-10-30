@@ -11,7 +11,7 @@ export const PROTECTED_ADMIN_PATHS = Object.freeze([
 ]);
 
 function publicUris(application) {
-  if (Array.isArray(application?.destinations) && application.destinations.length > 0) {
+  if (Array.isArray(application?.destinations)) {
     return application.destinations
       .filter(entry => entry?.type === "public" && typeof entry.uri === "string")
       .map(entry => ({ uri: entry.uri, overrides: entry.overrides ?? [] }));
@@ -59,7 +59,7 @@ export function auditAccessApplication({ application, hostname, audience }) {
     missing,
     checked: expected,
     audienceMatches: application?.aud === audience,
-    destinationField: Array.isArray(application?.destinations) && application.destinations.length > 0
+    destinationField: Array.isArray(application?.destinations)
       ? "destinations" : "self_hosted_domains",
   };
 }
