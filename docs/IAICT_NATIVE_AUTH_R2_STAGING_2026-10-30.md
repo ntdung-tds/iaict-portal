@@ -27,7 +27,7 @@ for a controlled cutover. No production authentication changes are authorized.
 ## Deployment gates (in strict order)
 1. Required GitHub CI verify, browser-visual, unit tests and immutable SHA review.
 2. Audit latest D1 backup/bookmark and migration count; review SQL migration 0022.
-3. Apply ONLY 0022 to staging with an explicit migration approval and rollback plan.
+3. After applying baseline 0022, apply forward-only migration **0023** to staging with an explicit D1 bookmark and rollback plan. This creates `iaict_password_credentials_v2` with Workers-compatible PBKDF2-SHA256 (100,000 iterations). Never alter the original 0022 migration, and do not delete any legacy credentials.
    Do not run npm deploy:staging because that implicit task also mutates D1.
 4. Deploy reviewed immutable SHA to staging Worker with staging mode using manual
    Cloudflare Builds, including prepare:cf-output. Recheck Worker version and bindings.
@@ -44,6 +44,16 @@ for a controlled cutover. No production authentication changes are authorized.
    Prefer a bounded pilot and retain an emergency rollback of Access settings.
 8. MFA/passkeys, password recovery, IP rate limiting, audit retention, security
    review and independent penetration testing required before production GO.
+
+## User management security updates
+- D1 user create/edit/deactivate remains admin-only and keeps last-active-admin protection.
+- Account creation does **not** create a password or grant Cloudflare Access; native onboarding/invitations and email verification remain separately gated.
+- The Admin user list indicates whether v2 credentials are established without exposing hash/salt.
+- Admin may revoke all IAICT sessions of an account; changing email, activity or roles automatically revokes sessions in the same atomic D1 transaction.
+- Mutating user APIs require same-origin JSON requests and enforce payload size limits; audit and revision history are retained.
+- Creating a password requires the existing authorized user's protected `/admin/security` page. This is not a general staff onboarding mechanism.
+- The initial 0022 credential table was incompatible with workerd's WebCrypto PBKDF2 limit; 0023 uses a new v2 credential table and a strict 100,000-iteration contract.
+- Do not claim full independent login accepted until an actual browser-authenticated native session works after a separately approved Access edge cutover.
 
 ## Known technical limitations
 This is a staged foundation, not a claim of production-ready identity security.
