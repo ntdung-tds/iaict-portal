@@ -4,7 +4,7 @@ import { translateNewsroomError } from "@/lib/newsroom-errors";
 import { publishApprovedReviewItem,setReviewDecision,updateReviewDraft } from "@/lib/news-repository";
 import { NewsroomAuthError,requireNewsroomActor } from "@/lib/newsroom-auth";
 export const dynamic="force-dynamic";
-function mapError(error:unknown){if(error instanceof NewsroomAuthError)return Response.json({error:error.message},{status:error.status});const message=error instanceof Error?error.message:"Unknown newsroom error";const status=message==="REVIEW_ITEM_NOT_FOUND"?404:message.includes("CONFLICT")||message==="INVALID_REVIEW_TRANSITION"?409:message.includes("REQUIRED")||message.includes("INVALID")||message.includes("TOO_SHORT")||message==="REVIEW_ITEM_NOT_EDITABLE"?400:500;return Response.json({error:translateNewsroomError(message)},{status});}
+function mapError(error:unknown){if(error instanceof NewsroomAuthError)return Response.json({error:error.message},{status:error.status});const message=error instanceof Error?error.message:"Unknown newsroom error";const knownGuard=/NOT NULL constraint failed: (news_review_queue\.workflow_status|news_publication_claims\.queue_id)/i.test(message);const errorCode=knownGuard?"NEWS_REVIEW_VERSION_CONFLICT":message;const status=message==="REVIEW_ITEM_NOT_FOUND"?404:errorCode.includes("CONFLICT")||errorCode==="INVALID_REVIEW_TRANSITION"?409:message.includes("REQUIRED")||message.includes("INVALID")||message.includes("TOO_SHORT")||message==="REVIEW_ITEM_NOT_EDITABLE"?400:500;return Response.json({error:translateNewsroomError(errorCode),code:errorCode==="NEWS_REVIEW_VERSION_CONFLICT"?"CONFLICT":undefined},{status});}
 export async function POST(request:Request){
  try{
   const db=getDatabaseBinding();let raw:unknown;
@@ -15,15 +15,17 @@ export async function POST(request:Request){
   const actor=await requireNewsroomActor(request,db,action==="edit"?NEWSROOM_EDIT_ROLES:NEWSROOM_REVIEW_ROLES);
   const queueId=typeof body.queueId==="string"?body.queueId.trim():"";
   if(!queueId)return Response.json({error:"Vui lòng chọn nội dung cần xử lý."},{status:400});
+  const expectedUpdatedAt=typeof body.expectedUpdatedAt==="string"?body.expectedUpdatedAt.trim():"";
+  if(!expectedUpdatedAt)return Response.json({error:translateNewsroomError("NEWS_REVIEW_VERSION_CONFLICT"),code:"CONFLICT"},{status:409});
   for(const key of ["title","excerpt","categoryId","notes","reason"]){const value=body[key];if(value!==undefined&&typeof value!=="string"&&!(key!=="title"&&value===null))return Response.json({error:"Tiêu đề, tóm tắt, chuyên mục và ghi chú phải là văn bản hợp lệ."},{status:400});}
   if(action==="edit"){
-   await updateReviewDraft(db,actor,{queueId,title:body.title as string|undefined,excerpt:body.excerpt as string|null|undefined,categoryId:body.categoryId as string|null|undefined,notes:body.notes as string|null|undefined});
+   await updateReviewDraft(db,actor,{queueId,expectedUpdatedAt,title:body.title as string|undefined,excerpt:body.excerpt as string|null|undefined,categoryId:body.categoryId as string|null|undefined,notes:body.notes as string|null|undefined});
   }else if(action==="approve"||action==="reject"){
    const reason=typeof body.reason==="string"?body.reason.trim():null;
    if(action==="reject"&&!reason)return Response.json({error:"Vui lòng nhập lý do từ chối."},{status:400});
-   await setReviewDecision(db,actor,{queueId,decision:action==="approve"?"approved":"rejected",reason});
+   await setReviewDecision(db,actor,{queueId,expectedUpdatedAt,decision:action==="approve"?"approved":"rejected",reason});
   }else{
-   const article=await publishApprovedReviewItem(db,actor,queueId);return Response.json({ok:true,action,queueId,article});
+   const article=await publishApprovedReviewItem(db,actor,queueId,expectedUpdatedAt);return Response.json({ok:true,action,queueId,article});
   }
   return Response.json({ok:true,action,queueId});
  }catch(error){return mapError(error);}
