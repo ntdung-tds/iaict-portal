@@ -96,7 +96,11 @@ describe("Cloudflare Access JWT boundary", () => {
   });
 
   it("guards CMS and API roots, including percent-encoded routes, but not the public site", () => {
-    for (const route of ["/admin", "/admin/news", "/api/admin", "/api/admin/cms/session", "/%61dmin/news"]) {
+    for (const route of [
+      "/admin", "/admin/news", "/api/admin", "/api/admin/cms/session",
+      "/%61dmin/news", "/%2561dmin/news", "/%252561dmin/news",
+      "/api/%2561dmin/news", "/api/admin%252fnews", "/%2561dmin",
+    ]) {
       expect(isProtectedAdminPath(route), route).toBe(true);
     }
     for (const route of ["/", "/tin-tuc", "/api/news/public", "/administrator", "/api/administration"]) {
