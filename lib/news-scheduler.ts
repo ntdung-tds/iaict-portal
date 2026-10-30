@@ -212,7 +212,7 @@ export async function runScheduledNewsIngestion(
   }
 
   const finishedAt = iso();
-  const status: NewsSchedulerResult["status"] = dueSources.length === 0 || claimed === 0
+  const status: NewsSchedulerResult["status"] = dueSources.length === 0 || claimed === 0 || (succeeded === 0 && failed === 0)
     ? "skipped"
     : failed === 0
       ? "succeeded"
