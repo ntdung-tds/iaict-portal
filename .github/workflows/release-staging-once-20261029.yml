@@ -78,17 +78,9 @@ jobs:
       - name: Run 9 browser acceptance tests on deployed staging
         run: npx playwright test --config playwright.staging.config.ts --workers=1
 
-      - name: Upload failure evidence
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-v17-release-failure
-          path: |
-            playwright-report-staging
-            test-results
-          if-no-files-found: ignore
-          retention-days: 7
-
+      # Test screenshots, videos, traces and HTML reports remain ephemeral on CI.
+      # Do NOT upload QA assets to GitHub; retain only explicit individual PNGs in
+      # the dedicated private Google Drive QA folder after authorized transfer.
       - name: Record staging release identity
         if: success()
         run: echo "STAGING RELEASE SUCCESS commit=$GITHUB_SHA target=iaict-portal-staging"
