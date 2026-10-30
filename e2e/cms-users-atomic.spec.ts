@@ -8,7 +8,7 @@ const initialUsers = [
   { id: "qa-admin", email: actor.email, display_name: "Admin",
     access_subject: null, is_active: 1, roles: ["admin"], created_at: "2026-10-29", updated_at: "2026-10-29" },
   { id: "qa-user", email: "qa-user@example.test", display_name: "Tài khoản thử nghiệm",
-    access_subject: null, is_active: 1, roles: ["editor"], created_at: "2026-10-29", updated_at: "2026-10-29" },
+    access_subject: null, is_active: 1, hasNativePassword: true, roles: ["editor"], created_at: "2026-10-29", updated_at: "2026-10-29" },
 ];
 
 type ApiHarness = {
@@ -41,6 +41,10 @@ async function mockUserManagement(page: Page): Promise<ApiHarness> {
       posts.push(data);
       if (failNextSave) {
         await route.fulfill({ status: 500, json: { error: "Lưu thất bại, quyền được giữ nguyên." } });
+        return;
+      }
+      if (data.action === "revokeSessions") {
+        await route.fulfill({ json: { ok: true, revoked: true } });
         return;
       }
       const user = users.find(u => u.id === data.id);
@@ -107,4 +111,16 @@ test("forbidden user listing does not render account information", async ({ page
   await page.reload();
   await expect(page.getByText("Không được phép xem người dùng.", { exact: true })).toBeVisible();
   await expect(page.getByText("qa-user@example.test")).toHaveCount(0);
+});
+
+
+test("shows native password readiness and lets admin revoke user sessions", async ({ page }) => {
+  const api = await mockUserManagement(page);
+  await page.getByRole("button", { name: /Tài khoản thử nghiệm/ }).click();
+  await expect(page.getByText("Đã thiết lập mật khẩu IAICT.", { exact: false })).toBeVisible();
+  page.once("dialog", dialog => dialog.accept());
+  await page.getByRole("button", { name: "Thu hồi phiên IAICT" }).click();
+  await expect(page.getByText("Đã thu hồi toàn bộ phiên đăng nhập IAICT của tài khoản.", { exact: true })).toBeVisible();
+  expect(api.posts).toHaveLength(1);
+  expect(api.posts[0]).toMatchObject({ action: "revokeSessions", id: "qa-user" });
 });
