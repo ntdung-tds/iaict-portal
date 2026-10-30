@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     if (raw.length > 4096) return Response.json({ error: "Payload too large" }, { status: 413, headers: noStore });
     const body = JSON.parse(raw) as {password?:unknown;currentPassword?:unknown};
     if (!validPassword(body.password)) {
-      return Response.json({ error: "Mật khẩu phải dài 14–128 ký tự." }, { status: 400, headers: noStore });
+      return Response.json({ error: "Mật khẩu phải dài 8–128 ký tự." }, { status: 400, headers: noStore });
     }
     const result = await setNativePassword(db, actor, body.password,
       typeof body.currentPassword === "string" ? body.currentPassword : undefined);
