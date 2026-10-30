@@ -36,7 +36,7 @@ export async function probeStaging({
     throw new Error("INVALID_STAGING_PROBE_OPTIONS");
   }
   if (!Array.from(paths).length || Array.from(paths).some(p =>
-    typeof p !== "string" || !/^\/[a-z0-9/-]*$/.test(p))) {
+    typeof p !== "string" || !PUBLIC_PATHS.includes(p))) {
     throw new Error("INVALID_STAGING_PUBLIC_PATH");
   }
 
