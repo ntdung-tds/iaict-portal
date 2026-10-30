@@ -791,12 +791,12 @@ export async function ingestNewsSource(
               autoPublished += 1;
               queued -= 1;
             } catch (error) {
-              console.error("QA_DEBUG_AUTO_GUARD", error instanceof Error ? error.message : String(error));
               // NULL queue_id fails the guard inside the atomic D1 batch.
               // The item was already saved as a pending manual-review candidate.
               // Do not misclassify a policy revocation as an ingestion failure.
               if (!(error instanceof Error &&
-                /NOT NULL constraint failed: news_publication_claims\.queue_id/i.test(error.message))) {
+                (/NOT NULL constraint failed: news_publication_claims\.queue_id/i.test(error.message) ||
+                 error.message.includes("NEWS_PUBLICATION_STATE_CONFLICT")))) {
                 throw error;
               }
             }
