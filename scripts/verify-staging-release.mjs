@@ -49,10 +49,11 @@ const local = readdirSync("cloudflare/migrations")
   .filter((name) => /^\d{4}_.+\.sql$/.test(name)).sort();
 // Forward-only native-auth schema 0022 is now applied to staging. Do not
 // weaken the original release migration identity or permit unreviewed DDL.
-assert(local.length === 22, `Expected 22 staging migrations, got ${local.length}.`);
+assert(local.length === 23, `Expected 23 staging migrations, got ${local.length}.`);
 assert(local[0] === "0001_core.sql" &&
        local[20] === "0021_v17_admin_role_normalization.sql" &&
-       local.at(-1) === "0022_iaict_native_auth.sql",
+       local[21] === "0022_iaict_native_auth.sql" &&
+       local.at(-1) === "0023_iaict_auth_pbkdf2_workers.sql",
        "Unexpected migration identity after native-auth extension.");
 const reviewedNativeMigrationSha = "cf40971d0f1029adac0a2ea9a9e7545b998dc6e8";
 const nativeMigrationSha = execFileSync("git",
@@ -60,6 +61,11 @@ const nativeMigrationSha = execFileSync("git",
   { encoding: "utf8" }).trim();
 assert(nativeMigrationSha === reviewedNativeMigrationSha,
   "Native-auth migration 0022 differs from exact reviewed immutable blob.");
+const workersMigrationSha = execFileSync("git",
+  ["hash-object", "cloudflare/migrations/0023_iaict_auth_pbkdf2_workers.sql"],
+  { encoding: "utf8" }).trim();
+assert(workersMigrationSha === "18c4908ac3bc3d49b5a703fd2d6b4fa1d921d804",
+  "Workers PBKDF2 migration 0023 differs from exact reviewed immutable blob.");
 
 async function cf(method, path, body) {
   const response = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
