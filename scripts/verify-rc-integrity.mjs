@@ -51,14 +51,31 @@ for (let i=1;i<reviewed.length;i++) {
 
 const migrations = readdirSync("cloudflare/migrations")
   .filter((name) => /^\d{4}_.+\.sql$/.test(name)).sort();
-assert(migrations.length === 21, `Expected 21 migrations; got ${migrations.length}`);
+// Release baseline 0001-0021 is immutable. The separately reviewed native-auth
+// migration may be appended, but must match the exact pinned Git blob SHA.
+const nativeAuthMigration = "cloudflare/migrations/0022_iaict_native_auth.sql";
+const hasNativeAuthMigration = migrations.includes("0022_iaict_native_auth.sql");
+assert(migrations.length === (hasNativeAuthMigration ? 22 : 21),
+  `Expected 21 baseline migrations plus at most the reviewed 0022; got ${migrations.length}`);
 assert(migrations[0] === "0001_core.sql" &&
-       migrations.at(-1) === "0021_v17_admin_role_normalization.sql",
+       migrations[20] === "0021_v17_admin_role_normalization.sql" &&
+       migrations.at(-1) === (hasNativeAuthMigration ? "0022_iaict_native_auth.sql" : "0021_v17_admin_role_normalization.sql"),
        "D1 migration identity changed unexpectedly");
+if (hasNativeAuthMigration) {
+  assert(git("hash-object", nativeAuthMigration) === "cf40971d0f1029adac0a2ea9a9e7545b998dc6e8",
+    "Native-auth migration 0022 differs from its reviewed immutable Git blob");
+}
 try {
   const changed = git("diff", "--name-only", releaseRef, "HEAD").split("\n").filter(Boolean);
   const canonical = changed.filter(p => /^cloudflare\/migrations\/\d{4}_/.test(p));
-  assert(canonical.length === 0, `Forward-only migrations changed from release baseline: ${canonical.join(", ")}`);
+  const authorizedAdditions = hasNativeAuthMigration ? [nativeAuthMigration] : [];
+  assert(canonical.length === authorizedAdditions.length &&
+    canonical.every((file, i) => file === authorizedAdditions[i]),
+    `Unauthorized D1 migration delta from release baseline: ${canonical.join(", ")}`);
+  // Do not permit a previously reviewed release migration to be modified.
+  for (const file of canonical) {
+    if (file !== nativeAuthMigration) errors.push(`Unexpected migration diff: ${file}`);
+  }
   for (const required of [
     "lib/news-scheduler.ts",
     "lib/news-repository.ts",
@@ -72,7 +89,7 @@ try {
   ]) {
     assert(changed.includes(required), `Expected security/QA delta missing from RC: ${required}`);
   }
-  console.log(`[rc-graph] release branch delta: ${changed.length} files; canonical migrations unchanged`);
+  console.log(`[rc-graph] release branch delta: ${changed.length} files; 21 canonical migrations unchanged; optional pinned 0022`);
 } catch (e) {
   errors.push(`Cannot independently compare RC tree to release: ${String(e).slice(0,200)}`);
 }
@@ -93,5 +110,5 @@ if (errors.length) {
   for (const error of errors) console.error(`[rc-graph] FAIL: ${error}`);
   process.exitCode = 1;
 } else {
-  console.log(`[rc-graph] PASS: ${reviewed.length} reviewed PR SHA ancestors, 21 unchanged migrations, required security contracts`);
+  console.log(`[rc-graph] PASS: ${reviewed.length} reviewed PR SHA ancestors, 21 immutable migrations and pinned forward-only 0022 if present, required security contracts`);
 }
