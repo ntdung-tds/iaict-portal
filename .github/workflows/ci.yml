@@ -54,6 +54,11 @@ jobs:
         run: npm run build
       - name: Validate Cloudflare Build Output
         run: npx cf deploy --dry-run --prebuilt --mode production
+      - name: Validate staging R2 binding and native auth build without deploying
+        run: |
+          IAICT_DEPLOY_TARGET=staging npm run build:staging
+          npm run prepare:cf-output
+          IAICT_DEPLOY_TARGET=staging npx cf deploy --dry-run --prebuilt --mode staging
 
   browser-visual:
     runs-on: ubuntu-latest
