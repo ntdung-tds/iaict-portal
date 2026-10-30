@@ -106,6 +106,7 @@ beforeEach(() => {
   sqlite.exec(readFileSync("cloudflare/migrations/0020_v17_cms_roles.sql", "utf8"));
   sqlite.exec(readFileSync("cloudflare/migrations/0021_v17_admin_role_normalization.sql", "utf8"));
   sqlite.exec(readFileSync("cloudflare/migrations/0022_iaict_native_auth.sql", "utf8"));
+  sqlite.exec(readFileSync("cloudflare/migrations/0023_iaict_auth_pbkdf2_workers.sql", "utf8"));
   // The complete production migration chain seeds Newsroom roles in 0016.
   // This focused in-memory fixture imports only core and CMS schema migrations.
   sqlite.exec("INSERT OR IGNORE INTO roles(id,code,name) VALUES('role-news-editor','news_editor','Newsroom Editor')");
@@ -300,8 +301,8 @@ describe("CMS users — native session and CSRF safeguards", () => {
     expect(noCredentials.status).toBe(200);
     expect((await noCredentials.json() as {users:Array<{hasNativePassword:boolean}>}).users.every(user => !user.hasNativePassword)).toBe(true);
     sqlite.prepare(
-      "INSERT INTO iaict_password_credentials(user_id,salt,password_hash,iterations,updated_at) VALUES(?,?,?,?,?)",
-    ).run("qa-user", "a".repeat(32), "b".repeat(64), 600000, "2026-10-30");
+      "INSERT INTO iaict_password_credentials_v2(user_id,salt,password_hash,iterations,updated_at) VALUES(?,?,?,?,?)",
+    ).run("qa-user", "a".repeat(32), "b".repeat(64), 100000, "2026-10-30");
     const ready = await GET(makeRequest("GET"));
     const payload = await ready.json() as {users:Array<{id:string;hasNativePassword:boolean}>};
     expect(payload.users.find(user => user.id==="qa-user")?.hasNativePassword).toBe(true);
