@@ -46,11 +46,3 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Check browser-rendered contrast and SEO locally
         run: npx playwright test e2e/public-visual-seo.spec.ts --workers=1
-      - name: Save Playwright traces on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: public-visual-seo-playwright
-          path: test-results
-          if-no-files-found: ignore
-          retention-days: 7
