@@ -43,7 +43,8 @@ describe("IAICT native authentication: cryptography and boundary guards", () => 
   it("requires exact same-origin state-changing requests", () => {
     const url = "https://iaict-portal-staging.iaict-platform.workers.dev/api/auth/login";
     expect(sameOriginPost(new Request(url, {headers:{Origin:"https://iaict-portal-staging.iaict-platform.workers.dev"}}))).toBe(true);
-    for (const headers of [{}, {Origin:"https://evil.example"}, {Origin:"null"}]) {
+    const invalidHeaders: HeadersInit[] = [{}, {Origin:"https://evil.example"}, {Origin:"null"}];
+    for (const headers of invalidHeaders) {
       expect(sameOriginPost(new Request(url,{headers}))).toBe(false);
     }
     expect(nativeAuthEnabled("true")).toBe(true);
