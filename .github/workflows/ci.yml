@@ -23,6 +23,8 @@ jobs:
         run: npm run verify:release-safety
       - name: Audit Cloudflare Access application root and path coverage
         run: npm run verify:access-paths
+      - name: Prohibit authenticated session files and browser recording in CI
+        run: npm run verify:auth-acceptance-safety
       - name: Independently probe live public Cloudflare Access signing keys
         run: node scripts/verify-access-jwks-readiness.mjs
       - name: Install dependencies
