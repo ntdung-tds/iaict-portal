@@ -9,7 +9,7 @@
 | Staging Worker | `iaict-portal-staging`; version `21ef7ce9-6f82-4381-a474-a3fa9678beb6`, 100% traffic |
 | Production Worker | `iaict-portal`; version `e7c703f7-fc4c-4313-b14c-0a2c94e0613d`, không đổi |
 | Staging D1 | `aa4a97e7-60c5-4da4-9f0b-d469ece811b4`; **21/21** records `d1_migrations`, 0001…0021 |
-| Staging Cloudflare Access | `/admin`, `/admin/*`, `/api/admin/*` configured; **exact `/api/admin` is missing** |
+| Staging Cloudflare Access | **4/4 destinations configured** (`/admin`, `/admin/*`, `/api/admin`, `/api/admin/*`) as of 30/10/2026; independent live browser verification required |
 | Production Cloudflare Access | `/admin/*`, `/api/admin/*` configured; **exact `/admin` and `/api/admin` are missing** |
 | Access app AUD | Khác nhau giữa staging và production; signed JWT verifier ở PR #19 |
 | Media QA | PNG độc lập trong [Google Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3); không ZIP, không GitHub Actions QA artifact |
@@ -34,7 +34,7 @@ PR #8 là baseline đã được kiểm tra Git ancestry trong PR #22: tổ tiê
 1. Người phụ trách **cho phép rõ ràng** triển khai staging; xác định SHA của head được phê duyệt. **Không bao giờ triển khai production trong bước này.**
 2. Kiểm tra lại ancestry/diff của toàn bộ chuỗi PR, đảm bảo không lược bỏ hotfix bảo mật.
 3. Trước deployment: lưu thông tin rollback Worker version, xác nhận snapshot/Time Travel D1, bảo đảm 21 migrations khớp và không có pending migration.
-4. Xác minh Access app staging đủ **4 đường dẫn** (`/admin`, `/admin/*`, `/api/admin`, `/api/admin/*`); hiện **chưa đạt** do thiếu exact `/api/admin`; JWT issuer/AUD của staging đúng và mạng runtime lấy JWKS được. Đánh giá rủi ro tạm gián đoạn CMS nếu origin kiểm JWT bị lỗi.
+4. Xác minh Access app staging đủ **4 đường dẫn** (`/admin`, `/admin/*`, `/api/admin`, `/api/admin/*`); đã được bổ sung exact `/api/admin` ngày 30/10/2026; phải kiểm tra lại qua Access API và HTTP thực tế; JWT issuer/AUD của staging đúng và mạng runtime lấy JWKS được. Đánh giá rủi ro tạm gián đoạn CMS nếu origin kiểm JWT bị lỗi.
 5. Xác minh thủ công workflow dispatch theo đúng release SHA, đúng Worker UUID hiện hành, môi trường staging, tài khoản và secrets.
 6. Sau triển khai: `/api/health`, 17+ Chromium public/Access-negative, responsive, SEO, routing; kiểm thử **CMS thật với phiên Cloudflare Access hợp lệ** cho role admin/editor/reviewer/viewer và phân quyền theo D1; invalid JWT/issuer/AUD/expired/forged identity bị từ chối.
 7. Newsroom: tạo nguồn tin QA phù hợp trong D1 QA **hoặc** dữ liệu staging được cấp phép; thử concurrent review CAS, last-admin guard, lease mất quyền, auto-publish bị tắt giữa ingest, rollback giao dịch. Không ảnh hưởng dữ liệu production.
@@ -48,4 +48,4 @@ PR #8 là baseline đã được kiểm tra Git ancestry trong PR #22: tổ tiê
 - Chưa có dịch vụ tự động chuyển PNG từ runner lên Drive; GitHub chỉ chạy QA và không lưu ảnh.
 - Tài liệu này không cấp quyền merge/deploy và không yêu cầu sửa production.
 
-**Decision: HOLD** cho đến khi hoàn tất điều kiện triển khai và người phụ trách phê duyệt rõ ràng.
+**Decision: HOLD** cho đến khi hoàn tất kiểm thử CMS/JWT thật trên bản mới và người phụ trách phê duyệt rõ ràng. Việc bổ sung Access staging không đồng nghĩa cho phép triển khai Worker.
