@@ -33,7 +33,7 @@ const ready = {
   productionAccessRootsReady: true,
 };
 const assess = change => evaluateStagingRelease({ ...ready, ...change });
-const has = (result, code) => result.blockers.some(x => x.code === code);
+const has = (result, code) => result.stagingBlockers.some(x => x.code === code);
 
 test("a fully controlled, reviewed candidate is only eligible for *separate* approval", () => {
   const result = assess({});
