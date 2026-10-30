@@ -49,6 +49,28 @@ test("newsroom admin paths are protected by Cloudflare Access at the edge", asyn
   }
 });
 
+test("read-only Access exact-root diagnostics: never serve an unauthenticated success response", async ({ request }) => {
+  // Observe *both* hostnames without authentication or mutation. An HTTP 404
+  // may mean no route exists: it is NOT proof that Access policy protected it.
+  for (const { environment, host } of [
+    { environment: "staging", host: "https://iaict-portal-staging.iaict-platform.workers.dev" },
+    { environment: "production", host: "https://iaict-portal.iaict-platform.workers.dev" },
+  ] as const) {
+    for (const path of ["/admin", "/api/admin"] as const) {
+      const response = await request.get(host + path, { maxRedirects: 0 });
+      const code = response.status();
+      const target = response.headers()["location"] ?? "";
+      const accessRedirect = [302, 303, 307, 308].includes(code) &&
+        /cloudflareaccess\\.com|\\/cdn-cgi\\/access\\/login/i.test(target);
+      console.log(`[access-root-observation] ${environment} ${path}: HTTP ${code}, access_redirect=${accessRedirect}`);
+      expect(code, `${environment} ${path} exposed an unauthenticated success response`)
+        .toBeGreaterThanOrEqual(300);
+      // Only a positive Access redirect proves edge login redirection. The
+      // staging release preflight separately requires explicit destinations.
+    }
+  }
+});
+
 test("all canonical public routes render successfully on staging", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
 
