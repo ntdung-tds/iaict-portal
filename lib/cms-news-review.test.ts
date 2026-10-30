@@ -28,7 +28,7 @@ function adapter(database: DatabaseSync): D1DatabaseLike {
 }
 
 beforeEach(()=>{
- sqlite=new DatabaseSync(':memory:');for(const name of ['0001_core.sql','0012_v16_news_ingestion_review.sql','0014_v16_news_auto_publish_policy.sql'])sqlite.exec(readFileSync('cloudflare/migrations/'+name,'utf8'));
+ sqlite=new DatabaseSync(':memory:');for(const name of ['0001_core.sql','0012_v16_news_ingestion_review.sql','0014_v16_news_auto_publish_policy.sql','0017_v16_news_publication_claims.sql'])sqlite.exec(readFileSync('cloudflare/migrations/'+name,'utf8'));
  sqlite.exec(`INSERT INTO admin_users(id,email,created_at,updated_at) VALUES('u','qa@example.com','2026','2026');
  INSERT INTO article_categories(id,name,slug) VALUES('cat','Chuyên mục','cat');
  INSERT INTO news_sources(id,name,homepage_url,entry_url,created_at,updated_at) VALUES('s','Nguồn','https://example.com','https://example.com/rss','2026','2026');
@@ -44,3 +44,43 @@ it.each(['published','rejected'])('does not edit %s content',async status=>{sqli
 it.each([null,[],{action:'edit',queueId:'q',expectedUpdatedAt:'2026',title:42},{action:'edit',queueId:'q',expectedUpdatedAt:'2026',excerpt:{}},{action:'reject',queueId:'q',expectedUpdatedAt:'2026',reason:'  '}])('rejects malformed request %j',async body=>{expect((await post(body)).status).toBe(400);expect(sqlite.prepare('SELECT COUNT(*) n FROM audit_logs').get()?.n).toBe(0);});
 it('stores a rejection reason without publishing',async()=>{expect((await post({action:'reject',queueId:'q',expectedUpdatedAt:'2026',reason:'  Nội dung chưa phù hợp  '})).status).toBe(200);const row=sqlite.prepare('SELECT * FROM news_review_queue').get();expect(row?.workflow_status).toBe('rejected');expect(row?.review_reason).toBe('Nội dung chưa phù hợp');expect(row?.article_id).toBeNull();});
 it('rejects pending publication',async()=>{expect((await post({action:'publish',queueId:'q',expectedUpdatedAt:'2026'})).status).toBe(409);});
+
+
+it('rejects review edits from a stale client without creating an audit',async()=>{
+ const response=await post({action:'edit',queueId:'q',expectedUpdatedAt:'2025',title:'Tiêu đề sai phiên bản'});
+ expect(response.status).toBe(409);
+ expect(sqlite.prepare("SELECT edited_title FROM news_review_queue WHERE id='q'").get()?.edited_title).toBeNull();
+ expect(sqlite.prepare("SELECT COUNT(*) AS n FROM audit_logs").get()?.n).toBe(0);
+});
+it('rolls back edit and audit when another actor changes status just before batch',async()=>{
+ beforeBatch=()=>sqlite.exec("UPDATE news_review_queue SET workflow_status='published',updated_at='2026-10-31' WHERE id='q'");
+ const response=await post({action:'edit',queueId:'q',expectedUpdatedAt:'2026',title:'Ghi đè không hợp lệ'});
+ expect(response.status).toBe(409);
+ const row=sqlite.prepare("SELECT workflow_status,edited_title FROM news_review_queue WHERE id='q'").get();
+ expect(row?.workflow_status).toBe('published');expect(row?.edited_title).toBeNull();
+ expect(sqlite.prepare("SELECT COUNT(*) AS n FROM audit_logs").get()?.n).toBe(0);
+});
+it('rolls back approval when a concurrent editor changes the queue item before batch',async()=>{
+ beforeBatch=()=>sqlite.exec("UPDATE news_review_queue SET edited_title='Đã sửa ở nơi khác',updated_at='2026-10-31' WHERE id='q'");
+ const response=await post({action:'approve',queueId:'q',expectedUpdatedAt:'2026'});
+ expect(response.status).toBe(409);
+ const row=sqlite.prepare("SELECT workflow_status,edited_title FROM news_review_queue WHERE id='q'").get();
+ expect(row?.workflow_status).toBe('pending');expect(row?.edited_title).toBe('Đã sửa ở nơi khác');
+ expect(sqlite.prepare("SELECT COUNT(*) AS n FROM audit_logs").get()?.n).toBe(0);
+});
+it('keeps the entire review mutation atomic when audit insertion fails',async()=>{
+ sqlite.exec("CREATE TRIGGER deny_review_audit BEFORE INSERT ON audit_logs BEGIN SELECT RAISE(ABORT,'forced review audit failure'); END");
+ const response=await post({action:'approve',queueId:'q',expectedUpdatedAt:'2026'});
+ expect(response.status).toBe(500);
+ expect(sqlite.prepare("SELECT workflow_status FROM news_review_queue WHERE id='q'").get()?.workflow_status).toBe('pending');
+ expect(sqlite.prepare("SELECT COUNT(*) AS n FROM audit_logs").get()?.n).toBe(0);
+});
+it('rejects manual publication if the approved review changed after precheck',async()=>{
+ sqlite.exec("UPDATE news_review_queue SET workflow_status='approved',updated_at='2026' WHERE id='q'");
+ beforeBatch=()=>sqlite.exec("UPDATE news_review_queue SET edited_title='Phiên bản duyệt mới',updated_at='2026-10-31' WHERE id='q'");
+ const response=await post({action:'publish',queueId:'q',expectedUpdatedAt:'2026'});
+ expect(response.status).toBe(409);
+ expect(sqlite.prepare("SELECT COUNT(*) AS n FROM articles").get()?.n).toBe(0);
+ expect(sqlite.prepare("SELECT COUNT(*) AS n FROM article_provenance").get()?.n).toBe(0);
+ expect(sqlite.prepare("SELECT COUNT(*) AS n FROM audit_logs").get()?.n).toBe(0);
+});
