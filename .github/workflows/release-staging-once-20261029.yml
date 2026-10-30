@@ -10,6 +10,10 @@ on:
         description: "Exact live staging Worker version (UUID) verified before release"
         required: true
         type: string
+      approved_release_sha:
+        description: "40-hex immutable reviewed commit SHA; must exactly equal dispatched release HEAD"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -31,6 +35,7 @@ jobs:
       APP_ENV: staging
       APP_VERSION: ${{ github.sha }}
       IAICT_EXPECTED_STAGING_WORKER_VERSION: ${{ inputs.expected_worker_version }}
+      IAICT_APPROVED_STAGING_COMMIT: ${{ inputs.approved_release_sha }}
     steps:
       - name: Checkout exact release commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,6 +53,7 @@ jobs:
           test "$APP_ENV" = "staging"
           test -n "$CLOUDFLARE_API_TOKEN"
           test "$CLOUDFLARE_ACCOUNT_ID" = "bad2f1dcbd36ca891c3e312d610a22cd"
+          test "$GITHUB_SHA" = "$IAICT_APPROVED_STAGING_COMMIT"
           echo "Release commit: $GITHUB_SHA"
           echo "Target Worker: iaict-portal-staging"
 
