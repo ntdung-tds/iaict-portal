@@ -90,3 +90,26 @@ jobs:
         run: node scripts/verify-rc-integrity.mjs
       - name: Independently validate release triggers and QA media rules
         run: node scripts/verify-release-safety.mjs
+
+
+  staging-release-go-no-go-audit:
+    # Successful audit means the decision was CHECKED, not that release is GO.
+    # Only an explicit, separate approval may authorize any staging deployment.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout complete candidate and release branch Git graph
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Test GO/NO-GO policy independently
+        run: node --test scripts/release-readiness.test.mjs
+      - name: Audit actual current release branch workflows (NO DEPLOY)
+        run: node scripts/audit-staging-release.mjs
