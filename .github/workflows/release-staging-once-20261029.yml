@@ -1,12 +1,15 @@
 name: one-time-staging-cms-v17-release
 
-# Intentional one-time staging release: exact release branch only.
-# The preflight pins the live Worker v42 and all 21 D1 migrations.
+# MANUAL only: an approved operator must trigger the exact staging release.
+# No push-triggered deployments; preflight pins the live Worker and all 21 D1 migrations.
 # No migration command, no data writes, and no production deployment.
 on:
-  push:
-    branches:
-      - release/staging-v17-hardened-20261029
+  workflow_dispatch:
+    inputs:
+      expected_worker_version:
+        description: "Exact live staging Worker version (UUID) verified before release"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -27,6 +30,7 @@ jobs:
       STAGING_BASE_URL: https://iaict-portal-staging.iaict-platform.workers.dev
       APP_ENV: staging
       APP_VERSION: ${{ github.sha }}
+      IAICT_EXPECTED_STAGING_WORKER_VERSION: ${{ inputs.expected_worker_version }}
     steps:
       - name: Checkout exact release commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -75,7 +79,7 @@ jobs:
       - name: Install Chromium for live acceptance
         run: npx playwright install --with-deps chromium
 
-      - name: Run 9 browser acceptance tests on deployed staging
+      - name: Run live browser acceptance tests on deployed staging
         run: npx playwright test --config playwright.staging.config.ts --workers=1
 
       # Test screenshots, videos, traces and HTML reports remain ephemeral on CI.
