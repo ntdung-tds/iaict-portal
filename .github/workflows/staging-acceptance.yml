@@ -36,11 +36,5 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 7
-      - name: Save live Chromium screenshots for visual review
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-browser-screenshots
-          path: browser-evidence/staging
-          if-no-files-found: ignore
-          retention-days: 7
+      # Screenshots stay ephemeral on the CI runner. They must never be
+      # uploaded to GitHub Artifacts; persistent QA images belong in Google Drive.
