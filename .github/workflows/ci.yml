@@ -51,3 +51,23 @@ jobs:
       # Test screenshots, videos, traces and HTML reports remain ephemeral on CI.
       # Do NOT upload QA assets to GitHub; retain only explicit individual PNGs in
       # the dedicated private Google Drive QA folder after authorized transfer.
+
+  rc-ancestry:
+    # An entirely separate verification of the complete Git history (round 2).
+    # It does not deploy, write to D1, or create screenshot artifacts.
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'rc/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout full Git graph for commit-ancestor verification
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Cross-check all reviewed PR commits, migration integrity and source contracts
+        run: node scripts/verify-rc-integrity.mjs
+      - name: Independently validate release triggers and QA media rules
+        run: node scripts/verify-release-safety.mjs
