@@ -35,12 +35,13 @@ const result = evaluateStagingRelease({
   approvedCandidateSha: intended,
   realAccessJwtAcceptance: false,  // Cannot be certified without live new Worker.
   authorizedQaIdentity: false,     // Real non-admin identity matrix incomplete.
+  productionAccessRootsReady: false, // Explicit production exact root coverage missing.
 });
 console.log(`[release-audit] AUDIT_COMPLETED decision=${result.decision} candidate_sha=${head}`);
-for (const blocker of result.blockers) {
+for (const blocker of result.stagingBlockers) {
   console.log(`[release-audit] BLOCKER ${blocker.code}: ${blocker.detail}`);
 }
-console.log(`[release-audit] ${result.blockerCount} blocker(s), canonical applied migration delta=${migrationDelta.length}, baseline_ancestor=${baseAncestor}`);
-if (process.argv.includes("--require-go") && result.decision !== "ELIGIBLE_FOR_MANUAL_APPROVAL") {
+console.log(`[release-audit] staging_blockers=${result.stagingBlockerCount}, promotion=${result.promotionDecision}, acceptance_blockers=${result.promotionBlockers.map(x => x.code).join(",")}, canonical_migration_delta=${migrationDelta.length}, baseline_ancestor=${baseAncestor}`);
+if (process.argv.includes("--require-go") && result.decision !== "ELIGIBLE_FOR_MANUAL_STAGING_PILOT_REVIEW") {
   process.exitCode = 2;
 }
