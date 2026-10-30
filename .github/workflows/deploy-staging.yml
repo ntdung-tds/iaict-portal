@@ -1,6 +1,6 @@
 name: HOLD - legacy manual staging deployment quarantined
 
-# The former manual path called npm run deploy:staging, which could
+# The former manual path could
 # bootstrap/migrate D1. It must not access Cloudflare or D1 at all.
 # Replacing this workflow is a separate post-review source change.
 on:
