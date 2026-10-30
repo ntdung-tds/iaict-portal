@@ -153,7 +153,8 @@ describe("HTTP route-level staging CMS/CRM least privilege (synthetic, no extern
         expect(db.binds, route.label + " / " + role).toEqual([["fixture@example.invalid"]]);
         denied++;
       }
-      expect(denied, "Each role should have at least one restricted API").toBeGreaterThan(0);
+      if (role === "admin") expect(denied).toBe(0);
+      else expect(denied, "Non-admin roles must have restricted APIs").toBeGreaterThan(0);
     });
   }
 
