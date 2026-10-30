@@ -62,6 +62,26 @@ if (!preflight.includes('remote.length === local.length') ||
   fail("staging preflight must fail if D1 migration histories diverge");
 }
 
+
+// A pinned staging release must independently query Access and verify exact
+// /admin, /api/admin roots and wildcard descendants; otherwise a prefix can
+// escape an edge Access application despite passing signed JWT unit tests.
+const pathAudit = read("scripts/audit-access-paths.mjs");
+if (!preflight.includes("auditAccessApplication") ||
+    !preflight.includes("access/apps/") ||
+    !pathAudit.includes("ACCESS_DESTINATION_MISSING")) {
+  fail("staging preflight requires live Cloudflare Access destination audit");
+}
+for (const exact of ['"/admin"', '"/admin/*"', '"/api/admin"', '"/api/admin/*"']) {
+  if (!pathAudit.includes(exact)) {
+    fail(`Access destination audit must require ${exact}`);
+  }
+}
+if (!pathAudit.includes("application.destinations") ||
+    !pathAudit.includes("ACCESS_PUBLIC_OVERRIDE_REQUIRES_REVIEW")) {
+  fail("Access audit must inspect current destinations and reject public bypass overrides");
+}
+
 if (issues.length) {
   for (const issue of issues) console.error(`[release-safety] FAIL: ${issue}`);
   process.exitCode = 1;

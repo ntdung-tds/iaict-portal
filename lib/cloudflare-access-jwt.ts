@@ -151,10 +151,22 @@ export async function verifyCloudflareAccessRequest(
 }
 
 export function isProtectedAdminPath(path: string): boolean {
-  // Protected root and descendant API/CMS routes, not similarly named routes.
-  // Decoding once also covers percent-encoded URL variants.
+  // URL parsers/frameworks may decode encoded path segments more than once.
+  // Match the undecoded path and each of four decoded layers; fail closed for
+  // malformed percent encoding. Public routes without an admin prefix remain public.
   let normalized = path;
-  try { normalized = decodeURIComponent(path); } catch { return true; }
+  for (let i = 0; i < 4; i += 1) {
+    const lower = normalized.toLowerCase();
+    if (
+      lower === "/admin" || lower.startsWith("/admin/") ||
+      lower === "/api/admin" || lower.startsWith("/api/admin/")
+    ) return true;
+    let decoded: string;
+    try { decoded = decodeURIComponent(normalized); }
+    catch { return true; }
+    if (decoded === normalized) return false;
+    normalized = decoded;
+  }
   const lower = normalized.toLowerCase();
   return lower === "/admin" || lower.startsWith("/admin/") ||
     lower === "/api/admin" || lower.startsWith("/api/admin/");

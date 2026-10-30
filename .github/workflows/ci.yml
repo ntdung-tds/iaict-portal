@@ -21,6 +21,8 @@ jobs:
         run: node scripts/verify-migrations.mjs
       - name: Reject unsafe staging release and GitHub QA uploads
         run: npm run verify:release-safety
+      - name: Audit Cloudflare Access application root and path coverage
+        run: npm run verify:access-paths
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: vinext compatibility check
@@ -55,7 +57,7 @@ jobs:
   rc-ancestry:
     # An entirely separate verification of the complete Git history (round 2).
     # It does not deploy, write to D1, or create screenshot artifacts.
-    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'rc/')
+    if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'rc/') || startsWith(github.base_ref, 'rc/'))
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:

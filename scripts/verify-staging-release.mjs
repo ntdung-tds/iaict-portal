@@ -5,6 +5,7 @@
  * No SQL changes and no secret values are printed.
  */
 import { readdirSync, readFileSync } from "node:fs";
+import { auditAccessApplication } from "./audit-access-paths.mjs";
 
 const accountId = "bad2f1dcbd36ca891c3e312d610a22cd";
 const databaseId = "aa4a97e7-60c5-4da4-9f0b-d469ece811b4";
@@ -66,6 +67,26 @@ assert(Array.isArray(rows), "Could not read staging D1 migration history.");
 const remote = rows.map((r) => r.name).sort();
 assert(remote.length === local.length && remote.every((name, i) => name === local[i]),
   "Staging database migration history does not match the release. No deployment.");
+
+// Cloudflare Access public destinations have to include BOTH exact roots and
+// descendants. The /api/admin/* wildcard is not treated as proof for /api/admin.
+// The newer destinations array supersedes deprecated self_hosted_domains.
+const stagingAccessAppId = "b9d6786d-8ba8-4b72-ab7b-ebf8c29ed715";
+const stagingAccessHostname = "iaict-portal-staging.iaict-platform.workers.dev";
+const expectedStagingAudience = "c21e351bf4647a54e10e65348f2cca417de5203fe606c2281d43fa8c08d007e8";
+const workerConfig = readFileSync("cloudflare.config.ts", "utf8");
+assert(workerConfig.includes(expectedStagingAudience),
+  "Pinned staging AUD disagrees with code Worker Access AUD binding.");
+const accessApp = await cf("GET", `${root}/access/apps/${stagingAccessAppId}`);
+const access = auditAccessApplication({
+  application: accessApp,
+  hostname: stagingAccessHostname,
+  audience: expectedStagingAudience,
+});
+assert(access.ok,
+  `Access staging app has incomplete destinations/policy: ${access.problems.join(", ")}; missing ${access.missing.join(", ")}. No deployment.`);
+console.log("[staging-preflight] Cloudflare Access staging roots, descendants and AUD verified.");
+
 console.log(`[staging-preflight] PASS: account, pinned staging Worker, D1 ID, ${remote.length} matching migrations.`);
 
 try {
