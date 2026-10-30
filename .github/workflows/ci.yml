@@ -21,6 +21,8 @@ jobs:
         run: node scripts/verify-migrations.mjs
       - name: Reject unsafe staging release and GitHub QA uploads
         run: npm run verify:release-safety
+      - name: Verify immutable approved SHA and Worker/D1 rollback negative cases
+        run: npm run verify:staging-rollback
       - name: Audit Cloudflare Access application root and path coverage
         run: npm run verify:access-paths
       - name: Prohibit authenticated session files and browser recording in CI
