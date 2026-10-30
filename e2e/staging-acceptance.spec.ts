@@ -63,10 +63,16 @@ test("read-only Access exact-root diagnostics: never serve an unauthenticated su
       const accessRedirect = [302, 303, 307, 308].includes(code) &&
         new RegExp("cloudflareaccess[.]com|/cdn-cgi/access/login", "i").test(target);
       console.log(`[access-root-observation] ${environment} ${path}: HTTP ${code}, access_redirect=${accessRedirect}`);
-      expect(code, `${environment} ${path} exposed an unauthenticated success response`)
-        .toBeGreaterThanOrEqual(300);
-      // Only a positive Access redirect proves edge login redirection. The
-      // staging release preflight separately requires explicit destinations.
+      if (environment === "staging") {
+        // Staging Access was updated to include both exact roots: a 404 is
+        // deliberately insufficient evidence of actual edge protection.
+        expect(accessRedirect, `staging exact ${path} must redirect to Cloudflare Access`).toBe(true);
+      } else {
+        // Production has not been changed and may still return 404. Record,
+        // but do not confuse it with successful Access login enforcement.
+        expect(code, `production ${path} exposed an unauthenticated success response`)
+          .toBeGreaterThanOrEqual(300);
+      }
     }
   }
 });
