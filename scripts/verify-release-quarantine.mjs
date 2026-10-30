@@ -55,7 +55,7 @@ const requiredWorkflows = Object.freeze([
 // YAML fields, workflow steps and exact shell commands remain immutable.
 export function withoutYamlComments(value) {
   return String(value).replace(/\r\n/g, "\n").split("\n")
-    .filter(line => !/^\s*#/.test(line))
+    .filter(line => line.trim().length > 0 && !/^\s*#/.test(line))
     .join("\n").trim() + "\n";
 }
 export function auditReleaseQuarantine(workflows) {
