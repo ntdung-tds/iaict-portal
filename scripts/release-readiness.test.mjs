@@ -30,14 +30,16 @@ const ready = {
   approvedCandidateSha: sha,
   realAccessJwtAcceptance: true,
   authorizedQaIdentity: true,
+  productionAccessRootsReady: true,
 };
 const assess = change => evaluateStagingRelease({ ...ready, ...change });
 const has = (result, code) => result.blockers.some(x => x.code === code);
 
 test("a fully controlled, reviewed candidate is only eligible for *separate* approval", () => {
   const result = assess({});
-  assert.equal(result.decision, "ELIGIBLE_FOR_MANUAL_APPROVAL");
-  assert.equal(result.blockerCount, 0);
+  assert.equal(result.decision, "ELIGIBLE_FOR_MANUAL_STAGING_PILOT_REVIEW");
+  assert.equal(result.stagingBlockerCount, 0);
+  assert.equal(result.promotionDecision, "ELIGIBLE_FOR_PRODUCTION_REVIEW");
 });
 
 test("the deployed release workflow's push trigger is a hard NO-GO", () => {
@@ -84,13 +86,22 @@ test("a candidate missing the release baseline or modifying applied migrations i
 
 test("synthetic JWT test success cannot substitute for real Access JWT acceptance", () => {
   const result = assess({ realAccessJwtAcceptance: false });
-  assert.equal(result.decision, "NO_GO");
-  assert.ok(has(result, "REAL_JWT_ACCEPTANCE_PENDING"));
+  assert.equal(result.decision, "ELIGIBLE_FOR_MANUAL_STAGING_PILOT_REVIEW");
+  assert.ok(result.promotionBlockers.some(x => x.code === "REAL_JWT_ACCEPTANCE_PENDING"));
+  assert.equal(result.promotionDecision, "NO_GO");
 });
 
 test("missing authorized non-admin acceptance is recorded as a blocker, not hidden as PASS", () => {
   const result = assess({ authorizedQaIdentity: false });
-  assert.ok(has(result, "ROLE_QA_IDENTITY_GAP"));
+  assert.equal(result.decision, "ELIGIBLE_FOR_MANUAL_STAGING_PILOT_REVIEW");
+  assert.ok(result.promotionBlockers.some(x => x.code === "ROLE_QA_IDENTITY_GAP"));
+});
+
+test("production Access root gap prevents promotion but is not a staging pilot prerequisite", () => {
+  const result = assess({ productionAccessRootsReady: false });
+  assert.equal(result.decision, "ELIGIBLE_FOR_MANUAL_STAGING_PILOT_REVIEW");
+  assert.equal(result.promotionDecision, "NO_GO");
+  assert.ok(result.promotionBlockers.some(x => x.code === "PRODUCTION_ACCESS_ROOTS_MISSING"));
 });
 
 test("unrecognized branch or nonimmutable candidate SHA is a blocker", () => {
