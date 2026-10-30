@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 import { isAbsolute, relative, resolve } from "node:path";
-import { statSync } from "node:fs";
+import { lstatSync, realpathSync, statSync } from "node:fs";
 
 // Never run authenticated staging acceptance in shared CI. Browsers and session
 // files contain a real Access cookie. The test runner must not make artifacts.
@@ -14,7 +14,10 @@ const state = process.env.IAICT_ACCESS_STORAGE_STATE;
 if (!state || !isAbsolute(state)) {
   throw new Error("AUTH_STATE_REQUIRED: use an absolute local storageState path outside the repository");
 }
-const file = resolve(state);
+if (lstatSync(state).isSymbolicLink()) {
+  throw new Error("AUTH_STATE_SYMLINK_FORBIDDEN: never follow session file symlinks");
+}
+const file = realpathSync(resolve(state));
 const relativeToRepo = relative(process.cwd(), file);
 if (relativeToRepo === "" || (!relativeToRepo.startsWith("..") && !isAbsolute(relativeToRepo))) {
   throw new Error("AUTH_STATE_OUTSIDE_REPOSITORY_REQUIRED: session cookies must never enter git");
