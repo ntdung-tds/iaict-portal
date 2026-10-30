@@ -11,3 +11,10 @@ test-results/
 !.env.example
 .DS_Store
 *.log
+
+# Never commit Cloudflare Access cookies, authenticated sessions or test captures.
+.playwright-auth/
+.secrets/
+*.storageState.json
+*.access-state.json
+test-results-private-auth/
