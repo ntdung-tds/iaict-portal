@@ -64,7 +64,9 @@ describe("Newsroom scheduler D1 lease fencing", () => {
       sqlite.exec("UPDATE news_scheduler_claims SET lease_token='new-owner' WHERE source_id='source-1'");
       return { ...summary };
     });
-    await runScheduledNewsIngestion(d1(sqlite), { cronExpression: "*/15 * * * *", scheduledTime: scheduledTime() });
+    const result = await runScheduledNewsIngestion(d1(sqlite), { cronExpression: "*/15 * * * *", scheduledTime: scheduledTime() });
+    expect(result).toMatchObject({ status: "skipped", succeeded: 0, failed: 0, skipped: 1 });
+    expect(result.sources[0]).toMatchObject({ status: "skipped", error: "NEWS_SCHEDULER_LEASE_LOST" });
     expect(next()).toBe("2025-01-01T00:00:00.000Z");
     expect(sqlite.prepare("SELECT lease_token FROM news_scheduler_claims").get()?.lease_token).toBe("new-owner");
   });
@@ -73,8 +75,22 @@ describe("Newsroom scheduler D1 lease fencing", () => {
       sqlite.exec("UPDATE news_scheduler_claims SET lease_until='2000-01-01T00:00:00.000Z'");
       return { ...summary };
     });
-    await runScheduledNewsIngestion(d1(sqlite), { cronExpression: "*/15 * * * *", scheduledTime: scheduledTime() });
+    const result = await runScheduledNewsIngestion(d1(sqlite), { cronExpression: "*/15 * * * *", scheduledTime: scheduledTime() });
+    expect(result).toMatchObject({ status: "skipped", succeeded: 0, failed: 0, skipped: 1 });
     expect(next()).toBe("2025-01-01T00:00:00.000Z");
+  });
+
+  it("marks an ingest error as skipped when its lease was stolen and preserves the next owner", async () => {
+    mockedIngest.mockImplementation(async () => {
+      sqlite.exec("UPDATE news_scheduler_claims SET lease_token='new-owner' WHERE source_id='source-1'");
+      throw new Error("Upstream temporarily failed");
+    });
+    const result = await runScheduledNewsIngestion(d1(sqlite), {
+      cronExpression: "*/15 * * * *", scheduledTime: scheduledTime(),
+    });
+    expect(result).toMatchObject({ status: "skipped", succeeded: 0, failed: 0, skipped: 1 });
+    expect(next()).toBe("2025-01-01T00:00:00.000Z");
+    expect(sqlite.prepare("SELECT lease_token FROM news_scheduler_claims").get()?.lease_token).toBe("new-owner");
   });
   it("continues another source when the first ingest fails", async () => {
     sqlite.exec("INSERT INTO news_sources(id,name,next_scheduled_at,updated_at) VALUES('source-2','Second source','2025-01-01T00:00:00.000Z','2025-01-01T00:00:00.000Z')");
