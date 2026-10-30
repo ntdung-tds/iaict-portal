@@ -82,6 +82,22 @@ if (!pathAudit.includes("application.destinations") ||
   fail("Access audit must inspect current destinations and reject public bypass overrides");
 }
 
+// The CMS release must never rely only on synthetic JWTs: public key
+// readiness, active D1 administrators and the exact Access roots are gates.
+if (!preflight.includes("active_admins") ||
+    !preflight.includes("No active CMS administrator")) {
+  fail("Staging release must check active admin accounts in D1 without reading user identities");
+}
+for (const name of manualWorkflows) {
+  const source = read(join(workflowsDir, name));
+  if (!source.includes("verify-access-jwks-readiness.mjs")) {
+    fail(`${name}: public Cloudflare Access JWKS preflight is required`);
+  }
+}
+if (!read(join(workflowsDir, "ci.yml")).includes("verify-access-jwks-readiness.mjs")) {
+  fail("Every PR must exercise the read-only public Access key readiness probe");
+}
+
 if (issues.length) {
   for (const issue of issues) console.error(`[release-safety] FAIL: ${issue}`);
   process.exitCode = 1;
