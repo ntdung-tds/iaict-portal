@@ -127,7 +127,15 @@ describe("real Worker boundary + signed Access assertion + D1 roles", () => {
     ["wrong AUD", () => signedToken({ aud: ["b".repeat(64)] }), undefined],
     ["wrong issuer", () => signedToken({ iss: "https://example.cloudflareaccess.com" }), undefined],
     ["forged Access email header", () => signedToken(), "other@example.test"],
-    ["invalid signature", () => signedToken().replace(/.$/, "A"), undefined],
+    // Always flip a significant signature byte, not padding bits in the final
+    // base64url character: a one-character final-symbol change can decode to
+    // the SAME RSA bytes and cause a nondeterministic false test failure.
+    ["invalid signature", () => {
+      const parts = signedToken().split(".");
+      const signature = Buffer.from(parts[2], "base64url");
+      signature[0] ^= 1;
+      return `${parts[0]}.${parts[1]}.${signature.toString("base64url")}`;
+    }, undefined],
     ["unknown key ID", () => signedToken({}, { kid: "unknown" }), undefined],
   ])("blocks %s before any CMS database read", async (_case, token, email) => {
     const response = await invoke("/api/admin/cms/session", token(), email);

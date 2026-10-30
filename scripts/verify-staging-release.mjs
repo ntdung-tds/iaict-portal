@@ -5,6 +5,8 @@
  * No SQL changes and no secret values are printed.
  */
 import { readdirSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { validateApprovedStagingCommit, validateRollbackReadiness } from "./staging-release-guards.mjs";
 import { auditAccessApplication } from "./audit-access-paths.mjs";
 
 const accountId = "bad2f1dcbd36ca891c3e312d610a22cd";
@@ -16,6 +18,16 @@ const expectedWorkerVersion = process.env.IAICT_EXPECTED_STAGING_WORKER_VERSION;
 if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(expectedWorkerVersion ?? "")) {
   throw new Error("[staging-preflight] Expected Worker version UUID is required. No deployment permitted.");
 }
+// Compare the independently approved immutable SHA to BOTH the actual Git
+// checkout and GitHub's dispatch SHA before any Cloudflare operation.
+const approvedSha = process.env.IAICT_APPROVED_STAGING_COMMIT;
+const checkedOutSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+validateApprovedStagingCommit({
+  approvedSha, checkedOutSha,
+  workflowSha: process.env.GITHUB_SHA,
+  ref: process.env.GITHUB_REF,
+});
+console.log("[staging-preflight] Immutable approved release SHA matches workflow and checkout.");
 const token = process.env.CLOUDFLARE_API_TOKEN;
 
 function assert(ok, message) {
@@ -104,9 +116,15 @@ console.log("[staging-preflight] Cloudflare Access staging roots, descendants an
 
 console.log(`[staging-preflight] PASS: account, pinned staging Worker, D1 ID, ${remote.length} matching migrations.`);
 
-try {
-  const bookmark = await cf("GET", `${root}/d1/database/${databaseId}/time_travel/bookmark`);
-  console.log(`[staging-preflight] D1 Time Travel bookmark: ${bookmark.bookmark ?? "unavailable"}`);
-} catch {
-  console.warn("[staging-preflight] D1 bookmark unavailable to CI token; prior bookmark captured via Cloudflare API.");
-}
+// Fail closed BEFORE changing the Worker when the currently deployed version
+// cannot be retrieved for a manual rollback or the D1 snapshot is unavailable.
+// No rollback is executed here. All requests in this preflight remain read-only.
+const rollbackVersion = await cf("GET", `${root}/workers/scripts/${worker}/versions/${expectedWorkerVersion}`);
+const d1Bookmark = await cf("GET", `${root}/d1/database/${databaseId}/time_travel/bookmark`);
+validateRollbackReadiness({
+  liveDeployment: deployments, rollbackVersion,
+  bookmark: d1Bookmark, expectedVersion: expectedWorkerVersion,
+});
+console.log(`[staging-preflight] Rollback readiness PASS: prior Worker version ${expectedWorkerVersion} retrievable; D1 bookmark available.`);
+// Print only the benchmark identifier: no D1 user data or credential values.
+console.log(`[staging-preflight] D1 bookmark for supervised recovery: ${d1Bookmark.bookmark}`);

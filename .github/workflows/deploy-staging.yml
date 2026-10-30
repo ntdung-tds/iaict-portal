@@ -9,6 +9,10 @@ on:
         description: "Exact currently deployed staging Worker version (UUID)"
         required: true
         type: string
+      approved_release_sha:
+        description: "40-hex immutable reviewed commit SHA; must exactly equal dispatched release HEAD"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -27,6 +31,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       IAICT_EXPECTED_STAGING_WORKER_VERSION: ${{ inputs.expected_worker_version }}
+      IAICT_APPROVED_STAGING_COMMIT: ${{ inputs.approved_release_sha }}
       IAICT_DEPLOY_TARGET: staging
       APP_ENV: staging
       APP_VERSION: ${{ github.sha }}
@@ -45,6 +50,7 @@ jobs:
           test "$CLOUDFLARE_ACCOUNT_ID" = "bad2f1dcbd36ca891c3e312d610a22cd"
           test "$IAICT_DEPLOY_TARGET" = "staging"
           test -n "$IAICT_EXPECTED_STAGING_WORKER_VERSION"
+          test "$GITHUB_SHA" = "$IAICT_APPROVED_STAGING_COMMIT"
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Verify migrations and application
