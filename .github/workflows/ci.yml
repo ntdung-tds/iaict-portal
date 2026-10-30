@@ -17,6 +17,10 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+      - name: Enforce safe staging workflow quarantine and QA evidence policy
+        run: |
+          node --test scripts/verify-release-quarantine.test.mjs
+          node scripts/verify-release-quarantine.mjs
       - name: Verify canonical migrations
         run: node scripts/verify-migrations.mjs
       - name: Install dependencies
