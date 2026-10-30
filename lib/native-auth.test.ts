@@ -22,11 +22,14 @@ describe("IAICT native authentication: cryptography and boundary guards", () => 
     expect(await verifyPasswordHash(password + "wrong", {salt:first.salt,password_hash:first.hash,iterations:first.iterations})).toBe(false);
   });
   it("refuses weak passwords and normalizes emails", async () => {
-    for (const password of ["", "short", "a".repeat(129), "a".repeat(13)]) {
+    for (const password of ["", "short", "a".repeat(129), "a".repeat(7)]) {
       expect(validPassword(password)).toBe(false);
       await expect(createPasswordHash(password)).rejects.toThrow("INVALID_PASSWORD_LENGTH");
     }
-    expect(validPassword("ThisIsFourteen!")).toBe(true);
+    expect(validPassword("Ab3!xY8?")).toBe(true);
+    const shortAllowed = await createPasswordHash("Ab3!xY8?");
+    expect(await verifyPasswordHash("Ab3!xY8?", {salt: shortAllowed.salt, password_hash: shortAllowed.hash, iterations: shortAllowed.iterations})).toBe(true);
+    expect(validPassword("a".repeat(128))).toBe(true);
     expect(normalizeLoginEmail(" QATest@Example.COM ")).toBe("qatest@example.com");
     expect(normalizeLoginEmail("invalid")).toBeNull();
   });
