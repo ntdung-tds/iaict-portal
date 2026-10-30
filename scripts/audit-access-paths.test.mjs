@@ -41,6 +41,15 @@ test("does not accept matching deprecated self_hosted_domains over active destin
   assert.equal(result.missing.length, 3);
 });
 
+test("empty modern destinations must not inherit deprecated protected paths", () => {
+  const result = run(app([], {
+    self_hosted_domains: PROTECTED_ADMIN_PATHS.map(path => host + path),
+  }));
+  assert.equal(result.destinationField, "destinations");
+  assert.equal(result.ok, false);
+  assert.equal(result.missing.length, 4);
+});
+
 test("supports legacy self_hosted_domains only when no modern destinations are configured", () => {
   const result = run({
     type: "self_hosted", aud,
