@@ -100,7 +100,7 @@ test("failed role update leaves edited input intact and visible error", async ({
 
 test("CMS prevents self-deactivation in the rendered user editor", async ({ page }) => {
   await mockUserManagement(page);
-  await expect(page.getByLabel("Email Cloudflare Access *")).toBeDisabled();
+  await expect(page.getByLabel("Email người dùng *")).toBeDisabled();
   await expect(page.getByRole("button", { name: "Vô hiệu hóa", exact: true })).toHaveCount(0);
 });
 
