@@ -50,17 +50,35 @@ export function evaluateStagingRelease(input) {
   if (input.approvedCandidateSha !== sha) {
     add("HUMAN_RELEASE_APPROVAL_MISSING", "Reviewed immutable candidate SHA has not been separately authorized for staging.");
   }
+  // Live Access-issued JWT acceptance necessarily happens AFTER the new Worker
+  // reaches a controlled staging pilot. Never make it a prerequisite to the
+  // staging pilot itself, or the rollout would be impossible to authorize.
+  const promotionBlockers = [];
   if (!input.realAccessJwtAcceptance) {
-    add("REAL_JWT_ACCEPTANCE_PENDING", "Real Cloudflare-issued JWT/CMS role acceptance is not yet verified on candidate Worker.");
+    promotionBlockers.push({
+      code: "REAL_JWT_ACCEPTANCE_PENDING",
+      detail: "Live Access JWT/role acceptance remains NOT TESTED on the new Worker.",
+    });
   }
   if (!input.authorizedQaIdentity) {
-    add("ROLE_QA_IDENTITY_GAP", "Non-admin CMS role acceptance is not fully evidenced with authorized staging accounts.");
+    promotionBlockers.push({
+      code: "ROLE_QA_IDENTITY_GAP",
+      detail: "No authorized real non-admin identity matrix has been accepted on staging.",
+    });
   }
-  // This is a **readiness observation** only; a GO verdict is not an actual
-  // permission to dispatch. Deployment must still be separately authorized.
+  if (!input.productionAccessRootsReady) {
+    promotionBlockers.push({
+      code: "PRODUCTION_ACCESS_ROOTS_MISSING",
+      detail: "Production exact /admin and /api/admin Access destinations are not yet configured.",
+    });
+  }
+  // These are AUDIT verdicts, never permission to dispatch. An approved
+  // controlled staging pilot has a different gate from production promotion.
   return {
-    decision: blockers.length ? "NO_GO" : "ELIGIBLE_FOR_MANUAL_APPROVAL",
-    blockerCount: blockers.length,
-    blockers,
+    decision: blockers.length ? "NO_GO" : "ELIGIBLE_FOR_MANUAL_STAGING_PILOT_REVIEW",
+    stagingBlockerCount: blockers.length,
+    stagingBlockers: blockers,
+    promotionDecision: blockers.length || promotionBlockers.length ? "NO_GO" : "ELIGIBLE_FOR_PRODUCTION_REVIEW",
+    promotionBlockers,
   };
 }
