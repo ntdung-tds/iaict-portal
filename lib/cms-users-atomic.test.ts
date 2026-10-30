@@ -9,6 +9,7 @@ import {
   type D1RunResult,
 } from "./cloudflare-db";
 import { GET, POST, DELETE } from "../app/api/admin/cms/users/route";
+import { setNativePassword, authenticateNativePassword } from "./native-auth";
 
 vi.mock("./newsroom-auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./newsroom-auth")>();
@@ -375,5 +376,25 @@ describe("CMS users — native session and CSRF safeguards", () => {
       displayName:"x".repeat(161),roles:["editor"]});
     expect(invalidName.status).toBe(400);
     expect(counts()).toEqual({revisions:0,audits:0});
+  });
+});
+
+
+describe("IAICT native password setup and subsequent login — real D1 schema", () => {
+  it("accepts an 8-character password using Workers-compatible PBKDF2 and persists a hashed session", async () => {
+    const db = adapter(sqlite);
+    const password = "Ab3!xY8?";
+    expect(await setNativePassword(db, { id: "qa-admin", email: "qa-admin@example.test" }, password)).toBe("created");
+    const row = sqlite.prepare("SELECT salt,password_hash,iterations FROM iaict_password_credentials_v2 WHERE user_id=?")
+      .get("qa-admin") as { salt:string; password_hash:string; iterations:number } | undefined;
+    expect(row?.iterations).toBe(100000);
+    expect(row?.password_hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(row?.password_hash).not.toContain(password);
+    expect(row?.salt).toMatch(/^[a-f0-9]{32}$/);
+    const session = await authenticateNativePassword(db, "qa-admin@example.test", password);
+    expect(session).toMatch(/^[0-9a-f]{64}$/);
+    expect(sqlite.prepare("SELECT COUNT(*) n FROM iaict_auth_sessions WHERE user_id='qa-admin'").get()?.n).toBe(1);
+    expect(sqlite.prepare("SELECT token_hash FROM iaict_auth_sessions LIMIT 1").get()?.token_hash).not.toBe(session);
+    expect(await authenticateNativePassword(db, "qa-admin@example.test", password + "wrong")).toBeNull();
   });
 });
