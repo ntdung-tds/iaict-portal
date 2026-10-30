@@ -19,6 +19,8 @@ jobs:
           node-version: 22
       - name: Verify canonical migrations
         run: node scripts/verify-migrations.mjs
+      - name: Reject unsafe staging release and GitHub QA uploads
+        run: npm run verify:release-safety
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: vinext compatibility check
