@@ -17,6 +17,10 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+      - name: Enforce safe staging workflow quarantine and QA evidence policy
+        run: |
+          node --test scripts/verify-release-quarantine.test.mjs
+          node scripts/verify-release-quarantine.mjs
       - name: Verify canonical migrations
         run: node scripts/verify-migrations.mjs
       - name: Install dependencies
@@ -46,11 +50,3 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Check browser-rendered contrast and SEO locally
         run: npx playwright test e2e/public-visual-seo.spec.ts --workers=1
-      - name: Save Playwright traces on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: public-visual-seo-playwright
-          path: test-results
-          if-no-files-found: ignore
-          retention-days: 7

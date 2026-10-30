@@ -26,13 +26,3 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run live staging acceptance
         run: npx playwright test --config playwright.staging.config.ts
-      - name: Upload Playwright report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-acceptance-report
-          path: |
-            playwright-report-staging
-            test-results
-          if-no-files-found: ignore
-          retention-days: 7

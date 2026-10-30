@@ -1,94 +1,21 @@
-name: one-time-staging-cms-v17-release
+name: HOLD - legacy one-time staging release quarantined
 
-# Intentional one-time staging release: exact release branch only.
-# The preflight pins the live Worker v42 and all 21 D1 migrations.
-# No migration command, no data writes, and no production deployment.
+# This legacy workflow must NEVER deploy on push or manual invocation.
+# Do not re-enable release through this file; use a separately reviewed
+# immutable-SHA staging workflow only after explicit authorization.
 on:
-  push:
-    branches:
-      - release/staging-v17-hardened-20261029
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: iaict-portal-staging
-  cancel-in-progress: false
-
 jobs:
-  deploy-staging:
-    if: github.repository == 'ntdung-tds/iaict-portal' && github.ref == 'refs/heads/release/staging-v17-hardened-20261029'
+  blocked:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    environment: staging
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      STAGING_BASE_URL: https://iaict-portal-staging.iaict-platform.workers.dev
-      APP_ENV: staging
-      APP_VERSION: ${{ github.sha }}
+    timeout-minutes: 2
     steps:
-      - name: Checkout exact release commit
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Set up Node 22
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 22
-
-      - name: Verify release target is exactly staging
+      - name: Fail closed - release authorization required
         run: |
-          test "$GITHUB_REF" = "refs/heads/release/staging-v17-hardened-20261029"
-          test "$APP_ENV" = "staging"
-          test -n "$CLOUDFLARE_API_TOKEN"
-          test "$CLOUDFLARE_ACCOUNT_ID" = "bad2f1dcbd36ca891c3e312d610a22cd"
-          echo "Release commit: $GITHUB_SHA"
-          echo "Target Worker: iaict-portal-staging"
-
-      - name: Install pinned dependencies
-        run: npm ci --no-audit --no-fund
-
-      - name: Verify source and test suite
-        run: npm run verify
-
-      - name: Verify live staging baseline and D1 are unchanged
-        id: preflight
-        run: node scripts/verify-staging-release.mjs
-
-      - name: Build Cloudflare staging artifact
-        run: npm run build:staging
-
-      - name: Prepare Cloudflare module graph
-        run: npm run prepare:cf-output
-
-      - name: Deploy only staging Worker (NO D1 migrations)
-        id: deploy
-        run: IAICT_DEPLOY_TARGET=staging npx vinext-cloudflare deploy --env staging --skip-build
-
-      - name: Verify public staging health after deployment
-        run: |
-          curl --retry 3 --retry-delay 2 --fail --silent --show-error --max-time 25 "$STAGING_BASE_URL/api/health" > /tmp/staging-health.json
-          node --input-type=module -e "import fs from 'node:fs'; const data=JSON.parse(fs.readFileSync('/tmp/staging-health.json','utf8')); if(data.status!=='ok') process.exit(1); console.log('Staging health response OK');"
-
-      - name: Install Chromium for live acceptance
-        run: npx playwright install --with-deps chromium
-
-      - name: Run 9 browser acceptance tests on deployed staging
-        run: npx playwright test --config playwright.staging.config.ts --workers=1
-
-      - name: Upload failure evidence
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-v17-release-failure
-          path: |
-            playwright-report-staging
-            test-results
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: Record staging release identity
-        if: success()
-        run: echo "STAGING RELEASE SUCCESS commit=$GITHUB_SHA target=iaict-portal-staging"
+          echo "::error::Legacy staging release workflow is quarantined. No Worker or D1 deployment is permitted."
+          echo "::error::See docs/STAGING_RELEASE_BRANCH_QUARANTINE_2026-10-30.md"
+          exit 1
