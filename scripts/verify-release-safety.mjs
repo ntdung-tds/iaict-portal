@@ -66,13 +66,12 @@ if (!preflight.includes('remote.length === local.length') ||
 // A pinned staging release must independently query Access and verify exact
 // /admin, /api/admin roots and wildcard descendants; otherwise a prefix can
 // escape an edge Access application despite passing signed JWT unit tests.
+const pathAudit = read("scripts/audit-access-paths.mjs");
 if (!preflight.includes("auditAccessApplication") ||
     !preflight.includes("access/apps/") ||
-    !preflight.includes("ACCESS_DESTINATION_MISSING") &&
-    !read("scripts/audit-access-paths.mjs").includes("ACCESS_DESTINATION_MISSING")) {
+    !pathAudit.includes("ACCESS_DESTINATION_MISSING")) {
   fail("staging preflight requires live Cloudflare Access destination audit");
 }
-const pathAudit = read("scripts/audit-access-paths.mjs");
 for (const exact of ['"/admin"', '"/admin/*"', '"/api/admin"', '"/api/admin/*"']) {
   if (!pathAudit.includes(exact)) {
     fail(`Access destination audit must require ${exact}`);
