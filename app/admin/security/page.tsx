@@ -29,8 +29,8 @@ export default function NativeAuthSetupPage() {
     <form onSubmit={submit}>
       <label htmlFor="old">Mật khẩu IAICT hiện tại (bỏ trống lần đầu)</label>
       <input id="old" type="password" autoComplete="current-password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} style={style}/>
-      <label htmlFor="new">Mật khẩu mới (ít nhất 14 ký tự)</label>
-      <input id="new" type="password" autoComplete="new-password" minLength={14} required value={password} onChange={e=>setPassword(e.target.value)} style={style}/>
+      <label htmlFor="new">Mật khẩu mới (ít nhất 8 ký tự; khuyến nghị từ 12 ký tự)</label>
+      <input id="new" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={e=>setPassword(e.target.value)} style={style}/>
       <label htmlFor="confirm">Xác nhận mật khẩu</label>
       <input id="confirm" type="password" autoComplete="new-password" required value={confirm} onChange={e=>setConfirm(e.target.value)} style={style}/>
       {message ? <p role="status">{message}</p> : null}
