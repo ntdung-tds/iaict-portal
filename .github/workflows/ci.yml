@@ -29,6 +29,17 @@ jobs:
         run: node scripts/verify-access-jwks-readiness.mjs
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
+      - name: Prove authenticated Playwright suite refuses CI even during test discovery
+        run: |
+          if npx playwright test --config playwright.staging-authenticated.config.ts --list > /tmp/iaict-auth-guard.log 2>&1; then
+            echo "::error::Authenticated Access tests unexpectedly accepted CI environment"
+            exit 1
+          fi
+          if ! grep -q "AUTH_ACCEPTANCE_LOCAL_ONLY" /tmp/iaict-auth-guard.log; then
+            echo "::error::Private-auth test discovery failed for an unexpected reason"
+            exit 1
+          fi
+          echo "[auth-qa-safety] PASS: authenticated suite refuses CI test discovery"
       - name: vinext compatibility check
         run: npm run check:vinext
       - name: Typecheck
