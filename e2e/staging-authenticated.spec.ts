@@ -9,6 +9,22 @@ const cmsRoles = new Set<Role>(["admin", "editor", "reviewer", "viewer"]);
 const isGlobalCmsUser = expected.some(role => cmsRoles.has(role));
 const isGlobalAdmin = expected.includes("admin");
 
+// Defend against accidental use with Playwright's default config. The private
+// auth config alone is not enough: default Playwright discovery can find specs.
+test.beforeAll(() => {
+  const use = test.info().project.use;
+  if (
+    process.env.CI ||
+    process.env.IAICT_AUTH_ACCEPTANCE_APPROVED !== "staging-only" ||
+    use.baseURL !== "https://iaict-portal-staging.iaict-platform.workers.dev" ||
+    typeof use.storageState !== "string" ||
+    use.storageState !== process.env.IAICT_ACCESS_STORAGE_STATE
+  ) {
+    throw new Error("AUTH_ACCEPTANCE_REQUIRES_PRIVATE_STAGING_CONFIG");
+  }
+});
+
+
 type Session = { ok?: boolean; actor?: { id?: string; roles?: string[]; email?: string } };
 
 test("real Access session reaches Worker and maps to expected active CMS roles", async ({ request }) => {
