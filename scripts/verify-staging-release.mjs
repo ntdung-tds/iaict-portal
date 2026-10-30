@@ -47,8 +47,19 @@ assert(binding?.database_name === "iaict-portal-staging-db", "Staging D1 name mi
 
 const local = readdirSync("cloudflare/migrations")
   .filter((name) => /^\d{4}_.+\.sql$/.test(name)).sort();
-assert(local.length === 21, `Expected 21 local migrations, got ${local.length}.`);
-assert(local.at(-1) === "0021_v17_admin_role_normalization.sql", "Unexpected migration end.");
+// Forward-only native-auth schema 0022 is now applied to staging. Do not
+// weaken the original release migration identity or permit unreviewed DDL.
+assert(local.length === 22, `Expected 22 staging migrations, got ${local.length}.`);
+assert(local[0] === "0001_core.sql" &&
+       local[20] === "0021_v17_admin_role_normalization.sql" &&
+       local.at(-1) === "0022_iaict_native_auth.sql",
+       "Unexpected migration identity after native-auth extension.");
+const reviewedNativeMigrationSha = "cf40971d0f1029adac0a2ea9a9e7545b998dc6e8";
+const nativeMigrationSha = execFileSync("git",
+  ["hash-object", "cloudflare/migrations/0022_iaict_native_auth.sql"],
+  { encoding: "utf8" }).trim();
+assert(nativeMigrationSha === reviewedNativeMigrationSha,
+  "Native-auth migration 0022 differs from exact reviewed immutable blob.");
 
 async function cf(method, path, body) {
   const response = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
