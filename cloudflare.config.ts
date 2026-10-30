@@ -19,6 +19,8 @@ export default defineConfig({
     env: {
       ASSETS: bindings.assets(),
       DB: bindings.d1({ name: isStaging ? "iaict-portal-staging-db" : "iaict-portal-db" }),
+      IAICT_NATIVE_AUTH_ENABLED: bindings.text(isStaging ? "true" : "false"),
+      MEDIA_BUCKET: isStaging ? bindings.r2({ name: "iaict-portal-staging-media" }) : undefined,
       // These audience tags identify Access apps; each deployment uses its own.
       ACCESS_TEAM_DOMAIN: bindings.text("https://lucky-sun-c4ca.cloudflareaccess.com"),
       ACCESS_POLICY_AUD: bindings.text(
