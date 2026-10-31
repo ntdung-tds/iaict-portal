@@ -199,3 +199,44 @@ test("password setup identifies the authenticated CMS account email, not a diffe
   await expect(page.getByRole("link",{name:"Mở trang đăng nhập IAICT"})).toHaveAttribute("href","/login");
   await expect(page.getByText("qa-other@example.test")).toHaveCount(0);
 });
+
+test("native account password change revokes sessions after a verified request", async ({ page }) => {
+  await page.setViewportSize({width:390,height:844});
+  const sent: Array<Record<string, unknown>> = [];
+  await page.route("**/api/account/password", async route => {
+    const request = route.request();
+    expect(request.method()).toBe("POST");
+    sent.push(request.postDataJSON() as Record<string, unknown>);
+    await route.fulfill({json:{ok:true,reauthenticationRequired:true}});
+  });
+  await page.goto("/account/security", {waitUntil:"domcontentloaded"});
+  await expect(page.getByRole("heading",{name:"Đổi mật khẩu IAICT"})).toBeVisible();
+  await page.getByLabel("Mật khẩu IAICT hiện tại").fill("Old-pass-2026");
+  await page.getByLabel("Mật khẩu mới",{exact:true}).fill("New-pass-2026");
+  await page.getByLabel("Xác nhận mật khẩu mới").fill("New-pass-2026");
+  await page.getByRole("button",{name:"Lưu mật khẩu mới"}).click();
+  await expect(page.getByText("Đổi mật khẩu thành công.",{exact:false})).toBeVisible();
+  await expect(page.getByRole("link",{name:"Đăng nhập lại"})).toHaveAttribute("href","/login");
+  expect(sent).toEqual([{currentPassword:"Old-pass-2026",password:"New-pass-2026"}]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("password change rejects confirmation mismatch and displays API denial without disclosing secrets", async ({ page }) => {
+  let requests = 0;
+  await page.route("**/api/account/password", route => {
+    requests += 1;
+    return route.fulfill({status:403,json:{error:"Mật khẩu hiện tại không đúng."}});
+  });
+  await page.goto("/account/security");
+  await page.getByLabel("Mật khẩu IAICT hiện tại").fill("Old-pass-2026");
+  await page.getByLabel("Mật khẩu mới",{exact:true}).fill("New-pass-2026");
+  await page.getByLabel("Xác nhận mật khẩu mới").fill("Mismatch-2026");
+  await page.getByRole("button",{name:"Lưu mật khẩu mới"}).click();
+  await expect(page.getByRole("alert")).toHaveText("Hai mật khẩu mới không trùng khớp.");
+  expect(requests).toBe(0);
+  await page.getByLabel("Xác nhận mật khẩu mới").fill("New-pass-2026");
+  await page.getByRole("button",{name:"Lưu mật khẩu mới"}).click();
+  await expect(page.getByRole("alert")).toHaveText("Mật khẩu hiện tại không đúng.");
+  expect(requests).toBe(1);
+  await expect(page.getByRole("link",{name:"Đăng nhập lại"})).toHaveCount(0);
+});
