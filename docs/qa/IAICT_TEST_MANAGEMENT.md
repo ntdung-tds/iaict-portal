@@ -108,7 +108,7 @@ Approver / release decision:
 ## 9A. Cập nhật 31/10/2026 — MFA nền tảng và nghiệm thu bàn giao toàn bộ mã nguồn
 
 - **IAM-FUT-007**: test tự động RFC 6238 với `lib/totp.test.ts`; chỉ xác nhận primitive, chưa xác nhận đăng ký MFA, mã hóa dữ liệu hoặc đăng nhập MFA. Full enrollment `IAM-FUT-001` vẫn PLANNED.
-- **IAM-REL-008**: kiểm thử thủ công khôi phục nguồn **từ Drive**, so sánh SHA256, chạy build/tests và xác nhận bàn giao qua [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38). Khi dự án chưa hoàn thành trạng thái `PLANNED`, không PASS.
+- **IAM-REL-008**: kiểm thử thủ công khôi phục nguồn **từ Drive**, so sánh SHA256, chạy build/tests và xác nhận bàn giao qua [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38). Chỉ sau khi chủ dự án yêu cầu rõ “bàn giao” mới chạy test này; trước đó giữ `PLANNED/NOT_RUN`, không PASS.
 - Bản Word v1.0 73 cases là lịch sử. Bản Google Doc v1.1/CSV 75 cases là bản đang sử dụng, chỉ được gọi đồng bộ sau khi đọc lại.
 
 ## 10. Căn cứ chính
