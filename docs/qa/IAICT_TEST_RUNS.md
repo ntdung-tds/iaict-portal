@@ -72,3 +72,30 @@
 - Case: `IAM-REL-008`; status **NOT_RUN / PLANNED**, because IAICT Portal has not completed the project.
 - Requirement: [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38); [FINAL_HANDOFF folder](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ) reserved and documented.
 - **No final source code archive, checksum manifest, download verification or isolated restore test has been produced yet.** This is a recorded final acceptance obligation, not a completed backup. No PASS.
+
+
+## RUN-IAM-20261031-03 — Eight staging QA identities and real browser rendering
+
+| Item | Actual observation |
+|---|---|
+| Date | 2026-10-31, UTC+07 |
+| Environment | **Real Cloudflare D1 staging** + Cloudflare Browser Rendering **actual browser** (mobile 390×844), no signed-in Access |
+| Worker deployed | Staging `1b8cfe71-88ef-4e21-8937-4f8590daaba4`, unchanged during QA bootstrap |
+| D1 binding | Staging database `aa4a97e7-60c5-4da4-9f0b-d469ece811b4` read back from Worker settings; no production DB write |
+| Original state | 2 pre-existing users, 0 QA fixtures; 7 role codes seeded |
+| Bootstrap action | Create **8 synthetic disabled QA users** (`admin` ×2 plus `editor, reviewer, viewer, news_admin, news_editor, news_reviewer`) through one QA-only D1 batch, not Admin API |
+| D1 readback | **PASS**: 8 user rows + 8 role joins + 8 `qa.fixture.provisioned` audit rows; all `is_active=0`; 0 password credentials; `PRAGMA quick_check=ok` |
+| Existing accounts | 2 existing users untouched; no customer data queried or mutated |
+| Credentials / Access | None generated, no valid Cloudflare Access test identities; full login is **NOT_READY**, not PASS |
+| Actual mobile browser `/login` | **PASS**: real rendered heading `Đăng nhập quản trị`, Email + Mật khẩu inputs, Đăng nhập button at 390×844 |
+| Browser `/account/security` | **BLOCKED** by Browser Rendering HTTP 429 (rate limit), not PASS |
+| Browser `/admin` | **BLOCKED** by Browser Rendering HTTP 429; anonymous Access gate not re-proven by this run |
+| Browser `/api/admin/cms/users` | **BLOCKED** by Browser Rendering HTTP 429; no authenticated API verification |
+| Full seven-role acceptance | **NOT_RUN** — needs controlled IAICT test mailboxes, Access identities, vault-backed credentials and approved activation |
+| Evidence | [Drive restricted QA account registry](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit?usp=drivesdk), [account folder](https://drive.google.com/drive/folders/1q8-9hjgH_Rq9WKhv_rJpA1C3A8jB8lGO), [GitHub Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+| Screenshots | **NOT_CAPTURED** — actual browser accessibility observations only, no screenshot emitted or uploaded |
+| Test IDs | `IAM-AUTH-017` (NOT_RUN); `IAM-USER-017` (NOT_RUN); `IAM-USER-018` (NOT_RUN); login form public browser smoke check PASS (not a signed-in authentication test) |
+| Production | Untouched. Cloudflare Access policy and Build HOLD unchanged |
+| Next step | Controlled test inbox + Access identity + approved password vault; activate users one-by-one, run private real Chromium auth suite, revoke and disable afterward |
+
+**Do not mark every role PASS:** fixtures are intentionally disabled; the D1 bootstrap does NOT exercise the app's Admin create-user API or verified browser sign-in.
