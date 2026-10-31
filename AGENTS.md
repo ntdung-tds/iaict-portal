@@ -19,6 +19,9 @@
 - Never claim PASS for tests that did not run, or for mocked-browser tests as a substitute for authenticated live staging. Preserve BLOCKED and NOT_RUN statuses.
 - Do not change folder sharing, delete/move large sets, set retention policies, modify external accounts, or publish sensitive content without a specific task and permission check.
 
+## Source-code transfer to Google Drive — exclusively on owner handover command
+**Only the operation of exporting/uploading the complete project source code to Google Drive as a handover is on hold.** Do not perform it until the owner explicitly says "bàn giao". This restriction does **not** pause or delay routine software development, GitHub code commits/PRs, staging implementation/deployment under normal approvals, project management, task tracking, Google Drive document updates/organization, test cases, test account management, browser testing, sanitized screenshots/bug evidence, or other authorized routine work. Do not treat milestone completion as an automatic source-code-to-Drive trigger.
+
 ## Mandatory final full-source backup to Google Drive
 Owner clarification 2026-10-31: full-source handover is DEFERRED. It must start ONLY after the owner explicitly says “bàn giao”; technical completion alone is not authorization. When instructed, the entire project including code must be uploaded to the private Drive Project Master. [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) is a DEFERRED instruction, not a release-blocking requirement. Destination [FINAL_HANDOFF](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ). Follow `docs/project/FINAL_HANDOFF_PLAN.md`; archive the exact approved release SHA and approved documentation, include manifest+SHA256, remove secrets/PII, verify upload/download and **clean restore from Drive**. Get human sign-off. A folder alone is not a backup. Do NOT initiate handover or export the final project before explicit “bàn giao” instruction. The owner may separately declare development complete; that does not authorize handover. Do not claim any final archive exists until explicitly executed and verified.
 
@@ -35,6 +38,9 @@ Owner clarification 2026-10-31: full-source handover is DEFERRED. It must start 
 5. Staging deploy: verify pinned SHA + completed CI and staging gate, worker prev version, D1 migration integrity and bookmark, Access routes, R2 binding; deploy only staging; restore HOLD; read back state; record test run and release.
 6. GitHub Issue/PR is source of truth for task and code; Drive for human approvals, document versions, QA media and backup. Do not duplicate authoritative state. Every report links issue/PR, SHA, CI, Worker, Drive evidence, and next blocker.
 7. If blocked by tool/permission/rate limit, stop risky action, report current exact state and missing verification. Never invent Drive file URLs or tool success.
+
+## Mandatory tabular QA results in each report
+For every executed test batch, **present actual test results as a Markdown table** (not a prose-only summary), minimum columns: `Test case / hạng mục | Môi trường & vai trò | Kết quả mong đợi | Kết quả thực tế | Trạng thái | Bằng chứng (URL)`. Add `Run ID`, `SHA/Worker`, `Defect ID`, and Drive image/folder links where relevant. Distinguish `PASS`, `FAIL`, `BLOCKED`, `NOT_RUN`, `NOT_APPLICABLE`; never inflate 533 unit tests into 533 manual role cases. CI and real Chromium tests must be identified separately. Use `NOT_CAPTURED` when no image exists. Finish with any blockers/next task. This is the **default user-facing format**, also for other AI agents.
 
 ## Deliverable contract for every task batch
 Report `Scope | Changed files/issues | Tests + exact results | Staging state | Evidence Drive URLs (or NOT_CAPTURED) | Production unchanged | Open risks | Next task`. When no deployment occurs, say `Not deployed`. Use explicit calendar dates and immutable identifiers.
