@@ -143,7 +143,9 @@ test("native login checks a separate private session page instead of redirecting
   await page.goto("/login");
   await page.getByLabel("Email", { exact:true }).fill("qa-admin@example.test");
   await page.getByLabel("Mật khẩu", { exact:true }).fill("S3cure!!8");
+  const loginPost = page.waitForResponse(response => response.url().endsWith("/api/auth/login") && response.request().method() === "POST");
   await page.getByRole("button", { name:"Đăng nhập", exact:true }).click();
+  expect((await loginPost).status()).toBe(200);
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByText("Phiên đăng nhập IAICT đã được xác minh.")).toBeVisible();
   await expect(page.getByText("qa-admin@example.test")).toBeVisible();
