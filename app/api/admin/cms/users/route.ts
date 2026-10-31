@@ -12,8 +12,12 @@ import { sameOriginPost } from "@/lib/native-auth";
 export const dynamic = "force-dynamic";
 
 type UserRow = { id:string; email:string; display_name:string|null; access_subject:string|null; is_active:number; created_at:string; updated_at:string; roles:string; native_ready?:number; };
-type UserBody = { id?:unknown; email?:unknown; displayName?:unknown; isActive?:unknown; roles?:unknown; action?:unknown; };
+type UserBody = { id?:unknown; email?:unknown; displayName?:unknown; isActive?:unknown; roles?:unknown; action?:unknown; updatedAt?:unknown; };
 function nowIso(){return new Date().toISOString();}
+// updated_at is the existing concurrency token: make each successful write
+// strictly newer even when two writes occur within the same millisecond.
+function nextUserTimestamp(previous:string){const last=Date.parse(previous);return new Date(Math.max(Date.now(),Number.isFinite(last)?last+1:Date.now())).toISOString();}
+const hasUpdatedVersion="EXISTS(SELECT 1 FROM admin_users WHERE id=? AND updated_at=?)";
 const noStore = { "Cache-Control": "no-store" };
 function requireMutationRequest(request:Request){
   if(!sameOriginPost(request)) invalid("REQUEST_ORIGIN");
@@ -34,7 +38,7 @@ function errorResponse(error:unknown){
   const message=error instanceof Error?error.message:"Unknown user-management error";
   const validation=message.startsWith("INVALID_CMS_");
   const conflict=/UNIQUE constraint failed/i.test(message);
-  return Response.json({error:translateCmsError(message),code:cmsErrorCode(message)},{status:conflict?409:validation?400:500,headers:noStore});
+  return Response.json({error:translateCmsError(message),code:cmsErrorCode(message)},{status:conflict||message==="INVALID_CMS_USER_CONFLICT"?409:message==="INVALID_CMS_USER_VERSION_REQUIRED"?428:validation?400:500,headers:noStore});
 }
 /**
  * A D1 batch is atomic. When removing an ACTIVE admin, its UPDATE must
@@ -71,9 +75,14 @@ function auditStatement(
   action: string,
   userId: string,
   metadata: Record<string, unknown>,
+  versionGuard?: string,
 ): D1PreparedStatementLike {
-  return db.prepare(`INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?)`)
-    .bind(crypto.randomUUID(), actorId, action, "users", userId, JSON.stringify(metadata), nowIso());
+  // A stale compare-and-swap must never write a misleading audit record.
+  const where=versionGuard?" WHERE "+hasUpdatedVersion:"";
+  const params=versionGuard?[userId,versionGuard]:[];
+  return db.prepare(`INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at)
+    SELECT ?,?,?,?,?,?,?${where}`)
+    .bind(crypto.randomUUID(), actorId, action, "users", userId, JSON.stringify(metadata), nowIso(), ...params);
 }
 
 function snapshotStatement(
@@ -81,9 +90,13 @@ function snapshotStatement(
   actorId: string,
   user: UserRow,
   roles: string[],
+  versionGuard?: string,
 ): D1PreparedStatementLike {
-  return db.prepare(`INSERT INTO cms_revisions(id,entity_type,entity_id,actor_user_id,snapshot_json,created_at) VALUES(?,?,?,?,?,?)`)
-    .bind(crypto.randomUUID(), "users", user.id, actorId, JSON.stringify({ ...user, roles }), nowIso());
+  const where=versionGuard?" WHERE "+hasUpdatedVersion:"";
+  const params=versionGuard?[user.id,versionGuard]:[];
+  return db.prepare(`INSERT INTO cms_revisions(id,entity_type,entity_id,actor_user_id,snapshot_json,created_at)
+    SELECT ?,?,?,?,?,?${where}`)
+    .bind(crypto.randomUUID(), "users", user.id, actorId, JSON.stringify({ ...user, roles }), nowIso(), ...params);
 }
 
 export async function GET(request:Request){try{const db=getDatabaseBinding();const actor=await requireNewsroomActor(request,db,CMS_ADMIN_ROLES);return Response.json({ok:true,actor,users:await listUsers(db),roles:CMS_ROLE_DEFINITIONS},{headers:noStore});}catch(error){return errorResponse(error);}}
@@ -129,15 +142,20 @@ export async function POST(request: Request) {
     const missing = roles.filter(role => !roleMap.has(role));
     if (missing.length) invalid(`USER_ROLE_NOT_SEEDED_${missing.join("_")}`);
 
-    const timestamp = nowIso();
+    let timestamp = nowIso();
     const entityId = id ?? crypto.randomUUID();
     const statements: D1PreparedStatementLike[] = [];
     let previousRoles: string[] = [];
     let revokeExistingSessions = false;
+    let guardedVersion: string | undefined;
 
     if (id) {
       const current = await db.prepare(`SELECT * FROM admin_users WHERE id=?`).bind(id).first<UserRow>();
       if (!current) invalid("USER_NOT_FOUND");
+      if(typeof body.updatedAt!=="string"||!body.updatedAt)invalid("USER_VERSION_REQUIRED");
+      if(body.updatedAt!==current.updated_at)invalid("USER_CONFLICT");
+      timestamp=nextUserTimestamp(current.updated_at);
+      guardedVersion=timestamp;
       const oldRoles = await db.prepare(`
         SELECT r.code FROM admin_user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=?
       `).bind(id).all<{ code: string }>();
@@ -151,17 +169,19 @@ export async function POST(request: Request) {
       const removesAdmin = current.is_active === 1 && previousRoles.includes("admin") && (!roles.includes("admin") || !isActive);
       if (removesAdmin && await countActiveAdmins(db, id) === 0) invalid("LAST_ACTIVE_ADMIN");
 
-      statements.push(snapshotStatement(db, actor.id, current, previousRoles));
       if (removesAdmin) {
         statements.push(db.prepare(`
           UPDATE admin_users SET email=?,display_name=?,
             is_active=CASE WHEN ${otherActiveAdminExists} THEN ? ELSE NULL END,
-            updated_at=? WHERE id=?
-        `).bind(email, displayName || null, id, isActive, timestamp, id));
+            updated_at=? WHERE id=? AND updated_at=?
+        `).bind(email, displayName || null, id, isActive, timestamp, id, current.updated_at));
       } else {
-        statements.push(db.prepare(`UPDATE admin_users SET email=?,display_name=?,is_active=?,updated_at=? WHERE id=?`)
-          .bind(email, displayName || null, isActive, timestamp, id));
+        statements.push(db.prepare(`UPDATE admin_users SET email=?,display_name=?,is_active=?,updated_at=? WHERE id=? AND updated_at=?`)
+          .bind(email, displayName || null, isActive, timestamp, id, current.updated_at));
       }
+      // A rejected CAS produces 0 changes. Every subsequent statement is
+      // guarded on the NEW version; stale requests have no side effects.
+      statements.push(snapshotStatement(db, actor.id, current, previousRoles, timestamp));
     } else {
       statements.push(
         db.prepare(`INSERT INTO admin_users(id,email,display_name,is_active,created_at,updated_at) VALUES(?,?,?,?,?,?)`)
@@ -171,24 +191,31 @@ export async function POST(request: Request) {
 
     if(revokeExistingSessions){
       // Same D1 transaction: privileges and all previously minted sessions change together.
-      statements.push(db.prepare("DELETE FROM iaict_auth_sessions WHERE user_id=?").bind(entityId));
+      statements.push(db.prepare(`DELETE FROM iaict_auth_sessions WHERE user_id=? AND ${hasUpdatedVersion}`).bind(entityId, entityId, guardedVersion));
       // Changed identity/role/status invalidates every outstanding activation link.
-      statements.push(db.prepare("DELETE FROM iaict_activation_invites WHERE user_id=?").bind(entityId));
+      statements.push(db.prepare(`DELETE FROM iaict_activation_invites WHERE user_id=? AND ${hasUpdatedVersion}`).bind(entityId, entityId, guardedVersion));
     }
-    statements.push(db.prepare(`DELETE FROM admin_user_roles WHERE user_id=?`).bind(entityId));
+    if (id) {
+      statements.push(db.prepare(`DELETE FROM admin_user_roles WHERE user_id=? AND ${hasUpdatedVersion}`)
+        .bind(entityId, entityId, guardedVersion));
+    } else {
+      statements.push(db.prepare("DELETE FROM admin_user_roles WHERE user_id=?").bind(entityId));
+    }
     for (const role of roles) {
-      statements.push(
-        db.prepare(`INSERT INTO admin_user_roles(user_id,role_id) VALUES(?,?)`)
-          .bind(entityId, roleMap.get(role)!),
-      );
+      statements.push(id
+        ? db.prepare(`INSERT INTO admin_user_roles(user_id,role_id) SELECT ?,? WHERE ${hasUpdatedVersion}`)
+            .bind(entityId, roleMap.get(role)!, entityId, guardedVersion)
+        : db.prepare("INSERT INTO admin_user_roles(user_id,role_id) VALUES(?,?)")
+            .bind(entityId, roleMap.get(role)!));
     }
     statements.push(auditStatement(db, actor.id, id ? "cms.user.update" : "cms.user.create",
-      entityId, { email, isActive: Boolean(isActive), roles, previousRoles }));
+      entityId, { email, isActive: Boolean(isActive), roles, previousRoles }, guardedVersion));
 
     // A single D1 batch runs as one transaction. If any role INSERT or audit
     // fails, previous roles, account data, and revision are rolled back.
-    await db.batch(statements);
-    return Response.json({ ok: true, id: entityId },{headers:noStore});
+    const results=await db.batch(statements);
+    if(Number(results[0]?.meta?.changes??0)!==1)invalid("USER_CONFLICT");
+    return Response.json({ ok: true, id: entityId, updatedAt: timestamp },{headers:noStore});
   } catch (error) {
     return userMutationError(error);
   }
@@ -206,6 +233,9 @@ export async function DELETE(request: Request) {
 
     const current = await db.prepare(`SELECT * FROM admin_users WHERE id=?`).bind(id).first<UserRow>();
     if (!current) invalid("USER_NOT_FOUND");
+    if(typeof body.updatedAt!=="string"||!body.updatedAt)invalid("USER_VERSION_REQUIRED");
+    if(body.updatedAt!==current.updated_at)invalid("USER_CONFLICT");
+    const nextVersion=nextUserTimestamp(current.updated_at);
 
     const roleRows = await db.prepare(`
       SELECT r.code FROM admin_user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=?
@@ -218,16 +248,17 @@ export async function DELETE(request: Request) {
     const disableStatement = removingActiveAdmin
       ? db.prepare(`UPDATE admin_users SET
           is_active=CASE WHEN ${otherActiveAdminExists} THEN 0 ELSE NULL END,
-          updated_at=? WHERE id=?`).bind(id, nowIso(), id)
-      : db.prepare(`UPDATE admin_users SET is_active=0,updated_at=? WHERE id=?`).bind(nowIso(), id);
-    await db.batch([
-      snapshotStatement(db, actor.id, current, roles),
+          updated_at=? WHERE id=? AND updated_at=?`).bind(id, nextVersion, id, current.updated_at)
+      : db.prepare(`UPDATE admin_users SET is_active=0,updated_at=? WHERE id=? AND updated_at=?`).bind(nextVersion, id, current.updated_at);
+    const results=await db.batch([
       disableStatement,
-      db.prepare("DELETE FROM iaict_auth_sessions WHERE user_id=?").bind(id),
-      db.prepare("DELETE FROM iaict_activation_invites WHERE user_id=?").bind(id),
-      auditStatement(db, actor.id, "cms.user.deactivate", id, { email: current.email, roles }),
+      snapshotStatement(db, actor.id, current, roles, nextVersion),
+      db.prepare(`DELETE FROM iaict_auth_sessions WHERE user_id=? AND ${hasUpdatedVersion}`).bind(id,id,nextVersion),
+      db.prepare(`DELETE FROM iaict_activation_invites WHERE user_id=? AND ${hasUpdatedVersion}`).bind(id,id,nextVersion),
+      auditStatement(db, actor.id, "cms.user.deactivate", id, { email: current.email, roles }, nextVersion),
     ]);
-    return Response.json({ ok: true },{headers:noStore});
+    if(Number(results[0]?.meta?.changes??0)!==1)invalid("USER_CONFLICT");
+    return Response.json({ ok: true, updatedAt: nextVersion },{headers:noStore});
   } catch (error) {
     return userMutationError(error);
   }
