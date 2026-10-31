@@ -99,7 +99,7 @@ Mọi kết quả kiểm thử khi báo cáo cho chủ dự án hoặc agent kh�
 
 Đặt `RUN-ID | Date UTC+07 | Git SHA | Worker version` trong dòng tiêu đề hoặc bảng metadata. Nếu không có ảnh, ghi `NOT_CAPTURED` hoặc `NO_IMAGE_REQUIRED`; không tự tạo liên kết. Với ca bị lỗi cần đường dẫn GitHub issue và thư mục ảnh riêng tư trên Drive. Phân biệt `unit/integration`, `mock browser`, `live-public`, `live-authenticated`; không được tổng hợp PASS của một lớp thành PASS của lớp khác.
 
-**Lưu ý:** Tài liệu Drive, bảng kiểm thử, ảnh/clip lỗi, hồ sơ phát triển vẫn được tạo/cập nhật bình thường; chỉ việc xuất **toàn bộ source code của dự án lên Drive** chờ lệnh `bàn giao` từ chủ dự án.
+**Lưu ý:** Tài liệu Drive, bảng kiểm thử, ảnh/clip lỗi, hồ sơ phát triển vẫn được tạo/cập nhật bình thường; **không chuyển bất kỳ source code hoặc bản sao mã nguồn nào lên Drive** cho đến khi chủ dự án nói rõ `bàn giao`; GitHub và những công việc khác vẫn tiếp tục bình thường.
 
 ## 8. Biểu mẫu test run
 
