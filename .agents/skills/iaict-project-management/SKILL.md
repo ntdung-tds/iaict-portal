@@ -71,6 +71,10 @@ When giving QA results, present a **Markdown table**, with one row per actual ch
 
 Continue normal Drive project management, documents, live QA evidence, test-account records, and GitHub development. **No source code, including individual source files, full archives, Git bundles or snapshots, may be uploaded to Google Drive until the owner explicitly says `bàn giao`.** This does not restrict ongoing GitHub commits, project documentation on Drive, QA evidence or normal staging work.
 
+## SRS freeze and per-component change records
+
+Read `docs/requirements/README.md` and `docs/requirements/SRS.md` before any feature change. SRS is a **frozen, not-yet-approved placeholder**. During active implementation, update only `docs/requirements/<module>/thaydoi.md` for every affected subsystem, with a CHG ID, rationale, before/after behavior, risk, PR/SHA and QA table/evidence. Do **not** change SRS until the owner explicitly **“chốt”** the appropriate requirements. When chốt occurs, start a separately reviewed, versioned SRS consolidation PR with exact change IDs. Never confuse chốt with **“bàn giao”**: the latter alone permits source-code transfer to Drive. Use `npm run verify:requirements` as a regression check; do not bypass it.
+
 ## D. Output format for agents
 
 Use the following concise deliverable layout, with actual proof:
