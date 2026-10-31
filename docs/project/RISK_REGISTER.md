@@ -13,6 +13,9 @@
 | RISK-007 | Release/migration mistake could affect production and D1 integrity | Separate production Worker and migration history | Immutable SHA, CI, staging-only, HOLD restore, rollback Worker/D1 bookmark | Engineering | OPEN |
 | RISK-008 | Lack of named decision authority / confirmed budget and dates could block scope and acceptance | Charter currently draft | Sponsor nominates accountable roles, budget, service objectives and sign-off procedure | IAICT Owner | OPEN |
 
+| RISK-009 | Enabling TOTP before at-rest encryption, atomic replay CAS and safe recovery may cause takeover or lockout | ADR-0002 MFA is PROPOSED; current code only pure RFC vectors | Keep Access; do not ship enrollment/login until encryption/throttle/recovery + staging tests PASS | Security + Engineering | OPEN |
+| RISK-010 | Final delivery could omit full source or contain unverifiable/unrestorable archive | Owner mandate 2026-10-31, Issue #38 | Mandatory SHA-pinned source archive, SHA256 manifest, Drive verification, isolated restore and owner sign-off | IAICT Owner + Engineering | OPEN |
+
 ## Open project decisions
 - DEC-001: APPROVAL PENDING — adopt Project Charter and RACI, name project lead and QA gate reviewer.
 - DEC-002: APPROVAL PENDING — when/if to use an organization Shared Drive; first design access partition for restricted assets.
