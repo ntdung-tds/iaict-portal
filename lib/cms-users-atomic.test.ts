@@ -11,6 +11,9 @@ import {
 import { GET, POST, DELETE } from "../app/api/admin/cms/users/route";
 import { setNativePassword, authenticateNativePassword, cookieForSession } from "./native-auth";
 import { GET as nativeSessionGET, POST as nativeSessionPOST } from "../app/api/auth/session/route";
+import { GET as securitySessionsGET, POST as securitySessionsPOST } from "../app/api/account/sessions/route";
+import { POST as activationAdminPOST } from "../app/api/admin/cms/activation/route";
+import { revokeNativeActivation } from "./native-activation";
 import { POST as nativeLogoutPOST } from "../app/api/auth/logout/route";
 
 vi.mock("./newsroom-auth", async (importOriginal) => {
@@ -538,5 +541,95 @@ describe("independent IAICT native session pilot (outside Access)", () => {
 
   it("does not support unsafe mutations through session-read endpoint", async () => {
     expect((await nativeSessionPOST()).status).toBe(405);
+  });
+});
+
+describe("IAM P0 — native self-service sessions and activation revocation",()=>{
+  async function tokenHash(token:string){
+    const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token));
+    return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");
+  }
+  function sessionRequest(method:"GET"|"POST",token?:string,body?:unknown,origin="https://qa.example.test"){
+    return new Request("https://qa.example.test/api/account/sessions",{
+      method,
+      headers:{
+        ...(token?{Cookie:"__Host-iaict_session="+token}:{}),
+        ...(method==="POST"?{Origin:origin,"Content-Type":"application/json"}:{}),
+      },
+      ...(method==="POST"?{body:JSON.stringify(body)}:{}),
+    });
+  }
+  it("counts other live sessions without exposing any session token or digest",async()=>{
+    globalThis.__IAICT_NATIVE_AUTH_ENABLED__=true;
+    const token="a".repeat(64);
+    const current=await tokenHash(token);
+    const other=await tokenHash("b".repeat(64));
+    sqlite.prepare("INSERT INTO iaict_auth_sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)")
+      .run(current,"qa-user",Date.now()-1000,Date.now()+60000);
+    sqlite.prepare("INSERT INTO iaict_auth_sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)")
+      .run(other,"qa-user",Date.now()-1000,Date.now()+60000);
+    const reply=await securitySessionsGET(sessionRequest("GET",token));
+    expect(reply.status).toBe(200);
+    const raw=await reply.text();
+    expect(JSON.parse(raw).otherActiveSessions).toBe(1);
+    expect(raw).not.toContain(token);
+    expect(raw).not.toContain(current);
+    expect(raw).not.toContain(other);
+    expect(reply.headers.get("cache-control")).toContain("no-store");
+  });
+  it("revokes only other live sessions and records one audit, not the current cookie",async()=>{
+    globalThis.__IAICT_NATIVE_AUTH_ENABLED__=true;
+    const token="c".repeat(64);
+    const current=await tokenHash(token);
+    const other=await tokenHash("d".repeat(64));
+    for (const hash of [current,other]) {
+      sqlite.prepare("INSERT INTO iaict_auth_sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)")
+        .run(hash,"qa-user",Date.now()-1000,Date.now()+60000);
+    }
+    const response=await securitySessionsPOST(sessionRequest("POST",token,{action:"revokeOthers"}));
+    expect(response.status).toBe(200);
+    expect((await response.json() as {revoked:number}).revoked).toBe(1);
+    const rows=sqlite.prepare("SELECT token_hash,revoked_at FROM iaict_auth_sessions WHERE user_id='qa-user'").all();
+    expect(rows.find(x=>x.token_hash===current)?.revoked_at).toBeNull();
+    expect(typeof rows.find(x=>x.token_hash===other)?.revoked_at).toBe("number");
+    expect((await securitySessionsGET(sessionRequest("GET",token))).status).toBe(200);
+    expect((await securitySessionsGET(sessionRequest("GET","d".repeat(64)))).status).toBe(401);
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM audit_logs WHERE action='auth.sessions.revoke_others'").get()?.n).toBe(1);
+  });
+  it("forbids missing or forged sessions, wrong Origin and invalid session operations",async()=>{
+    globalThis.__IAICT_NATIVE_AUTH_ENABLED__=true;
+    expect((await securitySessionsGET(sessionRequest("GET"))).status).toBe(401);
+    expect((await securitySessionsPOST(sessionRequest("POST","a".repeat(64),{action:"revokeOthers"},"https://evil.test"))).status).toBe(403);
+    expect((await securitySessionsPOST(sessionRequest("POST","a".repeat(64),{action:"revokeAll"}))).status).toBe(400);
+    expect((await securitySessionsPOST(sessionRequest("POST","a".repeat(64),{action:"revokeOthers"}))).status).toBe(401);
+    expect(counts()).toEqual({revisions:0,audits:0});
+  });
+  it("revokes an admin-issued invite with audit and a second request cannot replay it",async()=>{
+    globalThis.__IAICT_NATIVE_AUTH_ENABLED__=true;
+    const tokenHash="a".repeat(64);
+    sqlite.prepare("INSERT INTO iaict_activation_invites(user_id,token_hash,issued_by,issued_at,expires_at) VALUES(?,?,?,?,?)")
+      .run("qa-user",tokenHash,"qa-admin",Date.now()-1000,Date.now()+60000);
+    const make=()=>new Request("https://qa.example.test/api/admin/cms/activation",{
+      method:"POST",headers:{Origin:"https://qa.example.test","Content-Type":"application/json"},
+      body:JSON.stringify({id:"qa-user",action:"revoke"}),
+    });
+    const first=await activationAdminPOST(make());
+    expect(first.status).toBe(200);
+    const result=await first.text();
+    expect(JSON.parse(result).revoked).toBe(true);
+    expect(result).not.toContain(tokenHash);
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM iaict_activation_invites WHERE user_id='qa-user'").get()?.n).toBe(0);
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM audit_logs WHERE action='auth.activation.revoke'").get()?.n).toBe(1);
+    const second=await activationAdminPOST(make());
+    expect((await second.json() as {revoked:boolean}).revoked).toBe(false);
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM audit_logs WHERE action='auth.activation.revoke'").get()?.n).toBe(1);
+  });
+  it("failed audit rolls back invite removal entirely",async()=>{
+    sqlite.prepare("INSERT INTO iaict_activation_invites(user_id,token_hash,issued_by,issued_at,expires_at) VALUES(?,?,?,?,?)")
+      .run("qa-user","b".repeat(64),"qa-admin",Date.now()-1000,Date.now()+60000);
+    sqlite.exec("CREATE TRIGGER reject_revoke_audit BEFORE INSERT ON audit_logs WHEN NEW.action='auth.activation.revoke' BEGIN SELECT RAISE(ABORT,'injected audit failure'); END;");
+    await expect(revokeNativeActivation(adapter(sqlite),"qa-admin","qa-user")).rejects.toThrow();
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM iaict_activation_invites WHERE user_id='qa-user'").get()?.n).toBe(1);
+    expect(counts()).toEqual({revisions:0,audits:0});
   });
 });
