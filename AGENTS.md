@@ -37,6 +37,17 @@ Owner clarification 2026-10-31: full-source handover is DEFERRED. It must start 
 - Lệnh **“bàn giao”** hoàn toàn khác, chỉ cấp quyền đưa source code lên Drive; **không được suy ra từ “chốt”**. Các công việc phát triển và Drive tài liệu/test tiếp tục bình thường.
 - CI `npm run verify:requirements` sẽ chặn SRS khác với bản placeholder khóa và yêu cầu nhật ký khi PR thay code. Không tìm cách né chặn hoặc tự tạo phê duyệt.
 
+## Mandatory Checklist Moment — cross-chat continuity (all project work)
+**Owner instruction 2026-10-31:** every project/task batch must have a **Plan + Progress + Checklist Moment**. This requirement is an operating convention intended for reuse in other projects, not a claim that other repositories have already been modified.
+- **READ FIRST, before touching code or proposing the next task:** [live moment](docs/project/CHECKLIST_MOMENT.md), [latest immutable moment](docs/project/checklist-moments/), [plan](docs/project/PROJECT_PLAN.md), [progress](docs/project/PROJECT_PROGRESS.md), then actual PR HEAD, CI, QA run, staging/production runtime. New chat ≠ new project start.
+- **CHECKPOINT POINTER:** each moment has fixed checklist IDs and `[x] DONE / [ ] IN_PROGRESS / BLOCKED / NOT_STARTED / DEFERRED`. The current in-progress task MUST identify last verified **substep**, next substep, blocker/owner and proof. A scoped technical DONE is not full product/live acceptance.
+- **TIME HISTORY:** at each meaningful checkpoint (batch start/pause, blocked/unblocked, PR/test/deploy, end of chat) append a **NEW** timestamped markdown snapshot under `docs/project/checklist-moments/`; never rewrite prior snapshots. Update `CHECKLIST_MOMENT.md` live, then `PROJECT_PROGRESS.md`; update plan when scope/dependencies/priorities change. Prefer same PR with related implementation/test changes; if run ends unexpectedly, the last committed moment remains recoverable.
+- **EVIDENCE:** record immutable SHA, Worker version and environment, exact test case/Run ID, Drive evidence folder for photos, CI status at tested SHA; statuses PASS/BLOCKED/NOT_RUN remain distinct. Never count unrun QA cases as PASS or use a historical source SHA as current proof.
+- **GATES:** checklist save is not “chốt SRS”, “bàn giao”, production approval or authorization to remove Cloudflare Access. Source stays GitHub; private QA images and human-readable planning view stay Drive. Do not store secrets.
+- **REUSABILITY:** copy [generic template](docs/project/CHECKLIST_MOMENT_TEMPLATE.md) to a new project's own workspace. Every future project should start with this triad; do not assert it exists in a different repo before checking/creating it.
+- **Current checkpoint at first registration:** `CMS-08 / S2` (KDF staging compatibility plan), with QA IAM `CMS-06/07` BLOCKED and `CMS-09` R2 media NOT_STARTED; verify against newest moment before acting.
+
+
 ## Working method
 1. Confirm objective, boundaries, affected component, user value, project issue/requirement/ADR and baseline status. Group several **small related tasks**; split high-risk capabilities into separately tested stages.
 2. Find existing folders/files by their exact ID first, then by metadata search. Do not duplicate project roots or create a second QA evidence repository.
