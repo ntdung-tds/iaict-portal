@@ -23,6 +23,17 @@
 | 90 | Superseded/retired reviewed snapshots, not active working copies | [90_Archive](https://drive.google.com/drive/folders/1NJhNBcTW4c0vt2CVM4ap0u_vw7mJaTxo) | INTERNAL |
 | 99 | Intake for uncategorized incoming docs, requires owner & classification | [99_Inbox](https://drive.google.com/drive/folders/1dmXd-2xr3r4lZnSjXFkMs4g0s7OC36QM) | INTERNAL |
 
+## Living project-management documents (created and checked 2026-10-31)
+
+| ID | Document | Drive URL / location | Baseline |
+|---|---|---|---|
+| PM-INDEX-001 | Read first — master project navigation | [Google Doc](https://docs.google.com/document/d/1shehSFXogJqx7hhsIgYigU21IccifWx9ntybVUt3Rnk/edit?usp=drivesdk) in `00` | `docs/project/START_HERE.md` |
+| PM-GOV-001 | Project operating model, source-of-truth, RACI and controls | [Google Doc](https://docs.google.com/document/d/1Zaa7NCCiP1pMtTCdiuQJHtihN_EorY09NJlIwc3_Toc/edit?usp=drivesdk) in `01` | `docs/project/OPERATING_MODEL.md` |
+| AGENT-GUIDE-001 | Multi-agent instructions / reusable Skill guide | [Google Doc](https://docs.google.com/document/d/1IPioKWQJ1ruXpgdAhKk7gHf3ItGRfShZGQUjiOfXXmo/edit?usp=drivesdk) in `10` | `AGENTS.md`, `.agents/skills/iaict-project-management/SKILL.md` |
+| QA-PLAN-001 | Test management and 73 test cases | [Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) in `06` | `docs/qa/` |
+
+These Docs are **readable snapshots**, not auto-synchronized repositories. Their status is DRAFT/WORKING until an authorized owner records acceptance. Use exact file IDs and update the registry on relocation.
+
 ## Moved existing collections; IDs and permalinks deliberately preserved
 
 - QA screenshots and historical media: [IAICT Portal — Browser QA Screenshots](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) → `06`.
