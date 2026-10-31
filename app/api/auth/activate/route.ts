@@ -1,6 +1,6 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
 import { redeemNativeActivation } from "@/lib/native-activation";
-import { sameOriginPost, validPassword } from "@/lib/native-auth";
+import { acceptableNewPassword, sameOriginPost, validPassword } from "@/lib/native-auth";
 
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "no-store, private", "Vary": "Cookie",
@@ -26,6 +26,7 @@ export async function POST(request:Request) {
       return json({error:"Liên kết không hợp lệ hoặc đã hết hạn."},400);
     }
     if(!validPassword(password))return json({error:"Mật khẩu phải dài 8–128 ký tự."},400);
+    if(!acceptableNewPassword(password)) return json({error:"Mật khẩu quá phổ biến hoặc dễ đoán. Vui lòng chọn mật khẩu khác."},400);
     const ok=await redeemNativeActivation(getDatabaseBinding(),token,password);
     if(!ok)return json({error:"Liên kết không hợp lệ, đã sử dụng hoặc hết hạn."},410);
     return json({ok:true,loginUrl:"/login"},200);
