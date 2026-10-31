@@ -34,7 +34,7 @@
 
 ## Initial known baseline (historical snapshot, not live health)
 - Last **observed deployed staging feature**: SHA `2a76deb5642d6f60a89c894fa91c7c30a42953c8`, Worker `1b8cfe71-88ef-4e21-8937-4f8590daaba4` — IAM password check, sessions, invites. Verify runtime again before deployment.
-- Test catalog: 75 cases (2 new P0 requirements pending tests, 2026-10-31); earlier tested feature baseline had 526/526 Vitest PASS plus browser and staging acceptance. Historical `RUN-IAM-20261031-01` distinguishes PASS from BLOCKED and NOT_RUN.
+- Test catalog: 75 cases (one MFA primitive test, one final archive restore gate; 2026-10-31); earlier tested feature baseline had 526/526 Vitest PASS plus browser and staging acceptance. Historical `RUN-IAM-20261031-01` distinguishes PASS from BLOCKED and NOT_RUN.
 - This project folder/agent-governance PR **does not itself deploy** application changes.
 
 ## New team member or agent — first 5 minutes
