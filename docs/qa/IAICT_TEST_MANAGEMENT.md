@@ -79,6 +79,15 @@
 - Expected: A committed; B rejected; không có role/session/audit/revision thay đổi dở dang; UI B giữ draft và yêu cầu so sánh bản mới.
 - Evidence: GitHub CI URL tại run record; nếu kiểm thử trình duyệt cần hình, dùng thư mục MANUAL hoặc FAIL trong Drive; không dùng ảnh của người dùng thật.
 
+## Quy tắc trình bày kết quả kiểm thử cho chủ dự án (bắt buộc)
+**Mọi lần báo cáo kết quả kiểm thử cho người dùng phải có bảng**, không chỉ diễn giải bằng đoạn văn. Định dạng tối thiểu:
+
+| Test case / Run ID | Môi trường / Vai trò | Kết quả mong đợi | Kết quả thực tế | Trạng thái | Bằng chứng (CI, Drive) |
+|---|---|---|---|---|---|
+| IAM-... / RUN-... | Unit / Chromium mock / Staging public / Staging authenticated (Admin, Viewer, ...) | Dự kiến cụ thể | Thực tế quan sát; không suy đoán | PASS/FAIL/BLOCKED/NOT_RUN/N/A | Link đã xác minh hoặc NOT_CAPTURED |
+
+Bổ sung `SHA`, phiên bản Worker, ngày chạy, BUG ID, Drive folder/ảnh lỗi nếu phù hợp. Tách riêng kết quả tự động, trình duyệt mô phỏng, trình duyệt staging chưa đăng nhập và kiểm thử thật theo vai trò; một lớp PASS không thay cho lớp khác. Trong quản lý dự án, **chỉ việc xuất/đẩy toàn bộ source code lên Drive để bàn giao cần chờ câu lệnh rõ ràng “bàn giao”**; các hoạt động GitHub, staging, tài liệu Drive, quản lý testcase, ảnh test/bug, phân quyền QA đều tiếp tục như thông thường theo quy trình và quyền truy cập riêng.
+
 ## 8. Biểu mẫu test run
 
 ```
