@@ -1,0 +1,143 @@
+# IAICT Portal — Test Management Standard (QA Baseline v1.0)
+
+**Ngày tạo:** 2026-10-31 · **Môi trường:** staging trước production · **Phạm vi giai đoạn đầu:** IAM/CMS/Auth/Access/Release.
+**Đầu mối:** QA phối hợp Dev và chủ dự án. **Quyền sở hữu:** IAICT.
+**Bản Google Doc để IAICT cùng đọc/review:** [Master Test Plan + 78 Test Cases — IAM QA v1.2](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk). Bản này được đồng bộ thủ công theo mốc PR/release từ CSV; không tự cập nhật khi GitHub thay đổi.
+**Quy tắc đồng bộ bắt buộc:** mỗi khi thêm/sửa/xóa mã test case, cập nhật CSV trong PR, cập nhật nội dung Google Doc, kiểm tra lại tổng số và ID; ghi liên kết Google Doc trong PR và test run, không coi snapshot cũ là mới.
+**Test catalog (nguồn kiểm soát phiên bản):** [IAICT_TEST_CASES.csv](./IAICT_TEST_CASES.csv) — mã cố định, có điều kiện, dữ liệu tổng hợp, các bước và kết quả mong đợi.
+**Kết quả thực thi (append-only):** [IAICT_TEST_RUNS.md](./IAICT_TEST_RUNS.md). **Mẫu lỗi:** [IAICT_DEFECT_TEMPLATE.md](./IAICT_DEFECT_TEMPLATE.md).
+**Bằng chứng hình ảnh (private Google Drive, không phải GitHub):** [IAM P0 evidence](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), [PASS](https://drive.google.com/drive/folders/1W1HuaSxtaYMWxLDhdqy-U2HxX3jMlwfz), [FAIL/Defect](https://drive.google.com/drive/folders/1g50_0CJI3uoCNH2aAT5dBlKbyBPtsFln), [Manual/Recheck](https://drive.google.com/drive/folders/1wW6te40YqBwc3dJNMT40cnVESC11Iv5j).
+
+**Current document synchronization (2026-10-31):** living [78-case Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk), and [75-case Word v1.1 historical snapshot on Drive](https://docs.google.com/document/d/1gN3ECELzs48QKlGhRUGU8zj0B-Xh350J/edit?usp=drivesdk&ouid=115003313841764302454&rtpof=true&sd=true). 73-case v1.0 is superseded snapshot; retain for provenance. New RFC 6238 unit test status requires separate SHA-scoped CI result.
+
+**QA account registry and real-role acceptance (2026-10-31):** [8 staging role identities (RESTRICTED)](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit?usp=drivesdk), [role-based QA workflow](./IAICT_TEST_IDENTITIES.md) and [private Drive folder](https://drive.google.com/drive/folders/1q8-9hjgH_Rq9WKhv_rJpA1C3A8jB8lGO). All 8 fixture users are DISABLED without credentials/Access; run `RUN-IAM-20261031-03` records real browser /login PASS (form only), HTTP 429 BLOCKED for other paths and role authorization NOT_RUN. Current **78-case** source registry is the canonical baseline; [living Google Doc v1.2](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) and [Word snapshot 78 cases](https://docs.google.com/document/d/1bLQSwbFfaNjKmFIc39ijPOWnGCjZGrAy/edit?usp=drivesdk&ouid=115003313841764302454&rtpof=true&sd=true). Existing 73/75-case Word files remain historical.
+
+## 1. Mẫu quản lý và nguồn chuẩn
+
+Áp dụng mẫu nhẹ **ISO/IEC/IEEE 29119-3:2021-inspired**, phù hợp quy mô IAICT; đối chiếu kiểm thử bảo mật OWASP ASVS 5.0.0 (không tự nhận đạt chứng nhận hoặc bao phủ toàn bộ chuẩn). Quản lý năm thực thể độc lập:
+
+1. **Requirement** (`REQ-...`): đặc tả/quy định cần kiểm tra và PR/issue thay đổi.
+2. **Test Case** (`IAM-<AREA>-NNN`): mục tiêu, điều kiện, dữ liệu tổng hợp, thao tác, expected result và code/spec reference; không chứa kết quả PASS.
+3. **Test Run** (`RUN-IAM-YYYYMMDD-NN`): một lần thực hiện trên **SHA + Worker version + D1 migration + môi trường** cụ thể, người chạy, thời điểm, actual/status, link evidence và bug.
+4. **Defect** (`BUG-IAM-YYYYMMDD-NN`): kết quả thực tế khác expected; mức độ, bước tái hiện, SHA, môi trường, GitHub issue, Drive evidence, fix SHA, retest ID.
+5. **Evidence**: Google Drive riêng tư; hình/clip/ảnh lỗi chỉ là bằng chứng tương ứng với một run/case; không phải test case.
+
+**Nguồn chuẩn:** CSV + tiêu chuẩn này + test run/defect record trong GitHub. Bản Google Doc/Word dùng đọc và review; khi nội dung lệch nhau thì **file GitHub đã review theo PR là baseline**. Google Drive chỉ chứa QA media có thể được phép chia sẻ theo quyền. Không đưa token, cookie, session, password, thông tin cá nhân thật vào repo hoặc ảnh.
+
+## 2. Trạng thái không được trộn lẫn
+
+- `case_state=READY`: mô tả trường hợp kiểm thử đã viết; **không có nghĩa đã PASS**.
+- `case_state=PLANNED`: hệ thống/chức năng hoặc điều kiện test chưa đủ; không ghi PASS.
+- `automation=AUTO`: có file spec kiểm thử tự động liên quan, **không chứng nhận 1:1** nếu chưa gắn mã case vào test name; phải xác minh kết quả trên đúng SHA.
+- `automation=MANUAL`: cần người thực hiện trên môi trường/thiết bị ghi rõ, không thể suy diễn từ mock UI.
+- Trạng thái **mỗi lần chạy**: `NOT_RUN, PASS, FAIL, BLOCKED, NOT_APPLICABLE`; `RERUN` là run mới, không sửa/xóa run cũ.
+- Phân loại kết luận theo lớp: `unit/integration` (D1 mock/local), `browser` (Chromium với API stub hoặc local), `live-public` (staging chưa đăng nhập), `live-authenticated` (phiên được cấp phép), `manual`. Không thể dùng PASS một lớp để tuyên bố lớp khác PASS.
+
+## 3. Bộ dữ liệu / môi trường
+
+- Dùng email giả `*@example.test`, token giả và DB fixture riêng. Không bao giờ tạo/khóa tài khoản người dùng thật nhằm thử nghiệm.
+- Cloudflare Access vẫn bảo vệ `/admin`, `/admin/*`, `/api/admin`, `/api/admin/*` trên staging. Login native riêng chưa thay thế Access.
+- Test staging live ưu tiên READ-ONLY. Test mutation có tài khoản/fixture thí nghiệm riêng, kế hoạch hoàn tác, phê duyệt và người chịu trách nhiệm.
+- Ghi `commit SHA`, `Worker version`, D1 migration count, browser + phiên bản, viewport, timezone, ID của run/defect; không dùng chữ "mới nhất" làm định danh.
+- Khi Cloudflare Browser Rendering trả HTTP 429, đánh `BLOCKED` và ghi lý do; không coi là PASS.
+
+## 4. Tần suất test, yêu cầu cập nhật cùng thay đổi
+
+1. Khi có PR thay đổi `lib/native-*`, `app/api/auth`, `app/api/account`, `app/api/admin/cms`, `components/admin/user-management`, `lib/cms-roles`, `worker.ts`, `cloudflare/migrations`, `cloudflare.config.ts` hoặc luồng Release/Access: xác định mã REQ và test case bị ảnh hưởng; sửa/thêm test case **trong cùng PR** (nếu không cần sửa, ghi justification và liên kết case); bổ sung unit/browser test khi hợp lý.
+2. CI chạy `node scripts/verify-qa-registry.mjs` để kiểm tra format, mã duy nhất, trường bắt buộc, policy evidence Drive, đường dẫn spec có thật. CI không được giả vờ kiểm chứng PASS/FAIL của QA thủ công.
+3. Mỗi PR cần nêu: `Test case IDs`, `Test run ID`, changed behavior, regression suite, result, bug ID (nếu có), evidence folder, lý do SKIP/BLOCKED.
+4. Staging: CI green + pinned immutable SHA + read-only acceptance + D1/Access/rollback preflight; sau deploy readback Worker + D1 + Access. **Chỉ cập nhật record PASS sau khi thực hiện thành công**.
+5. Production: chỉ promote khi P0/P1 được phê duyệt, không còn defect critical/high mở, yêu cầu bảo mật (MFA/Recovery/permission gate) được nghiệm thu riêng; không tự merge/deploy.
+
+**Khi có phát hiện lỗi:** ghi FAIL vào run mới → tạo BUG và ảnh Drive FAIL → commit fix → rerun cùng case + tests hồi quy → record PASS của rerun nếu thực sự đạt; **không ghi đè FAIL gốc**.
+
+## 5. Test design và ma trận rủi ro
+
+- Phương pháp: positive/negative/boundary, equivalence partitions, state transition, concurrency/race, RBAC/IDOR, CSRF, token expiry/replay, denial of service, a11y/responsive, deployment/rollback.
+- **P0:** xác thực, cấp/thu hồi quyền, truy cập dữ liệu, phiên, invites, last-admin, D1 atomicity, Access, secrets, rollback.
+- **P1:** a11y, mobile, load, email deliverability, audit UI, organization scope; P2: enterprise SSO/SCIM.
+- OWASP ASVS 5.0.0 chỉ làm nguồn truy vết mức yêu cầu cho các kiểm thử security; không suy diễn rằng 526 Vitest bao phủ toàn bộ ASVS.
+
+## 6. Evidence protocol (không lưu hình lên GitHub)
+
+- Thư mục chính: https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp
+- PASS: https://drive.google.com/drive/folders/1W1HuaSxtaYMWxLDhdqy-U2HxX3jMlwfz
+- FAIL/Defect: https://drive.google.com/drive/folders/1g50_0CJI3uoCNH2aAT5dBlKbyBPtsFln
+- Manual/recheck: https://drive.google.com/drive/folders/1wW6te40YqBwc3dJNMT40cnVESC11Iv5j
+- Tên ảnh đề xuất: `RUN-IAM-YYYYMMDD-NN__IAM-AUTH-001__PASS__01.png`; lỗi: `BUG-IAM-YYYYMMDD-NN__IAM-USER-005__FAIL__01.png`.
+- Ảnh phải che password, cookie, bearer links, Access tokens, real email, IP/private info và khóa/tên tài khoản không phục vụ test. Không dán URL chứa fragment activation token vào ảnh.
+- Mỗi run record/bug record dẫn đến **đúng thư mục hoặc file ảnh** được Drive trả về, không tự bịa URL. Nếu chưa chụp/không có ảnh, ghi `NO_IMAGE_REQUIRED` hoặc `NOT_CAPTURED`; không phát minh bằng chứng.
+- Không bật screenshot/video/trace trong GitHub Actions để lưu ảnh. Test artifact văn bản gồm CI run URL, logs an toàn, và kết quả kiểm thử.
+
+## 7. Mẫu một test case có thể tái hiện
+
+**IAM-USER-005 | Two concurrent admin edits**
+- REQ: REQ-USER-CONFLICT; P0; integration; automation reference `lib/cms-users-atomic.test.ts`.
+- Preconditions: hai Admin A/B được phép; cùng nhận `updated_at` từ một bản ghi test; D1 test fixture.
+- Test data: email `qa-user@example.test`, version `v0`, A sửa `displayName`, B sửa `roles`.
+- Steps: (1) A/B cùng GET user; (2) A POST version v0 → 200; (3) B POST version v0 → 409; (4) GET D1 user/roles/audit/revisions/sessions.
+- Expected: A committed; B rejected; không có role/session/audit/revision thay đổi dở dang; UI B giữ draft và yêu cầu so sánh bản mới.
+- Evidence: GitHub CI URL tại run record; nếu kiểm thử trình duyệt cần hình, dùng thư mục MANUAL hoặc FAIL trong Drive; không dùng ảnh của người dùng thật.
+
+## Quy tắc trình bày kết quả kiểm thử cho chủ dự án (bắt buộc)
+**Mọi lần báo cáo kết quả kiểm thử cho người dùng phải có bảng**, không chỉ diễn giải bằng đoạn văn. Định dạng tối thiểu:
+
+| Test case / Run ID | Môi trường / Vai trò | Kết quả mong đợi | Kết quả thực tế | Trạng thái | Bằng chứng (CI, Drive) |
+|---|---|---|---|---|---|
+| IAM-... / RUN-... | Unit / Chromium mock / Staging public / Staging authenticated (Admin, Viewer, ...) | Dự kiến cụ thể | Thực tế quan sát; không suy đoán | PASS/FAIL/BLOCKED/NOT_RUN/N/A | Link đã xác minh hoặc NOT_CAPTURED |
+
+Bổ sung `SHA`, phiên bản Worker, ngày chạy, BUG ID, Drive folder/ảnh lỗi nếu phù hợp. Tách riêng kết quả tự động, trình duyệt mô phỏng, trình duyệt staging chưa đăng nhập và kiểm thử thật theo vai trò; một lớp PASS không thay cho lớp khác. Trong quản lý dự án, **chỉ việc xuất/đẩy toàn bộ source code lên Drive để bàn giao cần chờ câu lệnh rõ ràng “bàn giao”**; các hoạt động GitHub, staging, tài liệu Drive, quản lý testcase, ảnh test/bug, phân quyền QA đều tiếp tục như thông thường theo quy trình và quyền truy cập riêng.
+
+## 7A. Quy định bắt buộc: báo cáo kết quả bằng BẢNG
+
+Mọi kết quả kiểm thử khi báo cáo cho chủ dự án hoặc agent khác **phải trình bày bằng bảng**. Bảng không thay thế test run/defect record theo SHA mà là cách hiển thị thống nhất của những record đó.
+
+| Test ID | Nội dung | Môi trường / loại test | Vai trò | Kết quả mong đợi | Kết quả thực tế | Trạng thái | Evidence / Bug |
+|---|---|---|---|---|---|---|---|
+| IAM-AUTH-017 | QA đăng nhập thật | staging live-authenticated | QA role | Account đăng nhập hợp lệ | Chưa có danh tính Access và mật khẩu QA được phép | NOT_RUN | RUN-IAM-20261031-03 |
+| IAM-USER-017 | Ma trận phân quyền | staging live-authenticated | 7 roles | Đúng chính sách 200/403 | Chưa thực hiện login theo role | NOT_RUN | RUN-IAM-20261031-03 |
+
+Đặt `RUN-ID | Date UTC+07 | Git SHA | Worker version` trong dòng tiêu đề hoặc bảng metadata. Nếu không có ảnh, ghi `NOT_CAPTURED` hoặc `NO_IMAGE_REQUIRED`; không tự tạo liên kết. Với ca bị lỗi cần đường dẫn GitHub issue và thư mục ảnh riêng tư trên Drive. Phân biệt `unit/integration`, `mock browser`, `live-public`, `live-authenticated`; không được tổng hợp PASS của một lớp thành PASS của lớp khác.
+
+**Lưu ý:** Tài liệu Drive, bảng kiểm thử, ảnh/clip lỗi, hồ sơ phát triển vẫn được tạo/cập nhật bình thường; **không chuyển bất kỳ source code hoặc bản sao mã nguồn nào lên Drive** cho đến khi chủ dự án nói rõ `bàn giao`; GitHub và những công việc khác vẫn tiếp tục bình thường.
+
+## 8. Biểu mẫu test run
+
+```
+RUN-ID:
+Ngày UTC+7 / người thực hiện:
+Môi trường: unit / local-browser / staging-public / staging-auth / production-read-only
+Repo/branch + commit SHA:
+Cloudflare Worker version / D1 migration / browser + viewport:
+Case IDs và source suite:
+Prerequisites / Test data (synthetic):
+Observed actual results:
+Case verdict (PASS/FAIL/BLOCKED/NOT_APPLICABLE/NOT_RUN):
+CI workflow run URL:
+Evidence Drive folder / file URL (nếu có):
+Defect ID + GitHub issue URL (nếu có):
+Retest of RUN-ID:
+Approver / release decision:
+```
+
+## 9. Checklist trước khi đóng một release
+
+- [ ] 100% P0 liên quan có test case/coverage và actual run được ghi.
+- [ ] Không có P0 FAIL/BLOCKED bị ghi sai thành PASS; blocker có owner, ETA nội bộ và phương án khắc phục.
+- [ ] Unit/typecheck/build/browser/acceptance PASS trên SHA đã triển khai, hoặc exemption có ghi rõ.
+- [ ] Có bằng chứng Access và D1 integrity, không leak credentials, Build HOLD, production unchanged.
+- [ ] Đối chiếu runtime Worker version với commit và rollback target.
+- [ ] Test Run record + link evidence + defect/retest được commit; test catalog cập nhật đồng thời với code.
+
+## 9A. Cập nhật 31/10/2026 — MFA nền tảng và nghiệm thu bàn giao toàn bộ mã nguồn
+
+- **IAM-FUT-007**: test tự động RFC 6238 với `lib/totp.test.ts`; chỉ xác nhận primitive, chưa xác nhận đăng ký MFA, mã hóa dữ liệu hoặc đăng nhập MFA. Full enrollment `IAM-FUT-001` vẫn PLANNED.
+- **IAM-REL-008**: kiểm thử thủ công khôi phục nguồn **từ Drive**, so sánh SHA256, chạy build/tests và xác nhận bàn giao qua [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38). Chỉ sau khi chủ dự án yêu cầu rõ “bàn giao” mới chạy test này; trước đó giữ `PLANNED/NOT_RUN`, không PASS.
+- Bản Word v1.0 73 cases là lịch sử. Bản Google Doc v1.2/CSV 78 cases là bản đang sử dụng, chỉ được gọi đồng bộ sau khi đọc lại.
+
+## 10. Căn cứ chính
+
+- ISO/IEC/IEEE 29119-3:2021: https://www.iso.org/standard/79429.html
+- ISO/IEC/IEEE 29119 series: https://committee.iso.org/sites/jtc1sc7/home/projects/flagship-standards/isoiecieee-29119-series.html
+- OWASP ASVS 5.0.0: https://asvs.owasp.org/
+- Quy trình CI thực tế: `.github/workflows/ci.yml` và `.github/workflows/staging-acceptance.yml` trong repo IAICT.

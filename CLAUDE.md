@@ -1,0 +1,2 @@
+# IAICT Portal — Claude Code
+Read `AGENTS.md` (mandatory repository rules), then `.agents/skills/iaict-project-management/SKILL.md` and the linked references for Drive organization, development, QA and release. Use `docs/project/DRIVE_REGISTRY.md` for current Drive IDs. Source-of-truth: GitHub code/issues/test cases; Drive project master for approvals/docs/evidence. No production writes, Cloudflare Access changes, secret exposure, or GitHub screenshot uploads without applicable explicit authorization. Never claim tests or deployments that were not verified.

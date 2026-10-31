@@ -25,6 +25,8 @@ const fixedMessages: Record<string, string> = {
   CONFLICT: "Nội dung đã được người khác cập nhật sau khi bạn mở trang. Bản nháp của bạn vẫn được giữ; hãy tải lại dữ liệu để so sánh trước khi lưu.",
   REGISTRATION_DELETE_DISABLED: "Đăng ký khóa học không được xóa trực tiếp. Hãy cập nhật trạng thái thay vì xóa.",
 
+  USER_CONFLICT: "Người dùng này đã được quản trị viên khác cập nhật. Thay đổi chưa lưu của bạn vẫn còn; hãy kiểm tra bản mới nhất trước khi thực hiện lại.",
+  USER_VERSION_REQUIRED: "Thiếu phiên bản dữ liệu người dùng. Vui lòng tải lại trang rồi thử lại.",
   USER_EMAIL: "Vui lòng nhập địa chỉ email hợp lệ.",
   USER_ROLES: "Vui lòng chọn ít nhất một vai trò cho người dùng.",
   USER_ROLE_UNKNOWN: "Có vai trò không hợp lệ. Vui lòng chọn lại từ danh sách vai trò của hệ thống.",

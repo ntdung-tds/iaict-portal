@@ -313,22 +313,99 @@ test("public pages do not produce uncaught JavaScript exceptions in live Chromiu
   expect(errors, `uncaught exceptions: ${JSON.stringify(errors)}`).toEqual([]);
 });
 
-test("save public staging browser screenshots as reproducible visual evidence", async ({ page }) => {
-  const { mkdirSync } = await import("node:fs");
-  mkdirSync("browser-evidence/staging", { recursive: true });
-  for (const item of [
-    { route: "/", name: "home-desktop", width: 1440, height: 900 },
-    { route: "/", name: "home-mobile", width: 390, height: 844 },
-    { route: "/tin-tuc", name: "news-mobile", width: 390, height: 844 },
-    { route: "/tim-kiem?q=tram%20rung", name: "search-mobile", width: 390, height: 844 },
-    { route: "/lien-he", name: "contact-mobile", width: 390, height: 844 },
-  ]) {
-    await page.setViewportSize({ width: item.width, height: item.height });
-    const response = await page.goto(item.route, { waitUntil: "domcontentloaded" });
-    expect(response?.status()).toBeLessThan(400);
-    await expect(page.locator("#main-content")).toBeVisible();
-    if (item.route.startsWith("/tin-tuc")) await expect(page.locator('[data-public-news-state="ready"]')).toBeVisible();
-    if (item.route.startsWith("/tim-kiem")) await expect(page.locator(".public-search")).toHaveAttribute("data-ready", "true");
-    await page.screenshot({ path: `browser-evidence/staging/${item.name}.png`, animations: "disabled" });
+test("native IAICT login is publicly accessible on staging, mobile-responsive, and does not expose self-registration", async ({ page }) => {
+  for (const width of [320, 390, 768, 1440] as const) {
+    await page.setViewportSize({ width, height: 844 });
+    const response = await page.goto("/login", { waitUntil: "domcontentloaded" });
+    expect(response?.status(), "public IAICT login must not need Cloudflare Access").toBe(200);
+    await expect(page.getByRole("heading", { name: "Đăng nhập quản trị" })).toBeVisible();
+    await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Mật khẩu", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Đăng nhập", exact: true })).toBeVisible();
+    await expect(page.locator("form")).toHaveCount(1);
+    await expect(page.getByRole("link", { name: /đăng ký|register|sign up/i })).toHaveCount(0);
+    const bounds = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+    }));
+    expect(bounds.documentWidth, "IAICT login overflows at " + width + "px").toBeLessThanOrEqual(bounds.viewportWidth);
+  }
+});
+
+test("native login never exposes credentials via GET and bootstrap stays behind Access", async ({ request }) => {
+  const login = await request.get("/api/auth/login", { maxRedirects: 0 });
+  expect(login.status()).toBe(405);
+  expect(login.headers()["cache-control"]).toContain("no-store");
+  for (const path of ["/admin/security", "/api/admin/cms/auth-setup"] as const) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect([302, 303, 307, 308]).toContain(response.status());
+    expect(response.headers()["location"] ?? "").toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+  }
+});
+
+
+test("independent native session page on staging stays outside Access while admin remains protected", async ({ page, request }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const pageResponse = await page.goto("/account", { waitUntil: "domcontentloaded" });
+  expect(pageResponse?.status(), "native session account page should be public but identity-gated by D1").toBe(200);
+  await expect(page.getByRole("heading", { name: "Kiểm tra đăng nhập IAICT" })).toBeVisible();
+  await expect(page.getByText("Chưa đăng nhập IAICT hoặc phiên đã hết hạn.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Đăng nhập IAICT" })).toHaveAttribute("href", "/login");
+
+  const headerVariants: Array<Record<string, string>> = [{}, { "X-IAICT-Verified-Email": "fake@example.invalid" }, {
+    Cookie: "__Host-iaict_session=" + "a".repeat(64),
+  }];
+  for (const headers of headerVariants) {
+    const response = await request.get("/api/auth/session", { headers, maxRedirects: 0 });
+    expect(response.status()).toBe(401);
+    expect(response.headers()["cache-control"]).toContain("no-store");
+    const content = await response.text();
+    expect(content).not.toContain("fake@example.invalid");
+  }
+
+  const adminResponse = await request.get("/api/admin/cms/session", { maxRedirects: 0 });
+  expect([302, 303, 307, 308]).toContain(adminResponse.status());
+  expect(adminResponse.headers()["location"] ?? "").toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+});
+
+test("live native activation keeps the token out of GET requests and blocks anonymous administration", async ({ page, request }) => {
+  const root = "https://iaict-portal-staging.iaict-platform.workers.dev";
+  // These are read-only probes. No account, invitation or credential is created.
+  for (const path of ["/api/auth/activate", "/api/account/password"]) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect(response.status(), path + " must reject GET").toBe(405);
+    expect(response.headers()["cache-control"]).toContain("no-store");
+  }
+  for (const path of ["/api/admin/cms/activation", "/admin/users"]) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect([302,303,307,308], path + " must remain behind Access").toContain(response.status());
+    expect(response.headers()["location"] ?? "").toMatch(new RegExp("cloudflareaccess[.]com|/cdn-cgi/access/login", "i"));
+  }
+  const invalid = await request.get("/api/auth/session", { maxRedirects: 0 });
+  expect(invalid.status()).toBe(401);
+  for (const width of [320,390] as const) {
+    await page.setViewportSize({width,height:844});
+    // Ensure a fresh document load for each width; separate local E2E tests
+    // cover same-tab hashchange behavior in the candidate build.
+    await page.goto("/login", {waitUntil:"domcontentloaded"});
+    const fakeFragment="f".repeat(64);
+    const observed: string[] = [];
+    page.on("request", req => {
+      if (new URL(req.url()).pathname === "/activate") observed.push(req.url());
+    });
+    // Browser history.replaceState() strips the fragment during navigation.
+    // Playwright may return null for this same-document navigation: verify the
+    // network response independently and assert hydrated DOM separately.
+    const documentResponse=await request.get("/activate", {maxRedirects:0});
+    expect(documentResponse.status()).toBe(200);
+    await page.goto("/activate#token="+fakeFragment, {waitUntil:"domcontentloaded"});
+    await expect(page.getByRole("heading",{name:"Kích hoạt tài khoản IAICT"})).toBeVisible();
+    await expect(page.getByLabel("Mật khẩu mới")).toBeVisible();
+    await expect(page).toHaveURL(root+"/activate");
+    expect(observed.every(url=>!url.includes(fakeFragment))).toBe(true);
+    const size=await page.evaluate(()=>({
+      viewport:innerWidth, documentWidth:document.documentElement.scrollWidth,
+    }));
+    expect(size.documentWidth).toBeLessThanOrEqual(size.viewport);
   }
 });

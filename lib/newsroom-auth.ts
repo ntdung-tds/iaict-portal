@@ -1,4 +1,5 @@
 import type { D1DatabaseLike } from "./cloudflare-db";
+import { NATIVE_VERIFIED_EMAIL_HEADER } from "./native-auth";
 import { CMS_ROLE_CODES, isCmsRoleCode, type CmsRoleCode } from "./cms-roles";
 
 export type NewsroomRole = CmsRoleCode;
@@ -40,11 +41,13 @@ export async function requireNewsroomActor(
   db: D1DatabaseLike,
   allowedRoles: readonly NewsroomRole[],
 ): Promise<NewsroomActor> {
-  const email = request.headers.get("Cf-Access-Authenticated-User-Email")?.trim();
+  const nativeEmail = request.headers.get(NATIVE_VERIFIED_EMAIL_HEADER)?.trim();
+  const accessEmail = request.headers.get("Cf-Access-Authenticated-User-Email")?.trim();
   const assertion = request.headers.get("Cf-Access-Jwt-Assertion")?.trim();
-
-  if (!email || !assertion) {
-    throw new NewsroomAuthError(401, "Cloudflare Access authentication required");
+  // Worker ingress strips and reissues the native header only after D1 session verification.
+  const email = nativeEmail || accessEmail;
+  if (!email || (!nativeEmail && !assertion)) {
+    throw new NewsroomAuthError(401, "Authentication required");
   }
 
   const row = await db
