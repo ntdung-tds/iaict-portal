@@ -1,6 +1,6 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
 import {
-  clearSessionCookie, nativeActorEmail, sameOriginPost, setNativePassword, validPassword,
+  acceptableNewPassword, clearSessionCookie, nativeActorEmail, sameOriginPost, setNativePassword, validPassword,
 } from "@/lib/native-auth";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +45,9 @@ export async function POST(request: Request) {
       typeof body.currentPassword !== "string" ||
       !validPassword(body.currentPassword)) {
     return json({ error: "Mật khẩu hiện tại và mật khẩu mới phải dài 8–128 ký tự." }, 400);
+  }
+  if (!acceptableNewPassword(body.password)) {
+    return json({error:"Mật khẩu mới quá phổ biến hoặc dễ đoán. Vui lòng chọn mật khẩu khác."},400);
   }
   if (body.password === body.currentPassword) {
     return json({ error: "Mật khẩu mới phải khác mật khẩu hiện tại." }, 400);
