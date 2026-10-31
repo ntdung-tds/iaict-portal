@@ -26,6 +26,8 @@ jobs:
         run: node scripts/verify-migrations.mjs
       - name: Verify QA catalog, case links and PR change impact
         run: npm run verify:qa
+      - name: Verify multi-agent instructions and portable Skill
+        run: npm run verify:agent-skill
       - name: Reject unsafe staging release and GitHub QA uploads
         run: npm run verify:release-safety
       - name: Verify immutable approved SHA and Worker/D1 rollback negative cases
