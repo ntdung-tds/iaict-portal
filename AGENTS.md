@@ -19,6 +19,9 @@
 - Never claim PASS for tests that did not run, or for mocked-browser tests as a substitute for authenticated live staging. Preserve BLOCKED and NOT_RUN statuses.
 - Do not change folder sharing, delete/move large sets, set retention policies, modify external accounts, or publish sensitive content without a specific task and permission check.
 
+## Mandatory final full-source backup to Google Drive
+The IAICT owner explicitly requires that **at project completion the ENTIRE project INCLUDING CODE** be uploaded to the private Drive Project Master. [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) is a release-blocking requirement. Destination [FINAL_HANDOFF](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ). Follow `docs/project/FINAL_HANDOFF_PLAN.md`; archive the exact approved release SHA and approved documentation, include manifest+SHA256, remove secrets/PII, verify upload/download and **clean restore from Drive**. Get human sign-off. A folder alone is not a backup. Do NOT declare project COMPLETE before this gate closes. This is a future completion action; never claim the final archive exists while work remains ongoing.
+
 ## Working method
 1. Confirm objective, boundaries, affected component, user value, project issue/requirement/ADR and baseline status. Group several **small related tasks**; split high-risk capabilities into separately tested stages.
 2. Find existing folders/files by their exact ID first, then by metadata search. Do not duplicate project roots or create a second QA evidence repository.
