@@ -72,7 +72,9 @@ export async function redeemNativeActivation(
   // The indexed preflight is only an optimization. The atomic D1 batch below
   // MUST re-check expiration/consumption/user state to defeat concurrent use.
   const credential = await createPasswordHash(password);
-  const createdAt = new Date(now).toISOString();
+  // Expiration must also hold at commit time, not only before PBKDF2 work.
+  const commitNow = Date.now();
+  const createdAt = new Date(commitNow).toISOString();
   const currentCredential = "EXISTS(SELECT 1 FROM iaict_password_credentials_v2 c " +
     "WHERE c.user_id=i.user_id AND c.salt=? AND c.password_hash=? AND c.iterations=?)";
   const results = await db.batch([
@@ -86,17 +88,17 @@ export async function redeemNativeActivation(
       "AND EXISTS(SELECT 1 FROM admin_user_roles r WHERE r.user_id=u.id) " +
       "AND NOT EXISTS(SELECT 1 FROM iaict_password_credentials_v2 c WHERE c.user_id=u.id) " +
       "ON CONFLICT(user_id) DO NOTHING",
-    ).bind(credential.salt, credential.hash, credential.iterations, createdAt, tokenHash, now, now),
+    ).bind(credential.salt, credential.hash, credential.iterations, createdAt, tokenHash, commitNow, commitNow),
     db.prepare(
       "UPDATE iaict_activation_invites AS i SET consumed_at=? WHERE token_hash=? " +
       "AND consumed_at IS NULL AND " + currentCredential,
-    ).bind(now, tokenHash, credential.salt, credential.hash, credential.iterations),
+    ).bind(commitNow, tokenHash, credential.salt, credential.hash, credential.iterations),
     db.prepare(
       "INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at) " +
       "SELECT ?,i.user_id,'auth.activation.redeem','admin_users',i.user_id,'{}',? " +
       "FROM iaict_activation_invites i WHERE i.token_hash=? " +
       "AND i.consumed_at=? AND " + currentCredential,
-    ).bind(crypto.randomUUID(), createdAt, tokenHash, now,
+    ).bind(crypto.randomUUID(), createdAt, tokenHash, commitNow,
       credential.salt, credential.hash, credential.iterations),
   ]);
   return Number(results[0]?.meta?.changes ?? 0) === 1 &&
