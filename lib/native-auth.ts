@@ -96,6 +96,24 @@ export async function nativeActorEmail(request: Request, db: D1DatabaseLike): Pr
   ).bind(hash, Date.now()).first<{email: string}>();
   return row?.email ?? null;
 }
+/** Internal-only identity for native self-service session operations.
+ * The SHA-256 token digest MUST NOT be sent to the browser or logs.
+ */
+export async function nativeSessionPrincipal(request: Request, db: D1DatabaseLike):
+  Promise<{userId:string;email:string;tokenHash:string}|null> {
+  const token=cookieToken(request);
+  if(!token)return null;
+  const tokenHash=await sha256(token);
+  const user=await db.prepare(
+    "SELECT u.id AS userId,u.email FROM iaict_auth_sessions s " +
+    "JOIN admin_users u ON u.id=s.user_id " +
+    "WHERE s.token_hash=? AND s.revoked_at IS NULL AND s.expires_at>? " +
+    "AND u.is_active=1 AND EXISTS(SELECT 1 FROM admin_user_roles r WHERE r.user_id=u.id) " +
+    "LIMIT 1",
+  ).bind(tokenHash,Date.now()).first<{userId:string;email:string}>();
+  return user?{...user,tokenHash}:null;
+}
+
 export async function revokeNativeSession(request: Request, db: D1DatabaseLike) {
   const token = cookieToken(request);
   if (token) {
