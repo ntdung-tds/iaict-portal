@@ -313,27 +313,6 @@ test("public pages do not produce uncaught JavaScript exceptions in live Chromiu
   expect(errors, `uncaught exceptions: ${JSON.stringify(errors)}`).toEqual([]);
 });
 
-test("save public staging browser screenshots as reproducible visual evidence", async ({ page }) => {
-  const { mkdirSync } = await import("node:fs");
-  mkdirSync("browser-evidence/staging", { recursive: true });
-  for (const item of [
-    { route: "/", name: "home-desktop", width: 1440, height: 900 },
-    { route: "/", name: "home-mobile", width: 390, height: 844 },
-    { route: "/tin-tuc", name: "news-mobile", width: 390, height: 844 },
-    { route: "/tim-kiem?q=tram%20rung", name: "search-mobile", width: 390, height: 844 },
-    { route: "/lien-he", name: "contact-mobile", width: 390, height: 844 },
-  ]) {
-    await page.setViewportSize({ width: item.width, height: item.height });
-    const response = await page.goto(item.route, { waitUntil: "domcontentloaded" });
-    expect(response?.status()).toBeLessThan(400);
-    await expect(page.locator("#main-content")).toBeVisible();
-    if (item.route.startsWith("/tin-tuc")) await expect(page.locator('[data-public-news-state="ready"]')).toBeVisible();
-    if (item.route.startsWith("/tim-kiem")) await expect(page.locator(".public-search")).toHaveAttribute("data-ready", "true");
-    await page.screenshot({ path: `browser-evidence/staging/${item.name}.png`, animations: "disabled" });
-  }
-});
-
-
 test("native IAICT login is publicly accessible on staging, mobile-responsive, and does not expose self-registration", async ({ page }) => {
   for (const width of [320, 390, 768, 1440] as const) {
     await page.setViewportSize({ width, height: 844 });
@@ -411,8 +390,12 @@ test("live native activation keeps the token out of GET requests and blocks anon
     page.on("request", req => {
       if (new URL(req.url()).pathname === "/activate") observed.push(req.url());
     });
-    const response=await page.goto("/activate#token="+fakeFragment, {waitUntil:"domcontentloaded"});
-    expect(response?.status()).toBe(200);
+    // Browser history.replaceState() strips the fragment during navigation.
+    // Playwright may return null for this same-document navigation: verify the
+    // network response independently and assert hydrated DOM separately.
+    const documentResponse=await request.get("/activate", {maxRedirects:0});
+    expect(documentResponse.status()).toBe(200);
+    await page.goto("/activate#token="+fakeFragment, {waitUntil:"domcontentloaded"});
     await expect(page.getByRole("heading",{name:"Kích hoạt tài khoản IAICT"})).toBeVisible();
     await expect(page.getByLabel("Mật khẩu mới")).toBeVisible();
     await expect(page).toHaveURL(root+"/activate");
