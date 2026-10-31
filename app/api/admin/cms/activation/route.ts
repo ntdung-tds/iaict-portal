@@ -1,7 +1,7 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
 import { CMS_ADMIN_ROLES } from "@/lib/cms-roles";
 import { NewsroomAuthError, requireNewsroomActor } from "@/lib/newsroom-auth";
-import { issueNativeActivation } from "@/lib/native-activation";
+import { issueNativeActivation, revokeNativeActivation } from "@/lib/native-activation";
 import { sameOriginPost } from "@/lib/native-auth";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +27,12 @@ export async function POST(request: Request) {
     if (!body || typeof body!=="object" || Array.isArray(body)) return json({error:"Dữ liệu không hợp lệ."},400);
     const id=(body as Record<string,unknown>).id;
     if (typeof id!=="string" || !id.trim() || id.length>128) return json({error:"Tài khoản không hợp lệ."},400);
+    const action=(body as Record<string,unknown>).action;
+    if(action==="revoke"){
+      const revoked=await revokeNativeActivation(db,actor.id,id.trim());
+      return json({ok:true,revoked},200);
+    }
+    if(action!==undefined)return json({error:"Hành động không hợp lệ."},400);
     const activation=await issueNativeActivation(db,actor.id,id.trim());
     // One-time bearer link is returned only to the verified administrator.
     // Fragment prevents token transmission in the GET request or referer.
