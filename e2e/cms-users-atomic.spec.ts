@@ -144,6 +144,8 @@ test("native login checks a separate private session page instead of redirecting
   await page.goto("/login");
   await page.getByLabel("Email", { exact:true }).fill("qa-admin@example.test");
   await page.getByLabel("Mật khẩu", { exact:true }).fill("S3cure!!8");
+  const formValid = await page.locator("form").evaluate(node => (node as HTMLFormElement).checkValidity());
+  expect(formValid, "browser-native HTML constraints must allow submitting the test account").toBe(true);
   const loginPost = page.waitForResponse(response => response.url().endsWith("/api/auth/login") && response.request().method() === "POST");
   await page.getByRole("button", { name:"Đăng nhập", exact:true }).click();
   expect((await loginPost).status()).toBe(200);
