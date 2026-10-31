@@ -36,11 +36,11 @@
 | PM-PROGRESS-001 | Evidence-based milestone and test progress — WORKING | [Canonical GitHub progress](PROJECT_PROGRESS.md) | `docs/project/PROJECT_PROGRESS.md` |
 | RISK-REG-001 | Risks, contingencies and open owner decisions — WORKING | [Google Doc](https://docs.google.com/document/d/1p4qDFDH8qFi6Lq-fOw7b_3Xc4jSqaA4ct6LAXuaaqas/edit?usp=drivesdk) in `02` | `docs/project/RISK_REGISTER.md` |
 | AGENT-GUIDE-001 | Multi-agent instructions / reusable Skill guide | [Google Doc](https://docs.google.com/document/d/1IPioKWQJ1ruXpgdAhKk7gHf3ItGRfShZGQUjiOfXXmo/edit?usp=drivesdk) in `10` | `AGENTS.md`, `.agents/skills/iaict-project-management/SKILL.md` |
-| QA-PLAN-001 | Test management and 73 test cases | [Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) in `06` | `docs/qa/` |
+| QA-PLAN-001 | Test management and 78 test cases | [Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) in `06` | `docs/qa/` |
 
 These Docs are **readable snapshots**, not auto-synchronized repositories. Their status is DRAFT/WORKING until an authorized owner records acceptance. Use exact file IDs and update the registry on relocation.
 
-**Current QA snapshots as of 2026-10-31:** [living 75-case v1.1 Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) + [Word v1.1 exported and uploaded to QA Documentation](https://docs.google.com/document/d/1gN3ECELzs48QKlGhRUGU8zj0B-Xh350J/edit?usp=drivesdk&ouid=115003313841764302454&rtpof=true&sd=true). Previous 73-case v1.0 Word retained as historical snapshot and must not be mistaken for current baseline.
+**Current QA snapshots as of 2026-10-31:** [living 78-case IAM v1.2 Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) + [78-case Word v1.2 stored in QA Documentation](https://docs.google.com/document/d/1bLQSwbFfaNjKmFIc39ijPOWnGCjZGrAy/edit?usp=drivesdk). Earlier 73/75-case Word files remain historical snapshots and must not be mistaken for the current registry.
 
 ## Moved existing collections; IDs and permalinks deliberately preserved
 
