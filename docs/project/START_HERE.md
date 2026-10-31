@@ -10,6 +10,7 @@
 ## Where things live
 | Purpose | Go to |
 |---|---|
+| Final project source-code handover — required on completion | [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) · [Archive plan](./FINAL_HANDOFF_PLAN.md) · [Drive FINAL_HANDOFF](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ) (PENDING) |
 | Project home / folder IDs | [Drive Registry](./DRIVE_REGISTRY.md) |
 | Scope, governance, RACI, workflow, risks | [Operating Model](./OPERATING_MODEL.md) |
 | Project Charter — DRAFT, sponsor approval pending | [Charter](./PROJECT_CHARTER_DRAFT.md) · [Drive Doc](https://docs.google.com/document/d/1NHgTtMGGvan4rrDXMuGQRUb2bCmAX2gDMctG96q-7I4/edit?usp=drivesdk) |
@@ -17,7 +18,7 @@
 | Agent onboarding living Google Doc | [Agent Instructions / Skill Guide](https://docs.google.com/document/d/1IPioKWQJ1ruXpgdAhKk7gHf3ItGRfShZGQUjiOfXXmo/edit?usp=drivesdk) |
 | Agent and developer guardrails | [AGENTS.md](../../AGENTS.md) |
 | AI multi-agent skill | [IAICT Skill](../../.agents/skills/iaict-project-management/SKILL.md) |
-| Test plan and test case registry | [QA Standard](../qa/IAICT_TEST_MANAGEMENT.md), [73 test cases](../qa/IAICT_TEST_CASES.csv) |
+| Test plan and test case registry | [QA Standard](../qa/IAICT_TEST_MANAGEMENT.md), [75 test cases](../qa/IAICT_TEST_CASES.csv) |
 | Append-only verification results | [QA Run Ledger](../qa/IAICT_TEST_RUNS.md) |
 | Live review-friendly Google Doc | https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk |
 | QA screenshots and error photos | [Drive QA collection](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
@@ -33,7 +34,7 @@
 
 ## Initial known baseline (historical snapshot, not live health)
 - Last **observed deployed staging feature**: SHA `2a76deb5642d6f60a89c894fa91c7c30a42953c8`, Worker `1b8cfe71-88ef-4e21-8937-4f8590daaba4` — IAM password check, sessions, invites. Verify runtime again before deployment.
-- Test catalog: 73 cases; earlier tested feature baseline had 526/526 Vitest PASS plus browser and staging acceptance. Historical `RUN-IAM-20261031-01` distinguishes PASS from BLOCKED and NOT_RUN.
+- Test catalog: 75 cases (2 new P0 requirements pending tests, 2026-10-31); earlier tested feature baseline had 526/526 Vitest PASS plus browser and staging acceptance. Historical `RUN-IAM-20261031-01` distinguishes PASS from BLOCKED and NOT_RUN.
 - This project folder/agent-governance PR **does not itself deploy** application changes.
 
 ## New team member or agent — first 5 minutes
