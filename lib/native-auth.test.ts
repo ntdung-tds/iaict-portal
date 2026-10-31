@@ -4,7 +4,7 @@ import {
   PBKDF2_ITERATIONS, NATIVE_COOKIE, NATIVE_VERIFIED_EMAIL_HEADER,
   clearSessionCookie, cookieForSession, createPasswordHash,
   nativeActorEmail, nativeAuthEnabled, normalizeLoginEmail, sameOriginPost,
-  validPassword, verifyPasswordHash,
+  validPassword, verifyPasswordHash, authenticateNativePassword, setNativePassword,
 } from "./native-auth";
 
 describe("IAICT native authentication: cryptography and boundary guards", () => {
@@ -76,5 +76,78 @@ describe("IAICT native authentication: cryptography and boundary guards", () => 
     expect(bindValues[0]).toMatch(/^[a-f0-9]{64}$/);
     expect(bindValues[0]).not.toBe("b".repeat(64));
     expect(await nativeActorEmail(new Request(request.url,{headers:{[NATIVE_VERIFIED_EMAIL_HEADER]:"attacker@example.com"}}),db)).toBeNull();
+  });
+});
+
+describe("D1 compare-and-swap race protection for native credentials", () => {
+  it("rejects stale concurrent password rotation without unconditionally revoking sessions", async () => {
+    const oldPassword = "Known-Old-Pass-2026";
+    const old = await createPasswordHash(oldPassword);
+    const prepared: Array<{ sql: string; values: unknown[] }> = [];
+    const db: D1DatabaseLike = {
+      prepare(sql) {
+        const item = { sql, values: [] as unknown[] };
+        prepared.push(item);
+        const statement: D1PreparedStatementLike = {
+          bind(...values) { item.values = values; return statement; },
+          async first<T>() {
+            if (sql.startsWith("SELECT salt,password_hash,iterations FROM iaict_password_credentials_v2")) {
+              return { salt: old.salt, password_hash: old.hash, iterations: old.iterations } as T;
+            }
+            throw new Error("Unexpected query: " + sql);
+          },
+          async all<T>() { return { results: [] as T[] }; },
+          async run() { throw new Error("Only atomic batch writes allowed"); },
+        };
+        return statement;
+      },
+      async batch(statements) {
+        expect(statements).toHaveLength(3);
+        const queries = prepared.slice(-3).map(value => value.sql);
+        expect(queries[0]).toContain("WHERE user_id=? AND salt=? AND password_hash=?");
+        expect(queries[0]).toContain("is_active=1");
+        expect(queries[1]).toContain("AND EXISTS");
+        expect(queries[2]).toContain("WHERE EXISTS");
+        // Simulate a newer credential winning the race before this D1 batch.
+        return [{meta:{changes:0}},{meta:{changes:0}},{meta:{changes:0}}];
+      },
+    };
+    await expect(setNativePassword(db,
+      {id:"test-user",email:"test@example.test"}, "New-Pass-2026", oldPassword,
+    )).rejects.toThrow("PASSWORD_CHANGE_CONFLICT");
+  });
+
+  it("does not mint a live session when password rotated during hash verification", async () => {
+    const original = await createPasswordHash("Old-Pass-2026");
+    const statements: string[] = [];
+    const db: D1DatabaseLike = {
+      prepare(sql) {
+        statements.push(sql);
+        const stmt: D1PreparedStatementLike = {
+          bind() { return stmt; },
+          async first<T>() {
+            if (sql.startsWith("SELECT blocked_until")) return null;
+            if (sql.includes("JOIN iaict_password_credentials_v2")) {
+              return { id:"user-id",salt:original.salt,
+                password_hash:original.hash,iterations:original.iterations } as T;
+            }
+            throw new Error("Unexpected query: " + sql);
+          },
+          async all<T>() {return {results:[] as T[]};},
+          async run() {throw new Error("Batch expected");},
+        };
+        return stmt;
+      },
+      async batch() {
+        // Login attempt cleanup succeeds; stale credential-guarded insert makes
+        // no rows, so the returned token must NOT be treated as an active session.
+        return [{meta:{changes:1}},{meta:{changes:0}}];
+      },
+    };
+    expect(await authenticateNativePassword(db,"test@example.test","Old-Pass-2026")).toBeNull();
+    const guardedInsert = statements.find(q=>q.includes("INSERT INTO iaict_auth_sessions"));
+    expect(guardedInsert).toContain("c.password_hash=?");
+    expect(guardedInsert).toContain("c.salt=?");
+    expect(guardedInsert).toContain("admin_user_roles");
   });
 });
