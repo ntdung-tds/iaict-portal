@@ -127,10 +127,11 @@ test("shows native password readiness and lets admin revoke user sessions", asyn
 
 
 test("native login checks a separate private session page instead of redirecting to Cloudflare Access", async ({ page }) => {
+  let submittedLogin: {email:string;password:string} | null = null;
   await page.route("**/api/auth/login", async route => {
     if (route.request().method() === "POST") {
       const submitted = route.request().postDataJSON() as {email:string;password:string};
-      expect(submitted).toEqual({email:"qa-admin@example.test",password:"S3cure!!8"});
+      submittedLogin = submitted;
       await route.fulfill({ json: { ok:true }, headers: {"Cache-Control":"no-store"} });
       return;
     }
@@ -146,6 +147,7 @@ test("native login checks a separate private session page instead of redirecting
   const loginPost = page.waitForResponse(response => response.url().endsWith("/api/auth/login") && response.request().method() === "POST");
   await page.getByRole("button", { name:"Đăng nhập", exact:true }).click();
   expect((await loginPost).status()).toBe(200);
+  expect(submittedLogin).toEqual({email:"qa-admin@example.test",password:"S3cure!!8"});
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByText("Phiên đăng nhập IAICT đã được xác minh.")).toBeVisible();
   await expect(page.getByText("qa-admin@example.test")).toBeVisible();
