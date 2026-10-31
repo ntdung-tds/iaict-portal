@@ -11,6 +11,7 @@
 | Purpose | Go to |
 |---|---|
 | Final project source-code handover — required on completion | [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) · [Archive plan](./FINAL_HANDOFF_PLAN.md) · [Drive FINAL_HANDOFF](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ) (PENDING) |
+| SRS chưa chốt & nhật ký thay đổi theo 14 phân hệ | [Requirements Index](../requirements/README.md) · [SRS FROZEN](../requirements/SRS.md) |
 | Project home / folder IDs | [Drive Registry](./DRIVE_REGISTRY.md) |
 | Scope, governance, RACI, workflow, risks | [Operating Model](./OPERATING_MODEL.md) |
 | Project Charter — DRAFT, sponsor approval pending | [Charter](./PROJECT_CHARTER_DRAFT.md) · [Drive Doc](https://docs.google.com/document/d/1NHgTtMGGvan4rrDXMuGQRUb2bCmAX2gDMctG96q-7I4/edit?usp=drivesdk) |
