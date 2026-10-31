@@ -81,6 +81,14 @@ Owner clarification 2026-10-31: only after the owner explicitly says “bàn gia
 
 **On explicit owner “bàn giao”:** only then start source code archive to Drive. The two approvals are distinct; all other routine development/test/doc/Drive activity continues normally.
 
+## Checklist Moment timeline — durable cross-chat execution state
+- The mandatory triad is [PROJECT_PLAN](PROJECT_PLAN.md) (scope/dependencies/gates), [PROJECT_PROGRESS](PROJECT_PROGRESS.md) (append-only facts and per-scope counts) and [CHECKLIST_MOMENT](CHECKLIST_MOMENT.md) (current exact task + substep + blockers). Older moments are preserved as **timestamped append-only snapshots** under [checklist-moments](checklist-moments/) and must never be rewritten.
+- Stable checklist IDs do not replace GitHub Issue/PR authority; DONE requires explicit bounded acceptance evidence. Snapshot records must include date/timezone, observed PR/SHA/Worker/CI, test layer, current step, blocker, next action, named gate and Drive evidence URL or NOT_CAPTURED. Never infer acceptance from an old snapshot.
+- At the start of **every** chat or agent work session, read these three files and the latest moment before doing other work; compare with live GitHub/Cloudflare to detect drift. At end/pause/resume and significant checkpoints, save a **new** immutable moment, update current projection/progress, and reconcile plan changes. Document-only changes require CI readback; do not claim deploy.
+- Use [reusable cross-project template](CHECKLIST_MOMENT_TEMPLATE.md) for new repositories, adapting task IDs. In other projects this is a recommendation/instruction until the actual files are established, not an assertion that unrelated repositories are already updated.
+- A human-readable [Drive mirror](https://docs.google.com/document/d/1VT6fL6fogtrMg-MieaqhyjITceKiW2EqCcAZ1XcPpqM/edit?usp=drivesdk) exists in private `02_Planning`; it is a dated projection, **NOT** an automatically synchronized second source of truth. GitHub live checklist/plan/progress remain canonical.
+
+
 ## 7. Practical change workflow (small batch)
 
 1. **Inspect** GitHub head, opened PR, current Drive registry, newest QA run, Cloudflare staged/prod versions and prior ADR (read-only).
