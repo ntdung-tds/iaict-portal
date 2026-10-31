@@ -29,7 +29,7 @@
 - QA documents, including [73-case Word snapshot](https://docs.google.com/document/d/1xB592k649xvZ94ZfGVse2I_Ol7IAF-LG/edit?usp=drivesdk&ouid=115003313841764302454&rtpof=true&sd=true) → [IAICT Portal — QA Documentation](https://drive.google.com/drive/folders/1mE-w9P5JEKpr-EmCzQFrKcq4xXcryfIA) under `06`.
 - Security config backups: [Cloudflare Access Config Backups](https://drive.google.com/drive/folders/1e8qxwlTawwJ7wZJcgWOjggKtxqhIGJmt) → `07`. Do not publicly share, alter contents, delete, or export private backup bytes without an explicit need and approval.
 - Existing [IAM P0 evidence](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) remains inside screenshots collection. Subfolders: [PASS](https://drive.google.com/drive/folders/1W1HuaSxtaYMWxLDhdqy-U2HxX3jMlwfz), [FAIL](https://drive.google.com/drive/folders/1g50_0CJI3uoCNH2aAT5dBlKbyBPtsFln), [MANUAL/RECHECK](https://drive.google.com/drive/folders/1wW6te40YqBwc3dJNMT40cnVESC11Iv5j).
-- [Living IAM Test Plan / 73 test cases](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) is indexed here even if physically stored outside the project tree; relocate only after verifying permissions/parent and take care not to disrupt collaborative editing.
+- [Living IAM Test Plan / 73 test cases](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) was verified and moved without changing its file ID or sharing; it now resides in [QA Documentation](https://drive.google.com/drive/folders/1mE-w9P5JEKpr-EmCzQFrKcq4xXcryfIA) under `06`.
 
 ## Placement and naming contract
 
