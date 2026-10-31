@@ -61,6 +61,8 @@ These Docs are **readable snapshots**, not auto-synchronized repositories. Their
 - Archiving must never include live secrets, env files, passwords, cookies, personal data, plaintext config credentials, build dependencies or R2/D1 real data. Keep Drive ACL private. Archive must be sourced from immutable, known repository commit/tag. Handover completion (when explicitly requested) is blocked until #38 is closed with real evidence; do not fabricate success or close merely because a folder exists.
 - References: `docs/project/FINAL_HANDOFF_PLAN.md`, `docs/project/OPERATING_MODEL.md`, `AGENTS.md`.
 
+**QA identities and real-browser role-matrix:** [QA_TEST_IDENTITIES restricted folder](https://drive.google.com/drive/folders/1q8-9hjgH_Rq9WKhv_rJpA1C3A8jB8lGO) inside `06_Quality`, [private 8-account register](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit?usp=drivesdk). No passwords, bearer tokens or Access cookies are stored there. As of 2026-10-31 all 8 QA identities are disabled and role browser acceptance is not yet completed. [Current living 78-case QA plan](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk), [Word v1.2 snapshot](https://docs.google.com/document/d/1bLQSwbFfaNjKmFIc39ijPOWnGCjZGrAy/edit?usp=drivesdk&ouid=115003313841764302454&rtpof=true&sd=true).
+
 ## Placement and naming contract
 
 1. Never create another IAICT project root. Search this registry and the parent folder before creating children.
