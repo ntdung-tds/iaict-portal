@@ -385,6 +385,9 @@ test("live native activation keeps the token out of GET requests and blocks anon
   expect(invalid.status()).toBe(401);
   for (const width of [320,390] as const) {
     await page.setViewportSize({width,height:844});
+    // Ensure a fresh document load for each width; separate local E2E tests
+    // cover same-tab hashchange behavior in the candidate build.
+    await page.goto("/login", {waitUntil:"domcontentloaded"});
     const fakeFragment="f".repeat(64);
     const observed: string[] = [];
     page.on("request", req => {
