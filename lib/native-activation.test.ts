@@ -1,6 +1,6 @@
 import { describe,expect,it,vi } from "vitest";
 import type { D1DatabaseLike,D1PreparedStatementLike,D1RunResult } from "./cloudflare-db";
-import { ACTIVATION_TTL_MS,issueNativeActivation,redeemNativeActivation } from "./native-activation";
+import { ACTIVATION_TTL_MS,issueNativeActivation,redeemNativeActivation,revokeNativeActivation } from "./native-activation";
 
 function simulatedDb(changes: number[], tokenEligible = true) {
   let batchCalls = 0;
@@ -51,13 +51,13 @@ describe("one-use activation security boundaries",()=>{
   });
   it("requires a valid token and strong-enough password before any DB write",async()=>{
     const {db,queries}=simulatedDb([1,1,1]);
-    expect(await redeemNativeActivation(db,"invalid","Password-123")).toBe(false);
+    expect(await redeemNativeActivation(db,"invalid","Unique-Iaict#9426")).toBe(false);
     expect(await redeemNativeActivation(db,"a".repeat(64),"short")).toBe(false);
     expect(queries).toHaveLength(0);
   });
   it("atomically consumes only the invitation matching the newly inserted credential",async()=>{
     const {db,queries}=simulatedDb([1,1,1]);
-    const ok=await redeemNativeActivation(db,"a".repeat(64),"Password-123");
+    const ok=await redeemNativeActivation(db,"a".repeat(64),"Unique-Iaict#9426");
     expect(ok).toBe(true);
     expect(queries).toHaveLength(4);
     expect(queries[0].sql).toContain("FROM iaict_activation_invites i");
@@ -74,7 +74,7 @@ describe("one-use activation security boundaries",()=>{
   it("rejects random syntactically valid bearer tokens using only one indexed D1 read",async()=>{
     const {db,queries,batchCalls}=simulatedDb([1,1,1],false);
     const validShape="b".repeat(64);
-    const result=await redeemNativeActivation(db,validShape,"Password-123");
+    const result=await redeemNativeActivation(db,validShape,"Unique-Iaict#9426");
     expect(result).toBe(false);
     expect(queries).toHaveLength(1);
     expect(queries[0].sql).toContain("WHERE i.token_hash=?");
@@ -83,12 +83,26 @@ describe("one-use activation security boundaries",()=>{
     expect(queries[0].values[0]).not.toBe(validShape);
     expect(batchCalls).toBe(0);
   });
+  it("revokes an unused invite with an atomic audit and no bearer token exposure",async()=>{
+    const {db,queries}=simulatedDb([1,1]);
+    expect(await revokeNativeActivation(db,"admin-id","target-id")).toBe(true);
+    expect(queries).toHaveLength(2);
+    expect(queries[0].sql).toContain("auth.activation.revoke");
+    expect(queries[1].sql).toContain("DELETE FROM iaict_activation_invites");
+    expect(queries[1].sql).toContain("consumed_at IS NULL");
+    expect(JSON.stringify(queries)).not.toContain("token_hash=?");
+  });
+  it("does not falsely report a revoked invitation when there was none",async()=>{
+    const {db}=simulatedDb([0,0]);
+    expect(await revokeNativeActivation(db,"admin-id","target-id")).toBe(false);
+    await expect(revokeNativeActivation(db,"admin-id","admin-id")).rejects.toThrow("INVALID_ACTIVATION_TARGET");
+  });
   it("rejects stale, expired, reused and racing invitations (no credential insert)",async()=>{
     const {db}=simulatedDb([0,0,0]);
-    expect(await redeemNativeActivation(db,"a".repeat(64),"Password-123")).toBe(false);
+    expect(await redeemNativeActivation(db,"a".repeat(64),"Unique-Iaict#9426")).toBe(false);
   });
   it("rejects partial consumption; never reports success for missing consume",async()=>{
     const {db}=simulatedDb([1,0,0]);
-    expect(await redeemNativeActivation(db,"b".repeat(64),"Password-123")).toBe(false);
+    expect(await redeemNativeActivation(db,"b".repeat(64),"Unique-Iaict#9426")).toBe(false);
   });
 });
