@@ -20,7 +20,7 @@ describe("QA catalog contract",()=>{
     const result=validateCatalog([HEADER,...Array.from({length:60},()=>item)],{fileExists:()=>true});
     assert.ok(result.errors.some(x=>x.includes("duplicate ID")));
     const changed=[...item];changed[11]="https://example.invalid/evidence";
-    const evidence=validateCatalog([HEADER,...Array.from({length:60},(_,i)=>[...changed[0].replace("001",String(i+1).padStart(3,"0")), ...changed.slice(1)])],{fileExists:()=>true});
+    const evidence=validateCatalog([HEADER,...Array.from({length:60},(_,i)=>[changed[0].replace("001",String(i+1).padStart(3,"0")), ...changed.slice(1)])],{fileExists:()=>true});
     assert.ok(evidence.errors.some(x=>x.includes("unapproved evidence folder")));
   });
   it("rejects missing automated code references",()=>{
