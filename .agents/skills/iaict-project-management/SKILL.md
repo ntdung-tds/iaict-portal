@@ -65,6 +65,12 @@ Only when the owner explicitly requests “bàn giao”, execute [Issue #38](htt
 
 Read `docs/qa/IAICT_TEST_IDENTITIES.md` and its [restricted staging test-user registry](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit?usp=drivesdk). Eight disabled synthetic D1 fixtures represent seven roles; do not activate without approved Access test identity and proper password vault. Route role-sensitive tasks through 7-role positive/negative real-browser scenarios when authorized, record each run independently with actual statuses and sanitized Drive evidence. Cloudflare Browser Rendering quota errors are BLOCKED, not PASS. Use the existing staging-only authenticated Playwright config; no cookies or test login credentials in GitHub/Drive/CI.
 
+## Test report response format (MANDATORY)
+
+When giving QA results, present a **Markdown table**, with one row per actual checked case or meaningful grouped automated suite. Use columns: `Test ID | Scenario | Environment / test layer | Role | Expected | Actual | Status | Evidence/defect`. Precede with immutable `RUN-ID`, source SHA, staging Worker and date when known. Add a short summary table with PASS/FAIL/BLOCKED/NOT_RUN counts where useful. Never use PASS for a case based only on test-case readiness, different environment, or a non-equivalent mocked test. Mark browser HTTP 429 BLOCKED and unauthenticated role checks NOT_RUN. Store screenshots only in the verified private QA Drive folder.
+
+Continue normal Drive project management, documents, live QA evidence, test-account records, and GitHub development. Only the **whole-project SOURCE CODE copy/archive to Drive** requires the owner's future explicit instruction **`bàn giao`**.
+
 ## D. Output format for agents
 
 Use the following concise deliverable layout, with actual proof:
