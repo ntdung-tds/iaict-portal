@@ -25,6 +25,14 @@
 
 **Defect / Retest IDs (nếu có):**
 
+## Project Drive & multi-agent governance
+
+- [ ] Nếu thay đổi cấu trúc Drive/hồ sơ: đã tìm đối tượng hiện có, xác minh quyền, ghi nhận ID/parent cũ-mới, cập nhật `docs/project/DRIVE_REGISTRY.md` và kiểm tra lại trên Drive.
+- [ ] Nếu sửa Project Operating Model / Instructions / Skill: đã cập nhật `AGENTS.md` hoặc `.agents/skills/iaict-project-management/` khi cần; chạy `npm run verify:agent-skill`.
+- [ ] Nếu có Google Doc bản đọc tương ứng: đã đồng bộ thủ công với GitHub và đọc lại; nếu chưa thể, ghi `PENDING_SYNC` cùng người phụ trách (không coi là đồng bộ).
+- [ ] Đã rà soát tác động quyền chia sẻ; không công khai thư mục gốc hay làm lộ `07_Security` và ảnh QA.
+- [ ] Mọi Project Charter, RACI, ADR hoặc production release cần phê duyệt vẫn ghi DRAFT/PENDING cho tới khi có bằng chứng duyệt.
+
 ## Release gate
 
 - [ ] Exact SHA pinned; D1 migration/quick_check/Cloudflare Access/R2 bindings được xác minh.
