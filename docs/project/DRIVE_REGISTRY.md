@@ -44,6 +44,14 @@ These Docs are **readable snapshots**, not auto-synchronized repositories. Their
 - Existing [IAM P0 evidence](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) remains inside screenshots collection. Subfolders: [PASS](https://drive.google.com/drive/folders/1W1HuaSxtaYMWxLDhdqy-U2HxX3jMlwfz), [FAIL](https://drive.google.com/drive/folders/1g50_0CJI3uoCNH2aAT5dBlKbyBPtsFln), [MANUAL/RECHECK](https://drive.google.com/drive/folders/1wW6te40YqBwc3dJNMT40cnVESC11Iv5j).
 - [Living IAM Test Plan / 73 test cases](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) was verified and moved without changing its file ID or sharing; it now resides in [QA Documentation](https://drive.google.com/drive/folders/1mE-w9P5JEKpr-EmCzQFrKcq4xXcryfIA) under `06`.
 
+## Final project handover — mandatory but not yet completed
+
+- **Owner instruction, 2026-10-31:** At final project completion upload the **entire IAICT Portal deliverable, including SOURCE CODE**, to the Drive Project Master. [GitHub Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) is the durable open acceptance gate.
+- **Verified destination, status PENDING:** [FINAL_HANDOFF — Full Source, Documentation & Recovery](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ) nested under `05_Engineering`. This folder is reserved for the **final approved release snapshot** only, not intermediate copies.
+- Completion requires a source archive pinned to approved release SHA, optional history bundle, complete docs and agent skill, versioned manifest + independent SHA-256 checksums, sanitization/no secrets, upload/readback, clean restore test and owner sign-off. D1/R2 data backups are **separate restricted deliverables** requiring their own data-protection approval, not implied by a source archive.
+- Archiving must never include live secrets, env files, passwords, cookies, personal data, plaintext config credentials, build dependencies or R2/D1 real data. Keep Drive ACL private. Archive must be sourced from immutable, known repository commit/tag. Final completion is blocked until #38 is closed with real evidence; do not fabricate success or close merely because a folder exists.
+- References: `docs/project/FINAL_HANDOFF_PLAN.md`, `docs/project/OPERATING_MODEL.md`, `AGENTS.md`.
+
 ## Placement and naming contract
 
 1. Never create another IAICT project root. Search this registry and the parent folder before creating children.
