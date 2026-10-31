@@ -36,6 +36,8 @@
 
 These Docs are **readable snapshots**, not auto-synchronized repositories. Their status is DRAFT/WORKING until an authorized owner records acceptance. Use exact file IDs and update the registry on relocation.
 
+**Current QA snapshots as of 2026-10-31:** [living 75-case v1.1 Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) + [Word v1.1 exported and uploaded to QA Documentation](https://docs.google.com/document/d/1gN3ECELzs48QKlGhRUGU8zj0B-Xh350J/edit?usp=drivesdk&ouid=115003313841764302454&rtpof=true&sd=true). Previous 73-case v1.0 Word retained as historical snapshot and must not be mistaken for current baseline.
+
 ## Moved existing collections; IDs and permalinks deliberately preserved
 
 - QA screenshots and historical media: [IAICT Portal — Browser QA Screenshots](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) → `06`.
