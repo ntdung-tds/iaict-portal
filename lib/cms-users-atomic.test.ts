@@ -560,7 +560,7 @@ describe("IAM P0 — native self-service sessions and activation revocation",()=
     });
   }
   it("counts other live sessions without exposing any session token or digest",async()=>{
-    globalThis.__IAICT_NATIVE_AUTH_ENABLED__=true;
+    (globalThis as {__IAICT_NATIVE_AUTH_ENABLED__?:boolean}).__IAICT_NATIVE_AUTH_ENABLED__=true;
     const token="a".repeat(64);
     const current=await tokenHash(token);
     const other=await tokenHash("b".repeat(64));
@@ -578,7 +578,7 @@ describe("IAM P0 — native self-service sessions and activation revocation",()=
     expect(reply.headers.get("cache-control")).toContain("no-store");
   });
   it("revokes only other live sessions and records one audit, not the current cookie",async()=>{
-    globalThis.__IAICT_NATIVE_AUTH_ENABLED__=true;
+    (globalThis as {__IAICT_NATIVE_AUTH_ENABLED__?:boolean}).__IAICT_NATIVE_AUTH_ENABLED__=true;
     const token="c".repeat(64);
     const current=await tokenHash(token);
     const other=await tokenHash("d".repeat(64));
@@ -597,7 +597,7 @@ describe("IAM P0 — native self-service sessions and activation revocation",()=
     expect(sqlite.prepare("SELECT COUNT(*) AS n FROM audit_logs WHERE action='auth.sessions.revoke_others'").get()?.n).toBe(1);
   });
   it("forbids missing or forged sessions, wrong Origin and invalid session operations",async()=>{
-    globalThis.__IAICT_NATIVE_AUTH_ENABLED__=true;
+    (globalThis as {__IAICT_NATIVE_AUTH_ENABLED__?:boolean}).__IAICT_NATIVE_AUTH_ENABLED__=true;
     expect((await securitySessionsGET(sessionRequest("GET"))).status).toBe(401);
     expect((await securitySessionsPOST(sessionRequest("POST","a".repeat(64),{action:"revokeOthers"},"https://evil.test"))).status).toBe(403);
     expect((await securitySessionsPOST(sessionRequest("POST","a".repeat(64),{action:"revokeAll"}))).status).toBe(400);
@@ -605,7 +605,7 @@ describe("IAM P0 — native self-service sessions and activation revocation",()=
     expect(counts()).toEqual({revisions:0,audits:0});
   });
   it("revokes an admin-issued invite with audit and a second request cannot replay it",async()=>{
-    globalThis.__IAICT_NATIVE_AUTH_ENABLED__=true;
+    (globalThis as {__IAICT_NATIVE_AUTH_ENABLED__?:boolean}).__IAICT_NATIVE_AUTH_ENABLED__=true;
     const tokenHash="a".repeat(64);
     sqlite.prepare("INSERT INTO iaict_activation_invites(user_id,token_hash,issued_by,issued_at,expires_at) VALUES(?,?,?,?,?)")
       .run("qa-user",tokenHash,"qa-admin",Date.now()-1000,Date.now()+60000);
