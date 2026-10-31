@@ -8,6 +8,7 @@
 
 - [ ] Đã xem tác động lên [IAICT_TEST_CASES.csv](../docs/qa/IAICT_TEST_CASES.csv) và cập nhật/thêm mã `IAM-...` trong PR này, hoặc ghi giải thích có căn cứ.
 - [ ] Test case có preconditions, dữ liệu giả, bước thực hiện và expected rõ ràng.
+- [ ] Nếu CSV thay đổi, đã đồng bộ [Google Doc Master Test Plan](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk), kiểm tra đủ số lượng/ID và ghi version snapshot.
 - [ ] Đã chạy unit/integration/browser tương ứng; không đánh đồng mock browser với staging authenticated.
 - [ ] Ghi `RUN-IAM-...` trong [IAICT_TEST_RUNS.md](../docs/qa/IAICT_TEST_RUNS.md), kèm immutable commit SHA, Worker version, CI URL, kết quả thực tế và người chạy.
 - [ ] Nếu có FAIL/BLOCKED, tạo bug record và liên kết; không đổi kết quả lịch sử thành PASS.
