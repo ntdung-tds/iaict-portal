@@ -2,7 +2,7 @@
 
 **Ngày tạo:** 2026-10-31 · **Môi trường:** staging trước production · **Phạm vi giai đoạn đầu:** IAM/CMS/Auth/Access/Release.
 **Đầu mối:** QA phối hợp Dev và chủ dự án. **Quyền sở hữu:** IAICT.
-**Bản Google Doc để IAICT cùng đọc/review:** [Master Test Plan + 73 Test Cases — IAM QA v1.0](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk). Bản này được đồng bộ thủ công theo mốc PR/release từ CSV; không tự cập nhật khi GitHub thay đổi.
+**Bản Google Doc để IAICT cùng đọc/review:** [Master Test Plan + 75 Test Cases — IAM QA v1.1](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk). Bản này được đồng bộ thủ công theo mốc PR/release từ CSV; không tự cập nhật khi GitHub thay đổi.
 **Quy tắc đồng bộ bắt buộc:** mỗi khi thêm/sửa/xóa mã test case, cập nhật CSV trong PR, cập nhật nội dung Google Doc, kiểm tra lại tổng số và ID; ghi liên kết Google Doc trong PR và test run, không coi snapshot cũ là mới.
 **Test catalog (nguồn kiểm soát phiên bản):** [IAICT_TEST_CASES.csv](./IAICT_TEST_CASES.csv) — mã cố định, có điều kiện, dữ liệu tổng hợp, các bước và kết quả mong đợi.
 **Kết quả thực thi (append-only):** [IAICT_TEST_RUNS.md](./IAICT_TEST_RUNS.md). **Mẫu lỗi:** [IAICT_DEFECT_TEMPLATE.md](./IAICT_DEFECT_TEMPLATE.md).
@@ -102,6 +102,12 @@ Approver / release decision:
 - [ ] Có bằng chứng Access và D1 integrity, không leak credentials, Build HOLD, production unchanged.
 - [ ] Đối chiếu runtime Worker version với commit và rollback target.
 - [ ] Test Run record + link evidence + defect/retest được commit; test catalog cập nhật đồng thời với code.
+
+## 9A. Cập nhật 31/10/2026 — MFA nền tảng và nghiệm thu bàn giao toàn bộ mã nguồn
+
+- **IAM-FUT-007**: test tự động RFC 6238 với `lib/totp.test.ts`; chỉ xác nhận primitive, chưa xác nhận đăng ký MFA, mã hóa dữ liệu hoặc đăng nhập MFA. Full enrollment `IAM-FUT-001` vẫn PLANNED.
+- **IAM-REL-008**: kiểm thử thủ công khôi phục nguồn **từ Drive**, so sánh SHA256, chạy build/tests và xác nhận bàn giao qua [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38). Khi dự án chưa hoàn thành trạng thái `PLANNED`, không PASS.
+- Bản Word v1.0 73 cases là lịch sử. Bản Google Doc v1.1/CSV 75 cases là bản đang sử dụng, chỉ được gọi đồng bộ sau khi đọc lại.
 
 ## 10. Căn cứ chính
 
