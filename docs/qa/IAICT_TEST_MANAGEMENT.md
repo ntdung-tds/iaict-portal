@@ -2,13 +2,15 @@
 
 **Ngày tạo:** 2026-10-31 · **Môi trường:** staging trước production · **Phạm vi giai đoạn đầu:** IAM/CMS/Auth/Access/Release.
 **Đầu mối:** QA phối hợp Dev và chủ dự án. **Quyền sở hữu:** IAICT.
-**Bản Google Doc để IAICT cùng đọc/review:** [Master Test Plan + 75 Test Cases — IAM QA v1.1](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk). Bản này được đồng bộ thủ công theo mốc PR/release từ CSV; không tự cập nhật khi GitHub thay đổi.
+**Bản Google Doc để IAICT cùng đọc/review:** [Master Test Plan + 78 Test Cases — IAM QA v1.2](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk). Bản này được đồng bộ thủ công theo mốc PR/release từ CSV; không tự cập nhật khi GitHub thay đổi.
 **Quy tắc đồng bộ bắt buộc:** mỗi khi thêm/sửa/xóa mã test case, cập nhật CSV trong PR, cập nhật nội dung Google Doc, kiểm tra lại tổng số và ID; ghi liên kết Google Doc trong PR và test run, không coi snapshot cũ là mới.
 **Test catalog (nguồn kiểm soát phiên bản):** [IAICT_TEST_CASES.csv](./IAICT_TEST_CASES.csv) — mã cố định, có điều kiện, dữ liệu tổng hợp, các bước và kết quả mong đợi.
 **Kết quả thực thi (append-only):** [IAICT_TEST_RUNS.md](./IAICT_TEST_RUNS.md). **Mẫu lỗi:** [IAICT_DEFECT_TEMPLATE.md](./IAICT_DEFECT_TEMPLATE.md).
 **Bằng chứng hình ảnh (private Google Drive, không phải GitHub):** [IAM P0 evidence](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), [PASS](https://drive.google.com/drive/folders/1W1HuaSxtaYMWxLDhdqy-U2HxX3jMlwfz), [FAIL/Defect](https://drive.google.com/drive/folders/1g50_0CJI3uoCNH2aAT5dBlKbyBPtsFln), [Manual/Recheck](https://drive.google.com/drive/folders/1wW6te40YqBwc3dJNMT40cnVESC11Iv5j).
 
 **Current document synchronization (2026-10-31):** living [75-case Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk), and [75-case Word v1.1 archived on Drive](https://docs.google.com/document/d/1gN3ECELzs48QKlGhRUGU8zj0B-Xh350J/edit?usp=drivesdk&ouid=115003313841764302454&rtpof=true&sd=true). 73-case v1.0 is superseded snapshot; retain for provenance. New RFC 6238 unit test status requires separate SHA-scoped CI result.
+
+**QA account registry and real-role acceptance (2026-10-31):** [8 staging role identities (RESTRICTED)](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit?usp=drivesdk), [role-based QA workflow](./IAICT_TEST_IDENTITIES.md) and [private Drive folder](https://drive.google.com/drive/folders/1q8-9hjgH_Rq9WKhv_rJpA1C3A8jB8lGO). All 8 fixture users are DISABLED without credentials/Access; run `RUN-IAM-20261031-03` records real browser /login PASS (form only), HTTP 429 BLOCKED for other paths and role authorization NOT_RUN. Current **78-case** source registry is the canonical baseline; [living Google Doc v1.2](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) and [Word snapshot 78 cases](https://docs.google.com/document/d/1bLQSwbFfaNjKmFIc39ijPOWnGCjZGrAy/edit?usp=drivesdk&ouid=115003313841764302454&rtpof=true&sd=true). Existing 73/75-case Word files remain historical.
 
 ## 1. Mẫu quản lý và nguồn chuẩn
 
