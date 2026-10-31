@@ -9,13 +9,15 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   retries: 1,
   workers: 1,
-  reporter: process.env.CI ? [["list"], ["html", { open: "never", outputFolder: "playwright-report-staging" }]] : "list",
+  // Only text-only status reports. QA images/videos belong in the private Drive folder,
+  // not repository/CI runner artifacts. See the dedicated manual visual QA process.
+  reporter: "list",
   use: {
     baseURL,
     headless: true,
     ignoreHTTPSErrors: false,
-    screenshot: "only-on-failure",
-    trace: "retain-on-failure",
-    video: "retain-on-failure",
+    screenshot: "off",
+    trace: "off",
+    video: "off",
   },
 });
