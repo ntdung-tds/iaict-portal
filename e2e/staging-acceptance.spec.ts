@@ -388,3 +388,38 @@ test("independent native session page on staging stays outside Access while admi
   expect([302, 303, 307, 308]).toContain(adminResponse.status());
   expect(adminResponse.headers()["location"] ?? "").toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
 });
+
+test("live native activation keeps the token out of GET requests and blocks anonymous administration", async ({ page, request }) => {
+  const root = "https://iaict-portal-staging.iaict-platform.workers.dev";
+  // These are read-only probes. No account, invitation or credential is created.
+  for (const path of ["/api/auth/activate", "/api/account/password"]) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect(response.status(), path + " must reject GET").toBe(405);
+    expect(response.headers()["cache-control"]).toContain("no-store");
+  }
+  for (const path of ["/api/admin/cms/activation", "/admin/users"]) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect([302,303,307,308], path + " must remain behind Access").toContain(response.status());
+    expect(response.headers()["location"] ?? "").toMatch(/cloudflareaccess\\.com|\\/cdn-cgi\\/access\\/login/i);
+  }
+  const invalid = await request.get("/api/auth/session", { maxRedirects: 0 });
+  expect(invalid.status()).toBe(401);
+  for (const width of [320,390] as const) {
+    await page.setViewportSize({width,height:844});
+    const fakeFragment="f".repeat(64);
+    const observed: string[] = [];
+    page.on("request", req => {
+      if (new URL(req.url()).pathname === "/activate") observed.push(req.url());
+    });
+    const response=await page.goto("/activate#token="+fakeFragment, {waitUntil:"domcontentloaded"});
+    expect(response?.status()).toBe(200);
+    await expect(page.getByRole("heading",{name:"Kích hoạt tài khoản IAICT"})).toBeVisible();
+    await expect(page.getByLabel("Mật khẩu mới")).toBeVisible();
+    await expect(page).toHaveURL(root+"/activate");
+    expect(observed.every(url=>!url.includes(fakeFragment))).toBe(true);
+    const size=await page.evaluate(()=>({
+      viewport:innerWidth, documentWidth:document.documentElement.scrollWidth,
+    }));
+    expect(size.documentWidth).toBeLessThanOrEqual(size.viewport);
+  }
+});
