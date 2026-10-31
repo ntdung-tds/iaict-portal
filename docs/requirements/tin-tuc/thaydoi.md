@@ -12,6 +12,8 @@
 |---|---|---|---|---|---|---|
 | CHG-TIN-TUC-20261031-01 | 2026-10-31 | Khởi tạo nhật ký theo phân hệ để tập hợp thay đổi; cần đối chiếu lịch sử implementation trước khi nhập các thay đổi cũ | RECORDED — DOCUMENTATION ONLY | PR #36 | NOT_RUN — không có thay đổi runtime | CHƯA_CHỐT |
 
+| CHG-TIN-TUC-20261031-02 | 2026-10-31 | Ghi nhận thiết kế nguồn tin/duyệt tin V16 | PROPOSED (đúng phạm vi) | PR #36 / docs gốc | Chi tiết bên dưới | CHƯA_CHỐT |
+
 ## Thay đổi chi tiết
 
 ### CHG-TIN-TUC-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -22,6 +24,12 @@
 - **Nguồn:** yêu cầu trực tiếp của chủ dự án ngày 31/10/2026; đề cương (§8, §10; ND04).
 - **Quyết định/SRS:** CHƯA_CHỐT; không cập nhật SRS cho tới khi có yêu cầu chốt.
 - **Test:** NOT_RUN/NO_RUNTIME_CHANGE; chỉ xác minh cấu trúc file, link và CI tài liệu ở PR.
+
+### CHG-TIN-TUC-20261031-02 — Ghi nhận thiết kế nguồn tin/duyệt tin V16
+- **Status:** PROPOSED / BACKFILL_PENDING, **không coi là live staging PASS**; **SRS:** CHƯA_CHỐT.
+- **Trước → Sau:** tài liệu kỹ thuật `docs/V16_NEWS_INGESTION_WORKSTREAM.md` mô tả pipeline từ nguồn → normalize/dedupe → pending/edit → approve → publish/provenance; mặc định auto-publish OFF.
+- **Nguồn:** tài liệu V16, đề cương IAICT mục 8 và 10; phải đối chiếu code/schema và kiểm thử thực tế bằng news_admin/news_editor/news_reviewer ở task riêng.
+- **Test:** NOT_RUN đối với nghiệm thu live role trong entry này. SRS impact PENDING.
 
 ## Các thay đổi tiếp theo
 
