@@ -221,6 +221,25 @@ test("native account password change revokes sessions after a verified request",
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test("account security lists other sessions and lets user revoke them without signing out here",async({page})=>{
+  const calls:Record<string,unknown>[]=[];
+  await page.route("**/api/account/sessions",async route=>{
+    const req=route.request();
+    if(req.method()==="GET"){
+      await route.fulfill({json:{ok:true,otherActiveSessions:2}});
+      return;
+    }
+    calls.push(req.postDataJSON() as Record<string,unknown>);
+    await route.fulfill({json:{ok:true,revoked:2}});
+  });
+  await page.goto("/account/security");
+  await expect(page.getByText("Hiện có 2 phiên IAICT khác")).toBeVisible();
+  page.once("dialog",dialog=>dialog.accept());
+  await page.getByRole("button",{name:"Đăng xuất tất cả phiên khác"}).click();
+  await expect(page.getByText("Hiện có 0 phiên IAICT khác")).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("Phiên này vẫn được giữ");
+  expect(calls).toEqual([{action:"revokeOthers"}]);
+});
 test("password change rejects confirmation mismatch and displays API denial without disclosing secrets", async ({ page }) => {
   let requests = 0;
   await page.route("**/api/account/password", route => {
