@@ -29,6 +29,27 @@ export function validPassword(value: unknown): value is string {
   return typeof value === "string" && value.length >= 8 && value.length <= 128 &&
     !/[\u0000-\u001f\u007f]/.test(value);
 }
+
+// New or rotated passwords only: keep existing credentials login-compatible.
+// This compact offline screen blocks trivial passwords; it does NOT purport to
+// replace a large breached-password corpus or MFA.
+const prohibitedPasswordWords = new Set([
+  "password", "password123", "password1234", "password12345",
+  "12345678", "123456789", "1234567890", "12345678910",
+  "qwerty123", "qwerty1234", "qwertyuiop", "admin1234",
+  "admin12345", "administrator", "letmein123", "welcome123",
+  "welcome1234", "changeme123", "iloveyou", "abc123456",
+  "passw0rd", "passw0rd123", "iaict2026", "iaict1234",
+]);
+export function acceptableNewPassword(value: unknown): value is string {
+  if (!validPassword(value)) return false;
+  const lowered = value.normalize("NFKC").toLowerCase();
+  const compact = lowered.replace(/[^a-z0-9]/g, "");
+  if (prohibitedPasswordWords.has(compact)) return false;
+  if (/^(.)\1{7,}$/u.test(value)) return false;
+  if (/^(?:0123456789|1234567890|9876543210|abcdefghij|qwertyuiop)+$/i.test(value)) return false;
+  return true;
+}
 async function derivePassword(password: string, saltHex: string, iterations: number): Promise<string> {
   if (!/^[0-9a-f]{32,128}$/.test(saltHex) || iterations !== PBKDF2_ITERATIONS) {
     throw new Error("INVALID_PASSWORD_CREDENTIAL");
@@ -41,6 +62,7 @@ async function derivePassword(password: string, saltHex: string, iterations: num
 }
 export async function createPasswordHash(password: string) {
   if (!validPassword(password)) throw new Error("INVALID_PASSWORD_LENGTH");
+  if (!acceptableNewPassword(password)) throw new Error("INVALID_PASSWORD_WEAK");
   const salt = randomHex(16);
   return { salt, hash: await derivePassword(password, salt, PBKDF2_ITERATIONS), iterations: PBKDF2_ITERATIONS };
 }
@@ -135,6 +157,7 @@ export async function setNativePassword(
   db: D1DatabaseLike, actor: {id: string; email: string}, password: string, currentPassword?: string,
 ): Promise<"created"|"rotated"> {
   if (!validPassword(password)) throw new Error("INVALID_PASSWORD_LENGTH");
+  if (!acceptableNewPassword(password)) throw new Error("INVALID_PASSWORD_WEAK");
   const old = await db.prepare("SELECT salt,password_hash,iterations FROM iaict_password_credentials_v2 WHERE user_id=?")
     .bind(actor.id).first<{salt:string;password_hash:string;iterations:number}>();
   if (old && (!currentPassword || !(await verifyPasswordHash(currentPassword, old)))) {
