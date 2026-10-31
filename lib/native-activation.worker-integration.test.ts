@@ -27,6 +27,11 @@ vi.mock("vinext/server/fetch-handler", () => ({
         const route = await import("../app/api/admin/cms/activation/route");
         return request.method === "POST" ? route.POST(request) : route.GET();
       }
+      if (path === "/api/admin/cms/session") {
+        const route = await import("../app/api/admin/cms/session/route");
+        return request.method === "GET" ? route.GET(request) :
+          Response.json({error:"Method not allowed"}, {status:405});
+      }
       if (path === "/api/admin/cms/users") {
         const route = await import("../app/api/admin/cms/users/route");
         return request.method === "GET" ? route.GET(request) : Response.json({error:"Unsupported"}, {status:405});
