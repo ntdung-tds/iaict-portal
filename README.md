@@ -7,7 +7,8 @@
 - [**Project Master trên Google Drive**](https://drive.google.com/drive/folders/11kM9LwI0K0dXrSept6FU4UzKaIBn_eKQ) và [READ FIRST](https://docs.google.com/document/d/1shehSFXogJqx7hhsIgYigU21IccifWx9ntybVUt3Rnk/edit?usp=drivesdk).
 - [Project registry](docs/project/DRIVE_REGISTRY.md), [Operating Model / RACI](docs/project/OPERATING_MODEL.md), [Project Charter DRAFT](docs/project/PROJECT_CHARTER_DRAFT.md), [Risk Register](docs/project/RISK_REGISTER.md).
 - **AI Agents:** [AGENTS.md](AGENTS.md) và [portable Skill](.agents/skills/iaict-project-management/SKILL.md) (có hướng dẫn cho Copilot, Claude và Gemini).
-- [Test Management](docs/qa/IAICT_TEST_MANAGEMENT.md), [73 test cases](docs/qa/IAICT_TEST_CASES.csv), [test-run ledger](docs/qa/IAICT_TEST_RUNS.md). Hình ảnh/ảnh lỗi chỉ tại [Drive QA](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3), không phải GitHub.
+- [Test Management](docs/qa/IAICT_TEST_MANAGEMENT.md), [75 test cases](docs/qa/IAICT_TEST_CASES.csv), [test-run ledger](docs/qa/IAICT_TEST_RUNS.md). Hình ảnh/ảnh lỗi chỉ tại [Drive QA](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3), không phải GitHub.
+- **FINAL handoff requirement:** [GitHub Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) — copy **complete source code** and docs to private [Drive FINAL_HANDOFF](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ), verify SHA256 and restore before project closure. Currently **PENDING**.
 - Production `iaict-portal` **chỉ thay đổi sau phê duyệt rõ ràng**. Staging `iaict-portal-staging` phải qua CI, acceptance, D1/Access/rollback readback; giữ build HOLD.
 
 ---
