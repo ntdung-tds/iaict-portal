@@ -1,0 +1,2 @@
+# IAICT Portal — Gemini CLI
+Before working: load `AGENTS.md` and `.agents/skills/iaict-project-management/SKILL.md`; inspect `docs/project/DRIVE_REGISTRY.md`, `docs/project/OPERATING_MODEL.md` and current QA ledger. Work on staging only unless human has explicitly approved production; verify exact SHA, CI, D1, Access, rollback. Keep QA images and error captures in the existing private Google Drive collection, not GitHub. Respect task/approval/Drive permissions and accurately report NOT_RUN/BLOCKED.
