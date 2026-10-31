@@ -4,6 +4,12 @@
 - Requirement ID: `REQ-...`
 - Staging-only SHA / rollback plan:
 
+## Requirements / SRS governance — mandatory
+
+- [ ] Phân hệ ảnh hưởng đã được ghi trong [`docs/requirements/<module>/thaydoi.md`](../docs/requirements/README.md): CHG ID, trước/sau, lý do, API/UI/D1/quyền, PR/SHA, test/evidence và trạng thái duyệt.
+- [ ] **Không sửa `docs/requirements/SRS.md`** nếu chủ dự án chưa nói rõ **“chốt SRS”**. `bàn giao` là lệnh khác, chỉ liên quan chuyển mã nguồn lên Drive.
+- [ ] Không đồng nhất `TESTED/IMPLEMENTED` với `APPROVED_FOR_SRS`; chỉ được kết luận duyệt khi có bằng chứng.
+
 ## Test case / test run traceability — bắt buộc khi thay đổi chức năng hoặc bảo mật
 
 - [ ] Đã xem tác động lên [IAICT_TEST_CASES.csv](../docs/qa/IAICT_TEST_CASES.csv) và cập nhật/thêm mã `IAM-...` trong PR này, hoặc ghi giải thích có căn cứ.
