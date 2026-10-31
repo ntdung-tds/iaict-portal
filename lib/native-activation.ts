@@ -1,5 +1,5 @@
 import type { D1DatabaseLike } from "./cloudflare-db";
-import { createPasswordHash, validPassword } from "./native-auth";
+import { acceptableNewPassword, createPasswordHash, validPassword } from "./native-auth";
 
 export const ACTIVATION_TTL_MS = 30 * 60 * 1000;
 const tokenPattern = /^[a-f0-9]{64}$/;
@@ -52,7 +52,7 @@ export async function issueNativeActivation(
 export async function redeemNativeActivation(
   db: D1DatabaseLike, token: string, password: string,
 ): Promise<boolean> {
-  if (!tokenPattern.test(token) || !validPassword(password)) return false;
+  if (!tokenPattern.test(token) || !acceptableNewPassword(password)) return false;
   const tokenHash = await sha256(token);
   const now = Date.now();
   // A random, unknown, expired, used or disabled-user invitation must NOT
