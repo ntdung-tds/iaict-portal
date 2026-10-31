@@ -2,6 +2,8 @@
 
 **Ngày tạo:** 2026-10-31 · **Môi trường:** staging trước production · **Phạm vi giai đoạn đầu:** IAM/CMS/Auth/Access/Release.
 **Đầu mối:** QA phối hợp Dev và chủ dự án. **Quyền sở hữu:** IAICT.
+**Bản Google Doc để IAICT cùng đọc/review:** [Master Test Plan + 73 Test Cases — IAM QA v1.0](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk). Bản này được đồng bộ thủ công theo mốc PR/release từ CSV; không tự cập nhật khi GitHub thay đổi.
+**Quy tắc đồng bộ bắt buộc:** mỗi khi thêm/sửa/xóa mã test case, cập nhật CSV trong PR, cập nhật nội dung Google Doc, kiểm tra lại tổng số và ID; ghi liên kết Google Doc trong PR và test run, không coi snapshot cũ là mới.
 **Test catalog (nguồn kiểm soát phiên bản):** [IAICT_TEST_CASES.csv](./IAICT_TEST_CASES.csv) — mã cố định, có điều kiện, dữ liệu tổng hợp, các bước và kết quả mong đợi.
 **Kết quả thực thi (append-only):** [IAICT_TEST_RUNS.md](./IAICT_TEST_RUNS.md). **Mẫu lỗi:** [IAICT_DEFECT_TEMPLATE.md](./IAICT_DEFECT_TEMPLATE.md).
 **Bằng chứng hình ảnh (private Google Drive, không phải GitHub):** [IAM P0 evidence](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), [PASS](https://drive.google.com/drive/folders/1W1HuaSxtaYMWxLDhdqy-U2HxX3jMlwfz), [FAIL/Defect](https://drive.google.com/drive/folders/1g50_0CJI3uoCNH2aAT5dBlKbyBPtsFln), [Manual/Recheck](https://drive.google.com/drive/folders/1wW6te40YqBwc3dJNMT40cnVESC11Iv5j).
