@@ -11,6 +11,37 @@ export default function AccountSecurityPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
+  const [otherSessions,setOtherSessions]=useState<number|null>(null);
+  const [sessionBusy,setSessionBusy]=useState(false);
+  const [sessionMessage,setSessionMessage]=useState("");
+  useEffect(()=>{
+    if(!ready)return;
+    const controller=new AbortController();
+    void fetch("/api/account/sessions",{cache:"no-store",credentials:"same-origin",signal:controller.signal})
+      .then(async response=>{
+        if(!response.ok)return;
+        const data=await response.json() as {otherActiveSessions?:number};
+        if(!controller.signal.aborted&&Number.isSafeInteger(data.otherActiveSessions))
+          setOtherSessions(Math.max(0,Number(data.otherActiveSessions)));
+      }).catch(()=>{});
+    return ()=>controller.abort();
+  },[ready]);
+  async function revokeOtherSessions(){
+    if(sessionBusy||otherSessions===null||otherSessions===0)return;
+    if(!window.confirm("Đăng xuất tất cả phiên IAICT khác? Phiên trên thiết bị này vẫn được giữ."))return;
+    setSessionBusy(true);setSessionMessage("");
+    try{
+      const response=await fetch("/api/account/sessions",{
+        method:"POST",credentials:"same-origin",cache:"no-store",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"revokeOthers"}),
+      });
+      const data=await response.json() as {ok?:boolean;error?:string};
+      if(!response.ok||!data.ok)throw new Error(data.error||"Không thể thu hồi phiên.");
+      setOtherSessions(0);setSessionMessage("Đã đăng xuất các phiên IAICT khác. Phiên này vẫn được giữ.");
+    }catch(error){setSessionMessage(error instanceof Error?error.message:"Không thể thu hồi phiên.");}
+    finally{setSessionBusy(false);}
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -87,6 +118,15 @@ export default function AccountSecurityPage() {
             </button>
           </form>
         ) : <p role="status" style={{ color: "#087245" }}>{message}</p>}
+        {!success&&otherSessions!==null?<section aria-label="Phiên đăng nhập IAICT" style={{marginTop:28,borderTop:"1px solid #e2e8f0",paddingTop:20}}>
+          <h2 style={{fontSize:18}}>Phiên đăng nhập khác</h2>
+          <p style={{color:"#52657a"}}>Hiện có {otherSessions} phiên IAICT khác còn hiệu lực. Không bao gồm các phiên Cloudflare Access.</p>
+          <button type="button" onClick={()=>void revokeOtherSessions()} disabled={sessionBusy||otherSessions===0}
+            style={{padding:"10px 16px",borderRadius:8,border:"1px solid #b42318",color:"#b42318",background:"#fff"}}>
+            {sessionBusy?"Đang thu hồi…":"Đăng xuất tất cả phiên khác"}
+          </button>
+          {sessionMessage?<p role="status">{sessionMessage}</p>:null}
+        </section>:null}
         <p style={{ marginTop: 24 }}>
           <a href={success ? "/login" : "/account"} style={{ color: "#164b95", fontWeight: 700 }}>
             {success ? "Đăng nhập lại" : "Quay lại tài khoản"}
