@@ -46,6 +46,10 @@ These Docs are **readable snapshots**, not auto-synchronized repositories. Their
 - Existing [IAM P0 evidence](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) remains inside screenshots collection. Subfolders: [PASS](https://drive.google.com/drive/folders/1W1HuaSxtaYMWxLDhdqy-U2HxX3jMlwfz), [FAIL](https://drive.google.com/drive/folders/1g50_0CJI3uoCNH2aAT5dBlKbyBPtsFln), [MANUAL/RECHECK](https://drive.google.com/drive/folders/1wW6te40YqBwc3dJNMT40cnVESC11Iv5j).
 - [Living IAM Test Plan / 73 test cases](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) was verified and moved without changing its file ID or sharing; it now resides in [QA Documentation](https://drive.google.com/drive/folders/1mE-w9P5JEKpr-EmCzQFrKcq4xXcryfIA) under `06`.
 
+## Security architecture draft in Drive
+
+- [ADR-0002 — MFA/TOTP staged design (PROPOSED)](https://docs.google.com/document/d/1c0zGDPq6IJad8HO4LdlGty974_mbRIQQbpia8b59PTY/edit?usp=drivesdk), stored in [04_Architecture](https://drive.google.com/drive/folders/1ue8sL_mmfpO3lX5BJj2UxNuh5nwUcRxY). Source of truth: `docs/adr/0002-iaict-native-mfa-totp-staged.md`; no enrollment API is enabled.
+
 ## Final project handover — mandatory but not yet completed
 
 **Drive Final Handoff instruction document (verified, private):** [READ FIRST — FINAL HANDOFF PENDING](https://docs.google.com/document/d/1w2BYP9fVfjQ1n1UKV-4W-UW96xGIZlOB0XAtxP8V1as/edit?usp=drivesdk), stored inside the reserved final folder. This file is a pending checklist, **not a completed source archive**.
