@@ -34,7 +34,7 @@ export default function LoginPage() {
     <form ref={formRef} method="post" onSubmit={event => { event.preventDefault(); void authenticate(); }} onKeyDown={event => { if (event.key === "Enter" && (event.target as HTMLElement).tagName === "INPUT") { event.preventDefault(); void authenticate(); } }} style={{ width:"100%", maxWidth:420, background:"#fff", borderRadius:16, padding:32, boxShadow:"0 8px 40px #0f234014" }}>
       <p style={{ color:"#3360a1", fontWeight:700, letterSpacing:2 }}>IAICT PORTAL</p>
       <h1 style={{ fontSize:28, marginBottom:10 }}>Đăng nhập quản trị</h1>
-      <p style={{ color:"#64748b", lineHeight:1.6 }}>Sử dụng tài khoản nội bộ IAICT. Không hỗ trợ đăng ký công khai.</p>
+      <p style={{ color:"#64748b", lineHeight:1.6 }}>Sử dụng đúng email của tài khoản CMS đã thiết lập mật khẩu IAICT. Email này có thể khác email cá nhân của bạn. Không hỗ trợ đăng ký công khai.</p>
       <label htmlFor="iaict-email" style={{ display:"block", marginTop:24 }}>Email</label>
       <input ref={emailRef} id="iaict-email" type="email" autoComplete="username" required style={fieldStyle}/>
       <label htmlFor="iaict-password" style={{ display:"block", marginTop:18 }}>Mật khẩu</label>
