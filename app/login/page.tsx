@@ -15,7 +15,7 @@ export default function LoginPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         credentials: "same-origin", cache: "no-store", body: JSON.stringify({ email, password }),
       });
-      if (response.ok) { window.location.assign("/admin"); return; }
+      if (response.ok) { window.location.assign("/account"); return; }
       const data = await response.json() as {error?:string};
       setMessage(data.error || "Không thể đăng nhập.");
     } catch { setMessage("Không thể kết nối tới máy chủ."); }
