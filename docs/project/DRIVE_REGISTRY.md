@@ -30,6 +30,10 @@
 | PM-INDEX-001 | Read first — master project navigation | [Google Doc](https://docs.google.com/document/d/1shehSFXogJqx7hhsIgYigU21IccifWx9ntybVUt3Rnk/edit?usp=drivesdk) in `00` | `docs/project/START_HERE.md` |
 | PM-GOV-001 | Project operating model, source-of-truth, RACI and controls | [Google Doc](https://docs.google.com/document/d/1Zaa7NCCiP1pMtTCdiuQJHtihN_EorY09NJlIwc3_Toc/edit?usp=drivesdk) in `01` | `docs/project/OPERATING_MODEL.md` |
 | PRJ-CHTR-001 | Project Charter, scope and approval roles — **DRAFT, not signed** | [Google Doc](https://docs.google.com/document/d/1NHgTtMGGvan4rrDXMuGQRUb2bCmAX2gDMctG96q-7I4/edit?usp=drivesdk) in `01` | `docs/project/PROJECT_CHARTER_DRAFT.md` |
+
+| MOMENT-IAICT | Checklist Moment time-indexed project checkpoints, scoped progress and cross-chat handoff — WORKING | [Google Doc MIRROR](https://docs.google.com/document/d/1VT6fL6fogtrMg-MieaqhyjITceKiW2EqCcAZ1XcPpqM/edit?usp=drivesdk) in `02_Planning` | `docs/project/CHECKLIST_MOMENT.md`; timestamped `docs/project/checklist-moments/` |
+| PM-PLAN-001 | Current roadmap, dependencies, approval gates — WORKING | [Canonical GitHub plan](PROJECT_PLAN.md) (no duplicate Drive authority) | `docs/project/PROJECT_PLAN.md` |
+| PM-PROGRESS-001 | Evidence-based milestone and test progress — WORKING | [Canonical GitHub progress](PROJECT_PROGRESS.md) | `docs/project/PROJECT_PROGRESS.md` |
 | RISK-REG-001 | Risks, contingencies and open owner decisions — WORKING | [Google Doc](https://docs.google.com/document/d/1p4qDFDH8qFi6Lq-fOw7b_3Xc4jSqaA4ct6LAXuaaqas/edit?usp=drivesdk) in `02` | `docs/project/RISK_REGISTER.md` |
 | AGENT-GUIDE-001 | Multi-agent instructions / reusable Skill guide | [Google Doc](https://docs.google.com/document/d/1IPioKWQJ1ruXpgdAhKk7gHf3ItGRfShZGQUjiOfXXmo/edit?usp=drivesdk) in `10` | `AGENTS.md`, `.agents/skills/iaict-project-management/SKILL.md` |
 | QA-PLAN-001 | Test management and 73 test cases | [Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk) in `06` | `docs/qa/` |
