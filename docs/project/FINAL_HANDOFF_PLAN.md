@@ -1,9 +1,13 @@
 # IAICT Portal — FINAL HANDOFF & RESTORE PLAN (PENDING)
 **Requirement ID:** REQ-DELIVERY-001 | **Issue:** https://github.com/ntdung-tds/iaict-portal/issues/38
-**Created:** 2026-10-31 | **Status:** PENDING — PROJECT IS STILL UNDER DEVELOPMENT
+**Created:** 2026-10-31 | **Status:** DEFERRED — ONLY OWNER COMMAND “BÀN GIAO” MAY ACTIVATE
 **Final Drive destination (verified):** https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ
 
-## Mandatory closure rule
+## Activation rule — only after owner says “bàn giao”
+
+**Until then:** DO NOT produce final project archive, upload source, or block ordinary release work because of this plan.
+
+## Historical closure checklist (inactive until requested)
 
 Do not claim “IAICT project completed / handed over” before the full source-code archive and associated documents are uploaded to Drive, verified, restored and explicitly accepted by the IAICT owner. A final Google Drive folder created now is **not** a backup and does not satisfy this obligation. Keep Issue #38 OPEN until all checks and acceptance evidence are recorded.
 
