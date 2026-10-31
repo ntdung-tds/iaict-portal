@@ -9,7 +9,9 @@ import {
   type D1RunResult,
 } from "./cloudflare-db";
 import { GET, POST, DELETE } from "../app/api/admin/cms/users/route";
-import { setNativePassword, authenticateNativePassword } from "./native-auth";
+import { setNativePassword, authenticateNativePassword, cookieForSession } from "./native-auth";
+import { GET as nativeSessionGET, POST as nativeSessionPOST } from "../app/api/auth/session/route";
+import { POST as nativeLogoutPOST } from "../app/api/auth/logout/route";
 
 vi.mock("./newsroom-auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./newsroom-auth")>();
@@ -123,6 +125,7 @@ beforeEach(() => {
 afterEach(() => {
   beforeBatch = null;
   delete (globalThis as { __IAICT_D1_DB__?: D1DatabaseLike }).__IAICT_D1_DB__;
+  delete (globalThis as { __IAICT_NATIVE_AUTH_ENABLED__?: boolean }).__IAICT_NATIVE_AUTH_ENABLED__;
   sqlite.close();
 });
 
@@ -396,5 +399,92 @@ describe("IAICT native password setup and subsequent login — real D1 schema", 
     expect(sqlite.prepare("SELECT COUNT(*) n FROM iaict_auth_sessions WHERE user_id='qa-admin'").get()?.n).toBe(1);
     expect(sqlite.prepare("SELECT token_hash FROM iaict_auth_sessions LIMIT 1").get()?.token_hash).not.toBe(session);
     expect(await authenticateNativePassword(db, "qa-admin@example.test", password + "wrong")).toBeNull();
+  });
+});
+
+
+describe("independent IAICT native session pilot (outside Access)", () => {
+  const url = "https://qa.example.test/api/auth/session";
+  const flags = globalThis as typeof globalThis & { __IAICT_NATIVE_AUTH_ENABLED__?: boolean };
+  async function loggedInRequest() {
+    const db = adapter(sqlite);
+    const secret = "S3cure!!8";
+    await setNativePassword(db, {id:"qa-admin",email:"qa-admin@example.test"}, secret);
+    const token = await authenticateNativePassword(db, "qa-admin@example.test", secret);
+    expect(token).toMatch(/^[0-9a-f]{64}$/);
+    return new Request(url, { headers: { Cookie: cookieForSession(token!) } });
+  }
+
+  it("does not reveal any actor data when native auth is off, even with a cookie", async () => {
+    const req = await loggedInRequest();
+    flags.__IAICT_NATIVE_AUTH_ENABLED__ = false;
+    const res = await nativeSessionGET(req);
+    expect(res.status).toBe(404);
+    expect(JSON.stringify(await res.json())).not.toContain("qa-admin@example.test");
+    expect(res.headers.get("cache-control")).toContain("no-store");
+  });
+
+  it("requires a valid native cookie, not a forged internal header", async () => {
+    flags.__IAICT_NATIVE_AUTH_ENABLED__ = true;
+    const req = new Request(url, {headers:{"X-IAICT-Verified-Email":"qa-admin@example.test"}});
+    const response = await nativeSessionGET(req);
+    expect(response.status).toBe(401);
+    expect(JSON.stringify(await response.json())).not.toContain("qa-admin@example.test");
+  });
+
+  it("returns current active actor roles from D1 without exposing secrets", async () => {
+    flags.__IAICT_NATIVE_AUTH_ENABLED__ = true;
+    const request = await loggedInRequest();
+    const response = await nativeSessionGET(request);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toContain("private");
+    expect(response.headers.get("vary")).toContain("Cookie");
+    const data = await response.json() as {ok:boolean;actor:{email:string;roles:string[]}};
+    expect(data).toMatchObject({ok:true,actor:{email:"qa-admin@example.test",roles:["admin"]}});
+    const json = JSON.stringify(data);
+    expect(json).not.toContain("token_hash");
+    expect(json).not.toContain("password_hash");
+    expect(json).not.toContain("salt");
+  });
+
+  it("invalidates native verification immediately after an administrator revokes sessions", async () => {
+    flags.__IAICT_NATIVE_AUTH_ENABLED__ = true;
+    const request = await loggedInRequest();
+    expect((await nativeSessionGET(request)).status).toBe(200);
+    const revoke = await post({action:"revokeSessions",id:"qa-admin"});
+    expect(revoke.status).toBe(200);
+    expect((await nativeSessionGET(request)).status).toBe(401);
+  });
+
+  it("expires a native session and blocks a deactivated account", async () => {
+    flags.__IAICT_NATIVE_AUTH_ENABLED__ = true;
+    const request = await loggedInRequest();
+    sqlite.exec("UPDATE iaict_auth_sessions SET expires_at=created_at+1");
+    expect((await nativeSessionGET(request)).status).toBe(401);
+    sqlite.exec("UPDATE iaict_auth_sessions SET expires_at=created_at+3600000");
+    expect((await nativeSessionGET(request)).status).toBe(200);
+    sqlite.exec("UPDATE admin_users SET is_active=0 WHERE id='qa-admin'");
+    expect((await nativeSessionGET(request)).status).toBe(401);
+  });
+
+  it("logout revokes server-side session, clears the cookie and rejects cross-origin logout", async () => {
+    flags.__IAICT_NATIVE_AUTH_ENABLED__ = true;
+    const request = await loggedInRequest();
+    const cookie = request.headers.get("Cookie")!;
+    const wrongOrigin = await nativeLogoutPOST(new Request("https://qa.example.test/api/auth/logout",{
+      method:"POST",headers:{Cookie:cookie,Origin:"https://evil.invalid"},
+    }));
+    expect(wrongOrigin.status).toBe(403);
+    expect((await nativeSessionGET(request)).status).toBe(200);
+    const logout = await nativeLogoutPOST(new Request("https://qa.example.test/api/auth/logout", {
+      method:"POST",headers:{Cookie:cookie,Origin:"https://qa.example.test"},
+    }));
+    expect(logout.status).toBe(200);
+    expect(logout.headers.get("set-cookie")).toContain("Max-Age=0");
+    expect((await nativeSessionGET(request)).status).toBe(401);
+  });
+
+  it("does not support unsafe mutations through session-read endpoint", async () => {
+    expect((await nativeSessionPOST()).status).toBe(405);
   });
 });
