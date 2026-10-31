@@ -2,7 +2,8 @@ import { describe,expect,it,vi } from "vitest";
 import type { D1DatabaseLike,D1PreparedStatementLike,D1RunResult } from "./cloudflare-db";
 import { ACTIVATION_TTL_MS,issueNativeActivation,redeemNativeActivation } from "./native-activation";
 
-function simulatedDb(changes: number[]) {
+function simulatedDb(changes: number[], tokenEligible = true) {
+  let batchCalls = 0;
   const queries: Array<{sql:string;values:unknown[]}> = [];
   const db: D1DatabaseLike = {
     prepare(sql) {
@@ -10,18 +11,22 @@ function simulatedDb(changes: number[]) {
       queries.push(row);
       const stmt: D1PreparedStatementLike = {
         bind(...values){row.values=values;return stmt;},
-        async first<T>(){throw Error("No read of user identities is permitted in this test");},
+        async first<T>() {
+          if(!sql.includes("FROM iaict_activation_invites i"))throw Error("Unexpected read: "+sql);
+          return (tokenEligible ? {user_id:"qa-id"} : null) as T | null;
+        },
         async all<T>(){return {results:[] as T[]};},
         async run(){throw Error("All activation mutations must be atomic D1 batches");},
       };
       return stmt;
     },
     async batch(statements) {
+      batchCalls++;
       expect(statements).toHaveLength(changes.length);
       return changes.map(value=>({meta:{changes:value}} as D1RunResult));
     },
   };
-  return {db,queries};
+  return {db,queries,get batchCalls(){return batchCalls;}};
 }
 
 describe("one-use activation security boundaries",()=>{
@@ -54,14 +59,29 @@ describe("one-use activation security boundaries",()=>{
     const {db,queries}=simulatedDb([1,1,1]);
     const ok=await redeemNativeActivation(db,"a".repeat(64),"Password-123");
     expect(ok).toBe(true);
-    expect(queries).toHaveLength(3);
-    expect(queries[0].sql).toContain("i.consumed_at IS NULL AND i.expires_at>?");
+    expect(queries).toHaveLength(4);
+    expect(queries[0].sql).toContain("FROM iaict_activation_invites i");
+    expect(queries[0].sql).toContain("i.expires_at>?");
     expect(queries[0].sql).toContain("NOT EXISTS(SELECT 1 FROM iaict_password_credentials_v2");
-    expect(queries[0].sql).toContain("ON CONFLICT(user_id) DO NOTHING");
-    expect(queries[1].sql).toContain("UPDATE iaict_activation_invites AS i");
-    expect(queries[1].sql).toContain("c.password_hash=?");
-    expect(queries[2].sql).toContain("auth.activation.redeem");
+    expect(queries[1].sql).toContain("i.consumed_at IS NULL AND i.expires_at>?");
+    expect(queries[1].sql).toContain("NOT EXISTS(SELECT 1 FROM iaict_password_credentials_v2");
+    expect(queries[1].sql).toContain("ON CONFLICT(user_id) DO NOTHING");
+    expect(queries[2].sql).toContain("UPDATE iaict_activation_invites AS i");
+    expect(queries[2].sql).toContain("c.password_hash=?");
+    expect(queries[3].sql).toContain("auth.activation.redeem");
     expect(JSON.stringify(queries)).not.toContain("a".repeat(64));
+  });
+  it("rejects random syntactically valid bearer tokens using only one indexed D1 read",async()=>{
+    const {db,queries,batchCalls}=simulatedDb([1,1,1],false);
+    const validShape="b".repeat(64);
+    const result=await redeemNativeActivation(db,validShape,"Password-123");
+    expect(result).toBe(false);
+    expect(queries).toHaveLength(1);
+    expect(queries[0].sql).toContain("WHERE i.token_hash=?");
+    expect(queries[0].sql).toContain("i.consumed_at IS NULL");
+    expect(queries[0].sql).toContain("i.expires_at>?");
+    expect(queries[0].values[0]).not.toBe(validShape);
+    expect(batchCalls).toBe(0);
   });
   it("rejects stale, expired, reused and racing invitations (no credential insert)",async()=>{
     const {db}=simulatedDb([0,0,0]);
