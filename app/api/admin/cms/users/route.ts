@@ -172,6 +172,8 @@ export async function POST(request: Request) {
     if(revokeExistingSessions){
       // Same D1 transaction: privileges and all previously minted sessions change together.
       statements.push(db.prepare("DELETE FROM iaict_auth_sessions WHERE user_id=?").bind(entityId));
+      // Changed identity/role/status invalidates every outstanding activation link.
+      statements.push(db.prepare("DELETE FROM iaict_activation_invites WHERE user_id=?").bind(entityId));
     }
     statements.push(db.prepare(`DELETE FROM admin_user_roles WHERE user_id=?`).bind(entityId));
     for (const role of roles) {
@@ -222,6 +224,7 @@ export async function DELETE(request: Request) {
       snapshotStatement(db, actor.id, current, roles),
       disableStatement,
       db.prepare("DELETE FROM iaict_auth_sessions WHERE user_id=?").bind(id),
+      db.prepare("DELETE FROM iaict_activation_invites WHERE user_id=?").bind(id),
       auditStatement(db, actor.id, "cms.user.deactivate", id, { email: current.email, roles }),
     ]);
     return Response.json({ ok: true },{headers:noStore});
