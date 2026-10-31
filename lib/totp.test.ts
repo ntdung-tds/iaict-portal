@@ -68,7 +68,7 @@ describe("RFC 6238 compatibility — pure TOTP only, MFA remains disabled",()=>{
     const fresh=generateTotpSecretBase32();
     expect(fresh).toMatch(/^[A-Z2-7]{32}$/);
     expect(fromTotpBase32(fresh)).toHaveLength(20);
-    for(const secret of ["",b32+"=",b32.toLowerCase(),b32.replace("A","1"),"A".repeat(32)+"A","A".repeat(20)])
+    for(const secret of ["",b32+"=",b32.toLowerCase(),b32.slice(0,-1)+"1","A".repeat(32)+"A","A".repeat(20)])
       expect(()=>fromTotpBase32(secret)).toThrow("INVALID_TOTP_BASE32");
   });
   it("rejects weak keys, invalid timestamps and unsafe settings",async()=>{
