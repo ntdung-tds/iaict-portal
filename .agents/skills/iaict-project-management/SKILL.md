@@ -51,6 +51,10 @@ Before any action, list available **connected capabilities**. If the required Gi
 - Avoid bulk reorganizations and deletions; record source parent, target parent and post-move verification for each Drive move.
 - For any security or architectural exception, capture RISK/ADR or owner decision before proceeding.
 
+## Final delivery / full-source archival gate
+
+At final project acceptance, execute [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) and `docs/project/FINAL_HANDOFF_PLAN.md`. The owner requires **the whole source code, docs, tests, migrations, skill and recovery guide** uploaded to the verified private [FINAL_HANDOFF Drive folder](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ), with SHA-256 manifest and isolated restore test. Do not upload current working code as a falsely labelled FINAL, do not include secrets, and do not close issue or project before owner acceptance. A later agent must read this prerequisite regardless of whether it was present in the original chat.
+
 ## D. Output format for agents
 
 Use the following concise deliverable layout, with actual proof:
