@@ -240,3 +240,12 @@ test("password change rejects confirmation mismatch and displays API denial with
   expect(requests).toBe(1);
   await expect(page.getByRole("link",{name:"Đăng nhập lại"})).toHaveCount(0);
 });
+
+test("account activation UI never exposes a password form without a valid invitation",async({page})=>{
+  await page.goto("/activate",{waitUntil:"domcontentloaded"});
+  await expect(page.getByRole("heading",{name:"Kích hoạt tài khoản IAICT"})).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("Liên kết kích hoạt không hợp lệ");
+  await expect(page.getByRole("button",{name:"Kích hoạt tài khoản"})).toHaveCount(0);
+  await expect(page.getByRole("link",{name:"Đến trang đăng nhập IAICT"})).toHaveAttribute("href","/login");
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
