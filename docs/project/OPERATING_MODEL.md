@@ -69,6 +69,10 @@ Dates ISO `YYYY-MM-DD`; statuses `DRAFT, IN_REVIEW, APPROVED, SUPERSEDED`; do no
 - At each incident: preserve reproduction evidence, incident chronology and recovery steps; redact confidential values.
 - For any material architecture/hosting change: create ADR first, compare options, cost, security and rollback; seek approval for production-impacting changes.
 
+## Project closure acceptance — mandatory full source on Drive
+
+The owner instructed on 2026-10-31 that **when the project is completed, the entire IAICT Portal, including its source code, must be uploaded to Google Drive**. This is not a background promise; it is a durable closure requirement tracked in [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38), and [FINAL_HANDOFF_PLAN](./FINAL_HANDOFF_PLAN.md). Destination: https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ . Before COMPLETE: export the approved release commit, sanitized archive and Git history if approved, docs/test/skill, SHA256 manifest, upload/verify, clean restore and owner acceptance. Do not bundle D1/R2 user data or secrets with source. **Engineering Done for an increment ≠ Project Closed**, and no agent can waive the final archive gate.
+
 ## 7. Practical change workflow (small batch)
 
 1. **Inspect** GitHub head, opened PR, current Drive registry, newest QA run, Cloudflare staged/prod versions and prior ADR (read-only).
