@@ -11,7 +11,7 @@ import { sameOriginPost } from "@/lib/native-auth";
 
 export const dynamic = "force-dynamic";
 
-type UserRow = { id:string; email:string; display_name:string|null; access_subject:string|null; is_active:number; created_at:string; updated_at:string; roles:string; native_ready?:number; };
+type UserRow = { id:string; email:string; display_name:string|null; access_subject:string|null; is_active:number; created_at:string; updated_at:string; roles:string; native_ready?:number; activation_pending?:number; activation_expires_at?:number|null; };
 type UserBody = { id?:unknown; email?:unknown; displayName?:unknown; isActive?:unknown; roles?:unknown; action?:unknown; updatedAt?:unknown; };
 function nowIso(){return new Date().toISOString();}
 // updated_at is the existing concurrency token: make each successful write
@@ -62,8 +62,8 @@ function userMutationError(error: unknown) {
 }
 
 async function listUsers(db:ReturnType<typeof getDatabaseBinding>){
-  const rows=await db.prepare(`SELECT u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at,COALESCE(group_concat(r.code),'') AS roles, MAX(CASE WHEN pc.user_id IS NOT NULL THEN 1 ELSE 0 END) AS native_ready FROM admin_users u LEFT JOIN admin_user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id LEFT JOIN iaict_password_credentials_v2 pc ON pc.user_id=u.id GROUP BY u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at ORDER BY u.is_active DESC,lower(COALESCE(u.display_name,u.email)),lower(u.email)`).all<UserRow>();
-  return rows.results.map(row=>({...row,hasNativePassword:row.native_ready===1,roles:row.roles?row.roles.split(",").filter(Boolean):[]}));
+  const rows=await db.prepare(`SELECT u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at,COALESCE(group_concat(r.code),'') AS roles, MAX(CASE WHEN pc.user_id IS NOT NULL THEN 1 ELSE 0 END) AS native_ready, MAX(CASE WHEN ai.consumed_at IS NULL AND ai.expires_at>CAST(strftime('%s','now') AS INTEGER)*1000 THEN 1 ELSE 0 END) AS activation_pending, MAX(CASE WHEN ai.consumed_at IS NULL AND ai.expires_at>CAST(strftime('%s','now') AS INTEGER)*1000 THEN ai.expires_at ELSE NULL END) AS activation_expires_at FROM admin_users u LEFT JOIN admin_user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id LEFT JOIN iaict_password_credentials_v2 pc ON pc.user_id=u.id LEFT JOIN iaict_activation_invites ai ON ai.user_id=u.id GROUP BY u.id,u.email,u.display_name,u.access_subject,u.is_active,u.created_at,u.updated_at ORDER BY u.is_active DESC,lower(COALESCE(u.display_name,u.email)),lower(u.email)`).all<UserRow>();
+  return rows.results.map(row=>({...row,hasNativePassword:row.native_ready===1,activationPending:row.activation_pending===1,activationExpiresAt:row.activation_expires_at??null,roles:row.roles?row.roles.split(",").filter(Boolean):[]}));
 }
 async function countActiveAdmins(db:ReturnType<typeof getDatabaseBinding>,excludeUserId?:string){
   const row=await db.prepare(`SELECT COUNT(DISTINCT u.id) AS count FROM admin_users u JOIN admin_user_roles ur ON ur.user_id=u.id JOIN roles r ON r.id=ur.role_id WHERE u.is_active=1 AND r.code='admin' ${excludeUserId?"AND u.id <> ?":""}`).bind(...(excludeUserId?[excludeUserId]:[])).first<{count:number}>();
