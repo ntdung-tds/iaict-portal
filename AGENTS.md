@@ -30,6 +30,13 @@ Owner clarification 2026-10-31: full-source handover is DEFERRED. It must start 
 - For any role-sensitive feature, design positive **and negative** tests with the appropriate role, not only Admin; use isolated real Chromium browser sessions on staging only after explicitly authorized QA login, record 200/403 matrix and cross-role IDOR. Never spoof Access or fake an authenticated result. Tests with mock responses must be labeled MOCK, live browser HTTP 429 is BLOCKED, absent role login is NOT_RUN.
 - Store **only nonsecret account IDs/emails/status** in restricted Drive. Test passwords must live in an approved encrypted vault and session files must remain private on the authorized tester's machine outside the repository, never GitHub or Drive. After test revoke/disable, keep audit and run history.
 
+## Quy tắc đặc tả yêu cầu — SRS FROZEN / thaydoi.md LIVING (bắt buộc)
+- **Đọc trước mọi thay đổi chức năng:** [docs/requirements/README.md](docs/requirements/README.md), [SRS.md](docs/requirements/SRS.md) và **`docs/requirements/<module>/thaydoi.md`**. Đề cương chi tiết IAICT tháng 10/2026 chỉ là tài liệu đầu vào tham khảo, không mặc nhiên là SRS đã duyệt.
+- **Chưa có lệnh “chốt”: KHÔNG SỬA SRS.md.** Chỉ bổ sung/sửa ghi nhận thay đổi trong `thaydoi.md` của **từng phân hệ** bị ảnh hưởng, ghi CHG ID, before→after, nguồn yêu cầu, trạng thái, API/UI/D1/security impact, PR/SHA, test case/run và bằng chứng (nếu có). Giữ nguyên lịch sử; corrections là entry mới.
+- Lệnh **“chốt”** mới cho phép lập PR riêng để hợp nhất **chỉ những thay đổi được chủ dự án duyệt** vào SRS có phiên bản và ma trận `SRS ↔ CHG ↔ PR/SHA ↔ Test`. “OK, bước tiếp theo”, staging PASS và merge **không phải chốt**.
+- Lệnh **“bàn giao”** hoàn toàn khác, chỉ cấp quyền đưa source code lên Drive; **không được suy ra từ “chốt”**. Các công việc phát triển và Drive tài liệu/test tiếp tục bình thường.
+- CI `npm run verify:requirements` sẽ chặn SRS khác với bản placeholder khóa và yêu cầu nhật ký khi PR thay code. Không tìm cách né chặn hoặc tự tạo phê duyệt.
+
 ## Working method
 1. Confirm objective, boundaries, affected component, user value, project issue/requirement/ADR and baseline status. Group several **small related tasks**; split high-risk capabilities into separately tested stages.
 2. Find existing folders/files by their exact ID first, then by metadata search. Do not duplicate project roots or create a second QA evidence repository.
