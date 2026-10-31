@@ -15,7 +15,7 @@ Use together with repository `AGENTS.md`. This is a **portable Agent Skills** mo
 ## Mandatory 3-file continuity at every chat / checkpoint
 **Owner directive 2026-10-31:** `docs/project/PROJECT_PLAN.md` + `docs/project/PROJECT_PROGRESS.md` + `docs/project/CHECKLIST_MOMENT.md` are required operational artifacts. Before work, read all three plus the **newest timestamped immutable snapshot** under `docs/project/checklist-moments/`, then verify PR SHA, tests, staging Worker, QA and blockers. Last chat's current task/substep is the starting point, not an assumption of DONE.
 At each meaningful checkpoint/stop or handoff: record `[x] DONE` only for bounded evidenced DoD; `[ ] IN_PROGRESS` with **last completed substep and exact next substep**; BLOCKED with dependency; NOT_STARTED/DEFERRED clearly. Save a **new timestamped snapshot** (never edit old), refresh LIVE + append evidence to progress; amend plan only if changed. A failed CI or unavailable connector must be recorded truthfully.
-The [reusable template](../../../../docs/project/CHECKLIST_MOMENT_TEMPLATE.md) defines the format for future projects. Screenshot/bug media remain private on Drive. A checklist save never authorizes SRS approval, Access removal, production deploy or source handover.
+The [reusable template](../../../docs/project/CHECKLIST_MOMENT_TEMPLATE.md) defines the format for future projects. Screenshot/bug media remain private on Drive. A checklist save never authorizes SRS approval, Access removal, production deploy or source handover.
 
 
 ## Activation and prerequisite discovery
