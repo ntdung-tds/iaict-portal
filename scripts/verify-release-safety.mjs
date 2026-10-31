@@ -1,7 +1,8 @@
 /**
  * Read-only static release safety policy, run on EVERY pull request.
- * The runner may generate screenshots, but GitHub must not retain QA media.
- * Authenticated direct-to-Drive PNG uploads need separately approved CI credentials.
+ * The public staging acceptance runner must not capture QA screenshots, videos
+ * or traces. Manual visual evidence belongs only in the dedicated private
+ * Google Drive folder; CI must not persist QA media in GitHub.
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -21,6 +22,18 @@ for (const name of workflows) {
   if (/uses:\s*actions\/upload-artifact@/i.test(source)) {
     fail(`${file}: QA artifact upload to GitHub is prohibited`);
   }
+}
+
+// No visual QA media may be created on the public staging CI runner.
+const stagingPlaywright = read("playwright.staging.config.ts");
+for (const required of ['screenshot: "off"', 'trace: "off"', 'video: "off"', 'reporter: "list"']) {
+  if (!stagingPlaywright.includes(required)) {
+    fail("Public staging CI must disable capture/report storage: " + required);
+  }
+}
+const stagingTests = read("e2e/staging-acceptance.spec.ts");
+if (/\\bpage\\.screenshot\\s*\\(|\\bpage\\.video\\s*\\(|\\bcontext\\.tracing\\./.test(stagingTests)) {
+  fail("Staging acceptance must not create screenshots, videos or traces");
 }
 
 const manualWorkflows = [
