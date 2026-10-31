@@ -53,7 +53,7 @@ Before any action, list available **connected capabilities**. If the required Gi
 
 ## Final delivery / full-source archival gate
 
-Only when the owner explicitly requests “bàn giao”, execute [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) and `docs/project/FINAL_HANDOFF_PLAN.md`. The owner requires **the whole source code, docs, tests, migrations, skill and recovery guide** uploaded to the verified private [FINAL_HANDOFF Drive folder](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ), with SHA-256 manifest and isolated restore test. Do not upload current working code as a falsely labelled FINAL, do not include secrets, and do not close issue or project before owner acceptance. A later agent must read this prerequisite regardless of whether it was present in the original chat.
+Only when the owner explicitly requests “bàn giao”, execute [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) and `docs/project/FINAL_HANDOFF_PLAN.md`. The owner requires **the whole source code, docs, tests, migrations, skill and recovery guide** uploaded to the verified private [FINAL_HANDOFF Drive folder](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ), with SHA-256 manifest and isolated restore test. Do not upload current working code as a falsely labelled FINAL, do not include secrets, and do not close handover Issue #38 or claim handover complete before owner acceptance; ordinary project development and milestone statuses remain independent. A later agent must read this prerequisite regardless of whether it was present in the original chat.
 
 ## Role-based real-browser QA
 
