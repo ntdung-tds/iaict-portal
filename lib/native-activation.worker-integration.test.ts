@@ -96,6 +96,7 @@ const send=async(
 beforeEach(async()=>{
   sqlite=new DatabaseSync(":memory:");
   sqlite.exec(readFileSync("cloudflare/migrations/0001_core.sql","utf8"));
+  sqlite.exec(readFileSync("cloudflare/migrations/0022_iaict_native_auth.sql","utf8"));
   sqlite.exec(readFileSync("cloudflare/migrations/0023_iaict_auth_pbkdf2_workers.sql","utf8"));
   sqlite.exec(readFileSync("cloudflare/migrations/0024_iaict_activation_invites.sql","utf8"));
   sqlite.exec("INSERT INTO admin_users(id,email,display_name,is_active,created_at,updated_at) VALUES" +
