@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 export default function AccountSecurityPage() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -12,7 +14,7 @@ export default function AccountSecurityPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy) return;
+    if (!ready || busy) return;
     if (password !== confirmation) {
       setMessage("Hai mật khẩu mới không trùng khớp.");
       return;
@@ -68,20 +70,20 @@ export default function AccountSecurityPage() {
           <form onSubmit={event => void submit(event)}>
             <label htmlFor="current" style={label}>Mật khẩu IAICT hiện tại</label>
             <input id="current" type="password" autoComplete="current-password"
-              required minLength={8} maxLength={128} value={currentPassword}
+              required disabled={!ready || busy} minLength={8} maxLength={128} value={currentPassword}
               onChange={event => setCurrentPassword(event.target.value)} style={field} />
             <label htmlFor="next" style={label}>Mật khẩu mới</label>
             <input id="next" type="password" autoComplete="new-password"
-              required minLength={8} maxLength={128} value={password}
+              required disabled={!ready || busy} minLength={8} maxLength={128} value={password}
               onChange={event => setPassword(event.target.value)} style={field} />
             <label htmlFor="confirm" style={label}>Xác nhận mật khẩu mới</label>
             <input id="confirm" type="password" autoComplete="new-password"
-              required minLength={8} maxLength={128} value={confirmation}
+              required disabled={!ready || busy} minLength={8} maxLength={128} value={confirmation}
               onChange={event => setConfirmation(event.target.value)} style={field} />
             {message ? <p role="alert" style={{ color: "#b42318" }}>{message}</p> : null}
-            <button type="submit" disabled={busy} style={{ marginTop: 24, padding: "12px 20px",
+            <button type="submit" disabled={!ready || busy} style={{ marginTop: 24, padding: "12px 20px",
               background: "#164b95", border: 0, borderRadius: 8, color: "#fff" }}>
-              {busy ? "Đang đổi mật khẩu…" : "Lưu mật khẩu mới"}
+              {!ready ? "Đang tải…" : busy ? "Đang đổi mật khẩu…" : "Lưu mật khẩu mới"}
             </button>
           </form>
         ) : <p role="status" style={{ color: "#087245" }}>{message}</p>}
