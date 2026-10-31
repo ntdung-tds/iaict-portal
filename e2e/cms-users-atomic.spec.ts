@@ -249,3 +249,11 @@ test("account activation UI never exposes a password form without a valid invita
   await expect(page.getByRole("link",{name:"Đến trang đăng nhập IAICT"})).toHaveAttribute("href","/login");
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test("activation reacts to same-tab hash navigation", async ({page}) => {
+  await page.goto("/activate");
+  await expect(page.getByRole("alert")).toBeVisible();
+  await page.goto("/activate#token="+ "a".repeat(64));
+  await expect(page.getByLabel("Mật khẩu mới")).toBeVisible();
+  await expect(page).toHaveURL(/\/activate$/);
+});
