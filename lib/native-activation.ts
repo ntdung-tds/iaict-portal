@@ -72,7 +72,7 @@ export async function redeemNativeActivation(
       "ON CONFLICT(user_id) DO NOTHING",
     ).bind(credential.salt, credential.hash, credential.iterations, createdAt, tokenHash, now, now),
     db.prepare(
-      "UPDATE iaict_activation_invites SET consumed_at=? WHERE token_hash=? " +
+      "UPDATE iaict_activation_invites AS i SET consumed_at=? WHERE token_hash=? " +
       "AND consumed_at IS NULL AND " + currentCredential,
     ).bind(now, tokenHash, credential.salt, credential.hash, credential.iterations),
     db.prepare(
