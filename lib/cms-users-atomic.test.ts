@@ -79,11 +79,19 @@ function makeRequest(method: "GET" | "POST" | "DELETE", body?: unknown, role = "
 }
 
 function post(data: Record<string, unknown>, role = "admin") {
-  return POST(makeRequest("POST", data, role));
+  const user = typeof data.id === "string"
+    ? sqlite.prepare("SELECT updated_at FROM admin_users WHERE id=?").get(data.id) as {updated_at:string}|undefined
+    : undefined;
+  // All legacy test clients now supply the version returned by GET, except
+  // when a test intentionally supplies its own stale or missing token.
+  const body = data.updatedAt===undefined && user
+    ? {...data,updatedAt:user.updated_at} : data;
+  return POST(makeRequest("POST", body, role));
 }
 
-function deactivate(id: string, role = "admin") {
-  return DELETE(makeRequest("DELETE", { id }, role));
+function deactivate(id: string, role = "admin", version?: string) {
+  const row=sqlite.prepare("SELECT updated_at FROM admin_users WHERE id=?").get(id) as {updated_at:string}|undefined;
+  return DELETE(makeRequest("DELETE", {id,updatedAt:version??row?.updated_at}, role));
 }
 
 function roleCodes(id = "qa-user"): string[] {
@@ -149,6 +157,49 @@ describe("CMS user management — D1 transactional integrity", () => {
     expect(counts()).toEqual({ revisions: 1, audits: 1 });
     const snapshot = sqlite.prepare("SELECT snapshot_json FROM cms_revisions").get()?.snapshot_json;
     expect(JSON.parse(String(snapshot)).roles).toEqual(["editor"]);
+  });
+
+  it("rejects two stale administrators editing the same account without losing roles or audit integrity", async () => {
+    const version=String(userState()?.updated_at);
+    const first=await post({id:"qa-user",updatedAt:version,email:"qa-user@example.test",
+      displayName:"First admin edit",isActive:true,roles:["reviewer"]});
+    expect(first.status).toBe(200);
+    const current=userState() as {updated_at:string;display_name:string};
+    expect(current.updated_at).not.toBe(version);
+    const old=await post({id:"qa-user",updatedAt:version,email:"qa-user@example.test",
+      displayName:"Stale second edit",isActive:false,roles:["viewer"]});
+    expect(old.status).toBe(409);
+    expect((await old.json() as {code:string}).code).toBe("USER_CONFLICT");
+    expect(userState()?.display_name).toBe("First admin edit");
+    expect(roleCodes()).toEqual(["reviewer"]);
+    expect(counts()).toEqual({revisions:1,audits:1});
+  });
+
+  it("rejects a stale edit that races after validation but before D1 batch",async()=>{
+    const old=String(userState()?.updated_at);
+    beforeBatch=()=>{
+      sqlite.prepare("UPDATE admin_users SET updated_at=? WHERE id=?").run("2026-10-31T14:00:00.000Z","qa-user");
+    };
+    const result=await post({id:"qa-user",updatedAt:old,email:"qa-user@example.test",
+      displayName:"Lost edit",isActive:false,roles:["viewer"]});
+    expect(result.status).toBe(409);
+    expect(userState()?.display_name).toBe("Editor");
+    expect(roleCodes()).toEqual(["editor"]);
+    expect(counts()).toEqual({revisions:0,audits:0});
+  });
+
+  it("rejects a stale deactivation and preserves sessions and invites",async()=>{
+    const version=String(userState()?.updated_at);
+    sqlite.prepare("INSERT INTO iaict_auth_sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)")
+      .run("qa-session","qa-user",Date.now(),Date.now()+60000);
+    const first=await post({id:"qa-user",updatedAt:version,email:"qa-user@example.test",
+      displayName:"Updated",isActive:true,roles:["editor"]});
+    expect(first.status).toBe(200);
+    const res=await deactivate("qa-user","admin",version);
+    expect(res.status).toBe(409);
+    expect(userState()?.is_active).toBe(1);
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM iaict_auth_sessions WHERE user_id='qa-user'").get()?.n).toBe(1);
+    expect(counts()).toEqual({revisions:1,audits:1});
   });
 
   it("rolls back metadata, revision and original roles if a replacement role INSERT fails", async () => {
