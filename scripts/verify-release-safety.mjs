@@ -32,7 +32,7 @@ for (const required of ['screenshot: "off"', 'trace: "off"', 'video: "off"', 're
   }
 }
 const stagingTests = read("e2e/staging-acceptance.spec.ts");
-if (/\\bpage\\.screenshot\\s*\\(|\\bpage\\.video\\s*\\(|\\bcontext\\.tracing\\./.test(stagingTests)) {
+if (["page.screenshot(", "page.video(", "context.tracing."].some(call => stagingTests.includes(call))) {
   fail("Staging acceptance must not create screenshots, videos or traces");
 }
 
