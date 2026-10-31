@@ -73,6 +73,14 @@ Dates ISO `YYYY-MM-DD`; statuses `DRAFT, IN_REVIEW, APPROVED, SUPERSEDED`; do no
 
 Owner clarification 2026-10-31: only after the owner explicitly says “bàn giao” may the entire IAICT Portal, including source code, be uploaded. Continue normal development until that command; project milestones never auto-trigger handover. This is not a background promise; it is a deferred handover instruction activated only by explicit owner request tracked in [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38), and [FINAL_HANDOFF_PLAN](./FINAL_HANDOFF_PLAN.md). Destination: https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ . Only after explicit “bàn giao”, before marking HANDOVER ACCEPTED: export the approved release commit, sanitized archive and Git history if approved, docs/test/skill, SHA256 manifest, upload/verify, clean restore and owner acceptance. Do not bundle D1/R2 user data or secrets with source. **Engineering Done for an increment ≠ Project Closed**, and no agent can automatically activate the handover.
 
+## Requirements lifecycle: living changes, frozen SRS
+
+**While building:** GitHub `docs/requirements/<module>/thaydoi.md` is the living per-component record for new requirements, fixes, UI/API/D1 changes, and design decisions. `docs/requirements/SRS.md` is a **LOCKED/NOT_APPROVED placeholder**; do not edit it. The uploaded IAICT outline is reference, not silently the approved SRS. Every change maps to CHG ID, Issue/PR, SHA, impact, test case/run and actual status.
+
+**On explicit owner “chốt”:** compare relevant change logs with source outline, code and test outcomes; confirm exact accepted scope; submit versioned SRS update through separate review PR with traceability and recorded approval. Do not promote every proposed change automatically.
+
+**On explicit owner “bàn giao”:** only then start source code archive to Drive. The two approvals are distinct; all other routine development/test/doc/Drive activity continues normally.
+
 ## 7. Practical change workflow (small batch)
 
 1. **Inspect** GitHub head, opened PR, current Drive registry, newest QA run, Cloudflare staged/prod versions and prior ADR (read-only).
