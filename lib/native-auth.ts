@@ -114,13 +114,21 @@ export async function authenticateNativePassword(
   if (!user || !valid) { await failLogin(db, emailKey, now); return null; }
   const token = randomHex(32);
   const hash = await sha256(token);
-  await db.batch([
+  // A password can rotate while PBKDF2 is running. Mint a session ONLY if
+  // exactly the previously verified credential is still current when D1
+  // executes the insert. This prevents post-rotation sessions from old secrets.
+  const results = await db.batch([
     db.prepare("DELETE FROM iaict_login_attempts WHERE email_hash=?").bind(emailKey),
     db.prepare(
       "INSERT INTO iaict_auth_sessions(token_hash,user_id,created_at,expires_at) " +
-      "SELECT ?,u.id,?,? FROM admin_users u WHERE u.id=? AND u.is_active=1",
-    ).bind(hash, now, now + SESSION_TTL_MS, user.id),
+      "SELECT ?,u.id,?,? FROM admin_users u WHERE u.id=? AND u.is_active=1 " +
+      "AND EXISTS(SELECT 1 FROM admin_user_roles r WHERE r.user_id=u.id) " +
+      "AND EXISTS(SELECT 1 FROM iaict_password_credentials_v2 c " +
+      "WHERE c.user_id=u.id AND c.salt=? AND c.password_hash=? AND c.iterations=?)",
+    ).bind(hash, now, now + SESSION_TTL_MS, user.id,
+      user.salt, user.password_hash, user.iterations),
   ]);
+  if (Number(results[1]?.meta?.changes ?? 0) !== 1) return null;
   return token;
 }
 export async function setNativePassword(
@@ -134,18 +142,43 @@ export async function setNativePassword(
   }
   const next = await createPasswordHash(password);
   const now = new Date().toISOString();
-  await db.batch([
-    db.prepare(
-      "INSERT INTO iaict_password_credentials_v2(user_id,salt,password_hash,iterations,updated_at) " +
-      "VALUES(?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET " +
-      "salt=excluded.salt,password_hash=excluded.password_hash," +
-      "iterations=excluded.iterations,updated_at=excluded.updated_at",
-    ).bind(actor.id, next.salt, next.hash, next.iterations, now),
-    db.prepare("DELETE FROM iaict_auth_sessions WHERE user_id=?").bind(actor.id),
+  // Atomic compare-and-swap: a second racing setup/rotation MUST NOT
+  // overwrite a newer credential after validating an older password.
+  const hasActiveRole = "EXISTS(SELECT 1 FROM admin_users u " +
+    "WHERE u.id=? AND u.is_active=1 AND EXISTS(" +
+    "SELECT 1 FROM admin_user_roles r WHERE r.user_id=u.id))";
+  const write = old
+    ? db.prepare(
+      "UPDATE iaict_password_credentials_v2 SET " +
+      "salt=?,password_hash=?,iterations=?,updated_at=? " +
+      "WHERE user_id=? AND salt=? AND password_hash=? AND iterations=? " +
+      "AND " + hasActiveRole,
+    ).bind(next.salt, next.hash, next.iterations, now,
+      actor.id, old.salt, old.password_hash, old.iterations, actor.id)
+    : db.prepare(
+      "INSERT INTO iaict_password_credentials_v2" +
+      "(user_id,salt,password_hash,iterations,updated_at) " +
+      "SELECT u.id,?,?,?,? FROM admin_users u WHERE u.id=? AND u.is_active=1 " +
+      "AND EXISTS(SELECT 1 FROM admin_user_roles r WHERE r.user_id=u.id) " +
+      "ON CONFLICT(user_id) DO NOTHING",
+    ).bind(next.salt, next.hash, next.iterations, now, actor.id);
+
+  // Do not revoke sessions or write an audit entry for a stale request.
+  // Both statements are conditional on this request's *new* credential.
+  const wroteCredential = "EXISTS(SELECT 1 FROM iaict_password_credentials_v2 c " +
+    "WHERE c.user_id=? AND c.salt=? AND c.password_hash=? AND c.iterations=?)";
+  const results = await db.batch([
+    write,
+    db.prepare("DELETE FROM iaict_auth_sessions WHERE user_id=? AND " + wroteCredential)
+      .bind(actor.id, actor.id, next.salt, next.hash, next.iterations),
     db.prepare(
       "INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at) " +
-      "VALUES(?,?,'auth.password.rotate','admin_users',?,'{}',?)",
-    ).bind(crypto.randomUUID(), actor.id, actor.id, now),
+      "SELECT ?,?,'auth.password.rotate','admin_users',?,'{}',? WHERE " + wroteCredential,
+    ).bind(crypto.randomUUID(), actor.id, actor.id, now,
+      actor.id, next.salt, next.hash, next.iterations),
   ]);
+  if (Number(results[0]?.meta?.changes ?? 0) !== 1) {
+    throw new Error("PASSWORD_CHANGE_CONFLICT");
+  }
   return old ? "rotated" : "created";
 }
