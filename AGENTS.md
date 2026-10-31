@@ -42,6 +42,12 @@ Owner clarification 2026-10-31: full-source handover is DEFERRED. It must start 
 ## Mandatory tabular QA results in each report
 For every executed test batch, **present actual test results as a Markdown table** (not a prose-only summary), minimum columns: `Test case / hạng mục | Môi trường & vai trò | Kết quả mong đợi | Kết quả thực tế | Trạng thái | Bằng chứng (URL)`. Add `Run ID`, `SHA/Worker`, `Defect ID`, and Drive image/folder links where relevant. Distinguish `PASS`, `FAIL`, `BLOCKED`, `NOT_RUN`, `NOT_APPLICABLE`; never inflate 533 unit tests into 533 manual role cases. CI and real Chromium tests must be identified separately. Use `NOT_CAPTURED` when no image exists. Finish with any blockers/next task. This is the **default user-facing format**, also for other AI agents.
 
+## Mandatory test-result presentation — TABULAR REPORTS
+- **Every test report to the IAICT owner MUST use a Markdown table** (also provide a structured table in the persistent QA document/ledger when practical), not prose-only verdicts or a stack of colored badges.
+- Minimum per-case columns: `Case ID | Feature / scenario | Test layer & environment | Test role | Expected | Actual observed | Status (PASS/FAIL/BLOCKED/NOT_RUN) | Evidence / Defect link`. For large batches, group rows by workstream, with a concise summary table. Record exact Run ID, SHA, staging Worker and date in the table heading or adjacent caption; never invent evidence.
+- Report authorized real-browser E2E separately from mocked/local Chromium and from D1-only checks. A test account fixture created in D1 does NOT count as a real role login; unavailable Access credentials mean NOT_RUN/BLOCKED, not PASS.
+- **Drive activity continues as normal** for QA evidence, documents, role account registers, design files, reviews and regular project operations. The **sole deferred activity is whole-project/source-code archival to Drive**, until the owner explicitly requests `bàn giao`. Code continues to be committed to GitHub as normal.
+
 ## Deliverable contract for every task batch
 Report `Scope | Changed files/issues | Tests + exact results | Staging state | Evidence Drive URLs (or NOT_CAPTURED) | Production unchanged | Open risks | Next task`. When no deployment occurs, say `Not deployed`. Use explicit calendar dates and immutable identifiers.
 
