@@ -8,6 +8,8 @@
 **Kết quả thực thi (append-only):** [IAICT_TEST_RUNS.md](./IAICT_TEST_RUNS.md). **Mẫu lỗi:** [IAICT_DEFECT_TEMPLATE.md](./IAICT_DEFECT_TEMPLATE.md).
 **Bằng chứng hình ảnh (private Google Drive, không phải GitHub):** [IAM P0 evidence](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), [PASS](https://drive.google.com/drive/folders/1W1HuaSxtaYMWxLDhdqy-U2HxX3jMlwfz), [FAIL/Defect](https://drive.google.com/drive/folders/1g50_0CJI3uoCNH2aAT5dBlKbyBPtsFln), [Manual/Recheck](https://drive.google.com/drive/folders/1wW6te40YqBwc3dJNMT40cnVESC11Iv5j).
 
+**Current document synchronization (2026-10-31):** living [75-case Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk), and [75-case Word v1.1 archived on Drive](https://docs.google.com/document/d/1gN3ECELzs48QKlGhRUGU8zj0B-Xh350J/edit?usp=drivesdk&ouid=115003313841764302454&rtpof=true&sd=true). 73-case v1.0 is superseded snapshot; retain for provenance. New RFC 6238 unit test status requires separate SHA-scoped CI result.
+
 ## 1. Mẫu quản lý và nguồn chuẩn
 
 Áp dụng mẫu nhẹ **ISO/IEC/IEEE 29119-3:2021-inspired**, phù hợp quy mô IAICT; đối chiếu kiểm thử bảo mật OWASP ASVS 5.0.0 (không tự nhận đạt chứng nhận hoặc bao phủ toàn bộ chuẩn). Quản lý năm thực thể độc lập:
