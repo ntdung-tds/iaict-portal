@@ -18,12 +18,14 @@
 | Agent onboarding living Google Doc | [Agent Instructions / Skill Guide](https://docs.google.com/document/d/1IPioKWQJ1ruXpgdAhKk7gHf3ItGRfShZGQUjiOfXXmo/edit?usp=drivesdk) |
 | Agent and developer guardrails | [AGENTS.md](../../AGENTS.md) |
 | AI multi-agent skill | [IAICT Skill](../../.agents/skills/iaict-project-management/SKILL.md) |
-| Test plan and test case registry | [QA Standard](../qa/IAICT_TEST_MANAGEMENT.md), [75 test cases](../qa/IAICT_TEST_CASES.csv) |
+| Test plan and test case registry | [QA Standard](../qa/IAICT_TEST_MANAGEMENT.md), [78 test cases](../qa/IAICT_TEST_CASES.csv) |
 | Append-only verification results | [QA Run Ledger](../qa/IAICT_TEST_RUNS.md) |
 | Live review-friendly Google Doc | https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit?usp=drivesdk |
 | QA screenshots and error photos | [Drive QA collection](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
 | IAM Test Evidence (PASS/FAIL/Manual) | [Drive IAM](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) |
 | Cloudflare Access backups | [Restricted Drive folder](https://drive.google.com/drive/folders/1e8qxwlTawwJ7wZJcgWOjggKtxqhIGJmt) |
+
+**Staging QA account matrix:** [8 test identities on restricted Drive](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit?usp=drivesdk); [real-browser role acceptance procedure](../qa/IAICT_TEST_IDENTITIES.md). Fixtures disabled/no credentials; 7-role authenticated tests NOT_RUN pending controlled Access identity.
 
 ## Project operating rules
 - GitHub is authoritative for code, issues, PR, test specs and agent policy; Drive for shared docs, stakeholder approvals, visual QA evidence, restricted backup inventory, reports.
@@ -34,7 +36,7 @@
 
 ## Initial known baseline (historical snapshot, not live health)
 - Last **observed deployed staging feature**: SHA `2a76deb5642d6f60a89c894fa91c7c30a42953c8`, Worker `1b8cfe71-88ef-4e21-8937-4f8590daaba4` — IAM password check, sessions, invites. Verify runtime again before deployment.
-- Test catalog: 75 cases (one MFA primitive test, one final archive restore gate; 2026-10-31); earlier tested feature baseline had 526/526 Vitest PASS plus browser and staging acceptance. Historical `RUN-IAM-20261031-01` distinguishes PASS from BLOCKED and NOT_RUN.
+- Test catalog: 78 cases (one MFA primitive test, one final archive restore gate; 2026-10-31); earlier tested feature baseline had 526/526 Vitest PASS plus browser and staging acceptance. Historical `RUN-IAM-20261031-01` distinguishes PASS from BLOCKED and NOT_RUN.
 - This project folder/agent-governance PR **does not itself deploy** application changes.
 
 ## New team member or agent — first 5 minutes
