@@ -68,6 +68,7 @@ export default function NativeSessionPage() {
         <p style={{ color: "#52657a", lineHeight: 1.65 }}>
           Đây là bước xác minh phiên IAICT riêng. Khu vực quản trị vẫn được Cloudflare Access bảo vệ trong giai đoạn chuyển đổi.
         </p>
+        <p><a href="/account/security" style={linkStyle}>Đổi mật khẩu IAICT</a></p>
         <p><a href="/admin" style={linkStyle}>Mở CMS (có thể yêu cầu Cloudflare Access)</a></p>
         <button type="button" disabled={ending} onClick={() => void logout()}
           style={{ marginTop: 12, border: 0, borderRadius: 8, background: "#164b95", color: "#fff", padding: "12px 20px", cursor: "pointer" }}>
