@@ -400,7 +400,7 @@ test("live native activation keeps the token out of GET requests and blocks anon
   for (const path of ["/api/admin/cms/activation", "/admin/users"]) {
     const response = await request.get(path, { maxRedirects: 0 });
     expect([302,303,307,308], path + " must remain behind Access").toContain(response.status());
-    expect(response.headers()["location"] ?? "").toMatch(/cloudflareaccess\\.com|\\/cdn-cgi\\/access\\/login/i);
+    expect(response.headers()["location"] ?? "").toMatch(new RegExp("cloudflareaccess[.]com|/cdn-cgi/access/login", "i"));
   }
   const invalid = await request.get("/api/auth/session", { maxRedirects: 0 });
   expect(invalid.status()).toBe(401);
