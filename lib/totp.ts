@@ -73,7 +73,8 @@ async function totpForStep(secret: Uint8Array, step: number, hash: TotpHash, dig
   const counterBytes = new Uint8Array(8);
   for (let i = 0; i < 8; i++)
     counterBytes[7 - i] = Number((counter >> BigInt(i * 8)) & 255n);
-  const key = await crypto.subtle.importKey("raw", secret, { name:"HMAC", hash }, false, ["sign"]);
+  const isolatedKey = Uint8Array.from(secret); // Worker WebCrypto needs an owned ArrayBuffer (not SharedArrayBuffer).
+  const key = await crypto.subtle.importKey("raw", isolatedKey.buffer, { name:"HMAC", hash }, false, ["sign"]);
   const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, counterBytes));
   const offset = mac[mac.length - 1] & 15;
   const binary = ((mac[offset] & 127) << 24) |
