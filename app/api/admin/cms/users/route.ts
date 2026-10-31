@@ -147,7 +147,7 @@ export async function POST(request: Request) {
     const statements: D1PreparedStatementLike[] = [];
     let previousRoles: string[] = [];
     let revokeExistingSessions = false;
-    let guardedVersion: string | undefined;
+    let guardedVersion = ""; // Only non-empty for an existing user update.
 
     if (id) {
       const current = await db.prepare(`SELECT * FROM admin_users WHERE id=?`).bind(id).first<UserRow>();
