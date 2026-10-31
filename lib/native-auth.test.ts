@@ -4,7 +4,7 @@ import {
   PBKDF2_ITERATIONS, NATIVE_COOKIE, NATIVE_VERIFIED_EMAIL_HEADER,
   clearSessionCookie, cookieForSession, createPasswordHash,
   nativeActorEmail, nativeAuthEnabled, normalizeLoginEmail, sameOriginPost,
-  validPassword, verifyPasswordHash, authenticateNativePassword, setNativePassword,
+  acceptableNewPassword, validPassword, verifyPasswordHash, authenticateNativePassword, setNativePassword,
 } from "./native-auth";
 
 describe("IAICT native authentication: cryptography and boundary guards", () => {
@@ -32,6 +32,16 @@ describe("IAICT native authentication: cryptography and boundary guards", () => 
     expect(validPassword("a".repeat(128))).toBe(true);
     expect(normalizeLoginEmail(" QATest@Example.COM ")).toBe("qatest@example.com");
     expect(normalizeLoginEmail("invalid")).toBeNull();
+  });
+  it("rejects trivially guessed new passwords without invalidating old login rules", async () => {
+    for(const candidate of ["password123","Password-123!","12345678","qwerty1234","Admin@1234","Iaict-2026","aaaaaaaa"]) {
+      expect(validPassword(candidate)).toBe(true);
+      expect(acceptableNewPassword(candidate)).toBe(false);
+      await expect(createPasswordHash(candidate)).rejects.toThrow("INVALID_PASSWORD_WEAK");
+    }
+    expect(acceptableNewPassword("Ab3!xY8?")).toBe(true);
+    expect(acceptableNewPassword("long-unique-sentinel-#9921")).toBe(true);
+    expect(acceptableNewPassword("short")).toBe(false);
   });
   it("uses Secure HttpOnly Lax host-prefix cookie and a matching clearing cookie", () => {
     const token = "a".repeat(64);
