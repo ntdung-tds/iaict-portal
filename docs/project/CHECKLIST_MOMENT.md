@@ -1,7 +1,7 @@
 # IAICT Portal — CHECKLIST MOMENT (LIVE)
-**Moment ID:** `MOMENT-IAICT-20261031-1946-ICT` · **Captured:** `2026-10-31T19:46:47+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
+**Moment ID:** `MOMENT-IAICT-20261031-1956-ICT` · **Captured:** `2026-10-31T19:56:52+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
 **Project:** IAICT Portal / CMS / CRM / IAM · **Status:** ACTIVE / NOT ACCEPTED · **Owner acceptance:** NOT GIVEN.
-**Evidence scope:** audited source HEAD `a6afff7ecb0ed27bc4bddeb4374e2fe333312745` at observation time; this is a baseline **before** checklist-only commits. PR [#36](https://github.com/ntdung-tds/iaict-portal/pull/36) DRAFT on `feat/staging-native-login-r2-20261030`.
+**Evidence scope:** code/runtime baseline audited at source HEAD `a6afff7ecb0ed27bc4bddeb4374e2fe333312745` at observation time; this is a baseline **before** checklist-only commits. PR [#36](https://github.com/ntdung-tds/iaict-portal/pull/36) DRAFT on `feat/staging-native-login-r2-20261030`.
 **Related records:** [PROJECT_PLAN](PROJECT_PLAN.md) · [PROJECT_PROGRESS](PROJECT_PROGRESS.md) · [append-only moment history](checklist-moments/) · [QA run ledger](../qa/IAICT_TEST_RUNS.md) · [78-case catalog](../qa/IAICT_TEST_CASES.csv) · [14 module change logs](../requirements/README.md).
 **Input document:** user-supplied `IAICT_IAM_v1_2_FRESH_DOWNLOAD.docx` (dated 2026-10-31, appendix C/G/H–K); research/architecture proposal reviewed at older SHA `5d29e28b14a2f9aaedcfc59da6acb0665391d443`, **not an approved SRS or proof of implementation**. Do not commit the user file, private personal data, secrets or screenshots to GitHub.
 
@@ -79,6 +79,15 @@ Source: user-supplied IAM report v1.2, Appendix C (`IAM-01`–`IAM-10`) and Appe
 - **Risk gates:** MFA enrollment & recovery missing; workerd PBKDF2 >100k report requires direct staging proof; effective permission/IDOR and R2 media incomplete; review legal/data residency before P0 signoff.
 - **Deferred explicitly:** production deploy/Access removal; whole-source Drive handoff [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) **only on exact owner command “bàn giao”**; `docs/requirements/SRS.md` frozen until explicit “chốt”.
 - **Unresolved approvals:** owner product acceptance, any IAM architecture change ADR and controlled QA account activation are **PENDING**, not implicit from this document.
+
+
+## F. Governance batch completed at 2026-10-31T19:56:52+07:00 — separate from product delivery
+- **Created and verified in GitHub:** [Plan](PROJECT_PLAN.md), [Progress](PROJECT_PROGRESS.md), [live Checklist](CHECKLIST_MOMENT.md), [generic reusable template](CHECKLIST_MOMENT_TEMPLATE.md), first immutable moment `2026-10-31T19-46-ICT.md`; this `MOMENT-IAICT-20261031-1956-ICT` is second immutable checkpoint.
+- **Cross-agent handoff wired:** `AGENTS.md`, `docs/project/OPERATING_MODEL.md`, `docs/project/START_HERE.md`, `.agents/skills/iaict-project-management/SKILL.md`; also [Drive registry](DRIVE_REGISTRY.md) updated from historical QA 73/75 to current **78 cases**.
+- **Drive mirror:** [IAICT Checklist Moment human-readable projection](https://docs.google.com/document/d/1VT6fL6fogtrMg-MieaqhyjITceKiW2EqCcAZ1XcPpqM/edit?usp=drivesdk) created in [02_Planning](https://drive.google.com/drive/folders/1xS5YJd4M_cjPXpv1nF6LUo0CKi_fNrgq), Google Docs content and parent verified. Not automatically synced; GitHub is canonical.
+- **Automation:** new `scripts/verify-checklist-moment.mjs` plus `.test.mjs`, attached to `npm run verify` in `package.json`. Four focused local Node tests PASS before GitHub commit; **GitHub CI must still be checked at the exact final documentation SHA** (prior artifact source `ae0d486f7d758e6493fa70f55b80a58c94c26b02` was under verification at this moment). No claim that final HEAD CI passed yet.
+- **Live status unchanged:** CMS/CRM 5/10 DONE within expressly bounded scope; `CMS-08 / S2` is next work; 7-role and two-admin QA remain BLOCKED/NOT_RUN. Product IAM report v1.2 still a research proposal. Staging/production Worker not modified by this project-governance work; SRS remains frozen; owner approvals pending.
+- **Resume contract:** At next session verify fresh HEAD CI and latest Cloudflare readback *before* any KDF experiment or credential/security mutation. If new CI is failing, fix the governance test and save a new moment. Do not self-promote on the strength of this snapshot.
 
 ## E. Updating this live file and preserving history
 1. At **start of every chat/task batch**, read this LIVE checklist, most recent immutable moment, plan, progress, PR/CI, QA run and Cloudflare state. Never re-start a DONE item just because the chat changed.
