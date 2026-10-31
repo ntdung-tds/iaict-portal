@@ -45,6 +45,36 @@ for a controlled cutover. No production authentication changes are authorized.
 8. MFA/passkeys, password recovery, IP rate limiting, audit retention, security
    review and independent penetration testing required before production GO.
 
+## Native-session pilot before removing Cloudflare Access
+
+The initial native password bootstrap is independently verified in staging D1 by
+a nonzero **credential count**; no credentials or hashes may be fetched for QA.
+This does not prove successful password login or an authorized native session.
+
+- At `/login`, the authorized account owner enters their IAICT email and
+  password **privately**. A valid login sets a Secure/HttpOnly/SameSite=Lax
+  host-bound cookie and redirects to **`/account`**, not `/admin`.
+- `/account` calls `GET /api/auth/session` on the same site with the
+  IAICT cookie. The route independently verifies the token hash against
+  **active, non-expired, non-revoked** sessions and the current active user
+  roles in D1. It never accepts caller identity headers as proof.
+- If the session is valid, the page displays only the current user's own email,
+  display name and CMS role codes. Response headers are
+  `Cache-Control: no-store, private` and `Vary: Cookie`; there are no
+  hashes, salts, raw tokens or third-party telemetry.
+- Anonymous, disabled, expired or revoked sessions must not expose an identity.
+  A separate `POST /api/auth/logout` action validates same-origin requests,
+  revokes the token server-side and clears its cookie.
+- **Cloudflare Access remains on `/admin`, `/api/admin` and descendants.**
+  A valid `/account` result proves the native session works but does **not**
+  certify native access to the CMS, nor authorize edge cutover.
+- The first successful user-owned pilot must be confirmed with a read-only D1
+  aggregate (session **count only**) and no attempt to retrieve cookies,
+  identity emails or passwords.
+- Production's `IAICT_NATIVE_AUTH_ENABLED=false` disables the pilot API.
+  A reviewed staging-only Access cutover, role-by-role browser QA, MFA and
+  recovery readiness are still required before production.
+
 ## User management security updates
 - D1 user create/edit/deactivate remains admin-only and keeps last-active-admin protection.
 - Account creation does **not** create a password or grant Cloudflare Access; native onboarding/invitations and email verification remain separately gated.
