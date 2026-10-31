@@ -12,6 +12,9 @@
 |---|---|
 | Project home / folder IDs | [Drive Registry](./DRIVE_REGISTRY.md) |
 | Scope, governance, RACI, workflow, risks | [Operating Model](./OPERATING_MODEL.md) |
+| Project Charter — DRAFT, sponsor approval pending | [Charter](./PROJECT_CHARTER_DRAFT.md) · [Drive Doc](https://docs.google.com/document/d/1NHgTtMGGvan4rrDXMuGQRUb2bCmAX2gDMctG96q-7I4/edit?usp=drivesdk) |
+| Working Risk Register and open decisions | [Risks](./RISK_REGISTER.md) · [Drive Doc](https://docs.google.com/document/d/1p4qDFDH8qFi6Lq-fOw7b_3Xc4jSqaA4ct6LAXuaaqas/edit?usp=drivesdk) |
+| Agent onboarding living Google Doc | [Agent Instructions / Skill Guide](https://docs.google.com/document/d/1IPioKWQJ1ruXpgdAhKk7gHf3ItGRfShZGQUjiOfXXmo/edit?usp=drivesdk) |
 | Agent and developer guardrails | [AGENTS.md](../../AGENTS.md) |
 | AI multi-agent skill | [IAICT Skill](../../.agents/skills/iaict-project-management/SKILL.md) |
 | Test plan and test case registry | [QA Standard](../qa/IAICT_TEST_MANAGEMENT.md), [73 test cases](../qa/IAICT_TEST_CASES.csv) |
