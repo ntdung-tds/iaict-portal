@@ -54,8 +54,24 @@ export async function redeemNativeActivation(
 ): Promise<boolean> {
   if (!tokenPattern.test(token) || !validPassword(password)) return false;
   const tokenHash = await sha256(token);
-  const credential = await createPasswordHash(password);
   const now = Date.now();
+  // A random, unknown, expired, used or disabled-user invitation must NOT
+  // trigger PBKDF2. This is a publicly reachable API: expensive derivation
+  // before a cheap indexed lookup permits unauthenticated CPU exhaustion.
+  // The invite token is 256 random bits; lookups do not expose identities.
+  const eligible = await db.prepare(
+    "SELECT i.user_id FROM iaict_activation_invites i " +
+    "JOIN admin_users u ON u.id=i.user_id " +
+    "WHERE i.token_hash=? AND i.consumed_at IS NULL " +
+    "AND i.expires_at>? AND i.issued_at<=? AND u.is_active=1 " +
+    "AND EXISTS(SELECT 1 FROM admin_user_roles r WHERE r.user_id=i.user_id) " +
+    "AND NOT EXISTS(SELECT 1 FROM iaict_password_credentials_v2 c WHERE c.user_id=i.user_id) " +
+    "LIMIT 1",
+  ).bind(tokenHash, now, now).first<{user_id:string}>();
+  if (!eligible) return false;
+  // The indexed preflight is only an optimization. The atomic D1 batch below
+  // MUST re-check expiration/consumption/user state to defeat concurrent use.
+  const credential = await createPasswordHash(password);
   const createdAt = new Date(now).toISOString();
   const currentCredential = "EXISTS(SELECT 1 FROM iaict_password_credentials_v2 c " +
     "WHERE c.user_id=i.user_id AND c.salt=? AND c.password_hash=? AND c.iterations=?)";
