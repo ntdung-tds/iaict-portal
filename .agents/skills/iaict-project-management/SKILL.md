@@ -51,6 +51,12 @@ Before any action, list available **connected capabilities**. If the required Gi
 - Avoid bulk reorganizations and deletions; record source parent, target parent and post-move verification for each Drive move.
 - For any security or architectural exception, capture RISK/ADR or owner decision before proceeding.
 
+## Separation of normal work and handover
+The user's explicit clarification is narrow: **do not transfer/export complete source code to Google Drive for final handover until the user says "bàn giao"**. All other authorized project work continues **without interruption**: coding and commits to GitHub, PRs, staging changes subject to their normal safeguards, project management, Google Drive documents and folders, QA test cases, test accounts, browser tests, sanitized Drive screenshots, defect tracking and routine reporting. Do not ask for "bàn giao" to perform ordinary work and do not make final archive preparation a dependency for unrelated tasks.
+
+## Mandatory QA report output: table
+For each test run return a **Markdown table** with at least `Test ID | Environment / role | Expected | Actual | Status | Evidence / Drive link`. Include `Run ID`, `Git SHA/Worker`, `Bug ID` as needed. Show unit/CI, mocked Chromium, anonymous live browser and authenticated live role tests as separate rows; accurately use PASS, FAIL, BLOCKED, NOT_RUN or NOT_APPLICABLE. Screenshot absent → NOT_CAPTURED; never invent links. Append a short action/blocker note, not a prose-only substitute.
+
 ## Final delivery / full-source archival gate
 
 Only when the owner explicitly requests “bàn giao”, execute [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) and `docs/project/FINAL_HANDOFF_PLAN.md`. The owner requires **the whole source code, docs, tests, migrations, skill and recovery guide** uploaded to the verified private [FINAL_HANDOFF Drive folder](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ), with SHA-256 manifest and isolated restore test. Do not upload current working code as a falsely labelled FINAL, do not include secrets, and do not close handover Issue #38 or claim handover complete before owner acceptance; ordinary project development and milestone statuses remain independent. A later agent must read this prerequisite regardless of whether it was present in the original chat.
