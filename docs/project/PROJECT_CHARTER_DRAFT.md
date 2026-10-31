@@ -38,6 +38,10 @@ Agent cannot approve for sponsor or claim independent security audit.
 - No blanket retention or deletion policy set.
 - See `docs/project/RISK_REGISTER.md` for risk owner TBD entries.
 
+## Final acceptance — mandatory source archive
+
+Owner requirement, dated 2026-10-31: project must be delivered to Google Drive **including complete source code**, not only reports. [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) and [Final Handoff Plan](./FINAL_HANDOFF_PLAN.md) are non-waivable exit criteria: approved SHA snapshot, sanitized source, docs and tests, SHA256 manifest, Drive upload and readback, verified clean restore and owner sign-off. This is PENDING until the project actually completes.
+
 ## Approval
 - Proposed by: AI working draft on behalf of IAICT project (not signed).
 - Sponsor decision: PENDING.
