@@ -1,5 +1,5 @@
 import { getDatabaseBinding } from "@/lib/cloudflare-db";
-import { nativeActorEmail, nativeAuthEnabled } from "@/lib/native-auth";
+import { nativeActorEmail } from "@/lib/native-auth";
 import { isCmsRoleCode } from "@/lib/cms-roles";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ type ActorRecord = {
  */
 export async function GET(request: Request) {
   const env = globalThis as typeof globalThis & { __IAICT_NATIVE_AUTH_ENABLED__?: boolean };
-  if (!nativeAuthEnabled(env.__IAICT_NATIVE_AUTH_ENABLED__ ? "true" : undefined)) {
+  if (!env.__IAICT_NATIVE_AUTH_ENABLED__) {
     return Response.json({ error: "IAICT native login is not enabled." }, { status: 404, headers });
   }
   try {
