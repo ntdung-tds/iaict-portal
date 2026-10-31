@@ -55,6 +55,10 @@ Before any action, list available **connected capabilities**. If the required Gi
 
 Only when the owner explicitly requests “bàn giao”, execute [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) and `docs/project/FINAL_HANDOFF_PLAN.md`. The owner requires **the whole source code, docs, tests, migrations, skill and recovery guide** uploaded to the verified private [FINAL_HANDOFF Drive folder](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ), with SHA-256 manifest and isolated restore test. Do not upload current working code as a falsely labelled FINAL, do not include secrets, and do not close issue or project before owner acceptance. A later agent must read this prerequisite regardless of whether it was present in the original chat.
 
+## Role-based real-browser QA
+
+Read `docs/qa/IAICT_TEST_IDENTITIES.md` and its [restricted staging test-user registry](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit?usp=drivesdk). Eight disabled synthetic D1 fixtures represent seven roles; do not activate without approved Access test identity and proper password vault. Route role-sensitive tasks through 7-role positive/negative real-browser scenarios when authorized, record each run independently with actual statuses and sanitized Drive evidence. Cloudflare Browser Rendering quota errors are BLOCKED, not PASS. Use the existing staging-only authenticated Playwright config; no cookies or test login credentials in GitHub/Drive/CI.
+
 ## D. Output format for agents
 
 Use the following concise deliverable layout, with actual proof:
