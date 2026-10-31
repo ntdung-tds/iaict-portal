@@ -124,3 +124,58 @@ test("shows native password readiness and lets admin revoke user sessions", asyn
   expect(api.posts).toHaveLength(1);
   expect(api.posts[0]).toMatchObject({ action: "revokeSessions", id: "qa-user" });
 });
+
+
+test("native login checks a separate private session page instead of redirecting to Cloudflare Access", async ({ page }) => {
+  await page.route("**/api/auth/login", async route => {
+    if (route.request().method() === "POST") {
+      const submitted = route.request().postDataJSON() as {email:string;password:string};
+      expect(submitted).toEqual({email:"qa-admin@example.test",password:"S3cure!!8"});
+      await route.fulfill({ json: { ok:true }, headers: {"Cache-Control":"no-store"} });
+      return;
+    }
+    await route.fulfill({status:405,json:{error:"Method not allowed"}});
+  });
+  await page.route("**/api/auth/session", route => route.fulfill({
+    json:{ok:true,actor:{email:"qa-admin@example.test",displayName:"QA Admin",roles:["admin"]}},
+    headers:{"Cache-Control":"private, no-store","Vary":"Cookie"},
+  }));
+  await page.goto("/login");
+  await page.getByLabel("Email", { exact:true }).fill("qa-admin@example.test");
+  await page.getByLabel("Mật khẩu", { exact:true }).fill("S3cure!!8");
+  await page.getByRole("button", { name:"Đăng nhập", exact:true }).click();
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(page.getByText("Phiên đăng nhập IAICT đã được xác minh.")).toBeVisible();
+  await expect(page.getByText("qa-admin@example.test")).toBeVisible();
+  await expect(page.getByText("admin", { exact:true })).toBeVisible();
+  await expect(page.getByRole("link",{name:/Mở CMS/})).toHaveAttribute("href","/admin");
+});
+
+test("native session account page is usable while signed out without leaking identities", async ({ page }) => {
+  await page.route("**/api/auth/session", route => route.fulfill({
+    status:401,json:{error:"Phiên đăng nhập IAICT không hợp lệ hoặc đã hết hạn."},
+  }));
+  await page.setViewportSize({width:320,height:844});
+  await page.goto("/account");
+  await expect(page.getByText("Chưa đăng nhập IAICT hoặc phiên đã hết hạn.")).toBeVisible();
+  await expect(page.getByRole("link",{name:"Đăng nhập IAICT"})).toHaveAttribute("href","/login");
+  await expect(page.getByText("qa-admin@example.test")).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("native session page sends same-origin logout and returns to login", async ({ page }) => {
+  await page.route("**/api/auth/session", route => route.fulfill({
+    json:{ok:true,actor:{email:"qa-admin@example.test",displayName:"QA Admin",roles:["admin"]}},
+  }));
+  let logoutCalls=0;
+  await page.route("**/api/auth/logout", route=>{
+    expect(route.request().method()).toBe("POST");
+    logoutCalls++;
+    return route.fulfill({json:{ok:true}});
+  });
+  await page.goto("/account");
+  await expect(page.getByRole("button",{name:"Đăng xuất IAICT"})).toBeVisible();
+  await page.getByRole("button",{name:"Đăng xuất IAICT"}).click();
+  await expect(page).toHaveURL(/\/login$/);
+  expect(logoutCalls).toBe(1);
+});
