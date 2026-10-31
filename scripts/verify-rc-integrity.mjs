@@ -52,16 +52,18 @@ for (let i=1;i<reviewed.length;i++) {
 const migrations = readdirSync("cloudflare/migrations")
   .filter((name) => /^\d{4}_.+\.sql$/.test(name)).sort();
 // Original release baseline 0001-0021 is immutable. Native auth requires
-// exactly two forward-only reviewed migrations. Verify their exact Git blob IDs.
+// exactly three forward-only reviewed migrations. Verify their exact Git blob IDs.
 const nativeAuthMigrations = [
   ["cloudflare/migrations/0022_iaict_native_auth.sql", "cf40971d0f1029adac0a2ea9a9e7545b998dc6e8"],
   ["cloudflare/migrations/0023_iaict_auth_pbkdf2_workers.sql", "18c4908ac3bc3d49b5a703fd2d6b4fa1d921d804"],
+  ["cloudflare/migrations/0024_iaict_activation_invites.sql", "8c85804c7e99688ada086dec44b120ccc9b71e96"],
 ];
-assert(migrations.length === 23, `Expected 23 migrations with exact pinned 0022 and 0023; got ${migrations.length}`);
+assert(migrations.length === 24, `Expected 24 migrations with exact pinned 0022, 0023 and 0024; got ${migrations.length}`);
 assert(migrations[0] === "0001_core.sql" &&
        migrations[20] === "0021_v17_admin_role_normalization.sql" &&
        migrations[21] === "0022_iaict_native_auth.sql" &&
-       migrations[22] === "0023_iaict_auth_pbkdf2_workers.sql",
+       migrations[22] === "0023_iaict_auth_pbkdf2_workers.sql" &&
+       migrations[23] === "0024_iaict_activation_invites.sql",
        "D1 migration identity changed unexpectedly");
 for (const [path, sha] of nativeAuthMigrations) {
   assert(git("hash-object", path) === sha, `Migration drift: ${path} differs from reviewed immutable blob`);
@@ -90,7 +92,7 @@ try {
   ]) {
     assert(changed.includes(required), `Expected security/QA delta missing from RC: ${required}`);
   }
-  console.log(`[rc-graph] release branch delta: ${changed.length} files; 21 canonical migrations unchanged; pinned 0022 and 0023`);
+  console.log(`[rc-graph] release branch delta: ${changed.length} files; 21 canonical migrations unchanged; pinned 0022, 0023 and 0024`);
 } catch (e) {
   errors.push(`Cannot independently compare RC tree to release: ${String(e).slice(0,200)}`);
 }
