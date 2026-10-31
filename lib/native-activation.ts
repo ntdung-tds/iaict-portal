@@ -104,3 +104,26 @@ export async function redeemNativeActivation(
   return Number(results[0]?.meta?.changes ?? 0) === 1 &&
     Number(results[1]?.meta?.changes ?? 0) === 1;
 }
+
+/** Admin-only caller. Atomic audit-before-delete revokes an unconsumed invite.
+ * A consumed invitation is never altered; a fresh invite cannot race this
+ * transaction in D1. No token hashes are returned or logged.
+ */
+export async function revokeNativeActivation(
+  db: D1DatabaseLike, actorId: string, userId: string,
+): Promise<boolean> {
+  if(!actorId||actorId.length>128||!userId||userId.length>128||actorId===userId)
+    throw new Error("INVALID_ACTIVATION_TARGET");
+  const now=new Date().toISOString();
+  const results=await db.batch([
+    db.prepare(
+      "INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at) " +
+      "SELECT ?,?,'auth.activation.revoke','admin_users',?,'{}',? " +
+      "WHERE EXISTS(SELECT 1 FROM iaict_activation_invites WHERE user_id=? AND consumed_at IS NULL)",
+    ).bind(crypto.randomUUID(),actorId,userId,now,userId),
+    db.prepare(
+      "DELETE FROM iaict_activation_invites WHERE user_id=? AND consumed_at IS NULL",
+    ).bind(userId),
+  ]);
+  return Number(results[0]?.meta?.changes??0)===1&&Number(results[1]?.meta?.changes??0)===1;
+}
