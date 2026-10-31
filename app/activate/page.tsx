@@ -11,13 +11,23 @@ export default function NativeActivationPage() {
   const [done,setDone]=useState(false);
   const [message,setMessage]=useState("");
   useEffect(()=>{
-    // The token stays in the URL fragment (never sent on the GET). Remove it
-    // from browser history immediately; do not include it in analytics or logs.
-    const fragment=new URLSearchParams(window.location.hash.slice(1));
-    const value=fragment.get("token")??"";
-    window.history.replaceState(window.history.state,"",window.location.pathname);
-    setToken(/^[a-f0-9]{64}$/.test(value)?value:"");
-    setReady(true);
+    // Fragments are never sent on GET. Re-read on same-document hash changes
+    // (e.g. a second invite link opened in the existing /activate browser tab).
+    // Strip the fragment before rendering any token-dependent UI.
+    function readInvitation(){
+      const fragment=new URLSearchParams(window.location.hash.slice(1));
+      const value=fragment.get("token")??"";
+      window.history.replaceState(window.history.state,"",window.location.pathname);
+      setToken(/^[a-f0-9]{64}$/.test(value)?value:"");
+      setPassword("");
+      setConfirm("");
+      setDone(false);
+      setMessage("");
+      setReady(true);
+    }
+    readInvitation();
+    window.addEventListener("hashchange",readInvitation);
+    return ()=>window.removeEventListener("hashchange",readInvitation);
   },[]);
   async function submit(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
