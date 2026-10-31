@@ -28,6 +28,8 @@ jobs:
         run: npm run verify:qa
       - name: Verify multi-agent instructions and portable Skill
         run: npm run verify:agent-skill
+      - name: Verify SRS freeze and per-component change records
+        run: npm run verify:requirements
       - name: Reject unsafe staging release and GitHub QA uploads
         run: npm run verify:release-safety
       - name: Verify immutable approved SHA and Worker/D1 rollback negative cases
