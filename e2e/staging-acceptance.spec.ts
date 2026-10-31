@@ -373,9 +373,10 @@ test("independent native session page on staging stays outside Access while admi
   await expect(page.getByText("Chưa đăng nhập IAICT hoặc phiên đã hết hạn.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Đăng nhập IAICT" })).toHaveAttribute("href", "/login");
 
-  for (const headers of [{}, { "X-IAICT-Verified-Email": "fake@example.invalid" }, {
+  const headerVariants: Array<Record<string, string>> = [{}, { "X-IAICT-Verified-Email": "fake@example.invalid" }, {
     Cookie: "__Host-iaict_session=" + "a".repeat(64),
-  }]) {
+  }];
+  for (const headers of headerVariants) {
     const response = await request.get("/api/auth/session", { headers, maxRedirects: 0 });
     expect(response.status()).toBe(401);
     expect(response.headers()["cache-control"]).toContain("no-store");
