@@ -185,3 +185,17 @@ test("native session page sends same-origin logout and returns to login", async 
   await expect(page).toHaveURL(/\/login$/);
   expect(logoutCalls).toBe(1);
 });
+
+
+test("password setup identifies the authenticated CMS account email, not a different personal email", async ({ page }) => {
+  await page.route("**/api/admin/cms/session", route => route.fulfill({
+    json: {ok:true,actor:{id:"qa-admin",email:"qa-admin@example.test",displayName:"Admin",roles:["admin"]}},
+    headers:{"Cache-Control":"no-store"},
+  }));
+  await page.goto("/admin/security");
+  await expect(page.getByRole("heading",{name:"Bảo mật tài khoản IAICT"})).toBeVisible();
+  await expect(page.getByTestId("iaict-login-email")).toHaveText("qa-admin@example.test");
+  await expect(page.getByText("phải sử dụng chính xác email trên", {exact:false})).toBeVisible();
+  await expect(page.getByRole("link",{name:"Mở trang đăng nhập IAICT"})).toHaveAttribute("href","/login");
+  await expect(page.getByText("qa-other@example.test")).toHaveCount(0);
+});
