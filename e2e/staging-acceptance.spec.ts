@@ -363,3 +363,27 @@ test("native login never exposes credentials via GET and bootstrap stays behind 
     expect(response.headers()["location"] ?? "").toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
   }
 });
+
+
+test("independent native session page on staging stays outside Access while admin remains protected", async ({ page, request }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const pageResponse = await page.goto("/account", { waitUntil: "domcontentloaded" });
+  expect(pageResponse?.status(), "native session account page should be public but identity-gated by D1").toBe(200);
+  await expect(page.getByRole("heading", { name: "Kiểm tra đăng nhập IAICT" })).toBeVisible();
+  await expect(page.getByText("Chưa đăng nhập IAICT hoặc phiên đã hết hạn.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Đăng nhập IAICT" })).toHaveAttribute("href", "/login");
+
+  for (const headers of [{}, { "X-IAICT-Verified-Email": "fake@example.invalid" }, {
+    Cookie: "__Host-iaict_session=" + "a".repeat(64),
+  }]) {
+    const response = await request.get("/api/auth/session", { headers, maxRedirects: 0 });
+    expect(response.status()).toBe(401);
+    expect(response.headers()["cache-control"]).toContain("no-store");
+    const content = await response.text();
+    expect(content).not.toContain("fake@example.invalid");
+  }
+
+  const adminResponse = await request.get("/api/admin/cms/session", { maxRedirects: 0 });
+  expect([302, 303, 307, 308]).toContain(adminResponse.status());
+  expect(adminResponse.headers()["location"] ?? "").toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+});
