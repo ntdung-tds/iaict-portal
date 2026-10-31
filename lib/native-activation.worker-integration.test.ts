@@ -179,6 +179,35 @@ describe("real Worker -> D1 -> role -> invitation -> first login integration",()
     })).status).toBe(401);
   });
 
+  it("enforces a seven-role CMS matrix at every native-session request",async()=>{
+    const roleCodes=[
+      "admin","editor","reviewer","viewer","news_admin","news_editor","news_reviewer",
+    ] as const;
+    for(const code of roleCodes){
+      sqlite.prepare("INSERT OR IGNORE INTO roles(id,code,name) VALUES(?,?,?)")
+        .run("qa-role-"+code,code,"QA "+code);
+    }
+    await setNativePassword(db,{id:"qa-viewer",email:"viewer@example.test"},VIEWER_PASS);
+    const viewerCookie=await login("viewer@example.test",VIEWER_PASS);
+
+    for(const code of roleCodes){
+      sqlite.prepare("DELETE FROM admin_user_roles WHERE user_id=?").run("qa-viewer");
+      sqlite.prepare("INSERT INTO admin_user_roles(user_id,role_id) VALUES(?,?)")
+        .run("qa-viewer",code==="admin"?"role-admin":code==="viewer"?"role-viewer":"qa-role-"+code);
+      const session=await send("/api/admin/cms/session",{cookie:viewerCookie});
+      expect(session.status,"session role "+code).toBe(200);
+      expect(await session.json()).toMatchObject({actor:{roles:[code]}});
+
+      const list=await send("/api/admin/cms/users",{cookie:viewerCookie});
+      expect(list.status,"users read role "+code).toBe(code==="admin"?200:403);
+      const issue=await send("/api/admin/cms/activation",{
+        method:"POST",cookie:viewerCookie,body:{id:"qa-disabled"},
+      });
+      // The admin passes RBAC, then fails the disabled-recipient check (409).
+      expect(issue.status,"invitation write role "+code).toBe(code==="admin"?409:403);
+    }
+  });
+
   it("rejects cross-site requests even with an authenticated admin cookie",async()=>{
     const adminCookie=await login("admin@example.test",ADMIN_PASS);
     const response=await send("/api/admin/cms/activation",{
