@@ -48,6 +48,8 @@
 
 | 2026-11-02T18:09:00+07:00 | [PR #55](https://github.com/ntdung-tds/iaict-portal/pull/55), iterative local D1 challenge CAS review, [RUN-IAM-20261102-12](../qa/IAICT_TEST_RUNS.md) | Two gaps found and corrected (role scope/factor reset while active; synthetic epoch queried from D1). **31/31 D1 groups PASS**, **1/16** same-token success, initial SHA `b80fb136` CI portal 4/4 and 559/559 Vitest. Independent re-review found no new in-scope code defect; QA registry remains **85** | Final SHA CI/staging then close scoped loop; future full OTP+session atomicity NOT_RUN |
 
+| 2026-11-02T19:11:00+07:00 | [PR #57](https://github.com/ntdung-tds/iaict-portal/pull/57), `IAM-FUT-013`, [RUN-IAM-20261102-13](../qa/IAICT_TEST_RUNS.md) | Full **synthetic** D1 batch guards challenge+factor CAS, then creates session+audit. **20/20 local groups PASS**, 1/16 same challenge, 1/2 same OTP step, session/audit conflicts rollback; source SHA `f621f1ea`. QA **86 cases**; no real MFA deployment or E2E | Final CI/public staging; living QA Doc, merge if green; independent real TOTP+schema+key/session integration design |
+
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.
 - **RISK / pending:** full MFA enrollment, secret key lifecycle, reset/recovery, scoped permission/IDOR, hosted Worker KDF/AES-GCM parity, R2 media upload, offboarding and personal-data safeguards. Isolated workerd 100001 PBKDF2 already succeeded; it does NOT establish general hosted behavior.
