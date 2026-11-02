@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 9,
-  "updated_at": "2026-11-02T04:47:11.976Z",
+  "revision": 10,
+  "updated_at": "2026-11-02T05:21:01.458Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T04:47:11.976Z",
+    "updated_at": "2026-11-02T05:21:01.458Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -73,7 +73,8 @@
           "status": "PARTIAL",
           "case_ids": [
             "IAM-FUT-008",
-            "IAM-FUT-009"
+            "IAM-FUT-009",
+            "IAM-FUT-010"
           ],
           "unit": {
             "status": "PASS",
@@ -84,9 +85,10 @@
           },
           "not_run": [
             "HOSTED_WORKER_SECRET_BINDING",
-            "D1_FACTOR_STORAGE",
+            "LIVE_FACTOR_MIGRATION",
+            "TOTP_CHALLENGE_INTEGRATION",
+            "HOSTED_D1_REPLAY_RACE",
             "MFA_ENROLLMENT",
-            "REPLAY_SAFE_CHALLENGE",
             "KEY_ROTATION_AND_RECOVERY",
             "LIVE_AUTHENTICATED"
           ],
@@ -101,9 +103,21 @@
             "version": "1.20261012.1",
             "compatibility_date": "2026-10-12",
             "previous_run_id": "RUN-IAM-20261102-03"
+          },
+          "local_d1_cas": {
+            "status": "PASS",
+            "check_count": 15,
+            "parallel_attempts": 16,
+            "accepted_same_counter": 1,
+            "run_id": "RUN-IAM-20261102-05",
+            "source_sha": "2bee360c3552e9dcfe60c94e7719b9d8ae7d33a5",
+            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236",
+            "environment": "LOCAL_MINIFLARE_D1",
+            "replay_case": "IAM-FUT-010",
+            "test_only_schema": true
           }
         },
-        "description": "AES-GCM helper passes 6 Node unit tests and 11 workerd checks per request; probe harness revised to reset check state, 2 sequential workerd requests independent and wrong route/method rejected. No actual MFA factors, key lifecycle, hosted bindings, D1, replay, enrollment or recovery implemented."
+        "description": "Crypto: Node unit 6/6 PASS, local workerd AES-GCM 11 checks twice PASS. Proposed D1 replay-counter CAS: 15 local Miniflare assertion groups PASS, same step 1/16 accepted; test-only table, not live MFA. Key lifecycle, actual D1 migration, first-factor auth, step verification, recovery and all hosted E2E NOT_RUN. ADR PROPOSED."
       },
       {
         "id": "T-IAM-ONBOARDING",
@@ -150,11 +164,12 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR #45 merged at a8ad093ba09ee30a9c98d8510cca561cde2ae6eb; review identified module-scope state shared by probe requests. PR #46 corrects harness scope and sanitizes errors. Observed repeat test in local workerd at SHA 702ce448: 11/11 per each 2 sequential requests and path/method 404 PASS; append-only RUN-IAM-20261102-04.",
-      "next_action": "Verify final PR #46 portal-ci and public staging acceptance, sync living QA doc (82 cases, same IAM-FUT-009), merge safe harness fix. Afterwards review an isolated synthetic D1 conditional update race test and formal key lifecycle before any real MFA integration.",
+      "last_completed_step": "PR #46 merged 2065637e67ef45635c4789bbddab335669626461 (staging attempt 1 503 FAIL, rerun PASS, issue #30 still open). Isolated D1 CAS synthetic proof at source SHA 2bee360c: Miniflare v5, 15 checks PASS, 16 same-counter concurrent writes with 1 success, RUN-IAM-20261102-05; 83 QA cases. Preliminary Miniflare config failures preserved in CI history.",
+      "next_action": "Verify final PR #47 portal-ci and public read-only staging, sync 83-case QA Google Doc and merge only after checks. Then design/verify real factor lifecycle and integration boundaries with separate security/Owner decision before any hosted D1 migration, secret binding or real MFA endpoint.",
       "blockers": [
-        "MFA D1 factor, secret/KMS binding and key rotation design unapproved; full enrollment/replay/recovery NOT_RUN.",
-        "Real authenticated 7-role IAM E2E blocked on approved QA identities; hosted Worker parity and Owner security acceptance not established."
+        "D1 local CAS proof does not establish hosted multi-region D1 behavior, authentic TOTP validation, API session binding, rate limiting or recovery.",
+        "No authorized real MFA factor migration/key provisioning or 7-role authenticated acceptance; Owner/security decision pending.",
+        "Staging has tracked intermittent public /tin-tuc HTTP 503 (Issue #30), separate from local IAM tests."
       ],
       "actor": "pcs-solo-lead"
     },
