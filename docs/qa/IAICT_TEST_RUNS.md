@@ -301,3 +301,28 @@
 | `IAM-FUT-004` | Authenticated seven-role staging | Server-side assurance and RBAC checked from D1 for every route | QA users remain disabled; no live role testing | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
 
 **Important:** a successful unit test of the isolated predicate does not prove the production/staging login route enforces it. Existing `native-auth.ts`, `worker.ts`, login routes and D1 schema are intentionally unchanged. Final PR SHA CI and staging acceptance must be separately verified before merge.
+
+
+## RUN-IAM-20261102-09 — Two independent review passes of isolated MFA preauth guard
+
+| Field | Observed result |
+| --- | --- |
+| Date | 2026-11-02, Asia/Ho_Chi_Minh |
+| Scope | Security review of merged PR #50 and bounded fix in [PR #51](https://github.com/ntdung-tds/iaict-portal/pull/51); existing case `IAM-FUT-011` only |
+| Review pass 1 — static and boundaries | Read `lib/native-mfa-preauth.ts`, tests, `native-auth.ts`, QA, ADR, PCS and original PR #50 diff. The new module remained **unimported by Worker/login**; current password-only session behavior unchanged. Found truthy input coercion for `accountActive`/`hasActiveRole` and type assumptions on token/hash inputs |
+| Review pass 2 — adversarial cases | Add four independent negative Vitest scenarios with `"false"`, `"true"`, numeric 0/1, Boolean wrapper objects, null/undefined account/role flags, non-string token or digest inputs; strict boolean and primitive-string validation now fails closed. Future trusted D1 caller must explicitly normalize 0/1 before invoking predicate |
+| Exact tested source SHA | `828d106029b75b73afb4ccf1c79c1e853c26a2c6` (PR #51 code/QA catalog after correction; document/checkpoint edits later) |
+| Observed CI | [portal-ci #41416918807](https://github.com/ntdung-tds/iaict-portal/actions/runs/41416918807) — `verify` job #125182920590 **SUCCESS**, new module **20/20** test PASS, overall **559/559 Vitest PASS**, QA registry **84** cases PASS, requirements and frozen-SRS gate PASS |
+| Initial verification failure | [CI #41416787752](https://github.com/ntdung-tds/iaict-portal/actions/runs/41416787752) initial `verify` job **FAIL** due to missing QA registry update in the first revision, not a security assertion failure. Existing `IAM-FUT-011` test-case row was revised and test rerun; original failure remains in CI history |
+| Runtime/coverage limits | **LOCAL_NODE_UNIT_ONLY**; helper still not imported in Worker/login/actual session readers, no D1 schema or user MFA enrollment. Positive challenge eligibility remains **READ_ONLY** and is NOT atomic redemption, OTP verification, or full-session issuance |
+| Real MFA security acceptance | `IAM-FUT-001` full login, `IAM-FUT-002` recovery, `IAM-FUT-004` seven-role cross-route and hosted D1 challenge **NOT_RUN** |
+| Deployment | **NONE**; no Cloudflare staging/production Worker, Access, D1, R2, credentials or live user modified |
+| Media | **NO_IMAGE_REQUIRED**, [private IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Approval | SRS FROZEN, ADR-0002 PROPOSED, owner/security activation NOT APPROVED |
+
+| Case | Environment and role | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-011` | Local Node/Vitest, synthetic typed and malformed values | Deny truthy non-boolean account/role flags, reject non-string token/digest, preserve valid strict-boolean semantics | **20/20 PASS** (four additional negative scenarios) | **PASS — ISOLATED UNIT** | [CI verify job](https://github.com/ntdung-tds/iaict-portal/actions/runs/41416918807/job/125182920590) |
+| `IAM-FUT-001` | Real hosted IAM | Verify OTP and atomically consume challenge before privileged session | Not integrated | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+
+**Do not infer live MFA enforcement from a unit test.** Final source SHA CI and anonymous staging acceptance must be verified separately before merging PR #51.
