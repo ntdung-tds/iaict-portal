@@ -64,3 +64,34 @@ The isolated `lib/mfa-secret-crypto.ts` helper uses AES-256-GCM with a new 96-bi
 - **Verification gap:** `IAM-FUT-008` was tested in Node/Vitest. Workerd AES-GCM compatibility, actual secret binding, D1 migrations, concurrency, multi-role and browser scenarios remain **NOT_RUN**.
 
 **Decision:** continue with an architecture proposal and isolated testing. Do not enlarge the runtime implementation or create a secret/migration until risk, rollback, recovery and Owner/security decision are documented. **ADR status stays PROPOSED.**
+
+
+## 2026-11-02 — Local workerd AES-GCM result and minimal F2 key/factor design
+
+**Measured compatibility:** [RUN-IAM-20261102-03](../qa/IAICT_TEST_RUNS.md) demonstrates **11/11 checks PASS** for the actual `lib/mfa-secret-crypto.ts` bundled into isolated workerd npm `1.20261012.1`, compatibility date `2026-10-12`. Hosted runtime, live bindings, D1 and authenticated MFA remain **NOT_RUN**. No migration or deployment is authorized by this result.
+
+### Proposed key lifecycle — review before implementation
+1. **Provision:** Generate one independent 256-bit symmetric master key per environment using an approved confidential source, expose to the Worker only through a **secret binding/KMS**. Do not use `vars`, GitHub variables, D1, R2, screenshots or a client bundle for key material. Never log/export key, plaintext TOTP seed, QR or backup codes. Cloudflare secret updates can create new Worker versions; treat provisioning and rollback as separate approved operations, not safe side effects of tests.
+2. **Key IDs:** Maintain a non-secret key identifier in the envelope. Only an explicit, allowlisted ID maps to an available secret; fail closed for unknown, missing or revoked IDs. The current helper imports nonextractable `CryptoKey` from caller-provided bytes; the call site must safely obtain the key, preserve separation between staging and production and avoid caching raw key bytes in logs or persistent state.
+3. **Rotation:** New enrollments use a new `keyId`; temporarily retain approved old decrypt-only material until all encrypted envelopes have been read-back, re-encrypted with a fresh IV under the new key and verified. Rotation must be resumable/idempotent, auditable and bounded; do **not** delete old secrets until encrypted-factor and backup/restore coverage is verified. Define lost-key disaster/recovery decision beforehand; no silent reset of MFA.
+4. **Nonce budget:** Random 96-bit GCM IV per record and per re-encryption. Collision probability is small but not impossible; impose a documented maximum encryptions/key and a rotation/monitoring policy before high-scale use. Crypto helper nonextractability is not by itself end-to-end key management.
+
+### Proposed D1 factor contract — NOT a migration
+
+One separate `iam_mfa_factors` table is the minimum useful starting point, *subject to real-schema cross-check and migration review*, with these fields:
+
+| Field group | Proposed semantics |
+| --- | --- |
+| Ownership | stable `factor_id` primary key, `user_id` FK to actual IAM users table; unique constraint for active TOTP factor per user if that is the approved product policy |
+| Encrypted seed | `envelope_version=1`, `algorithm='AES-256-GCM'`, `key_id`, `iv_b64url`, `ciphertext_b64url`; no plaintext or backup seed column |
+| Lifecycle | `status` one of `PENDING/ACTIVE/DISABLED`; `pending_expires_at`, `confirmed_at`, `created_at`, `updated_at`, optional `disabled_at` |
+| Replay/abuse | `last_accepted_counter` nullable integer, `failed_attempts` and `locked_until`; counter and attempt limits must be checked server-side, not derived from client |
+| Concurrency/audit | row `revision` for conditional updates; immutable audit events in existing IAM audit design, not storing raw OTP/key bytes |
+
+Proposed replay verification SQL concept (not runnable migration): `UPDATE iam_mfa_factors SET last_accepted_counter=?, revision=revision+1 WHERE factor_id=? AND user_id=? AND status='ACTIVE' AND (last_accepted_counter IS NULL OR last_accepted_counter < ?)`; issue an MFA-authenticated session **only when the conditional write commits exactly one row and the primary-factor challenge is still valid**. Validate D1 `meta.changes` and concurrency in an isolated D1 test; group audit/session/factor state changes transactionally or design a safe compensation path. Do not issue a full session before MFA verification.
+
+**Recovery and rollback gates:** verified first factor + MFA/recovery code for sensitive changes, separate approved privileged emergency recovery, one-time hashed backup codes, dual control and audits, revocation after reset, test of lost authenticator and key loss. Recoverable backup/restore and no orphaned ACTIVE factors required before any staged migration.
+
+**Decision:** Design proposal only, **ADR-0002 remains PROPOSED**. No real key, D1 schema, MFA factor endpoints, rate limits, Access cutover or production changes in this PR. Next test layers: synthetic D1 CAS/replay race, key rotation/failure cases, key-binding runtime, real authorized staging E2E after Owner/security review.
+
+**References:** [Cloudflare Workers Web Crypto](https://developers.cloudflare.com/workers/runtime-apis/web-crypto/), [Workers Secrets](https://developers.cloudflare.com/workers/configuration/secrets/), [D1 prepared-statement semantics](https://developers.cloudflare.com/d1/worker-api/prepared-statements/), [D1 transactions via batch](https://developers.cloudflare.com/d1/worker-api/d1-database/).

@@ -152,3 +152,29 @@
 | `IAM-FUT-001` | Live MFA / real authorized role | Secure factor enrollment, OTP challenge and replay guard | No integrated enrollment or real role QA | **NOT_RUN** | Issue #37 |
 
 **Scope warning:** The CI on this source SHA predates later documentation/checkpoint edits on the same PR. Reconfirm all CI gates at the PR's final head before merge; never transfer this test verdict to a deployed Worker.
+
+
+## RUN-IAM-20261102-03 — AES-256-GCM exact library on isolated local workerd
+
+| Field | Actual observation |
+| --- | --- |
+| Date/timezone | 2026-11-02 11:32:49 ICT (04:32:49 UTC) |
+| Scope / test | CMS-08/S3 `T-IAM-MFA-F2` / `IAM-FUT-009` (runtime crypto only) |
+| Exact tested SHA | `23c0960dba63905dfcf90fff2309e81b78f6e838` (initial PR #45 head **before** QA report/checkpoint edits) |
+| CI proof | [portal-ci #41389043762](https://github.com/ntdung-tds/iaict-portal/actions/runs/41389043762), `kdf-local-workerd` job [#125096175596](https://github.com/ntdung-tds/iaict-portal/actions/runs/41389043762/job/125096175596) **PASS** |
+| Actual runtime | **LOCAL_WORKERD** npm `1.20261012.1`, compatibility date `2026-10-12`, `nodejs_compat`; loopback-only `127.0.0.1:19388` |
+| Code being tested | The **real** `lib/mfa-secret-crypto.ts` bundled via installed esbuild into an ephemeral workerd module; **not** a manually rewritten AES example |
+| Inputs | Fixed synthetic 160-bit seed and 256-bit AES key, generated solely for CI; no account password or secret binding |
+| Logged output | Sanitized check IDs, `passed=11`, verdict and runtime version. **No key bytes, seed bytes, OTP, ciphertext or session** |
+| Deployment | **NOT DEPLOYED**; no staging/production Worker modification, D1, R2, Cloudflare Access or real credentials |
+| Evidence image | **NO_IMAGE_REQUIRED** for local crypto runner; private [IAM QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Other CI | The workerd job PASS is confirmed at this SHA; verify final PR #45 **portal-ci** plus public-only staging-acceptance independently before merge |
+| Owner / architecture | ADR-0002 PROPOSED; SRS FROZEN; no user or security acceptance for hosted MFA |
+
+| Case ID | Environment / role | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-009` | Isolated local workerd / synthetic | 11 positive/negative WebCrypto checks using exact project helper | **11/11 PASS**, HTTP 200; roundtrip/nonce/key, owner+factor+key AAD, swapped IV/ciphertext, wrong key and malformed IV rejected | **PASS — LOCAL_WORKERD ONLY** | [CI job](https://github.com/ntdung-tds/iaict-portal/actions/runs/41389043762/job/125096175596) |
+| `IAM-FUT-008` | Node/Vitest / synthetic | Independent 6-case crypto unit suite | Previous [RUN-IAM-20261102-02](#run-iam-20261102-02--aes-256-gcm-totp-seed-protection-helper-unit-only) still valid at its pinned SHA | **PASS — PRIOR UNIT ONLY** | [CI #41386111393](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386111393) |
+| `IAM-FUT-001` | Hosted Worker + real approved role | MFA enrollment, atomic replay guard, recovery and audit | Not implemented or exercised | **NOT_RUN** | Issue #37 |
+
+**Interpretation:** The exact AES-256-GCM helper functions on **one tested local workerd version** under the project's compatibility flags. It does **not** establish hosted Cloudflare parity, secret/KMS injection, concurrency/replay resistance, key rotation, D1 factor schema, IAM step-up or authorized E2E acceptance. Keep Cloudflare Access, SRS and production unchanged.

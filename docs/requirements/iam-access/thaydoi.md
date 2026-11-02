@@ -77,3 +77,12 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 - **Tác động:** thư viện và kiểm thử nội bộ; không sửa giao diện, D1, Access, staging hay production.
 - **Đối chiếu:** Issue #37, ADR-0002 PROPOSED. CI/Run: PENDING tại thời điểm ghi; không tuyên bố chức năng MFA đã hoàn thành.
 - **SRS:** CHƯA_CHỐT. Không sửa SRS hiện hành.
+
+### CHG-IAM-ACCESS-20261102-03 — Local workerd AES-GCM runtime compatibility (QA-only)
+- **Trạng thái:** PENDING_CI / CHƯA_CHỐT, 02/11/2026; task CMS-08/S3 (`T-IAM-MFA-F2`), Issue #37.
+- **Trước:** `IAM-FUT-008` có Node/Vitest AES-256-GCM unit PASS nhưng chưa có bằng chứng chạy cùng thư viện trong Workers runtime.
+- **Sau:** `scripts/mfa-workerd/` sử dụng esbuild có sẵn để bundle **đúng `lib/mfa-secret-crypto.ts`** vào workerd local `127.0.0.1:19388`; một bước trong GitHub PR job đã có chạy 11 kiểm tra với dữ liệu tổng hợp, chỉ xuất tên kiểm tra + verdict; `IAM-FUT-009` trong QA CSV. `probe.bundle.mjs` tạo tạm rồi xóa. Chỉ cập nhật PASS sau CI thật.
+- **Ảnh hưởng:** CI + test + tài liệu; không đổi thư viện encryption đang dùng, route, Cloudflare bindings, tài khoản, D1, Access, staging hoặc production; không có secrets.
+- **QA:** `IAM-FUT-009` READY; chưa phải MFA enrollment/login E2E (`IAM-FUT-001` vẫn NOT_RUN). Evidence local CI log, ảnh NO_IMAGE_REQUIRED.
+- **Kiến trúc:** ADR-0002 tiếp tục PROPOSED; thiết kế vòng đời khóa, factor D1, CAS replay và recovery cần review trước bất kỳ tích hợp thực tế.
+- **SRS:** FROZEN / CHƯA_CHỐT.
