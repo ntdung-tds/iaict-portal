@@ -58,3 +58,6 @@
 
 ## Cross-chat handoff
 Open [CHECKLIST_MOMENT](CHECKLIST_MOMENT.md), choose **latest timestamped snapshot**, compare GitHub PR HEAD/CI and Cloudflare runtime, resume **CMS-08 S3 / T-IAM-MFA-F2** or record a new evidence-based decision when blocked. No need to infer progress from prose in preceding chats. Keep old progress rows append-only, add new row and moment snapshot when switching tasks.
+
+
+| 2026-11-02 · CMS-08 / schema design | [Real IAM schema/security epoch review](../iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md), `CHG-IAM-ACCESS-20261102-14` | Read-only mapping of actual IAM tables, mutation paths, session assurance, security epoch, factor/recovery and rollback. No schema/code change; **DESIGN_ONLY**, MFA real E2E NOT_RUN, Owner approval pending | Exact PR HEAD docs CI/staging read-only; approve architecture/recovery before any real migration |
