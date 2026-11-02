@@ -1,5 +1,5 @@
 # IAICT Portal — CHECKLIST MOMENT (LIVE)
-**Moment ID:** `MOMENT-IAICT-20261102-1655-ICT` · **Captured:** `2026-11-02T16:55:00+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
+**Moment ID:** `MOMENT-IAICT-20261102-1714-ICT` · **Captured:** `2026-11-02T17:14:00+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
 **Project:** IAICT Portal / CMS / CRM / IAM · **Status:** ACTIVE / NOT ACCEPTED · **Owner acceptance:** NOT GIVEN.
 **Evidence scope:** code/runtime baseline audited at source HEAD `a6afff7ecb0ed27bc4bddeb4374e2fe333312745` at observation time; this is a baseline **before** checklist-only commits. PR [#36](https://github.com/ntdung-tds/iaict-portal/pull/36) DRAFT on `feat/staging-native-login-r2-20261030`.
 **Related records:** [PROJECT_PLAN](PROJECT_PLAN.md) · [PROJECT_PROGRESS](PROJECT_PROGRESS.md) · [append-only moment history](checklist-moments/) · [QA run ledger](../qa/IAICT_TEST_RUNS.md) · [82-case catalog](../qa/IAICT_TEST_CASES.csv) · [14 module change logs](../requirements/README.md).
@@ -192,3 +192,16 @@ Source: user-supplied IAM report v1.2, Appendix C (`IAM-01`–`IAM-10`) and Appe
 - QA catalog **85 cases**, one new P0 case, no inflated hosted MFA PASS; `IAM-FUT-001/002/004` real login/recovery/roles **NOT_RUN**. SQL only proves challenge-row CAS, **NOT verified OTP counter + challenge + session atomic transaction**.
 - PCS revision **15 proposed**, T-IAM-MFA-F2 **IN_PROGRESS / QA PARTIAL**, `CHG-IAM-ACCESS-20261102-09` logged. ADR-0002 PROPOSED, SRS FROZEN, Owner security approval not given.
 - **Next:** exact final PR #53 CI/public read-only staging acceptance + living Google QA sync, safe merge if green. No D1 migration, secrets, Cloudflare Access/Worker/production change or QA images (**NO_IMAGE_REQUIRED**); [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+## S. 2026-11-02 CMS-08/S5 — two-pass revocation/regrant security review
+
+- Baseline [PR #53](https://github.com/ntdung-tds/iaict-portal/pull/53) MERGED `f18a375c38d6e4e023f51358dd0f155c925a7d52`; **PCS revision 15**, QA 85 cases, `IAM-FUT-012` previous 26/26 synthetic D1 PASS.
+- **Round 1 static:** SQL only checked *current* account/role flags, so a pre-revocation pending challenge could become eligible after role regrant or account reactivation within TTL. This is a design/test gap in the synthetic D1 contract, **not a demonstrated live MFA exploit**.
+- **Round 2 adversarial:** [PR #54](https://github.com/ntdung-tds/iaict-portal/pull/54) adds synthetic user/challenge `security_revision`, atomically checked in the same SQL UPDATE, bumped on synthetic revoke/disable transitions. Old challenge stays denied after restore; independent users and fresh current-revision challenges still work.
+- [RUN-IAM-20261102-11](../qa/IAICT_TEST_RUNS.md) `IAM-FUT-012`: **29/29 local D1 groups PASS**, exactly **1/16** simultaneous writes accepted at SHA `3c32802b791ec8ac44dfbb76868cd960265318c4`, [CI #41426633634](https://github.com/ntdung-tds/iaict-portal/actions/runs/41426633634). **85-case QA registry unchanged**; CHG-IAM-ACCESS-20261102-10 logged.
+- **PCS revision 16 PROPOSED** in this PR, T-IAM-MFA-F2 IN_PROGRESS / QA PARTIAL. Real hosted `IAM-FUT-001/002/004` NOT_RUN. No real security epoch, D1 migration, OTP+factor+session transaction, key, user, API, Worker, Access or production deployment.
+- ADR-0002 PROPOSED, SRS FROZEN, Owner approval NOT GIVEN. **Next:** exact final PR #54 CI + public staging; living Google QA update, merge only if PASS. Media **NO_IMAGE_REQUIRED**, private [QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp); Issue #30 503 remains OPEN.
+
+### Checkpoint ID correction (append-only, pre-merge)
+
+The prior draft snapshot at `2026-11-02T17-13-ICT.md` had a formatting-only malformed Moment ID; it contains no different runtime evidence and is retained in Git history. This new `2026-11-02T17-14-ICT.md` snapshot corrects its identifier and is the authoritative latest checkpoint for PR #54.

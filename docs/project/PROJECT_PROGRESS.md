@@ -44,6 +44,8 @@
 
 | 2026-11-02T16:55:00+07:00 | [PR #53](https://github.com/ntdung-tds/iaict-portal/pull/53), `IAM-FUT-012`, [RUN-IAM-20261102-10](../qa/IAICT_TEST_RUNS.md), source SHA `15b9b84a` | **26/26 LOCAL_MINIFLARE_D1 assertions PASS**, 16 simultaneous same-token writes produce one accepted challenge. Case registry **85**; initial fixture-count CI FAIL preserved. No live session, OTP, migration or Worker change | Final exact-SHA CI/staging, QA Doc sync, then independent all-or-nothing OTP/challenge/session transaction proof |
 
+| 2026-11-02T17:13:00+07:00 | [PR #54](https://github.com/ntdung-tds/iaict-portal/pull/54), two-pass audit of `IAM-FUT-012`, [RUN-IAM-20261102-11](../qa/IAICT_TEST_RUNS.md) | Found synthetic challenge revival after role/account restoration; added monotonic security_revision in same CAS, regrant/reactivation/stale-revision tests. **29/29 groups PASS, 1/16 concurrency**, 85-case registry unchanged, initial source SHA `3c32802b`. No actual MFA or D1 migration | Exact final PR SHA CI/staging, QA Doc sync; future hosted epoch and factor+session transaction require separate security design |
+
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.
 - **RISK / pending:** full MFA enrollment, secret key lifecycle, reset/recovery, scoped permission/IDOR, hosted Worker KDF/AES-GCM parity, R2 media upload, offboarding and personal-data safeguards. Isolated workerd 100001 PBKDF2 already succeeded; it does NOT establish general hosted behavior.

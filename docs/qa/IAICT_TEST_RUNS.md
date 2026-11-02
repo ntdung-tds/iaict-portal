@@ -352,3 +352,30 @@
 | `IAM-FUT-004` | Authorized seven-role E2E staging | Protected APIs reject pending/legacy sessions and enforce RBAC/Access | Not tested live | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
 
 **Boundary:** The new test does not import the preauth TypeScript module into a real route; its D1 schema is strictly synthetic. Neither a successful conditional UPDATE nor this PASS grants a native IAM session. Full MFA transaction semantics remain NOT_RUN.
+
+
+## RUN-IAM-20261102-11 — Two-pass security review of pre-MFA challenge revival after restoration
+
+| Field | Observed evidence / strict boundary |
+| --- | --- |
+| Date | 2026-11-02, Asia/Ho_Chi_Minh |
+| Case / PR | Existing P0 `IAM-FUT-012` (no new case), [PR #54](https://github.com/ntdung-tds/iaict-portal/pull/54), Issue #37 |
+| Round 1 — source review | A challenge pre-dating a role revocation or account disable could become eligible again after permissions/account status were restored before its original five-minute expiry, because the synthetic SQL only checked present `is_active`/`has_active_role` bits and the password credential revision |
+| Round 2 — adversarial contract | Synthetic `security_revision` on both account and challenge, validated inside same conditional D1 UPDATE. Test role revoke→regrant and account disable→reactivate with old pre-change challenge **denied** even after restored bit; explicitly seed fresh and independent-user revision fixtures. Strict 64-character token/fingerprint check |
+| Exact source SHA tested | `3c32802b791ec8ac44dfbb76868cd960265318c4` (initial PR #54 head before this QA/PCS documentation; logs from same test code) |
+| CI | [portal-ci #41426633634](https://github.com/ntdung-tds/iaict-portal/actions/runs/41426633634), `kdf-local-workerd` job `125214697790` **SUCCESS**; `[mfa-preauth-d1-cas] OBSERVED` |
+| Actual result | **29/29 synthetic D1 assertion groups PASS**, exactly **1 of 16** concurrent requests to consume the same hashed challenge accepted; 3 added security-state negative groups compared with historical 26/26 |
+| Other tests | Existing `IAM-FUT-010`, `IAM-FUT-011` retain their prior bounded scope; full Vitest, QA registry and public staging gate must be verified against **final PR head** after checkpoint edits |
+| Prior history | `RUN-IAM-20261102-10` 26/26 remains historical evidence for PR #53; this review does not reinterpret that older result. First PR #53 fixture-count FAIL remains preserved in CI history |
+| Important implementation constraint | In a real D1 architecture, any revocation/disable/privilege or MFA policy change must advance an authoritative security epoch **atomically** with the state change or revoke outstanding challenges using an equivalent proven transaction. The new epoch exists **only in synthetic test tables** |
+| Strict security limit | No OTP/TOTP code verification, factor counter+challenge+session+audit transaction, real user/session, D1 migration/binding, Worker/login integration, Cloudflare Access or production modification |
+| QA media | **NO_IMAGE_REQUIRED**, [private IAM evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) |
+| Approval | ADR-0002 PROPOSED, SRS FROZEN, Owner approval NOT GIVEN |
+
+| Case | Environment / role | Expected | Observed | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-012` | Local Miniflare D1, synthetic identities | Old challenge stays invalid after role restored or account reactivated | **29/29 groups PASS, 1/16 concurrent consumes** | **PASS — LOCAL_D1_ONLY** | [CI #41426633634](https://github.com/ntdung-tds/iaict-portal/actions/runs/41426633634) |
+| `IAM-FUT-001` | Real authenticated hosted staging | Password-only session not issued for MFA-required user; full OTP+factor+challenge/session atomicity | Not implemented | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Authenticated 7-role staging | Access/RBAC/assurance remain secure after revoke and regrant | No authorized live fixtures | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**This is a synthetic D1 contract proof, NOT a live MFA feature.** Final PR SHA CI and public staging acceptance are separately required before merge.

@@ -51,3 +51,9 @@ Safely complete IAICT-developed CMS/IAM foundations on staging, prove real-role 
 - [PR #53](https://github.com/ntdung-tds/iaict-portal/pull/53): `IAM-FUT-012` synthetic Miniflare v5 D1 user/challenge tables, no hosted migration. SQL-only conditional challenge UPDATE checks owner, purpose, TTL, lock/attempts, active account/role and current credential fingerprint **plus revision** in one statement. 16 concurrent attempts yielded one change; 26 checks PASS at SHA `15b9b84a`, [CI #41424145730](https://github.com/ntdung-tds/iaict-portal/actions/runs/41424145730).
 - Scope **LOCAL_D1_CAS_ONLY**: no actual factor or session, OTP check, audit, or all-or-nothing cross-table transaction. Prior initial aggregate fixture-count CI fail preserved. QA registry **85 cases**; ADR PROPOSED, SRS FROZEN.
 - Before real MFA route: select and prove a transaction design preventing any session issuance on a lost challenge or TOTP CAS race. Owner/security policy, key management and forward-only migration approval required.
+
+### CMS-08/S5 — two-pass challenge revival audit (2026-11-02)
+
+- [PR #54](https://github.com/ntdung-tds/iaict-portal/pull/54) review found a synthetic D1 state-transition issue: challenge minted before role/account revocation may become eligible again when current role/active bit is restored before expiry.
+- Synthetic monotonic `security_revision` incremented by revoke/disable events and checked inside the challenge CAS UPDATE prevents revival. `IAM-FUT-012` extends existing case with regrant/reactivation/stale-revision negatives: 29/29 local groups PASS, 1/16 same-token writes accepted. **85 QA cases unchanged**.
+- This revision **does not exist in actual IAM/D1**. Before implementation, authoritative role/account/policy revocation must atomically invalidate outstanding challenges; independently prove factor counter + OTP + session transaction. ADR PROPOSED, SRS FROZEN.

@@ -217,3 +217,14 @@ The SQL checks active synthetic user, active role, current credential fingerprin
 **Do not overgeneralize:** this is **one-row challenge CAS**, not an atomic cross-entity MFA login transaction. It does *not* prove all-or-nothing semantics for (challenge consume, verified TOTP counter advance, session issue, audit). In particular, a D1 `batch()` call is not automatically evidence that conditional zero-row writes prevent later session INSERT statements. Before approving actual MFA, implement/test a transaction pattern that makes success depend on BOTH verified factor step and challenge consumption and prevents session issuance under any lost race, mismatch, disabled user or D1 failure. If full atomicity cannot be established in the selected platform, stop and seek a reviewed design instead of best-effort separate writes.
 
 Test-only tables are `synthetic_mfa_users` and `synthetic_mfa_challenges`; **no actual schema migration, OTP verification, session, secret, binding, Worker route, Access or production change**. ADR-0002 **PROPOSED**, SRS **FROZEN**, Owner/security approval not granted; `IAM-FUT-001` hosted MFA still NOT_RUN.
+
+
+## 2026-11-02 — Pre-MFA revocation-and-restore security epoch review
+
+A two-pass review of the **synthetic, isolated PR #53** test found a state-transition gap: checking only whether the account is currently active and has a role does not invalidate an already issued challenge after an access-revocation event if that access is restored within the five-minute TTL. Credential revision alone covers password rotation, **not** role removal or account deactivation.
+
+The next synthetic Miniflare D1 test adds a monotonically increasing `security_revision` to the user and challenge table and validates equality in the *same* conditional challenge UPDATE. The revision is bumped on the test's role-revocation/disable events, and positive restored states **do not decrement it**. New assertions require previously issued challenges remain unusable after subsequent regrant/reactivation, with fresh current-revision challenges and unrelated users unaffected. This is **not** a production migration or a proof of real API enforcement.
+
+**Future backend rule:** a reliable security epoch (or atomic deletion/revocation of outstanding challenges) must cover any security-relevant change, including account disable, role revoke, permission/policy change, administrative credential reset and factor rebind. The epoch increment must be coupled to the change under the authoritative D1 transaction semantics, not maintained only by a non-atomic application callback. The final OTP + factor replay counter + challenge + full-session transaction remains separately unproved.
+
+This review **does not enable native MFA**, migrate real D1, modify login/Worker, change Access or grant Owner approval. ADR-0002 PROPOSED; SRS FROZEN.

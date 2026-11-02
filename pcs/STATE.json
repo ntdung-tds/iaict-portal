@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 15,
-  "updated_at": "2026-11-02T09:54:32.088Z",
+  "revision": 16,
+  "updated_at": "2026-11-02T10:12:34.623Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T09:54:32.088Z",
+    "updated_at": "2026-11-02T10:12:34.623Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -146,19 +146,22 @@
           "isolated_challenge_cas": {
             "status": "PASS",
             "case_id": "IAM-FUT-012",
-            "assertion_groups": 26,
+            "assertion_groups": 29,
             "parallel_attempts": 16,
             "accepted_same_challenge": 1,
             "environment": "LOCAL_MINIFLARE_D1",
-            "run_id": "RUN-IAM-20261102-10",
-            "source_sha": "15b9b84a072af824eb467f59783f9b73106887a4",
-            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41424145730",
+            "run_id": "RUN-IAM-20261102-11",
+            "source_sha": "3c32802b791ec8ac44dfbb76868cd960265318c4",
+            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41426633634",
             "real_otp_verified": false,
             "real_session_issued": false,
-            "hosted_d1_tested": false
+            "hosted_d1_tested": false,
+            "review_passes": 2,
+            "security_revision_synthetic": true,
+            "live_security_epoch_implemented": false
           }
         },
-        "description": "Local-only AES-GCM, factor counter CAS, 256-bit challenge helper, and new first-factor challenge single-row D1 CAS have bounded PASS. The new SQL CAS checks credential revision/active role in the same statement, 1/16 wins; does not atomically commit OTP factor counter/session, not connected to login. Full real MFA, key binding, recovery and role E2E NOT_RUN."
+        "description": "Local AES-GCM, factor counter CAS, preauth challenge guard and synthetic D1 challenge CAS PASS (29 checks, 1/16 same-token wins). Two-pass review adds synthetic monotonic account security revision to prevent revoked then restored access from reviving old challenge. No actual Worker/session integration, live epoch, OTP, multi-row transaction, hosted D1 or real MFA."
       },
       {
         "id": "T-IAM-ONBOARDING",
@@ -205,13 +208,13 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR #52 merged c11ac258cbdd52e16ebfa2aebda2b8af4e3ebdbe, PCS rev14. PR #53 isolated D1 pre-MFA challenge single-row CAS: IAM-FUT-012 26/26 checks PASS, 1/16 concurrent attempts accepted, source SHA 15b9b84a072af824eb467f59783f9b73106887a4, CI #41424145730; QA 85 cases, RUN-IAM-20261102-10. Initial synthetic fixture-count CI failure preserved; real MFA still NOT_RUN.",
-      "next_action": "Validate exact final PR #53 portal-ci and public read-only staging, synchronize living QA Google Doc with 85-case registry and merge if gates PASS. Then investigate transactional all-or-nothing challenge+verified factor counter+session issuance on disposable D1, and obtain Owner/security approval before real D1 migration, MFA policy/keys or Worker integration.",
+      "last_completed_step": "PR #53 MERGED f18a375c38d6e4e023f51358dd0f155c925a7d52. Two-pass review of synthetic IAM-FUT-012 identified restoration revival gap; PR #54 adds synthetic monotonic security_revision checked by CAS, role revoke/regrant and disable/reactivate negative tests. 29/29 checks PASS, 1/16 concurrent accepted at source SHA 3c32802b791ec8ac44dfbb76868cd960265318c4, CI #41426633634 kdf-local-workerd SUCCESS; QA registry remains 85, RUN-IAM-20261102-11. No real MFA.",
+      "next_action": "Verify final PR #54 portal-ci and anonymous public-only staging at exact final SHA, sync living QA Doc and merge narrow synthetic review if both PASS. Next: independently prove all-or-nothing verified OTP+factor CAS+challenge+session transaction in isolated D1; separately design an authoritative real security revision and secure state mutation before hosted migration/enforcement.",
       "blockers": [
-        "Single-row challenge CAS is LOCAL_D1_ONLY; it does not prove multi-row challenge+TOTP counter+session atomicity, hosted D1 consistency, or real MFA login.",
-        "Current native password route still issues full password session; pre-MFA helper unimported. No authorized D1 factor/challenge migrations, key binding, recovery or enforce policy. ADR PROPOSED/SRS FROZEN.",
-        "Authenticated seven-role and second Admin staging E2E NOT_RUN pending approved identities and Access.",
-        "Intermittent staging HTTP 503 root cause still unconfirmed (Issue #30)."
+        "Current security_revision is only synthetic test D1; live IAM lacks proven epoch and atomic update on role/account/policy changes. MFA not enforced.",
+        "Full-factor OTP + challenge + full-session transaction and rollback are NOT_RUN; isolated CAS does not grant a session.",
+        "Owner approval for real D1 migration, MFA key/policy/recovery and Access integration NOT GIVEN; SRS FROZEN and ADR PROPOSED.",
+        "Hosted authenticated 7-role tests NOT_RUN; intermittent public staging 503 Issue #30 unresolved."
       ],
       "actor": "pcs-solo-lead"
     },

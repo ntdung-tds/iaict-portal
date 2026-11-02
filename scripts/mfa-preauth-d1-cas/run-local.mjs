@@ -32,6 +32,7 @@ const sql = `
      SET consumed_at_ms=?, revision=revision+1
    WHERE challenge_hash=? AND user_id=? AND credential_fingerprint=?
      AND credential_revision=? AND purpose='LOGIN'
+     AND security_revision>=0
      AND consumed_at_ms IS NULL AND revision>=0
      AND created_at_ms>=0 AND created_at_ms<=?
      AND expires_at_ms>? AND expires_at_ms>created_at_ms
@@ -44,6 +45,7 @@ const sql = `
           AND u.is_active=1 AND u.has_active_role=1
           AND u.credential_fingerprint=synthetic_mfa_challenges.credential_fingerprint
           AND u.credential_revision=synthetic_mfa_challenges.credential_revision
+          AND u.security_revision=synthetic_mfa_challenges.security_revision
      )
 `;
 let mf;
@@ -66,7 +68,8 @@ try {
       is_active INTEGER NOT NULL CHECK(is_active IN (0,1)),
       has_active_role INTEGER NOT NULL CHECK(has_active_role IN (0,1)),
       credential_fingerprint TEXT NOT NULL,
-      credential_revision INTEGER NOT NULL
+      credential_revision INTEGER NOT NULL,
+      security_revision INTEGER NOT NULL CHECK(security_revision>=0)
     )
   `).run();
   await db.prepare(`
@@ -75,6 +78,7 @@ try {
       user_id TEXT NOT NULL,
       credential_fingerprint TEXT NOT NULL,
       credential_revision INTEGER NOT NULL,
+      security_revision INTEGER NOT NULL,
       purpose TEXT NOT NULL,
       created_at_ms INTEGER NOT NULL,
       expires_at_ms INTEGER NOT NULL,
@@ -86,30 +90,32 @@ try {
   `).run();
   check("DISPOSABLE_EMPTY_SCHEMA",
     (await db.prepare("SELECT COUNT(*) AS n FROM synthetic_mfa_challenges").first()).n === 0);
+  let currentSecurityRevision = 1;
   for (const id of [USER, OTHER]) {
     await db.prepare(`
       INSERT INTO synthetic_mfa_users
-        (user_id,is_active,has_active_role,credential_fingerprint,credential_revision)
-      VALUES(?,1,1,?,1)
+        (user_id,is_active,has_active_role,credential_fingerprint,credential_revision,security_revision)
+      VALUES(?,1,1,?,1,1)
     `).bind(id, FP).run();
   }
   const seed = async (overrides={}) => {
     const token = randomBytes(32).toString("hex");
     const data = {
-      userId: USER, fingerprint: FP, credRevision: 1, purpose: "LOGIN",
+      userId: USER, fingerprint: FP, credRevision: 1,
+      securityRevision: currentSecurityRevision, purpose: "LOGIN",
       created: NOW - 1000, expires: NOW + TTL_MS - 1000,
       consumed: null, failed: 0, locked: null, revision: 0,
       ...overrides,
     };
     await db.prepare(`
       INSERT INTO synthetic_mfa_challenges
-        (challenge_hash,user_id,credential_fingerprint,credential_revision,
+        (challenge_hash,user_id,credential_fingerprint,credential_revision,security_revision,
          purpose,created_at_ms,expires_at_ms,consumed_at_ms,
          failed_attempts,locked_until_ms,revision)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
     `).bind(
       sha(token), data.userId, data.fingerprint, data.credRevision,
-      data.purpose, data.created, data.expires, data.consumed,
+      data.securityRevision, data.purpose, data.created, data.expires, data.consumed,
       data.failed, data.locked, data.revision,
     ).run();
     return token; // no token or digest is ever printed
@@ -121,9 +127,9 @@ try {
   const consume = async (token, {
     userId=USER, fingerprint=FP, credRevision=1, now=NOW,
   }={}) => {
-    if (typeof token !== "string" || !TOKEN.test(token) ||
+    if (typeof token !== "string" || token.length !== 64 || !TOKEN.test(token) ||
         typeof userId !== "string" || !userId ||
-        typeof fingerprint !== "string" || !TOKEN.test(fingerprint) ||
+        typeof fingerprint !== "string" || fingerprint.length !== 64 || !TOKEN.test(fingerprint) ||
         !Number.isSafeInteger(credRevision) || credRevision < 0 ||
         !Number.isSafeInteger(now) || now < 0) return false;
     const outcome = await db.prepare(sql).bind(
@@ -184,18 +190,42 @@ try {
   check("STALE_CREDENTIAL_REVISION_DENIED", await consume(oldRevision) === false);
 
   const fresh = await seed({credRevision:3});
-  await db.prepare("UPDATE synthetic_mfa_users SET has_active_role=0 WHERE user_id=?")
-    .bind(USER).run();
+  // Revocation events MUST invalidate issued challenges *permanently*.
+  // Tests require a monotonic security revision, not only the current role bit.
+  await db.prepare(`
+    UPDATE synthetic_mfa_users
+      SET has_active_role=0,security_revision=security_revision+1 WHERE user_id=?
+  `).bind(USER).run();
+  currentSecurityRevision += 1;
   check("ROLE_REVOKED_DENIED",
     await consume(fresh,{credRevision:3}) === false && (await row(fresh)).rev === 0);
-  await db.prepare("UPDATE synthetic_mfa_users SET has_active_role=1,is_active=0 WHERE user_id=?")
+  await db.prepare("UPDATE synthetic_mfa_users SET has_active_role=1 WHERE user_id=?")
     .bind(USER).run();
-  check("ACCOUNT_DISABLED_DENIED",
+  check("ROLE_REGRANTED_OLD_CHALLENGE_STILL_DENIED",
     await consume(fresh,{credRevision:3}) === false && (await row(fresh)).rev === 0);
+
+  const beforeDisable = await seed({credRevision:3});
+  await db.prepare(`
+    UPDATE synthetic_mfa_users
+      SET is_active=0,security_revision=security_revision+1 WHERE user_id=?
+  `).bind(USER).run();
+  currentSecurityRevision += 1;
+  check("ACCOUNT_DISABLED_DENIED",
+    await consume(beforeDisable,{credRevision:3}) === false &&
+    (await row(beforeDisable)).rev === 0);
   await db.prepare("UPDATE synthetic_mfa_users SET is_active=1 WHERE user_id=?")
     .bind(USER).run();
+  check("ACCOUNT_REACTIVATED_OLD_CHALLENGE_STILL_DENIED",
+    await consume(beforeDisable,{credRevision:3}) === false &&
+    (await row(beforeDisable)).rev === 0);
+  // Restore current account/role bits for test-only cases below. This DOES NOT
+  // restore the older security revision and cannot revive pre-revocation tokens.
 
   stage = "NEGATIVE_STATES";
+  const staleSecurityRevision = await seed({credRevision:3,securityRevision:1});
+  check("STALE_SECURITY_REVISION_DENIED",
+    await consume(staleSecurityRevision,{credRevision:3}) === false &&
+    (await row(staleSecurityRevision)).rev === 0);
   const wrongPurpose = await seed({purpose:"RESET",credRevision:3});
   check("WRONG_PURPOSE_DENIED", await consume(wrongPurpose,{credRevision:3}) === false);
   const attempts = await seed({failed:MAX_ATTEMPTS,credRevision:3});
@@ -215,6 +245,7 @@ try {
     await consume(malformed,{credRevision:-1}) === false &&
     await consume(malformed,{now:-1,credRevision:3}) === false &&
     await consume(malformed,{userId:"",credRevision:3}) === false &&
+    await consume(malformed+"\\n",{credRevision:3}) === false &&
     await consume({}, {credRevision:3}) === false &&
     (await row(malformed)).rev === 0);
   check("FAIL_CLOSED_ON_MISSING_D1_METADATA",
@@ -223,7 +254,7 @@ try {
   const valid = await seed({credRevision:3});
   check("FRESH_CHALLENGE_STILL_ACCEPTED",
     await consume(valid,{credRevision:3}) === true && (await row(valid)).rev === 1);
-  const separate = await seed({userId:OTHER});
+  const separate = await seed({userId:OTHER,securityRevision:1});
   check("INDEPENDENT_USER_ACCEPTED",
     await consume(separate,{userId:OTHER}) === true && (await row(separate)).rev === 1);
   const all = await db.prepare(`
