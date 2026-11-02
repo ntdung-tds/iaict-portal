@@ -133,3 +133,5 @@ jobs:
         run: node scripts/mfa-d1-cas/run-local.mjs
       - name: Test atomic pre-MFA challenge consumption against isolated Miniflare D1 (no deploy)
         run: node scripts/mfa-preauth-d1-cas/run-local.mjs
+      - name: Test synthetic verified OTP and multi-table MFA batch rollback (no deploy)
+        run: node scripts/mfa-atomic-d1/run-local.mjs
