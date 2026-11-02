@@ -474,3 +474,17 @@
 - **Screenshots:** `NO_IMAGE_REQUIRED` for D1 and automated public regression; private [QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp). No secrets, session files, screenshots, trace/video uploaded to GitHub.
 - **Boundaries:** SRS FROZEN, ADR-0002 PROPOSED. New case proof does **not** verify actual password PBKDF2, TOTP, real MFA challenge/session readers, encrypted factors, hosted D1, or seven-role authenticated browser tests. Owner standing permission to create test accounts is recorded in PR #66; no real accounts provisioned in this run. Existing intermittent public 503 Issue #30 remains open.
 - **Merge rule:** source SHA above proves code before this evidence commit. Re-run exact-final-head PR CI and staging before merging; never transfer a prior SHA's green gates as proof of a changed HEAD.
+
+
+## RUN-IAM-20261103-02 — Browser role-navigation regression and authenticated QA preflight
+
+| Test scope | Target | Observed result | Verdict | Evidence |
+|---|---|---|---|---|
+| IAM-USER-019 | Local Chromium 390px, seven simulated roles and forbidden session; CMS session explicitly mocked | **8 newly added UI tests PASS**, included in 38/38 total Chromium checks at source SHA `eb395141aaa052d5136797e3876b240b710a6bcf` | **PASS LOCAL_CHROMIUM_MOCK ONLY** | [Portal CI #41521921878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41521921878) |
+| IAM-USER-020 | Real staging Chromium with valid authorized per-role Cloudflare Access browser state | New `page.goto` UI assertion written; **no valid private per-role Access session available**, so authenticated execution did not occur | **NOT_RUN / BLOCKED** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+| Account provisioning preflight | Restricted Drive QA registry | Eight synthetic staging D1 fixture entries documented as **DISABLED**, no passwords, Access subject or valid session. No new user created or activated in this run; account registry read is historical status, not fresh hosted D1 verification | **BLOCKED** | [Restricted QA identities](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit) |
+| External prerequisites | Connected Cloudflare management, email and credential vault | Cloudflare Access application-management reads blocked by tool safety; no connected approved encrypted password vault; no controlled dedicated QA mailbox connector usable yet. Owner's standing staging-only permission already granted in PR #66 | **BLOCKED**, not missing authorization | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+The 8 new Chromium tests are browser-rendered **with API mocks** and cannot establish authenticated RBAC in deployed staging. The existing anonymous staging Chromium acceptance is an independent layer. No password, JWT, cookie, screenshot, API secret, D1 mutation, Worker deployment or production change was made. The role/browser tool is prepared for genuine Access sessions but must not be run on CI or substitute synthetic fixture addresses for real identities. No QA image required; [private evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+**Review history:** QA verifier rejected the initial MANUAL test's automated reference; corrected to `—`. Requirements verifier rejected source changes without `thaydoi.md`; added `CHG-IAM-ACCESS-20261103-02`. Final-head CI/staging gate must be recorded after this ledger commit before merge.
