@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 17,
-  "updated_at": "2026-11-02T11:08:12.720Z",
+  "revision": 18,
+  "updated_at": "2026-11-02T11:16:33.916Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T11:08:12.720Z",
+    "updated_at": "2026-11-02T11:16:33.916Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -161,9 +161,14 @@
             "live_security_epoch_implemented": false,
             "review_loop": {
               "rounds": 2,
-              "first": "found and corrected role scope/factor reset coverage and D1 epoch source",
-              "second": "independent SQL/test matrix review found no further actionable local CAS issue",
-              "closure_requires_final_ci_and_staging": true
+              "closed": true,
+              "closure_scope": "DISPOSABLE_SINGLE_ROW_CHALLENGE_CAS_ONLY",
+              "finding": "role-scope and factor-reset epoch coverage, D1 epoch was read via JS mirror",
+              "fix_verified": true,
+              "final_source_sha": "3dc10c5b3269c320200c8014048d09f5835a2fca",
+              "ci_run": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41434638382",
+              "public_staging_run": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41434638417",
+              "full_mfa_covered": false
             }
           }
         },
@@ -214,8 +219,8 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR #54 MERGED 578caa9620e85a5d407ff3ae812cb6213b9867cd, PCS rev16. PR #55 bounded inspect→fix→test→independent re-review for synthetic IAM-FUT-012: security epoch now read from D1 during challenge issuance, role-scope and factor-reset epoch invalidation checked. 31/31 local D1 groups PASS, 1/16 same challenge accepted, CI #41433990774 all 4 jobs SUCCESS at source SHA b80fb136097dd5da2e0ccb95f0770d567a00f8a0. 85 cases unchanged; RUN-IAM-20261102-12. Real MFA NOT_RUN.",
-      "next_action": "Verify exact final PR #55 portal CI and independent public staging acceptance; sync 85-case living QA Doc, merge only if green. Then separately prove full verified OTP+factor counter+challenge+session atomic transaction on disposable D1 before any hosted migration or real MFA activation; do not re-review local CAS indefinitely without new finding.",
+      "last_completed_step": "PR #55 MERGED fb4f7b4298518f56939e9ef475ba3b26e899f38c, head 3dc10c5b3269c320200c8014048d09f5835a2fca. Review loop inspect→fix→retest→independent audit→final gates closed for isolated synthetic D1 challenge CAS; IAM-FUT-012 31/31 PASS, 1/16 same-token accepted, 559/559 Vitest, CI #41434638382 SUCCESS, public staging #41434638417 SUCCESS (21/21 Chromium;24/24 GET). 85 QA cases, RUN-IAM-20261102-12 and living Google QA v1.8.2 synced. No MFA real E2E.",
+      "next_action": "Next distinct task: design and independently test all-or-nothing verified OTP + factor counter CAS + pre-MFA challenge consume + full-session issuance (+ audit) on disposable D1, including races, rollback and denial on partial writes. Do not rerun/merge PR #55; do not enable MFA, hosted migration, keys or Access changes without Owner security approval.",
       "blockers": [
         "No live IAM security epoch or atomic role/account/factor change integration; synthetic only. MFA login/current native password session remains unenforced.",
         "OTP validation, factor counter + challenge + full session all-or-nothing transaction unproven; hosted D1 and E2E all NOT_RUN.",
