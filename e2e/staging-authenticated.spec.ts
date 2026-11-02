@@ -78,3 +78,22 @@ test("public health remains accessible with an authenticated browser", async ({ 
 // Do NOT issue POST/PUT/PATCH/DELETE or capture screenshots/trace/video.
 // A separate anonymous staging suite checks that exact roots redirect to Access.
 // This suite must only run on a specifically approved deployed staging Worker.
+
+test("Chromium renders the authorized role menu on staging", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const response = await page.goto("/admin/news", { waitUntil: "domcontentloaded" });
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole("heading", { name: "Newsroom Control Center" })).toBeVisible();
+  const sidebar = page.locator('aside[aria-label="Điều hướng CMS"] nav');
+  await expect(sidebar.locator('a[href="/admin/news"]')).toBeVisible();
+  if (isGlobalAdmin) {
+    await expect(sidebar.locator('a[href="/admin/users"]')).toBeVisible();
+  } else {
+    await expect(sidebar.locator('a[href="/admin/users"]')).toHaveCount(0);
+  }
+  if (isGlobalCmsUser) {
+    await expect(sidebar.locator('a[href="/admin"]')).toBeVisible();
+  } else {
+    await expect(sidebar.locator('a[href="/admin"]')).toHaveCount(0);
+  }
+});
