@@ -1,6 +1,6 @@
 # IAICT Portal — CMS-08 / S2: KDF compatibility verification plan
 
-**Date:** 2026-11-02 (ICT) · **Status:** PLAN_PREPARED / NO_EXECUTION · **Scope:** P0-B in [Project Plan](../project/PROJECT_PLAN.md) and CMS-08/S2 in [Checklist Moment](../project/CHECKLIST_MOMENT.md).
+**Date:** 2026-11-02 (ICT) · **Status:** LOCAL_WORKERD_OBSERVED (100000/100001); 600000 NOT_RUN; live staging NOT_RUN · **Scope:** P0-B in [Project Plan](../project/PROJECT_PLAN.md) and CMS-08/S2 in [Checklist Moment](../project/CHECKLIST_MOMENT.md).
 
 ## Why this step exists
 
@@ -19,8 +19,8 @@ The source `lib/native-auth.ts` currently pins PBKDF2-HMAC-SHA-256 at `100_000` 
 
 | Proposed ID | Isolated runtime input | Expected evidence | Current status |
 | --- | --- | --- | --- |
-| `KDF-S2-P01` | PBKDF2 SHA-256, synthetic fixed password/salt, 100000 iterations | success/failure, exception name, runtime version, measured duration; no derived bytes logged | NOT_RUN |
-| `KDF-S2-P02` | Identical inputs, 100001 iterations | observe real runtime success or rejection and exact sanitized error class; no assumed outcome | NOT_RUN |
+| `KDF-S2-P01` | PBKDF2 SHA-256, synthetic fixed password/salt, 100000 iterations | success/failure, exception name, runtime version, measured duration; no derived bytes logged | **PASS local**, 256 bits / 11 ms |
+| `KDF-S2-P02` | Identical inputs, 100001 iterations | observe real runtime success or rejection and exact sanitized error class; no assumed outcome | **PASS local**, 256 bits / 12 ms |
 | `KDF-S2-P03` | Identical inputs, 600000 iterations | optional bounded boundary probe after resource/runtime gate; record if deliberately SKIPPED for safety | NOT_RUN |
 | `KDF-S2-P04` | Current `createPasswordHash` / `verifyPasswordHash` on isolated synthetic fixture | existing 100k application contract remains compatible and salted/hashed; test suite tied to SHA | NOT_RUN (new run) |
 | `KDF-S2-P05` | Disabled/expired/nonmatching credentials and unsupported `iterations` metadata | application rejects invalid state without issuing a session; use existing negative tests as baseline | NOT_RUN (new run) |
@@ -37,3 +37,7 @@ A local workerd result is **LOCAL_WORKER**, not live staging evidence. If actual
 4. Review measured Worker behavior and `ADR-0002`, deciding whether the current 100k credential policy stays or any new architecture/migration is proposed. No automatic SRS synchronization, KDF parameter change, or production Access change.
 
 **Completion criterion for S2:** real bounded workerd results, evidence-linked test run and reviewed architectural conclusion. **Writing this plan is not S2 PASS or S2 DONE.**
+
+## Execution evidence — 2026-11-02 (local workerd only)
+
+[GitHub Actions run #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088) at exact code SHA `82380adafceaa239f24438ee85fa8ef10cc9d343` ran two probes in isolated workerd `1.20261012.1` (compatibility date `2026-10-12`, `nodejs_compat`). Both returned 256 bits: **100000 SUCCESS / 11 ms**, **100001 SUCCESS / 12 ms** (single observations, not benchmark). See [RUN-IAM-20261102-01](IAICT_TEST_RUNS.md). **600000 NOT_RUN**, **staging Worker NOT_TESTED**, real IAM E2E NOT_RUN. The purported strict 100000 hard cap is contradicted for this local runtime. No product parameter change; ADR and Owner/security decision pending.

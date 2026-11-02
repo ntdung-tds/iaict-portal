@@ -61,3 +61,11 @@
 ## Các thay đổi tiếp theo
 
 Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu và quy định](../README.md); **không sửa SRS**. Nếu hồi cứu thay đổi đã thực hiện trước đây, ghi `BACKFILLED` cùng nguồn commit/PR và kiểm thử; không tự đặt PASS.
+
+### CHG-IAM-ACCESS-20261102-01 — Thực nghiệm KDF local workerd (QA only)
+- **Trạng thái:** TEST_EVIDENCE_ONLY / CHƯA_CHỐT; 2026-11-02.
+- **Trước:** 100000 được giả định là hard cap; local workerd boundary NOT_RUN.
+- **Sau:** bổ sung 2 QA case `IAM-AUTH-018/019`, `scripts/kdf-workerd/` và [RUN-IAM-20261102-01](../../qa/IAICT_TEST_RUNS.md) thực nghiệm tại SHA `82380adafceaa239f24438ee85fa8ef10cc9d343`: 100000 và 100001 đều thành công, source app giữ nguyên.
+- **Traceability:** [PR #42](https://github.com/ntdung-tds/iaict-portal/pull/42), [CI #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088), isolated local workerd PASS. Các job khác phải kiểm tra trên final SHA.
+- **Ảnh hưởng:** chỉ QA/CI/tài liệu; không sửa UI/API/D1/R2/Access/Worker deployed/production. 600000 và live-auth E2E NOT_RUN. Không có ảnh (NO_IMAGE_REQUIRED).
+- **SRS:** FROZEN, chưa duyệt; ADR-0002 vẫn PROPOSED, không tự đổi KDF.

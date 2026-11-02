@@ -7,7 +7,7 @@
 |---|---:|---:|---:|---:|---|
 | CMS/CRM-1 **scoped checklist** | **5/10** | 1 | 2 | 2 | Includes narrow infrastructure / QA artifact checkpoints, not full CMS release |
 | IAM v1.2 **20 proposed target outcomes** | **0/20 full acceptance** | 5 | 1 | 14 | Prototype/partial code exists; no assertion that all 20 are approved requirements |
-| QA case catalog | **78 documented** | — | — | — | Prepared cases; 78 is not PASS count |
+| QA case catalog | **80 documented** | — | — | — | Prepared cases; 78 is not PASS count |
 | Authorized live 7-role authentication | **0/7 role E2E proven** | — | 7 | — | Eight disabled D1 fixtures are not valid logins |
 
 ## Verified chronology — append only (new rows at bottom)
@@ -21,6 +21,8 @@
 | 2026-10-31T19:56:52+07:00 | [Moment MOMENT-IAICT-20261031-1956-ICT](checklist-moments/2026-10-31T19-56-ICT.md), live checklist/plan/progress/template, agent rules, [Drive mirror](https://docs.google.com/document/d/1VT6fL6fogtrMg-MieaqhyjITceKiW2EqCcAZ1XcPpqM/edit) and `verify:checklist-moment` validator added; 4 focused local validator tests PASS | Documentation/CI-control batch, **no Worker/D1/Access/prod mutation**. CI on new docs HEAD pending final readback. 5/10 scoped CMS DONE; IAM v1.2 full acceptance 0/20 | Verify final SHA CI; resume `CMS-08 S2` KDF plan; real-role QA blocked |
 
 | 2026-11-02T10:25:00+07:00 | [PCS Solo PR #40](https://github.com/ntdung-tds/iaict-portal/pull/40) merged at `5473d954`; [CMS-08/S2 KDF test plan](../qa/IAICT_KDF_BOUNDARY_PLAN.md) drafted with proposed 100000/100001/600000 synthetic probes | **DOCUMENTATION ONLY; actual workerd experiments NOT_RUN**. PCS revision 3 is proposed by this follow-up PR; no app, Worker, D1, Access or production write | Execute isolated synthetic workerd proof, log exact QA run/SHA; review ADR; role E2E still blocked |
+
+| 2026-11-02T10:47:00+07:00 | [PR #42](https://github.com/ntdung-tds/iaict-portal/pull/42), local workerd `1.20261012.1`, [CI #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088), [RUN-IAM-20261102-01](../qa/IAICT_TEST_RUNS.md), tested SHA `82380ada` | `IAM-AUTH-018/019` local proof PASS: 100000/100001 both derive 256 bits; 600000/live staging/real IAM E2E **NOT_RUN**; current app KDF unchanged | Review ADR / optional bounded experiment; QA Doc synchronization and PR final CI |
 
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.

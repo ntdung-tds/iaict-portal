@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 3,
-  "updated_at": "2026-11-02T03:24:39.710Z",
+  "revision": 4,
+  "updated_at": "2026-11-02T03:46:41.259Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T03:24:39.710Z",
+    "updated_at": "2026-11-02T03:46:41.259Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -33,9 +33,29 @@
         "dependencies": [],
         "qa": {
           "required": true,
-          "status": "NOT_RUN"
+          "status": "PARTIAL",
+          "local_workerd": {
+            "status": "PASS",
+            "case_ids": [
+              "IAM-AUTH-018",
+              "IAM-AUTH-019"
+            ],
+            "run_id": "RUN-IAM-20261102-01",
+            "source_sha": "82380adafceaa239f24438ee85fa8ef10cc9d343",
+            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088",
+            "version": "1.20261012.1",
+            "iterations_success": [
+              100000,
+              100001
+            ]
+          },
+          "not_run": [
+            "600000-RESOURCE_GATE",
+            "LIVE_WORKER",
+            "AUTHENTICATED_IAM_E2E"
+          ]
         },
-        "description": "Scope is planning and bounded synthetic workerd evidence only (PROJECT_PLAN P0-B; CHECKLIST_MOMENT CMS-08 S2). Test plan prepared at docs/qa/IAICT_KDF_BOUNDARY_PLAN.md; no runtime probe, credential write, staging deploy, or architecture approval claimed."
+        "description": "CMS-08/S2 local workerd (100000/100001) observed PASS on exact CI SHA; architecture/Owner decision and all other live IAM acceptance remain open. No deployed Worker, credential, D1 or Access changes."
       },
       {
         "id": "T-IAM-ONBOARDING",
@@ -82,12 +102,12 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-KDF-S2",
-      "last_completed_step": "PCS Solo bootstrap PR #40 merged on active IAM/R2 development branch; KDF boundary plan for CMS-08/S2 prepared, real Worker measurements NOT_RUN.",
-      "next_action": "Execute bounded synthetic PBKDF2 compatibility experiment in isolated local workerd; record actual 100000/100001 observations and optional gated 600000; verify SHA and add QA run; review ADR before any IAM/migration changes.",
+      "last_completed_step": "Observed real local workerd PBKDF2 100000/100001 results (both SUCCESS) in CI job at SHA 82380ada; appended immutable QA RUN-IAM-20261102-01. Existing product KDF=100000 unchanged. ADR updated with evidence but remains PROPOSED.",
+      "next_action": "Verify final PR #42 checks, synchronize QA living Google Doc (80 cases) and merge safe CI/test/QA changes. Afterwards evaluate whether isolated 600000 probe or live parity is necessary before security Owner reviews any KDF redesign; do not change app KDF by default.",
       "blockers": [
-        "Real workerd boundary experiment not executed; do not infer hard-cap from Node unit tests or proposal.",
-        "Any remote diagnostic Worker, staging IAM changes, real-user QA, or production/Access change requires separately verified authorization and security gates.",
-        "Public repository: public-only PCS metadata; privileged public PCS operators not enabled (public_content_reviewed=false)."
+        "No proof for 600000 iterations or remote staging runtime parity; neither is mandatory for keeping existing 100000-iteration policy.",
+        "Full MFA enrollment/recovery, real role-based IAM E2E and permission cutover remain NOT_RUN/BLOCKED.",
+        "Owner/security review required for credential parameter/migration or privileged changes; PUBLIC repo privileged PCS operation not enabled."
       ],
       "actor": "pcs-solo-bootstrap"
     },
