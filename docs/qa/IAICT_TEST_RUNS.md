@@ -201,3 +201,29 @@
 | `IAM-FUT-001` | Hosted Worker, approved real users | MFA enrollment, key binding, OTP replay CAS, recovery, audit | No app integration or authorized role E2E performed | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
 
 **Limits:** CI is a synthetic runtime compatibility and harness isolation check, not a hosted Worker, real-login or security acceptance result. Final PR #46 CI and public-only staging acceptance must be checked separately at exact final head. Historical `RUN-IAM-20261102-03` remains intact; this is a new append-only retest record.
+
+
+## RUN-IAM-20261102-06 — Staging 503 fail-closed probe diagnostic enhancement
+
+| Field | Actual result and scope |
+| --- | --- |
+| Date | 2026-11-02 14:00–14:01 ICT (07:00–07:01 UTC) |
+| Case | `IAM-REL-005` (existing case, no new QA ID) and public-only `IAM-REL-004` |
+| Exact tested source SHA | `664f77dc7ce8387ad25c6e43077c4ea817481441` ([PR #48](https://github.com/ntdung-tds/iaict-portal/pull/48) preliminary final-code head before this QA record) |
+| Portal CI | [#41403328517](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328517) **SUCCESS**; staging availability probe **10/10 Node unit tests PASS** (three new checks), full Vitest **539/539 PASS**, QA registry **82 cases**, Moment validator PASS |
+| Public staging CI | [#41403328483](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328483) **SUCCESS**; Chromium **21/21 PASS**, anonymous availability **24/24 GET requests PASS**, `http503=0`, `networkErrors=0` |
+| Changes exercised | On non-200 responses, preserve only syntactically validated CF-Ray ID and enum-classified server/cache/content headers. Never read response body, cookie, credentials or arbitrary headers. Live probe runs after failed Chromium too; **no gate weakening** |
+| Real 503 diagnostic | **NOT_OBSERVED_IN_THIS_RUN**. CF-Ray extraction was verified with a synthetic 503 in unit tests; there is no new real CF-Ray sample in this run |
+| Historical incident | [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains **OPEN**: PR #47 staging attempts 1 and 2 both FAIL with HTTP 503. A successful later sample is not an operational fix |
+| Cloudflare root-cause evidence | Staging observability configuration read-only inspection: `observability=null`, `logpush=false`, zero tail consumers; no matching exception trace available from this inspection. GraphQL analytics quota returned rate-limit error. **ROOT_CAUSE_UNCONFIRMED** |
+| Runtime / deployment | Existing staging Worker remains deployed, diagnostic probe is only a GitHub CI client; no staging deploy, D1, Access, R2 or production modification |
+| QA media | **NO_IMAGE_REQUIRED** (HTTP status + sanitized text CI log). No GitHub screenshot/video/trace artifacts; [restricted QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Scope limit | This test concerns anonymous staging availability and release observability, not MFA/OTP. `IAM-FUT-001` live authenticated MFA remains **NOT_RUN** |
+
+| Test case | Environment | Expected | Observed | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-REL-005` | Node test with synthetic errors | Preserve valid CF-Ray on 503, reject unsafe headers, fail closed | **10/10** Node tests PASS, prior 503→200 still FAIL as designed | **PASS — UNIT ONLY** | [portal-ci #41403328517](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328517) |
+| `IAM-REL-005` | Live staging, public anonymous | 6 cycles × 4 GETs, no errors, fail on any non-200 | **24/24 PASS**, no real 503 sampled; no actual CF-Ray error diagnostic exercised | **PASS — BOUNDED LIVE SAMPLE** | [staging #41403328483](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328483) |
+| `IAM-REL-004` | Staging real Chromium | Public pages and Access boundaries | **21/21 PASS** | **PASS — LIVE PUBLIC ONLY** | [staging #41403328483](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328483) |
+
+**No root cause established, no reliability/SLO clearance, no permission for any production change or live MFA migration.** The original staging HTTP 503 failures remain in CI history and Issue #30. PR #47 local D1 CAS proof remains bounded; it must be independently verified on a new exact head after any eventual integration.
