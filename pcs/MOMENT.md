@@ -1,15 +1,16 @@
 # PCS Moment — IAICT Portal
 
-**PCS Universal 3.2.0 · Solo · Revision 3 · Active checkpoint CMS-08/S2**
+**PCS Universal 3.2.0 · Solo · Revision 4 · CMS-08/S2 local workerd evidence**
 
-- Canonical progress source for this development line: `pcs/STATE.json` revision **3**; branch `feat/staging-native-login-r2-20261030` is the intended merge target. Changes in this documentation PR are only proposed until merged; always verify actual branch HEAD and the current revision.
-- PCS bootstrap [PR #40](https://github.com/ntdung-tds/iaict-portal/pull/40) **MERGED** at commit `5473d954e79aeeb673a5a8816fedcd158cc448cc`; no app, Cloudflare or production changes.
-- **Active PCS task:** `T-IAM-KDF-S2` — historical IAICT checklist **CMS-08 / S2**, project plan **P0-B**; a bounded [PBKDF2 Workers test plan](../docs/qa/IAICT_KDF_BOUNDARY_PLAN.md) has been prepared. **Actual workerd tests NOT_RUN**, no Worker deployment, IAM changes or ADR approval.
-- Other backlog: `T-IAM-ONBOARDING` ([Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37)) and `T-MEDIA-R2` ([Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39)) are both **PLANNED**, live E2E NOT_RUN. No feature, flow or release marked ACCEPTED.
-- **Avoid duplicated management:** existing [CHECKLIST_MOMENT](../docs/project/CHECKLIST_MOMENT.md), [PROJECT_PLAN](../docs/project/PROJECT_PLAN.md), [PROJECT_PROGRESS](../docs/project/PROJECT_PROGRESS.md), GitHub Issues/PRs, 78-case QA CSV and test-run ledger remain the detailed operational sources. PCS stores only pointers and high-level progress.
-- SRS `docs/requirements/SRS.md` remains **FROZEN / UNAPPROVED**; existing per-module `thaydoi.md` logs remain canonical. [Source-code handoff #38](https://github.com/ntdung-tds/iaict-portal/issues/38) deferred until explicit “bàn giao”.
-- Repo **PUBLIC**: metadata must be PUBLIC-safe; `public_content_reviewed=false` means no privileged public-repo PCS operator authorization. QA images: restricted [Drive IAM evidence](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp); none created in this documentation batch.
+- Tracking source: `pcs/STATE.json` **revision 4**; proposed on [PR #42](https://github.com/ntdung-tds/iaict-portal/pull/42), with intended branch `feat/staging-native-login-r2-20261030`. Confirm merge + HEAD before treating this as canonical on that branch.
+- Active task `T-IAM-KDF-S2` (**IN_PROGRESS**, QA **PARTIAL**). Isolated local workerd `1.20261012.1`, compatibility date `2026-10-12`, tested SHA `82380adafceaa239f24438ee85fa8ef10cc9d343`, GitHub Actions [run #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088), QA [RUN-IAM-20261102-01](../docs/qa/IAICT_TEST_RUNS.md).
+- **Observed:** PBKDF2 100000 SUCCESS (256 bits / 11 ms), 100001 SUCCESS (256 bits / 12 ms). Single-sample runtime proof, **not** load benchmark. The supposed exact 100000 workerd hard cap is contradicted by this local test; do not generalize to all hosted versions.
+- **NOT_RUN:** 600000, actual hosted Worker parity, signed-in role E2E, full MFA enrollment/recovery. No product `PBKDF2_ITERATIONS` change; [ADR-0002](../docs/adr/0002-iaict-native-mfa-totp-staged.md) remains PROPOSED.
+- Other backlog: `T-IAM-ONBOARDING` (Issue #37), `T-MEDIA-R2` (Issue #39), both PLANNED, not accepted. No feature/flow/release accepted.
+- Detailed checklist: [CHECKLIST_MOMENT](../docs/project/CHECKLIST_MOMENT.md), [PROJECT_PLAN](../docs/project/PROJECT_PLAN.md), [PROJECT_PROGRESS](../docs/project/PROJECT_PROGRESS.md); authoritative QA catalog is now **80 cases** (78 prior + 2 workerd boundary cases), run ledger and actual CI logs. No duplicate requirement ledger; per-module `thaydoi.md` remains source. SRS FROZEN.
+- Repository PUBLIC: public-only metadata; `public_content_reviewed=false`. QA images in private [Drive IAM folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) only. This crypto QA required **NO_IMAGE_REQUIRED**. No staging Worker, D1, R2, Access or production mutation.
+- Full source handoff to Google Drive remains DEFERRED until Owner explicitly says “bàn giao”.
 
 ## Next precise action
 
-Perform a *locally isolated* synthetic Workers PBKDF2 boundary proof at 100000 and 100001 iterations (600000 only after a resource gate), record real runtime/error evidence on an immutable SHA and new QA Run ID, then review the proposed MFA/KDF ADR. This is not approval to touch live staging, D1, Access or production. Update PCS State and this Moment consistently after actual evidence.
+Check the **final SHA** on PR #42, ensure CI and public read-only staging acceptance PASS, synchronize living QA Google Doc with cases 79–80, then merge if no independent review blocker. Continue S2 architectural review without altering the existing 100000-iteration product contract. Real IAM and MFA acceptance remain blocked independently.
