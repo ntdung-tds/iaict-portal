@@ -7,7 +7,7 @@ Safely complete IAICT-developed CMS/IAM foundations on staging, prove real-role 
 | Phase | Scope | Priority / dependencies | Definition of Done / evidence | Current |
 |---|---|---|---|---|
 | P0-A | Preserve current secure staging release, rollback, QA docs and requirement logs | NOW; read-only first | exact Worker SHA/version, CI, 24 migrations/quick_check, Access, QA run, private evidence URLs | Foundation documented; current release not final IAM |
-| P0-B | KDF compatibility and Auth architecture ADR | before modifying password hash design | controlled 100k/100001/600k worker test with synthetic inputs; measured results; reviewed migration-compatible ADR | NOT_STARTED (report hypothesis only) |
+| P0-B | KDF compatibility and Auth architecture ADR | before modifying password hash design | controlled 100k/100001/600k worker test with synthetic inputs; measured results; reviewed migration-compatible ADR | IN_PROGRESS (S2 plan prepared; real workerd boundary test NOT_RUN) |
 | P0-C | MFA enrollment/challenge/replay/recovery, Admin step-up | after P0-B/ADR | encrypted secret, atomic replay guard, recovery controls, threat model, negative tests, real E2E | IN_PROGRESS (primitive only) |
 | P0-D | Fine-grained permissions and resource/tenant/CRM scopes | design independently; before Access cutover | shared policy at API/DB, no IDOR/privilege escalation, revoke immediacy, role × action × scope × state tests | NOT_STARTED |
 | P0-E | Genuine 7-role staging QA and 2-admin race test | verified IAICT QA mailboxes+Access+password vault; no counterfeit | live authorized Chromium role matrix, 409 races, actual QA runs/Drive evidence | BLOCKED [#34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
