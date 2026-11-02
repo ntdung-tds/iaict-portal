@@ -451,3 +451,10 @@
 | Evidence media | **NO_IMAGE_REQUIRED**; [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp). No private images/logs to GitHub |
 
 **Conclusion:** The actual TOTP helper now participates in the *isolated* D1 batch harness and passed the bounded security regression. This does NOT implement MFA in IAICT Portal or approve a live migration, account enrollment or Access cutover. The next action is to review authoritative IAM schema/epoch/assurance and recovery under a separate approved scope.
+
+
+### RUN-IAM-20261102-14 — post-merge readback (documentation-only handoff)
+
+- [PR #59](https://github.com/ntdung-tds/iaict-portal/pull/59) **MERGED** as `bdd0d2e353079496bc32a249a128b2fd95db3ed9`. Exact final PR HEAD `17eabc0fa896eea531aa186160f607f6ee66ea21`: [portal-ci #41457724289](https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724289) **SUCCESS all four jobs**, **27/27 local IAM-FUT-013**, **559/559 Vitest**, QA 86; [public staging #41457724115](https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724115) **SUCCESS 21/21 Chromium + 24/24 anonymous GET**, 0 HTTP503/5xx/network errors **in sample only**.
+- Post-merge active branch source and PCS **revision 21** read back; Google QA [v2.0](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) updated/read back. This handoff proposes PCS revision 22 to replace stale “verify/merge PR59” next action; it **does not** add a new test run or increase scope of the preceding evidence.
+- **Persistent restrictions:** actual MFA/hosted D1/Worker/key/recovery/7-role E2E NOT_RUN, ADR PROPOSED, SRS FROZEN, Owner security sign-off NOT GIVEN. No remote mutations, Access changes or production deploy.
