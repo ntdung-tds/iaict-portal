@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 21,
-  "updated_at": "2026-11-02T13:57:00.402Z",
+  "revision": 22,
+  "updated_at": "2026-11-02T14:01:33.335Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T13:57:00.402Z",
+    "updated_at": "2026-11-02T14:01:33.335Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -198,7 +198,7 @@
             "production_mfa_done": false
           },
           "actual_totp_parity": {
-            "status": "LOCAL_PASS_FINAL_PR_GATES_PENDING",
+            "status": "PASS_LOCAL_ONLY",
             "case_id": "IAM-FUT-013",
             "assertion_groups": 27,
             "uses_actual_totp_module": true,
@@ -214,7 +214,12 @@
             "public_staging": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41456996063",
             "hosted_d1_tested": false,
             "real_sessions_issued": false,
-            "live_mfa_implemented": false
+            "live_mfa_implemented": false,
+            "post_merge_verified": true,
+            "merge_sha": "bdd0d2e353079496bc32a249a128b2fd95db3ed9",
+            "final_pr_head_sha": "17eabc0fa896eea531aa186160f607f6ee66ea21",
+            "final_portal_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724289",
+            "final_public_staging": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724115"
           }
         },
         "description": "MFA foundation still IN_PROGRESS/QA PARTIAL. Actual lib/totp.ts generator/matcher now passed 27/27 groups when bundled into local synthetic atomic D1 harness (PR #59); 1/16 same challenge, 1/2 same factor step, 4 simulated sessions/audits. No real login/session/Factor schema/MFA enrollment/hosted D1/7-role E2E."
@@ -264,8 +269,8 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR #59 actual lib/totp.ts in synthetic local D1 batch: code SHA 5e13f97da067f12c3d21de460092ecd37aa8298d, IAM-FUT-013 27/27 groups PASS, 1/16 same challenge, 1/2 same factor step, 4 synthetic sessions/audits; portal CI #41456996101 4/4 SUCCESS and 559/559 Vitest; public staging #41456996063 SUCCESS 21/21 Chromium + 24/24 anonymous GET. RUN-IAM-20261102-14 recorded. PR final docs-head recheck required.",
-      "next_action": "Verify PR #59 FINAL HEAD exact CI and public-only staging; merge QA-only after both PASS. Do not activate MFA. Next separate IAM schema/security revision/assurance/recovery design review. Hosted D1/key binding/Worker/login integration only after explicit Owner/security approval, ADR PROPOSED and SRS FROZEN.",
+      "last_completed_step": "PR #59 MERGED bdd0d2e353079496bc32a249a128b2fd95db3ed9. Exact final PR SHA 17eabc0fa896eea531aa186160f607f6ee66ea21 portal-ci #41457724289 SUCCESS 4/4 jobs, 559/559 Vitest, IAM-FUT-013 actual lib/totp.ts + synthetic D1 27/27 groups PASS, staging #41457724115 SUCCESS 21/21 public Chromium and 24/24 anonymous GET (0 observed HTTP503 in sample). 86 QA cases, RUN-IAM-20261102-14, Google QA v2.0 read back. No live MFA.",
+      "next_action": "Do not reopen or remerge PR #59. NEXT SEPARATE TASK (design/review only): map real admin_users/admin_user_roles, iaict_password_credentials_v2, iaict_auth_sessions and audit schema to proposed MFA factor/challenge/security_epoch/assurance/recovery model; validate key lifecycle and rollback; propose minimal migration and policy for explicit Owner/security approval before any real D1/Worker/Access change. Public staging 503 issue #30 and authenticated seven-role E2E remain outstanding.",
       "blockers": [
         "Actual lib/totp.ts now exercised only in Node local synthetic D1 proof; hosted D1 integration, real encrypted factor/key binding, real IAM session and recovery still NOT_IMPLEMENTED/NOT_RUN.",
         "User/factor security epoch and encrypted MFA keys remain unprovisioned for real IAM. Hosted D1 migration, Access cutover, policy and recovery need explicit Owner approval; ADR PROPOSED, SRS FROZEN.",
