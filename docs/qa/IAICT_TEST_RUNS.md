@@ -536,3 +536,22 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 - **Evidence:** [portal-ci #41533428400](https://github.com/ntdung-tds/iaict-portal/actions/runs/41533428400) (all four PASS; 566 Vitest; 38 local Chromium); [public staging #41533428059](https://github.com/ntdung-tds/iaict-portal/actions/runs/41533428059) (24 Chromium and 24 HTTP probes PASS). QA media not captured, because this is a programmatic security test; only store future screenshots in the [restricted IAM evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
 - **Security/side-effect boundary:** one randomized absent synthetic email submitted to live staging login can generate a D1 failed-login counter. No real account activation, password write, Access membership, roles, invitations, MFA, Worker deploy, migration, production mutation or secret/PII export. Automated reports have screenshot/video/trace OFF. No genuine 7-role positive login performed. Native login rejection is not proof that a real authenticated user can access CMS.
 - **Post-evidence gate:** because this record/PCS are new changes, final PR head must independently pass CI plus Chromium again, then merge. Never backfill an unobserved real role PASS.
+
+
+## RUN-IAM-20261103-06 — actual Worker/native-cookie RBAC on disposable D1; downstream HTTP dispatcher MOCKED
+
+| Field | Verified outcome |
+|---|---|
+| Date, scope and case | 2026-11-03; [PR #76](https://github.com/ntdung-tds/iaict-portal/pull/76); `IAM-ACC-008`; code SHA `3dcad1ff72038c6fc6d39ea98c38887ff4d1815b` **before this evidence/PCS commit** |
+| Real implementation under test | Actual `worker.ts` ingress (native cookie verification, internal-header stripping, Origin guard), `lib/native-auth.ts` PBKDF2 credential and D1 session logic, `lib/newsroom-auth.ts` RBAC SQL, `lib/cms-roles.ts`, original unmodified `0001_core.sql`, `0022_iaict_native_auth.sql`, `0023_iaict_auth_pbkdf2_workers.sql`, `0024_iaict_activation_invites.sql` |
+| Test fixture and mocked part | Eight independent randomly passworded synthetic `example.test` accounts in **disposable local Miniflare D1**. **Only** `vinext/server/fetch-handler` dispatcher is mocked for seven `/api/admin/_qa/*` synthetic routes. No deployed CMS endpoints or real Cloudflare Access are involved |
+| Positive/negative role coverage | **8 roles × 7 independent permission gates = 56 allow/deny decisions**, including second Admin; actual native cookie and D1 role query on each Worker request |
+| Additional negative coverage | Missing/forged cookies, client-forged internal identity header, native feature disabled, cross-origin/absent Origin on POST, role deletion and inactive user refusal |
+| New integration tests | **12/12 PASS** in [portal-ci #41536511330](https://github.com/ntdung-tds/iaict-portal/actions/runs/41536511330); actual `lib/native-worker.real-d1.roles.test.ts` 12 tests |
+| Entire source/CI at tested SHA | **578/578 Vitest PASS**, **38/38 local Chromium PASS** (some mocked), **4/4 portal CI jobs SUCCESS** |
+| Real public staging regression | [staging-acceptance #41536511374](https://github.com/ntdung-tds/iaict-portal/actions/runs/41536511374) **24/24 real Chromium PASS** and **24/24 HTTP PASS**, 0 observed HTTP503/5xx/network errors in sample. New `IAM-ACC-008` is *local*, not among these 24 real-staging tests |
+| Hosted D1 status after tests | Read-only staging D1 `quick_check=ok`, 8 legacy QA rows still disabled with zero native credentials and zero Access subjects. No hosted D1 or Cloudflare policy touched by this PR |
+| Real authenticated 8-role Access acceptance | **BLOCKED / NOT_RUN**: no independent controlled QA inboxes, valid per-role Access identities/browser state or approved recoverable credential manager |
+| Media and security | No password, browser cookie, Access JWT or screenshot persisted; no production/staging Worker deployment. Media folder [restricted IAM Drive QA](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) — no image required for local API assertions |
+
+**Verdict:** **PASS LOCAL_WORKER_INGRESS_REAL_D1_WITH_MOCK_HTTP_DISPATCH**. Does **not** prove real positive Cloudflare Access enrollment, actual hosted Admin API actions, or true signed-in role-browser E2E. The source SHA above was observed green; this documentation revision must receive its own exact-head CI and public staging Chromium checks before merge. SRS remains FROZEN; no live MFA implementation.
