@@ -114,3 +114,13 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 - **D1/secret/security:** nêu logical schema `iam_mfa_factors`, `iam_mfa_challenges`, `iam_mfa_recovery_codes` và nâng assurance của session ở mức proposal; **không tạo migration, không provision key, không cập nhật binding/Access/Worker, không sửa D1 thật**.
 - **QA:** cập nhật phạm vi dự kiến cho các case `IAM-FUT-001`, `IAM-FUT-002`, `IAM-FUT-004`; `IAM-FUT-010` local CAS PASS vẫn chỉ giới hạn test; **các luồng MFA đăng nhập/recovery/7-role hosted NOT_RUN**. Danh mục giữ **83 case**. Kết quả CI cho chính PR sẽ ghi sau khi chạy, tuyệt đối không coi CI tài liệu là E2E.
 - **Trạng thái:** `T-IAM-MFA-F2` IN_PROGRESS / QA PARTIAL, Owner MFA security acceptance NOT GIVEN. **SRS FROZEN**; chủ dự án quyết định lúc hoàn tất có đồng bộ SRS hay không.
+
+
+### CHG-IAM-ACCESS-20261102-07 — Isolated pre-MFA challenge and session assurance
+
+- Date/status: 2026-11-02; ISOLATED FOUNDATION / NOT APPROVED. PR #50, Issue #37; ADR-0002 PROPOSED.
+- Before: Native login grants a full D1 session immediately on successful password. The application has no native MFA assurance checks.
+- After: Add standalone, unimported `lib/native-mfa-preauth.ts` and Vitest. The module generates a 256-bit random challenge token, returns a separate SHA-256 record digest, supplies a distinct Secure/HttpOnly five-minute pending cookie, checks challenge candidate eligibility against user, credential fingerprint, expiry, attempts and disabled state, and models a fail-closed server session assurance predicate.
+- Boundaries: The eligibility function is READ ONLY, not challenge redemption. It neither matches an OTP nor issues or authorizes any session. Existing login/API/Worker/session readers are unchanged. No live D1 schema, migration, factor, key binding, user or Cloudflare setting modified. Real MFA E2E remains NOT_RUN.
+- QA: New P0 security case IAM-FUT-011, synthetic local Vitest. Registry 84 cases. Record actual exact-SHA results separately, never claim hosted MFA.
+- SRS remains FROZEN pending an explicit owner decision; implementation and Access cutover require separate security approval.

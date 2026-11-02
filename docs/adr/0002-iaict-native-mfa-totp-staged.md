@@ -180,3 +180,18 @@ These are **proposed logical entities**, not finalized table names or DDL. Befor
 | `IAM-REL-007` existing | Preflight staging Worker version, D1 schema, Access, rollback and production unchanged | **NOT_RUN for MFA deploy** |
 
 **Owner/security decisions required before code/migration:** (i) role-based vs all-user enforcement and onboarding exception policy, (ii) separate challenge TTL and throttle thresholds, (iii) Worker secret/KMS ownership, rotation and recoverable key backups, (iv) how existing sessions are invalidated at enforcement, (v) factor count/recovery-code issuance/privileged reset approval, (vi) exactly which staging identities can perform real E2E. Until then do not deploy, migrate or change Access. Keep **ADR-0002 PROPOSED**, **SRS FROZEN**, `T-IAM-MFA-F2` **IN_PROGRESS / QA PARTIAL**.
+
+
+## 2026-11-02 — Isolated first-factor challenge and assurance primitives (PR #50)
+
+This is a **source-only foundation**, not a change to active login. New `lib/native-mfa-preauth.ts` supplies:
+
+- `issuePendingMfaChallenge()`: cryptographically random 256-bit opaque token and digest-only D1 record proposal; separate `__Host-iaict_mfa_pending` HttpOnly/Secure/Lax five-minute cookie (must never be treated as the privileged `__Host-iaict_session`).
+- `pendingChallengeEligibleForCas()`: read-only **candidate** filter bound to server-derived user/credential fingerprint, active account/role, valid time, unused record, attempts, lock and matching SHA-256 token digest. This filter can return TRUE twice: **it does not consume the challenge and never grants an admin session**.
+- `nativeSessionMeetsAssurance()`: separate server-side predicate rejecting expired/revoked/disabled sessions and rejecting password-only/legacy sessions under explicit `MFA_REQUIRED` policy. Unknown policy fails closed. Legacy sessions can be permitted only when a trusted server-side `PASSWORD_ONLY` policy expressly applies.
+
+**Important nuance:** The current `lib/native-auth.ts`, `worker.ts` and login/session API **do not import or call these helpers**. Consequently, all current native login behavior is unchanged. This is not an MFA bypass fix, not a challenge persistence implementation and not enrollment. `IAM-FUT-011` tests only isolated code with synthetic values; real `IAM-FUT-001` remains NOT_RUN.
+
+**Required next stage before a feature toggle:** Implement a forward-only D1 challenge/session assurance model and prove transactional single-redemption semantics under race and failures. Password verification and full-session issuance must be separated; all Worker, API, CMS, account and role session-read paths must evaluate a trusted, centrally derived effective MFA policy including old sessions. A CAS result affecting zero rows must never grant a full session. Rate limiting, Origin/CSRF, factor key binding, actual OTP matching, recovery and authorized seven-role staging acceptance need independent evidence. When no factor/required key is available under a required policy, fail closed or use a specifically approved constrained onboarding/recovery route; never silently downgrade.
+
+**Approval boundary:** owner/security review is needed before deploying a new MFA factor table, provisioning live keys, enforcing MFA on users, changing Access or production. ADR-0002 remains **PROPOSED**, SRS remains **FROZEN**. No Cloudflare resources altered by this test-only PR.

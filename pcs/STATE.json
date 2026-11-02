@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 11,
-  "updated_at": "2026-11-02T07:36:09.579Z",
+  "revision": 12,
+  "updated_at": "2026-11-02T08:43:21.672Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T07:36:09.579Z",
+    "updated_at": "2026-11-02T08:43:21.672Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -74,7 +74,8 @@
           "case_ids": [
             "IAM-FUT-008",
             "IAM-FUT-009",
-            "IAM-FUT-010"
+            "IAM-FUT-010",
+            "IAM-FUT-011"
           ],
           "unit": {
             "status": "PASS",
@@ -128,9 +129,19 @@
             "adr": "docs/adr/0002-iaict-native-mfa-totp-staged.md",
             "full_login_implemented": false,
             "owner_approved": false
+          },
+          "isolated_preauth": {
+            "status": "PASS",
+            "case_id": "IAM-FUT-011",
+            "test_count": 16,
+            "run_id": "RUN-IAM-20261102-08",
+            "source_sha": "aee436679d3efb76b13adb755fe5b58b560639ca",
+            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41414835791",
+            "environment": "LOCAL_NODE_VITEST",
+            "live_route_wired": false
           }
         },
-        "description": "Crypto and D1 CAS remain isolated LOCAL-only PASS. MFA integration boundary now documented: password verification must not mint full session before OTP; server-side MFA assurance enforced on all session readers; challenge replay, key lifecycle, recovery and rollout safeguards planned. No integration, key binding, D1 migration or live E2E."
+        "description": "Isolated AES-GCM, local D1 CAS and pending pre-MFA challenge/assurance helpers have bounded PASS only. New unimported module produces digest-only 256-bit challenge and fail-closed session assurance predicate; full login still issues password sessions, so MFA not enabled. Real D1 challenge persistence, OTP, sessions, hosted E2E, key and recovery NOT_RUN."
       },
       {
         "id": "T-IAM-ONBOARDING",
@@ -177,13 +188,13 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR #47 QA-only local D1 CAS merged as 11e3af741ede3e3d0d17c9e6d34034a8bb388876, 83 QA cases, PCS rev10. Source cross-check of native auth shows existing password-success immediate full session issue and no MFA assurance in session readers. F2/F3 integration contract drafted in ADR-0002, CHG-IAM-ACCESS-20261102-06, existing planned QA cases updated; no runtime integration.",
-      "next_action": "Complete exact final SHA PR #49 CI and public read-only staging; sync Google living QA Doc and merge docs-only proposal if all gates PASS. Then owner/security choice of enforcement roles, key/KMS and recovery/rollback; implement separate tested first-factor challenge and session assurance gate BEFORE any factor activation or D1 migration.",
+      "last_completed_step": "PR #49 merged cc917d67d046f15cad4b58b8e679f83dfff90b80, PCS rev11. PR #50 added isolated pre-MFA challenge/assurance helper and IAM-FUT-011; 16/16 new tests PASS, overall 555/555 Vitest PASS on exact SHA aee436679d3efb76b13adb755fe5b58b560639ca. RUN-IAM-20261102-08, 84 cases. No existing login/Worker route wired.",
+      "next_action": "Verify final PR #50 portal-ci and public read-only staging at exact SHA, sync living 84-case QA Doc and merge safe isolated primitive. Next: independently implement and test server-side challenge D1 lifecycle and assurance integration only with approved owner/security plan; no live factors, keys or Access cutover.",
       "blockers": [
-        "No Owner/security approval for MFA required roles, hosted key binding or factor migration; ADR-0002 remains PROPOSED, SRS FROZEN.",
-        "Native password login currently issues full session before any MFA challenge; must split issuance and update all session readers and existing sessions before MFA enforcement.",
-        "Authenticated 7-role staging E2E, recovery, hosted D1 CAS, secret rotation and rate limits NOT_RUN; disabled QA identities cannot provide acceptance.",
-        "Intermittent public staging HTTP 503 cause unresolved (Issue #30); keep monitoring independent."
+        "Owner/security has not approved effective MFA policy by role, challenge D1 migration, key binding, recovery, or rollout. ADR PROPOSED, SRS FROZEN.",
+        "Current native password-login route still mints full password session; isolated helper is NOT wired, so real MFA NOT_ENFORCED. Need transactionally verified challenge redemption and assurance-gated session readers.",
+        "Real 7-role and second Admin staging E2E NOT_RUN; user fixtures disabled pending approved identities.",
+        "Issue #30 intermittent staging 503 root cause unconfirmed; keep independent failure evidence."
       ],
       "actor": "pcs-solo-lead"
     },

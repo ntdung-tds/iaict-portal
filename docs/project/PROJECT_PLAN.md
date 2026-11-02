@@ -34,3 +34,9 @@ Safely complete IAICT-developed CMS/IAM foundations on staging, prove real-role 
 - Source inspection exposed a future enforcement bypass risk: `authenticateNativePassword()` issues `iaict_auth_sessions` immediately on password success and the existing session readers have no MFA assurance. **Do not add an OTP UI on top of the current full-session issuance**.
 - The [ADR-0002](../adr/0002-iaict-native-mfa-totp-staged.md) integration contract specifies restricted pre-MFA challenge, server-side MFA policy, challenge/credential binding and expiration, verified D1 CAS + session creation, rotation/recovery and revoke-on-policy-change. Link [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) and `CHG-IAM-ACCESS-20261102-06`.
 - Prioritize challenge/session gate and tests before factor D1 migration/secret provisioning. Pending Owner/security decisions: which of seven roles must enforce, key/KMS provider/rotation, privileged recovery controls, existing-session cutover, test identities. Continue Access protection and SRS freeze; no production deployment or source Drive handoff.
+
+### CMS-08/S5 — isolated pre-MFA challenge/assurance foundation (2026-11-02)
+
+- [PR #50](https://github.com/ntdung-tds/iaict-portal/pull/50): add **unimported** `lib/native-mfa-preauth.ts`, 256-bit token + digest-only record, separate five-minute HttpOnly/Secure pending cookie, candidate-only expiration/account/credential validation and explicit server-side session-assurance predicate.
+- QA `IAM-FUT-011`, `RUN-IAM-20261102-08`: local Vitest 16/16 PASS on SHA `aee43667`, full 555/555 PASS. 84 cases; real MFA login/recovery remains NOT_RUN.
+- **No live integration** to `authenticateNativePassword`, `nativeActorEmail`, Worker, route, D1 or Access. Before any real activation: owner/security-controlled schema/keys, atomic first-factor challenge+OTP CAS+session transaction, old session policy, approved 7-role staging QA and rollback. SRS FROZEN, ADR PROPOSED.
