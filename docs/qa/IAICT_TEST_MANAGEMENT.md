@@ -57,6 +57,18 @@
 
 **Khi có phát hiện lỗi:** ghi FAIL vào run mới → tạo BUG và ảnh Drive FAIL → commit fix → rerun cùng case + tests hồi quy → record PASS của rerun nếu thực sự đạt; **không ghi đè FAIL gốc**.
 
+## 4A. Bắt buộc kiểm thử thực tế bằng trình duyệt khi có thể
+
+**Quyết định của chủ dự án (02/11/2026):** Không được bỏ qua kiểm thử bằng trình duyệt nếu hạng mục có thể kiểm chứng thực tế bằng trình duyệt. Áp dụng trong từng bước phát triển và từng vòng rà soát/sửa lỗi, không chỉ cuối release.
+
+- **UI local / Chromium thật:** chạy các Playwright spec liên quan để xem giao diện, hành vi nhập liệu, lỗi hiển thị, điều hướng, responsive và trạng thái thất bại. API mock phải được ghi rõ là `MOCK`; đây không phải bằng chứng tích hợp hệ thống.
+- **Staging thực / Chromium thật:** chạy `npx playwright test --config playwright.staging.config.ts` hoặc subset nhắm đúng chức năng công khai được phép READ-ONLY. Kiểm tra đường dẫn, luồng sử dụng, responsive 320/390/768px khi liên quan, Console/JS/network error khi có thể. Ghi số lượng PASS/FAIL, URL run và SHA. Chỉ kết luận chức năng thay đổi đã hoạt động trên staging khi xác nhận Worker/deployment chứa SHA tương ứng.
+- **Đăng nhập thực / phân quyền:** nếu tính năng cần tài khoản, chạy Playwright `playwright.staging-authenticated.config.ts` **chỉ trên máy/phiên kiểm thử được phê duyệt**, với tài khoản IAICT đã cấp và dữ liệu an toàn. Không đưa session/token/password vào CI, GitHub, logs hoặc ảnh. Nếu thiếu quyền/tài khoản: ghi chính xác `BLOCKED` hoặc `NOT_RUN`, liên kết Issue #34, vẫn kiểm thử được các nhánh public/anonymous và local Chromium. Không thay thế bằng kết quả mock.
+- **Không bỏ sót trong báo cáo:** ghi rõ theo từng lớp `LOCAL_CHROMIUM_MOCK`, `LIVE_STAGING_CHROMIUM_ANONYMOUS`, `LIVE_STAGING_AUTHORIZED` và `NOT_APPLICABLE` nếu đúng bản chất. Mỗi trường hợp cần expected/actual, vai trò, browser/viewport, commit SHA và URL evidence; `NOT_APPLICABLE` chỉ dành cho phần thuần D1/crypto/backend không có giao diện hoặc hành vi web có thể kiểm tra.
+- **Sau sửa lỗi hoặc triển khai:** chạy lại trên trình duyệt đúng chức năng bị ảnh hưởng; không lấy CI của phiên bản trước thay cho lần kiểm thử trên Worker mới. Ảnh có giá trị chẩn đoán lưu private Google Drive (PASS/FAIL/Manual), không lưu trên GitHub; nếu không chụp được thì ghi `NOT_CAPTURED`, không tự tạo bằng chứng.
+
+**Đã có sẵn:** `.github/workflows/ci.yml` chạy local Chromium browser-visual; `.github/workflows/staging-acceptance.yml` chạy Chromium trên staging thực và probe độ sẵn sàng. Kết quả của hai luồng phải được báo cáo riêng. Không thêm các biểu mẫu/bộ trạng thái song song chỉ để thực thi quy tắc này.
+
 ## 5. Test design và ma trận rủi ro
 
 - Phương pháp: positive/negative/boundary, equivalence partitions, state transition, concurrency/race, RBAC/IDOR, CSRF, token expiry/replay, denial of service, a11y/responsive, deployment/rollback.
