@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 8,
-  "updated_at": "2026-11-02T04:34:46.740Z",
+  "revision": 9,
+  "updated_at": "2026-11-02T04:47:11.976Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T04:34:46.740Z",
+    "updated_at": "2026-11-02T04:47:11.976Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -93,14 +93,17 @@
           "local_workerd": {
             "status": "PASS",
             "test_count": 11,
-            "run_id": "RUN-IAM-20261102-03",
-            "source_sha": "23c0960dba63905dfcf90fff2309e81b78f6e838",
-            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41389043762",
+            "requests_checked": 2,
+            "invalid_routes_rejected": true,
+            "run_id": "RUN-IAM-20261102-04",
+            "source_sha": "702ce448ae1a63a6ab3e768a01104f14d16a183c",
+            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476",
             "version": "1.20261012.1",
-            "compatibility_date": "2026-10-12"
+            "compatibility_date": "2026-10-12",
+            "previous_run_id": "RUN-IAM-20261102-03"
           }
         },
-        "description": "AES-GCM seed envelope is UNIT-PASS (6 tests) and now exact source crypto library LOCAL_WORKERD-PASS (11 checks), separate immutable QA runs. This does NOT constitute secret binding, hosted parity, key lifecycle, schema, replay, enrollment, recovery or Owner acceptance."
+        "description": "AES-GCM helper passes 6 Node unit tests and 11 workerd checks per request; probe harness revised to reset check state, 2 sequential workerd requests independent and wrong route/method rejected. No actual MFA factors, key lifecycle, hosted bindings, D1, replay, enrollment or recovery implemented."
       },
       {
         "id": "T-IAM-ONBOARDING",
@@ -147,12 +150,11 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "Isolated workerd npm 1.20261012.1 proved exact lib/mfa-secret-crypto.ts AES-GCM helper 11/11 PASS at SHA 23c0960d, GitHub CI #41389043762, QA RUN-IAM-20261102-03. Minimal key rotation/forward-only D1 factor design proposed in ADR-0002, no migration or real secret.",
-      "next_action": "Verify final PR #45 CI and public staging gate, mirror QA 82-case living Doc, merge safe tests/proposals. Then review D1 state schema and simulate atomic one-time OTP CAS race before enrollment implementation; request Owner/security sign-off for any real key/migration/privileged stage.",
+      "last_completed_step": "PR #45 merged at a8ad093ba09ee30a9c98d8510cca561cde2ae6eb; review identified module-scope state shared by probe requests. PR #46 corrects harness scope and sanitizes errors. Observed repeat test in local workerd at SHA 702ce448: 11/11 per each 2 sequential requests and path/method 404 PASS; append-only RUN-IAM-20261102-04.",
+      "next_action": "Verify final PR #46 portal-ci and public staging acceptance, sync living QA doc (82 cases, same IAM-FUT-009), merge safe harness fix. Afterwards review an isolated synthetic D1 conditional update race test and formal key lifecycle before any real MFA integration.",
       "blockers": [
-        "MFA key binding, rotation/restore/secret lifecycle and D1 factor storage are PROPOSED, not implemented or approved.",
-        "Authenticated MFA enrollment, atomic replay gate, rate limit, recovery, and 7-role E2E NOT_RUN.",
-        "Hosted Workers binding parity and Owner authorization for any real D1/staging/Access changes NOT_VERIFIED; Access remains in place."
+        "MFA D1 factor, secret/KMS binding and key rotation design unapproved; full enrollment/replay/recovery NOT_RUN.",
+        "Real authenticated 7-role IAM E2E blocked on approved QA identities; hosted Worker parity and Owner security acceptance not established."
       ],
       "actor": "pcs-solo-lead"
     },

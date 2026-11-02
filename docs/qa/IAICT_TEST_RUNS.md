@@ -178,3 +178,26 @@
 | `IAM-FUT-001` | Hosted Worker + real approved role | MFA enrollment, atomic replay guard, recovery and audit | Not implemented or exercised | **NOT_RUN** | Issue #37 |
 
 **Interpretation:** The exact AES-256-GCM helper functions on **one tested local workerd version** under the project's compatibility flags. It does **not** establish hosted Cloudflare parity, secret/KMS injection, concurrency/replay resistance, key rotation, D1 factor schema, IAM step-up or authorized E2E acceptance. Keep Cloudflare Access, SRS and production unchanged.
+
+
+## RUN-IAM-20261102-04 — Retest workerd AES-GCM request isolation after PR #45 review
+
+| Field | Observed evidence |
+| --- | --- |
+| Date | 2026-11-02 11:45 ICT (GitHub Actions 04:45 UTC) |
+| Retest parent | `RUN-IAM-20261102-03`, test `IAM-FUT-009` (same case ID, no added feature) |
+| Exact executed source SHA | `702ce448ae1a63a6ab3e768a01104f14d16a183c` (PR #46 preliminary code head) |
+| CI job | [portal-ci #41390187476](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476), [local workerd job #125099646544](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476/job/125099646544) **SUCCESS** |
+| Tested runtime | `workerd` npm `1.20261012.1`, compatibility date `2026-10-12`, `nodejs_compat`, isolated loopback; **NOT HOSTED** |
+| Actual | For each of **two sequential requests on same Worker isolate**, all **11/11** crypto checks PASS. `identical_check_sets_for_two_requests=true`; invalid route and POST returned HTTP 404. Runner output sanitized; no key/seed/OTP/ciphertext logged |
+| Change reviewed | Reset per-request `checks` accumulator in `scripts/mfa-workerd/probe.ts`; fail-closed error names instead of arbitrary exception text; runner verifies repeated and negative-path behavior. **Application crypto helper unchanged** |
+| Deployment | NONE, no real secret, D1, R2, Access, staging Worker or production mutation |
+| QA media | **NO_IMAGE_REQUIRED**; [private IAM evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) not modified |
+| Independent acceptance | MFA real factors, hosted secret bindings, D1 replay CAS, recovery and role E2E still **NOT_RUN**; SRS FROZEN and ADR-0002 PROPOSED |
+
+| Case | Layer and role | Expected | Actual | Verdict | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-009` | Synthetic local workerd, unauthenticated probe | 11 checks per request, independent state for repeat, invalid route and method fail closed | 11/11 on each of 2 requests; 404/404 invalid route and method | **PASS — LOCAL_WORKERD RETEST ONLY** | [CI job #125099646544](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476/job/125099646544) |
+| `IAM-FUT-001` | Hosted Worker, approved real users | MFA enrollment, key binding, OTP replay CAS, recovery, audit | No app integration or authorized role E2E performed | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+
+**Limits:** CI is a synthetic runtime compatibility and harness isolation check, not a hosted Worker, real-login or security acceptance result. Final PR #46 CI and public-only staging acceptance must be checked separately at exact final head. Historical `RUN-IAM-20261102-03` remains intact; this is a new append-only retest record.

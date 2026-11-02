@@ -10,11 +10,6 @@ import {
 const context = { userId: "mfa-probe-user-a", factorId: "mfa-probe-factor-a", keyId: "local-probe-key-v1" };
 const seed = Uint8Array.from({ length: 20 }, (_, i) => i + 10);
 const keyBytes = () => Uint8Array.from({ length: 32 }, (_, i) => i + 1);
-const checks: Record<string, "PASS"> = {};
-const mark = (id: string, condition: boolean) => {
-  if (!condition) throw Error("CHECK_FAILED_" + id);
-  checks[id] = "PASS";
-};
 const rejected = async (fn: () => Promise<unknown>): Promise<boolean> => {
   try { await fn(); return false; }
   catch (e) { return e instanceof Error && e.message === "INVALID_MFA_ENCRYPTED_SEED"; }
@@ -23,6 +18,12 @@ export default {
   async fetch(request: Request) {
     if (request.method !== "GET" || new URL(request.url).pathname !== "/mfa-crypto-probe")
       return new Response("Not found", { status: 404 });
+    // Each request must start a fresh set of results, even in a reused Worker isolate.
+    const checks: Record<string, "PASS"> = {};
+    const mark = (id: string, condition: boolean) => {
+      if (!condition) throw Error("CHECK_FAILED_" + id);
+      checks[id] = "PASS";
+    };
     try {
       const key = await importMfaKey(keyBytes());
       mark("NONEXTRACTABLE_KEY", key.extractable === false &&
@@ -62,7 +63,9 @@ export default {
     } catch (e) {
       return Response.json({
         test_id: "IAM-FUT-009", runtime: "LOCAL_WORKERD", passed: Object.keys(checks).length,
-        results: checks, outcome: "FAIL", sanitized_error: e instanceof Error ? e.message.slice(0,90) : "UNKNOWN"
+        results: checks, outcome: "FAIL",
+        sanitized_error: e instanceof Error && /^CHECK_FAILED_[A-Z_]+$/.test(e.message)
+          ? e.message : "WORKERD_CRYPTO_PROBE_ERROR"
       }, { status: 500, headers: { "cache-control": "no-store" } });
     }
   }
