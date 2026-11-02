@@ -1,5 +1,5 @@
 # IAICT Portal — CHECKLIST MOMENT (LIVE)
-**Moment ID:** `MOMENT-IAICT-20261102-1714-ICT` · **Captured:** `2026-11-02T17:14:00+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
+**Moment ID:** `MOMENT-IAICT-20261102-1809-ICT` · **Captured:** `2026-11-02T18:09:00+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
 **Project:** IAICT Portal / CMS / CRM / IAM · **Status:** ACTIVE / NOT ACCEPTED · **Owner acceptance:** NOT GIVEN.
 **Evidence scope:** code/runtime baseline audited at source HEAD `a6afff7ecb0ed27bc4bddeb4374e2fe333312745` at observation time; this is a baseline **before** checklist-only commits. PR [#36](https://github.com/ntdung-tds/iaict-portal/pull/36) DRAFT on `feat/staging-native-login-r2-20261030`.
 **Related records:** [PROJECT_PLAN](PROJECT_PLAN.md) · [PROJECT_PROGRESS](PROJECT_PROGRESS.md) · [append-only moment history](checklist-moments/) · [QA run ledger](../qa/IAICT_TEST_RUNS.md) · [82-case catalog](../qa/IAICT_TEST_CASES.csv) · [14 module change logs](../requirements/README.md).
@@ -205,3 +205,12 @@ Source: user-supplied IAM report v1.2, Appendix C (`IAM-01`–`IAM-10`) and Appe
 ### Checkpoint ID correction (append-only, pre-merge)
 
 The prior draft snapshot at `2026-11-02T17-13-ICT.md` had a formatting-only malformed Moment ID; it contains no different runtime evidence and is retained in Git history. This new `2026-11-02T17-14-ICT.md` snapshot corrects its identifier and is the authoritative latest checkpoint for PR #54.
+
+## T. 2026-11-02 — bounded iterative review of IAM-FUT-012 synthetic CAS
+
+- [PR #54](https://github.com/ntdung-tds/iaict-portal/pull/54) merged; PCS 16 canonical. New [PR #55](https://github.com/ntdung-tds/iaict-portal/pull/55) continues targeted **inspect → fail-case design → minimal fix → CI → re-review** without creating an always-on process.
+- **Iteration 1 finding:** scope/permission mutation or MFA factor reset can occur while `has_active_role=1`, `is_active=1` and password revision unchanged. Synthetic challenge seeding also shadowed D1 security revision in JS. Fix: seed from D1 state, increment epoch on simulated role-scope/factor-reset, verify older pending challenge denied.
+- **Iteration 1 evidence:** [RUN-IAM-20261102-12](../qa/IAICT_TEST_RUNS.md) `IAM-FUT-012`, **31/31 synthetic local D1 groups PASS**, exactly **1/16** writes accepted, code SHA `b80fb136097dd5da2e0ccb95f0770d567a00f8a0`, [portal CI #41433990774](https://github.com/ntdung-tds/iaict-portal/actions/runs/41433990774) SUCCESS all 4 jobs, full 559/559 Vitest.
+- **Iteration 2 distinct review:** source-vs-attack matrix for expiration, replay, malformed identity/token, credential revisions, account/role revocation/regrant, role-scope/factor changes, independent users, CAS affected-rows metadata and lockout. No additional actionable bug identified **within isolated synthetic single-row CAS**. Final exact PR head CI/staging still mandatory.
+- QA registry **85 cases** unchanged, earlier run 11 (29 groups) retained; `CHG-IAM-ACCESS-20261102-11` appended; PCS **17 PROPOSED**, `T-IAM-MFA-F2` **IN_PROGRESS / QA PARTIAL**. Real OTP+factor+challenge+session transaction, hosted D1/7-role E2E **NOT_RUN**; ADR PROPOSED, SRS FROZEN.
+- **Next:** final head CI and anonymous public staging gate, living Google QA Doc; if green merge narrow QA-only PR and **stop this review loop** absent new issues. No Worker/D1/Access/production or secret changed. Media **NO_IMAGE_REQUIRED**, [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
