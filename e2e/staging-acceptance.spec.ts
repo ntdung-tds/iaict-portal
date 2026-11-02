@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { randomUUID } from "node:crypto";
 
 const publicRoutes = [
   "/",
@@ -407,5 +408,67 @@ test("live native activation keeps the token out of GET requests and blocks anon
       viewport:innerWidth, documentWidth:document.documentElement.scrollWidth,
     }));
     expect(size.documentWidth).toBeLessThanOrEqual(size.viewport);
+  }
+});
+
+
+// REAL deployed-staging negative security tests. These do NOT establish
+// legitimate authenticated multi-role Access acceptance. The first test
+// may create one failure-counter row for a nonexistent QA example.test email.
+test("actual Chromium native login denies a synthetic nonexistent user without cookie", async ({ page, request }) => {
+  const email = "iaict-qa-deny-" + randomUUID() + "@example.test";
+  const response = await page.goto("/login", { waitUntil: "domcontentloaded" });
+  expect(response?.status()).toBe(200);
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Mật khẩu", { exact: true }).fill("Unusable-QA-Login*2026");
+  const submit = page.getByRole("button", { name: "Đăng nhập", exact: true });
+  await expect(submit).toBeEnabled();
+  const pending = page.waitForResponse(r =>
+    new URL(r.url()).pathname === "/api/auth/login" && r.request().method() === "POST");
+  await submit.click();
+  const login = await pending;
+  expect(login.status()).toBe(401);
+  expect(login.headers()["cache-control"]).toContain("no-store");
+  expect(login.headers()["set-cookie"] ?? "").not.toContain("__Host-iaict_session");
+  await expect(page.getByRole("alert")).toHaveText("Email hoặc mật khẩu không đúng.");
+  await expect(page).toHaveURL(/\/login$/);
+  expect((await page.context().cookies()).map(c => c.name)).not.toContain("__Host-iaict_session");
+  expect((await request.get("/api/auth/session", { maxRedirects: 0 })).status()).toBe(401);
+});
+
+test("actual staging rejects forged cross-site login and malformed activation POST", async ({ request }) => {
+  const login = await request.post("/api/auth/login", {
+    headers: { Origin: "https://untrusted.example.invalid" },
+    data: { email: "qa-unknown@example.test", password: "NeverValid-Check1!" },
+    maxRedirects: 0,
+  });
+  expect(login.status()).toBe(403);
+  expect(login.headers()["cache-control"]).toContain("no-store");
+  expect(login.headers()["set-cookie"] ?? "").not.toContain("__Host-iaict_session");
+
+  const activation = await request.post("/api/auth/activate", {
+    headers: { Origin: "https://iaict-portal-staging.iaict-platform.workers.dev" },
+    data: { token: "not-a-valid-token", password: "Unusable-QA-Activation*2026" },
+    maxRedirects: 0,
+  });
+  expect(activation.status()).toBe(400);
+  expect(activation.headers()["cache-control"]).toContain("no-store");
+  expect(activation.headers()["set-cookie"] ?? "").not.toContain("__Host-iaict_session");
+});
+
+test("actual staging Access refuses forged client identity on all protected admin paths", async ({ request }) => {
+  const headers = {
+    "Cf-Access-Authenticated-User-Email": "qa-forged@example.invalid",
+    "Cf-Access-Jwt-Assertion": "untrusted.fake.jwt",
+  };
+  for (const path of [
+    "/admin", "/admin/users", "/api/admin/cms/session",
+    "/api/admin/cms/users", "/api/admin/news/settings",
+  ]) {
+    const response = await request.get(path, { headers, maxRedirects: 0 });
+    expect([302, 303, 307, 308], path).toContain(response.status());
+    expect(response.headers()["location"] ?? "", path)
+      .toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+    expect(response.headers()["set-cookie"] ?? "").not.toContain("__Host-iaict_session");
   }
 });
