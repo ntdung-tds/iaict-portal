@@ -19,6 +19,11 @@ const hex = (bytes: Uint8Array) =>
   Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
 const TOKEN_RE = /^[0-9a-f]{64}$/;
 const HASH_RE = /^[0-9a-f]{64}$/;
+// TypeScript annotations do not validate data materialized from D1/JSON.
+const validToken = (value: unknown): value is string =>
+  typeof value === "string" && TOKEN_RE.test(value);
+const validHash = (value: unknown): value is string =>
+  typeof value === "string" && HASH_RE.test(value);
 
 export type PendingMfaChallengeRecord = Readonly<{
   tokenHash: string;
@@ -50,7 +55,7 @@ async function digestToken(value: string): Promise<string> {
   return hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))));
 }
 function equalHash(a: string, b: string): boolean {
-  if (!HASH_RE.test(a) || !HASH_RE.test(b)) return false;
+  if (!validHash(a) || !validHash(b)) return false;
   let delta = 0;
   for (let i = 0; i < 64; i++) delta |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return delta === 0;
@@ -64,7 +69,7 @@ function equalHash(a: string, b: string): boolean {
 export async function issuePendingMfaChallenge(
   userId: string, credentialFingerprint: string, nowMs: number,
 ): Promise<PendingMfaChallengeIssue> {
-  if (!safeUserId(userId) || !HASH_RE.test(credentialFingerprint) ||
+  if (!safeUserId(userId) || !validHash(credentialFingerprint) ||
       !safeTime(nowMs) || !safeTime(nowMs + NATIVE_MFA_PENDING_TTL_MS))
     throw new Error("INVALID_PRE_MFA_CHALLENGE_CONTEXT");
 
@@ -82,7 +87,7 @@ export async function issuePendingMfaChallenge(
 
 /** Separate cookie namespace from __Host-iaict_session; never use for admin auth. */
 export function cookieForPendingMfaChallenge(token: string): string {
-  if (!TOKEN_RE.test(token)) throw new Error("INVALID_PRE_MFA_TOKEN");
+  if (!validToken(token)) throw new Error("INVALID_PRE_MFA_TOKEN");
   return NATIVE_MFA_PENDING_COOKIE + "=" + token +
     "; Path=/; Max-Age=300; HttpOnly; Secure; SameSite=Lax";
 }
@@ -97,7 +102,7 @@ export function pendingMfaTokenFromRequest(request: Request): string | null {
     .filter(part => part.startsWith(NATIVE_MFA_PENDING_COOKIE + "="));
   if (values.length !== 1) return null;
   const token = values[0].slice(NATIVE_MFA_PENDING_COOKIE.length + 1);
-  return TOKEN_RE.test(token) ? token : null;
+  return validToken(token) ? token : null;
 }
 
 /**
@@ -119,12 +124,14 @@ export async function pendingChallengeEligibleForCas(
     nowMs: number;
   },
 ): Promise<boolean> {
-  if (!TOKEN_RE.test(token) || !row || !current ||
+  if (!validToken(token) || !row || !current ||
       !safeTime(current.nowMs) ||
       !safeUserId(current.userId) ||
-      !HASH_RE.test(current.credentialFingerprint) ||
+      !validHash(current.credentialFingerprint) ||
       row.purpose !== "LOGIN" || row.userId !== current.userId ||
-      !current.accountActive || !current.hasActiveRole ||
+      // Require exact booleans: "false", 1 and other truthy D1/JSON
+      // representations are NOT trusted. Adapt D1 0/1 explicitly upstream.
+      current.accountActive !== true || current.hasActiveRole !== true ||
       !safeTime(row.createdAtMs) || !safeTime(row.expiresAtMs) ||
       row.expiresAtMs <= row.createdAtMs ||
       row.expiresAtMs - row.createdAtMs > NATIVE_MFA_PENDING_TTL_MS ||
@@ -164,7 +171,7 @@ export type NativeSessionCheck = Readonly<{
  * No current route/Worker calls this function yet.
  */
 export function nativeSessionMeetsAssurance(check: NativeSessionCheck): boolean {
-  if (!check || !check.accountActive || !check.hasActiveRole ||
+  if (!check || check.accountActive !== true || check.hasActiveRole !== true ||
       !safeTime(check.createdAtMs) || !safeTime(check.expiresAtMs) ||
       !safeTime(check.nowMs) || check.expiresAtMs <= check.createdAtMs ||
       check.createdAtMs > check.nowMs || check.expiresAtMs <= check.nowMs ||

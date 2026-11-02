@@ -38,6 +38,8 @@
 
 | 2026-11-02T15:44:00+07:00 | [PR #50](https://github.com/ntdung-tds/iaict-portal/pull/50), `IAM-FUT-011`, [RUN-IAM-20261102-08](../qa/IAICT_TEST_RUNS.md), SHA `aee43667`, [CI #41414835791](https://github.com/ntdung-tds/iaict-portal/actions/runs/41414835791) | Isolated 256-bit pre-MFA challenge and server-only assurance guard: **16/16 Vitest PASS**, total **555/555**, QA **84 cases**. Unimported, no D1 migration/route/session effect; real MFA **NOT_RUN** | PR #50 final SHA CI + staging, Google QA Doc; later approved D1 challenge redemption/session enforcement |
 
+| 2026-11-02T16:01:00+07:00 | [PR #51](https://github.com/ntdung-tds/iaict-portal/pull/51), two-pass review of PR #50, `IAM-FUT-011`, [RUN-IAM-20261102-09](../qa/IAICT_TEST_RUNS.md) | Fixed non-boolean truthy account/role flags and non-string token/hash coercion. **20/20 unit PASS**, total **559/559**, same **84 cases**, at SHA `828d1060`; initial registry gate fail retained, now PASS. No routes wired; real MFA NOT_RUN | Exact final CI/public staging, QA Doc sync; no D1/Access changes or owner approval |
+
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.
 - **RISK / pending:** full MFA enrollment, secret key lifecycle, reset/recovery, scoped permission/IDOR, hosted Worker KDF/AES-GCM parity, R2 media upload, offboarding and personal-data safeguards. Isolated workerd 100001 PBKDF2 already succeeded; it does NOT establish general hosted behavior.

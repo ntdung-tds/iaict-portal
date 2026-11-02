@@ -124,3 +124,13 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 - Boundaries: The eligibility function is READ ONLY, not challenge redemption. It neither matches an OTP nor issues or authorizes any session. Existing login/API/Worker/session readers are unchanged. No live D1 schema, migration, factor, key binding, user or Cloudflare setting modified. Real MFA E2E remains NOT_RUN.
 - QA: New P0 security case IAM-FUT-011, synthetic local Vitest. Registry 84 cases. Record actual exact-SHA results separately, never claim hosted MFA.
 - SRS remains FROZEN pending an explicit owner decision; implementation and Access cutover require separate security approval.
+
+
+### CHG-IAM-ACCESS-20261102-08 — Double review of isolated MFA challenge guard
+
+- Date/status: 2026-11-02, REVIEW_CORRECTION / LOCAL_ONLY; proposed PR #51. The original module was introduced by merged PR #50, `IAM-FUT-011`.
+- Review pass 1 (static security/boundary): check source against D1 and native session semantics. Existing login and Worker do **not** import the isolated module. A future reader must not accept unvalidated account/role booleans; TypeScript does not validate D1/JSON runtime data.
+- Review pass 2 (adversarial data): correct `pendingChallengeEligibleForCas` and `nativeSessionMeetsAssurance` to require `accountActive === true` and `hasActiveRole === true`; reject truthy `"false"`, numeric `1`, Boolean objects and malformed data. Require primitive strings before token/digest regexp and constant-time hash comparison, preventing implicit object coercion or exceptions.
+- Compatibility requirement: D1 SQLite active/role numbers must be explicitly normalized to strict booleans by the **future trusted server-side caller**. Current module remains unimported by login/session/Worker; no migration, no live auth behavior change, no alternate authentication path or MFA activation.
+- QA: Extend existing `IAM-FUT-011` by four negative test scenarios, no new test case, total registry **84**. The prior 16/16 PASS stays historical; new count and exact SHA require new CI evidence, and full hosted MFA remains NOT_RUN.
+- SRS FROZEN, ADR-0002 PROPOSED, Owner MFA security approval NOT GIVEN. No remote D1, Access, production, or staging Worker updates.

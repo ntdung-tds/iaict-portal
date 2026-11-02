@@ -186,3 +186,63 @@ describe("IAM-FUT-011 server-assurance predicate for future native session reade
     expect(nativeSessionMeetsAssurance({ ...baseSession, authLevel: null, mfaVerifiedAtMs: null })).toBe(false);
   });
 });
+
+
+describe("IAM-FUT-011 adversarial runtime type handling (review pass 2)", () => {
+  it("rejects truthy strings, objects and numeric D1 flags for challenge account and roles", async () => {
+    const { token, record } = await issuePendingMfaChallenge(USER, FINGERPRINT, NOW);
+    for (const invalid of ["false", "true", 1, 0, new Boolean(false), undefined, null]) {
+      expect(await pendingChallengeEligibleForCas(token, record, {
+        ...trustedCurrent, accountActive: invalid as unknown as boolean,
+      })).toBe(false);
+      expect(await pendingChallengeEligibleForCas(token, record, {
+        ...trustedCurrent, hasActiveRole: invalid as unknown as boolean,
+      })).toBe(false);
+    }
+    // D1 integer booleans must be explicitly normalized at the trusted caller.
+    expect(await pendingChallengeEligibleForCas(token, record, {
+      ...trustedCurrent, accountActive: (1 === Number(1)), hasActiveRole: true,
+    })).toBe(true);
+  });
+
+  it("rejects non-boolean flags for privileged session assurance, even under password-only policy", () => {
+    for (const invalid of ["false", "true", 1, 0, new Boolean(false), undefined, null]) {
+      for (const effectivePolicy of ["MFA_REQUIRED", "PASSWORD_ONLY"] as const) {
+        expect(nativeSessionMeetsAssurance({
+          ...baseSession, effectivePolicy, accountActive: invalid as unknown as boolean,
+        })).toBe(false);
+        expect(nativeSessionMeetsAssurance({
+          ...baseSession, effectivePolicy, hasActiveRole: invalid as unknown as boolean,
+        })).toBe(false);
+      }
+    }
+    expect(nativeSessionMeetsAssurance(baseSession)).toBe(true);
+  });
+
+  it("rejects non-string tokens and cookie objects rather than coercing them", async () => {
+    const { token, record } = await issuePendingMfaChallenge(USER, FINGERPRINT, NOW);
+    for (const value of [new String(token), { toString: () => token }, null, 1]) {
+      expect(await pendingChallengeEligibleForCas(
+        value as unknown as string, record, trustedCurrent,
+      )).toBe(false);
+      expect(() => cookieForPendingMfaChallenge(value as unknown as string)).toThrow("INVALID_PRE_MFA_TOKEN");
+    }
+  });
+
+  it("rejects object-like hash and credential fields without throwing on malformed database data", async () => {
+    const { token, record } = await issuePendingMfaChallenge(USER, FINGERPRINT, NOW);
+    const disguisedHash = { toString: () => FINGERPRINT } as unknown as string;
+    const disguisedTokenHash = { toString: () => record.tokenHash } as unknown as string;
+    await expect(issuePendingMfaChallenge(USER, disguisedHash, NOW))
+      .rejects.toThrow("INVALID_PRE_MFA_CHALLENGE_CONTEXT");
+    expect(await pendingChallengeEligibleForCas(token, record, {
+      ...trustedCurrent, credentialFingerprint: disguisedHash,
+    })).toBe(false);
+    expect(await pendingChallengeEligibleForCas(token, {
+      ...record, credentialFingerprint: disguisedHash,
+    }, trustedCurrent)).toBe(false);
+    expect(await pendingChallengeEligibleForCas(token, {
+      ...record, tokenHash: disguisedTokenHash,
+    }, trustedCurrent)).toBe(false);
+  });
+});
