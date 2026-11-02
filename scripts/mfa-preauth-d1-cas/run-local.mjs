@@ -152,12 +152,11 @@ try {
   const otherUser = await seed();
   check("WRONG_OWNER_DENIED",
     await consume(otherUser,{userId:OTHER}) === false && (await row(otherUser)).rev === 0);
-  const otherToken = await seed();
-  const unused = await seed();
-  check("WRONG_TOKEN_DENIED",
-    await consume(otherToken,{userId:OTHER}) === false &&
-    await consume(unused,{userId:OTHER}) === false &&
-    (await row(otherToken)).rev === 0 && (await row(unused)).rev === 0);
+  const validButUnsent = await seed();
+  const unmatchedToken = randomBytes(32).toString("hex");
+  check("WRONG_TOKEN_HASH_DENIED",
+    await consume(unmatchedToken) === false &&
+    (await row(validButUnsent)).rev === 0);
   const wrongCred = await seed();
   check("CHALLENGE_CREDENTIAL_MISMATCH",
     await consume(wrongCred,{fingerprint:CHANGED_FP}) === false &&
