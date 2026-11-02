@@ -193,10 +193,10 @@ describe("IAM-FUT-011 adversarial runtime type handling (review pass 2)", () => 
     const { token, record } = await issuePendingMfaChallenge(USER, FINGERPRINT, NOW);
     for (const invalid of ["false", "true", 1, 0, new Boolean(false), undefined, null]) {
       expect(await pendingChallengeEligibleForCas(token, record, {
-        ...trustedCurrent, accountActive: invalid as boolean,
+        ...trustedCurrent, accountActive: invalid as unknown as boolean,
       })).toBe(false);
       expect(await pendingChallengeEligibleForCas(token, record, {
-        ...trustedCurrent, hasActiveRole: invalid as boolean,
+        ...trustedCurrent, hasActiveRole: invalid as unknown as boolean,
       })).toBe(false);
     }
     // D1 integer booleans must be explicitly normalized at the trusted caller.
@@ -209,10 +209,10 @@ describe("IAM-FUT-011 adversarial runtime type handling (review pass 2)", () => 
     for (const invalid of ["false", "true", 1, 0, new Boolean(false), undefined, null]) {
       for (const effectivePolicy of ["MFA_REQUIRED", "PASSWORD_ONLY"] as const) {
         expect(nativeSessionMeetsAssurance({
-          ...baseSession, effectivePolicy, accountActive: invalid as boolean,
+          ...baseSession, effectivePolicy, accountActive: invalid as unknown as boolean,
         })).toBe(false);
         expect(nativeSessionMeetsAssurance({
-          ...baseSession, effectivePolicy, hasActiveRole: invalid as boolean,
+          ...baseSession, effectivePolicy, hasActiveRole: invalid as unknown as boolean,
         })).toBe(false);
       }
     }
@@ -223,9 +223,9 @@ describe("IAM-FUT-011 adversarial runtime type handling (review pass 2)", () => 
     const { token, record } = await issuePendingMfaChallenge(USER, FINGERPRINT, NOW);
     for (const value of [new String(token), { toString: () => token }, null, 1]) {
       expect(await pendingChallengeEligibleForCas(
-        value as string, record, trustedCurrent,
+        value as unknown as string, record, trustedCurrent,
       )).toBe(false);
-      expect(() => cookieForPendingMfaChallenge(value as string)).toThrow("INVALID_PRE_MFA_TOKEN");
+      expect(() => cookieForPendingMfaChallenge(value as unknown as string)).toThrow("INVALID_PRE_MFA_TOKEN");
     }
   });
 
