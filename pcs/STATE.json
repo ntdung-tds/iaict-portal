@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 4,
-  "updated_at": "2026-11-02T03:46:41.259Z",
+  "revision": 5,
+  "updated_at": "2026-11-02T04:02:04.768Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T03:46:41.259Z",
+    "updated_at": "2026-11-02T04:02:04.768Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -58,6 +58,28 @@
         "description": "CMS-08/S2 local workerd (100000/100001) observed PASS on exact CI SHA; architecture/Owner decision and all other live IAM acceptance remain open. No deployed Worker, credential, D1 or Access changes."
       },
       {
+        "id": "T-IAM-MFA-F2",
+        "title": "CMS-08/S3 — isolated AES-GCM seed protection foundation",
+        "status": "IN_PROGRESS",
+        "priority": "P0",
+        "risk": "HIGH",
+        "classification": "PUBLIC",
+        "security_sensitive": true,
+        "requires_owner_approval": true,
+        "github_issue": "https://github.com/ntdung-tds/iaict-portal/issues/37",
+        "dependencies": [
+          "T-IAM-KDF-S2"
+        ],
+        "qa": {
+          "required": true,
+          "status": "NOT_RUN",
+          "case_ids": [
+            "IAM-FUT-008"
+          ]
+        },
+        "description": "Proposed isolated AES-256-GCM envelope helper and test case. No D1 factor schema, key injection, login, recovery, staging deployment or Owner acceptance. Verify exact GitHub CI SHA; update result after execution."
+      },
+      {
         "id": "T-IAM-ONBOARDING",
         "title": "Secure native-account onboarding and recovery",
         "status": "PLANNED",
@@ -101,13 +123,13 @@
     "approvals": [],
     "artifacts": [],
     "current": {
-      "active_task": "T-IAM-KDF-S2",
-      "last_completed_step": "Observed real local workerd PBKDF2 100000/100001 results (both SUCCESS) in CI job at SHA 82380ada; appended immutable QA RUN-IAM-20261102-01. Existing product KDF=100000 unchanged. ADR updated with evidence but remains PROPOSED.",
-      "next_action": "Verify final PR #42 checks, synchronize QA living Google Doc (80 cases) and merge safe CI/test/QA changes. Afterwards evaluate whether isolated 600000 probe or live parity is necessary before security Owner reviews any KDF redesign; do not change app KDF by default.",
+      "active_task": "T-IAM-MFA-F2",
+      "last_completed_step": "PR #42 merged, local workerd 100k/100001 QA recorded. PR #43 adds unused AES-GCM TOTP seed envelope and 1 proposed unit case; CI verification pending.",
+      "next_action": "Verify PR #43 Vitest/TypeScript/browser and staging public read-only checks on exact SHA, record immutable QA run, design key provisioning/forward-only D1 factor storage with approval gate; do not enable MFA yet.",
       "blockers": [
-        "No proof for 600000 iterations or remote staging runtime parity; neither is mandatory for keeping existing 100000-iteration policy.",
-        "Full MFA enrollment/recovery, real role-based IAM E2E and permission cutover remain NOT_RUN/BLOCKED.",
-        "Owner/security review required for credential parameter/migration or privileged changes; PUBLIC repo privileged PCS operation not enabled."
+        "ADR-0002 remains PROPOSED, no approved key binding/rotation or forward-only D1 MFA factor schema.",
+        "No actual authenticated enrollment, replay-proof D1 counter, step-up or recovery tests; full MFA remains NOT_RUN.",
+        "No real-role IAM E2E; Cloudflare Access must stay enabled and production untouched."
       ],
       "actor": "pcs-solo-bootstrap"
     },
