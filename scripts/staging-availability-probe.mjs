@@ -21,6 +21,28 @@ const requestHeaders = Object.freeze({
 });
 
 /**
+ * Read only public, allowlisted diagnostic response headers on failures.
+ * A CF-Ray ID lets IAICT/Cloudflare correlate an observed error with edge logs,
+ * but does NOT by itself identify the root cause of an HTTP 503.
+ * Never log arbitrary headers, cookies, URLs, body text or error-page HTML.
+ */
+export function safeFailureHeaders(headers) {
+  const ray = headers?.get?.("cf-ray");
+  const server = headers?.get?.("server")?.toLowerCase();
+  const cache = headers?.get?.("cf-cache-status")?.toUpperCase();
+  const type = headers?.get?.("content-type")?.toLowerCase() || "";
+  return {
+    cfRay: typeof ray === "string" && /^[a-f0-9]{8,32}(?:-[A-Z]{3,5})?$/i.test(ray)
+      ? ray : null,
+    serverClass: server === "cloudflare" ? "cloudflare" : server ? "other" : null,
+    cacheClass: new Set(["DYNAMIC","HIT","MISS","BYPASS","EXPIRED","REVALIDATED","STALE","UPDATING"]).has(cache)
+      ? cache : null,
+    contentClass: type.startsWith("text/html") ? "html"
+      : type.startsWith("application/json") ? "json" : type ? "other" : null,
+  };
+}
+
+/**
  * Return structured results for independently verifiable evidence.
  * Caller can supply a fake fetch and a no-op wait in unit tests.
  */
@@ -47,6 +69,7 @@ export async function probeStaging({
       const url = new URL(path, STAGING_ORIGIN);
       let status = null;
       let errorType = null;
+      let failureHeaders = null;
       let latencyMs = 0;
       const begin = performance.now();
       try {
@@ -58,14 +81,19 @@ export async function probeStaging({
           signal: AbortSignal.timeout(12000),
         });
         status = response.status;
-        // Avoid reading or retaining any response bodies, even public ones.
+        // Capture only bounded, allowlisted public header metadata for errors.
+        // Do not inspect arbitrary origin headers or the HTML error body.
+        if (status !== 200) failureHeaders = safeFailureHeaders(response.headers);
         await response.body?.cancel();
       } catch (error) {
         errorType = error instanceof Error ? error.name.replace(/[^A-Za-z]/g, "").slice(0,32) : "RequestError";
       }
       latencyMs = Math.round(performance.now() - begin);
       const ok = status === 200 && errorType === null;
-      const observation = { cycle, path, status, errorType, latencyMs, ok };
+      const observation = {
+        cycle, path, status, errorType, latencyMs, ok,
+        ...(failureHeaders ? { failureHeaders } : {}),
+      };
       observations.push(observation);
       report("[staging-availability] " + JSON.stringify(observation));
     }
