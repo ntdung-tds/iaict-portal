@@ -7,7 +7,7 @@
 |---|---:|---:|---:|---:|---|
 | CMS/CRM-1 **scoped checklist** | **5/10** | 1 | 2 | 2 | Includes narrow infrastructure / QA artifact checkpoints, not full CMS release |
 | IAM v1.2 **20 proposed target outcomes** | **0/20 full acceptance** | 5 | 1 | 14 | Prototype/partial code exists; no assertion that all 20 are approved requirements |
-| QA case catalog | **90 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
+| QA case catalog | **93 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
 | Authorized live 7-role authentication | **0/7 role E2E proven** | — | 7 | — | Eight disabled D1 fixtures are not valid logins |
 
 ## Verified chronology — append only (new rows at bottom)
@@ -61,6 +61,8 @@
 | 2026-11-03 — live QA identity audit and empty secrets store | [RUN-IAM-20261103-03](../qa/IAICT_TEST_RUNS.md) · [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) | Read-only live D1: 8 QA disabled, 0 native passwords, 0 Access subjects. Staging Access app/policy now readable: account-member-only, 1 Access user; Cloudflare account no routing destinations or DNS zones. Created **empty** encrypted account-level QA Secrets Store, verified 0 secrets. Real 8-role E2E **BLOCKED/NOT_RUN**, 89 QA cases unchanged | Connect project-owned deliverable QA mailbox plus least-privilege Access enrollment; validate secret-store use before creating credentials |
 
 | 2026-11-03 — native auth real-function local D1 integration | [RUN-IAM-20261103-04](../qa/IAICT_TEST_RUNS.md) · [PR #73](https://github.com/ntdung-tds/iaict-portal/pull/73) | 7 actual TypeScript-native auth function integration tests PASS at code SHA `d380dfd4` on 8 synthetic roles and actual 0001/0022/0023/0024 D1 migrations. QA catalog 90. Cloudflare Access has only Cloudflare IdP (no OTP); Outlook.com plus tags share one inbox, not independent QA accounts. No hosted D1, Access or production changes | Exact final PR CI/staging Chromium gates; then controlled project QA inbox/OTP onboarding; real role E2E NOT_RUN |
+
+| 2026-11-03 · end-to-end real staging negative security acceptance | [RUN-IAM-20261103-05](../qa/IAICT_TEST_RUNS.md) · [PR #75](https://github.com/ntdung-tds/iaict-portal/pull/75) | 3 new real deployed-staging negative checks: unknown-user UI login 401/no cookie, Origin 403/invalid activate 400, forged Access headers denied over five protected paths. **24/24 real public staging Chromium**, 24/24 GET; **566/566** unit, **38/38** local Chromium, 4/4 CI; D1 quick_check ok, zero FK errors, 8 QA users still disabled. Catalog **93** | 7-role + Admin2 genuinely authenticated positive browser matrix still BLOCKED/NOT_RUN pending independent controlled QA inbox, Access enrollment and recoverable vault |
 
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.
