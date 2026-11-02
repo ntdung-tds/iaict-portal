@@ -69,3 +69,11 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 - **Traceability:** [PR #42](https://github.com/ntdung-tds/iaict-portal/pull/42), [CI #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088), isolated local workerd PASS. Các job khác phải kiểm tra trên final SHA.
 - **Ảnh hưởng:** chỉ QA/CI/tài liệu; không sửa UI/API/D1/R2/Access/Worker deployed/production. 600000 và live-auth E2E NOT_RUN. Không có ảnh (NO_IMAGE_REQUIRED).
 - **SRS:** FROZEN, chưa duyệt; ADR-0002 vẫn PROPOSED, không tự đổi KDF.
+
+### CHG-IAM-ACCESS-20261102-02 — Thử nghiệm thư viện mã hóa MFA F2
+- **Trạng thái:** PROPOSED / CHƯA_CHỐT, ngày 2026-11-02.
+- **Trước:** chưa có lớp lưu trữ mã hóa yếu tố TOTP.
+- **Sau:** thư viện AES-GCM độc lập `lib/mfa-secret-crypto.ts`, kèm kiểm thử `lib/mfa-secret-crypto.test.ts` và QA case `IAM-FUT-008`; không tích hợp vào API hoặc cơ sở dữ liệu.
+- **Tác động:** thư viện và kiểm thử nội bộ; không sửa giao diện, D1, Access, staging hay production.
+- **Đối chiếu:** Issue #37, ADR-0002 PROPOSED. CI/Run: PENDING tại thời điểm ghi; không tuyên bố chức năng MFA đã hoàn thành.
+- **SRS:** CHƯA_CHỐT. Không sửa SRS hiện hành.

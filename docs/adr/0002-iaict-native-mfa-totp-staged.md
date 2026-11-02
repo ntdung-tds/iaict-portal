@@ -45,3 +45,9 @@ IAICT uses native password/session backed by D1 and keeps Cloudflare Access prot
 - [QA RUN-IAM-20261102-01](../qa/IAICT_TEST_RUNS.md), [CI run #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088): synthetic workerd `1.20261012.1`, compatibility `2026-10-12`, **100000 SUCCESS (11 ms)** and **100001 SUCCESS (12 ms)**, both 256 bits.
 - This contradicts a strict 100000-iteration limit for the tested **local** runtime only. 600000, live staging and full MFA remain **NOT_RUN**; these timings are not throughput benchmarks.
 - Keep current `lib/native-auth.ts` `PBKDF2_ITERATIONS=100000` and its equality guard; no automatic parameter migration. Future KDF changes require distinct security, CPU load, availability, migration and rollback review; ADR-0002 remains **PROPOSED**.
+
+## 2026-11-02 — Proposed MFA-F2 cryptographic foundation
+
+The isolated `lib/mfa-secret-crypto.ts` helper uses AES-256-GCM with a new 96-bit nonce per encryption and authenticated metadata linking the owner, factor and key version. Its tests cover roundtrips, nondeterministic nonces, altered records, mismatched ownership and invalid key material. No production route imports this helper; it does not enroll a factor, mint sessions or store data.
+
+**Next design decisions (not yet approved):** separate Worker-managed key provision and rotation, forward-only D1 factor schema and pending/active lifecycle, replay-safe transaction, recovery and real staging acceptance. Current application authentication remains unchanged; this is not permission to modify Access, staging or production. `IAM-FUT-008` covers only the helper; `IAM-FUT-001` end-to-end MFA remains NOT_RUN. ADR-0002 stays PROPOSED.
