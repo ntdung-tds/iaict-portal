@@ -227,3 +227,27 @@
 | `IAM-REL-004` | Staging real Chromium | Public pages and Access boundaries | **21/21 PASS** | **PASS — LIVE PUBLIC ONLY** | [staging #41403328483](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328483) |
 
 **No root cause established, no reliability/SLO clearance, no permission for any production change or live MFA migration.** The original staging HTTP 503 failures remain in CI history and Issue #30. PR #47 local D1 CAS proof remains bounded; it must be independently verified on a new exact head after any eventual integration.
+
+## RUN-IAM-20261102-05 — Atomic MFA replay-counter CAS on isolated local Miniflare D1
+
+| Field | Observed / verified |
+| --- | --- |
+| Date/timezone | 2026-11-02 12:18 ICT (05:18 UTC) |
+| Scope | CMS-08/S3; `IAM-FUT-010` P0 SECURITY / LOCAL D1 SQL only |
+| Exact executed source SHA | `2bee360c3552e9dcfe60c94e7719b9d8ae7d33a5` (PR #47 initial source and QA case HEAD; later documentation/checkpoint edits NOT implicitly tested) |
+| CI evidence | [portal-ci #41393225236](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236), `kdf-local-workerd` job [#125108910122](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236/job/125108910122) SUCCESS; local D1 runner line `[mfa-d1-cas] OBSERVED` |
+| Environment | **LOCAL_MINIFLARE_D1**, Miniflare v5 adapter + ephemeral SQLite D1 via workerd; generated random synthetic database ID; no persistence root, cleaned by `dispose()`. **No production or staging D1 binding / API / real user** |
+| Setup / semantics | One minimal **test-only** `iam_mfa_factors` SQL table (NOT a deployment migration). Atomic `UPDATE ... WHERE last_accepted_counter IS NULL OR last_accepted_counter < candidate`; require `result.success === true` and D1 `meta.changes===1`. Pure candidate counter inputs; code matching, time window and authentication not exercised |
+| Actual | 15/15 independent assertion groups PASS; **16 parallel same-counter writes**, exactly **1** accepted and 15 rejected. Monotonic counter, replay and older step denied; owner/factor mismatch, pending, disabled and locked factor denied; expired lock/newer step accepted; invalid counters and missing D1 metadata fail closed; independent factor counter |
+| Previous unsuccessful setup runs | [PR CI #41392786419](https://github.com/ntdung-tds/iaict-portal/actions/runs/41392786419), [#41392954526](https://github.com/ntdung-tds/iaict-portal/actions/runs/41392954526), [#41393053532](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393053532) **harness/config FAIL**, not successful D1 tests. Pinned Miniflare 5 rejected old configuration; used its supported `convertV4MiniflareOptions` adapter, retested. All errors preserved in CI history |
+| Other CI gates | Verify typecheck, whole suite, browser and read-only staging on **final PR head** before merge; do not transfer this proof to hosted D1 |
+| Deployment | **NONE**. Not an MFA API, factor migration, server-side code verification, session issuance, Cloudflare binding or Access change |
+| Evidence media | **NO_IMAGE_REQUIRED**; [private IAM QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Approval | ADR-0002 PROPOSED; SRS FROZEN; MFA feature Owner acceptance **NOT GIVEN** |
+
+| Case ID | Test layer / role | Expected | Actual | Verdict | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-010` | Local ephemeral Miniflare D1 / synthetic factor | Same OTP step accepted **at most once** under 16 concurrent CAS writes; no replay/regression/state bypass | Exactly **1/16** `meta.changes=1`; 15 groups PASS incl negative checks; test-only D1 | **PASS — LOCAL_SQL_CAS ONLY** | [CI job](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236/job/125108910122) |
+| `IAM-FUT-001` | Hosted Worker + approved real user | Full MFA enrollment, secure key binding, TOTP code matching, guarded challenge, session, recovery and audit | No live factor or authentication integration | **NOT_RUN** | Issue #37 |
+
+**Boundary:** This is evidence that a **proposed SQL replay-counter CAS** behaves atomically on one local Miniflare/D1 runtime with synthetic factor rows. It does not validate TOTP code matching against the DB, hosted D1 consistency, session issuance, key rotation, real-user concurrency or full MFA. No forward-only migration or production/staging mutation was executed.
