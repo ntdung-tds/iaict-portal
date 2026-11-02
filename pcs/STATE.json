@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 19,
-  "updated_at": "2026-11-02T12:09:59.698Z",
+  "revision": 20,
+  "updated_at": "2026-11-02T12:17:38.896Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T12:09:59.698Z",
+    "updated_at": "2026-11-02T12:17:38.896Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -189,7 +189,13 @@
             "uses_production_totp_module": false,
             "live_otp_verified": false,
             "live_session_issued": false,
-            "hosted_d1_tested": false
+            "hosted_d1_tested": false,
+            "post_merge_verified": true,
+            "merge_sha": "6f4b6ee2db41432344ebed64e92016b0e9608fee",
+            "final_tested_sha": "831e31799329d17ae6f7b6f8a942506e97c66088",
+            "ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41442739799",
+            "staging": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41442739686",
+            "production_mfa_done": false
           }
         },
         "description": "Local-only AES-GCM, factor counter CAS, preauth guard, challenge CAS, and synthetic full D1 OTP+factor+challenge+session+audit transaction now PASS in bounded test. 20 assertion groups; 1/16 same-challenge winner and 1/2 same factor step across distinct challenges, late session/audit failures roll back. Synthetic Node HMAC and tables only; live IAM MFA, keys, hosted D1 and 7-role E2E NOT_RUN."
@@ -239,8 +245,8 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR #56 MERGED 52004b7f78d820822c7ad91085ccde9d07206b8a, PCS rev18. PR #57 synthetic full D1.batch transaction: standalone synthetic HMAC-SHA1 verified before batch, DB CHECK(changes()=1) guards after challenge and factor CAS, then session/audit inserts. IAM-FUT-013 20/20 local checks PASS: 1/16 same challenge, 1/2 same factor step, late session/audit conflicts rollback; 4 synthetic sessions and 4 success audit records. Initial source SHA f621f1ea9896010b720aecd25b4120cfa1ec6618, portal CI #41442058049 local workerd PASS. QA 86 cases, RUN-IAM-20261102-13; real MFA NOT_RUN.",
-      "next_action": "Verify PR #57 exact final head portal CI (all jobs) and public staging acceptance, sync living QA Doc to 86 cases, merge only if both PASS. Next separate security task: integrate actual lib/totp.ts, real D1 schema/security revision, fail-closed session readers and authorized hosted 7-role MFA E2E with Owner/security approval; no live deployment from this proof.",
+      "last_completed_step": "PR #57 MERGED 6f4b6ee2db41432344ebed64e92016b0e9608fee; final tested head 831e31799329d17ae6f7b6f8a942506e97c66088. IAM-FUT-013 local D1 synthetic full batch 20/20 groups PASS, 1/16 same challenge and 1/2 same factor counter completes, 4 synthetic sessions and audits, portal CI #41442739799 SUCCESS (4/4 jobs, 559/559 Vitest), public staging #41442739686 SUCCESS (21/21 Chromium, 24/24 GET). QA 86 cases, RUN-IAM-20261102-13, Google QA v1.9 synced; no live MFA.",
+      "next_action": "DO NOT rerun or remerge PR #57. Next separate security review: exercise actual lib/totp.ts cryptographic helper in an isolated transaction harness (or independently prove equivalent behavior), design hosted D1 tables and authoritative security-epoch updates, then wire protected first-factor challenge and server-side MFA assurance only after Owner/security approval. Native login, keys, hosted D1, Access and production unchanged.",
       "blockers": [
         "The full transaction proof is local synthetic D1 with standalone HMAC, not production TOTP module, remote DB or real IAM sessions. Real MFA login/recovery still NOT_IMPLEMENTED / NOT_RUN.",
         "User/factor security epoch and encrypted MFA keys remain unprovisioned for real IAM. Hosted D1 migration, Access cutover, policy and recovery need explicit Owner approval; ADR PROPOSED, SRS FROZEN.",
