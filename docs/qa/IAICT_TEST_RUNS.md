@@ -251,3 +251,28 @@
 | `IAM-FUT-001` | Hosted Worker + approved real user | Full MFA enrollment, secure key binding, TOTP code matching, guarded challenge, session, recovery and audit | No live factor or authentication integration | **NOT_RUN** | Issue #37 |
 
 **Boundary:** This is evidence that a **proposed SQL replay-counter CAS** behaves atomically on one local Miniflare/D1 runtime with synthetic factor rows. It does not validate TOTP code matching against the DB, hosted D1 consistency, session issuance, key rotation, real-user concurrency or full MFA. No forward-only migration or production/staging mutation was executed.
+
+
+## RUN-IAM-20261102-07 — MFA integration contract/source review (no MFA runtime test)
+
+| Field | Actual observed |
+| --- | --- |
+| Date | 2026-11-02, Asia/Ho_Chi_Minh |
+| Scope | `CHG-IAM-ACCESS-20261102-06` / ADR-0002 F2/F3 DESIGN_ONLY, proposed [PR #49](https://github.com/ntdung-tds/iaict-portal/pull/49), Issue #37 |
+| Read source | `lib/native-auth.ts`, `app/api/auth/login/route.ts`, `app/api/auth/session/route.ts`, `app/api/account/password/route.ts`, `worker.ts`, `lib/totp.ts`, `lib/mfa-secret-crypto.ts`, `lib/cms-roles.ts` at merged PR #47 baseline `11e3af741ede3e3d0d17c9e6d34034a8bb388876` |
+| Confirmed behavior | `authenticateNativePassword()` immediately inserts a full `iaict_auth_sessions` row after password success and returns token. `POST /api/auth/login` sets `__Host-iaict_session` cookie. Session readers today do **not** require a native MFA assurance claim. |
+| Threat identified | An OTP-only UI added to this login code would not secure privileged native sessions because the full session has already been created. **Do not label existing pre-MFA feature a production bypass until enforcement is added**. |
+| Proposed design | Split primary proof and session mint, opaque expiring one-time pre-MFA challenge, atomic D1 challenge+factor CAS+session commit proof, session-reader assurance guard, key rotation, privileged recovery, Access retained; all **NOT_IMPLEMENTED** |
+| QA registry | **83 cases**, existing `IAM-FUT-001/002/004` manual scenarios refined for current security risks, no invented PASS. `IAM-FUT-010` local Miniflare D1 15/15 PASS belongs to prior pinned [#41405196516](https://github.com/ntdung-tds/iaict-portal/actions/runs/41405196516), **not** a hosted login test |
+| New runtime tests | **NOT_RUN / NOT_APPLICABLE**: document/QA contract review only, no app/D1/Access feature changed. GitHub CI validates documentation and existing regression tests only |
+| Staging browser | Read-only public staging CI to be checked at final PR head; authenticated role+MFA E2E **NOT_RUN** |
+| Evidence media | **NO_IMAGE_REQUIRED**, [private IAM QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Approval | Owner MFA acceptance NOT GIVEN; ADR-0002 PROPOSED; SRS FROZEN; no Cloudflare Worker/version, D1, secret, recovery code or production mutation |
+
+| Case ID | Environment / role | Expected | Actual | Result | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-001` | Hosted staging; approved native IAM account | MFA-required password login issues **only** restricted challenge; OTP+CAS grants full session exactly once | No new route/session gate implemented | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-002` | Hosted staging; authorized privileged user | Recovery code single-use, approved dual-control lost-device recovery, audit and session revocation | Not implemented | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Hosted staging; 7 roles and second Admin | Pending challenge and old session cannot bypass Access/RBAC or server-side MFA assurance | Accounts disabled, not run | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Strict scope:** This QA record describes a source-code and threat-model review, not execution/acceptance of the proposed MFA design. Final CI SHA shall be appended/recorded in the PR once completed; a documentation-only CI pass is not an MFA feature pass.
