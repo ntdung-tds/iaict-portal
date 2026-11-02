@@ -99,3 +99,32 @@
 | Next step | Controlled test inbox + Access identity + approved password vault; activate users one-by-one, run private real Chromium auth suite, revoke and disable afterward |
 
 **Do not mark every role PASS:** fixtures are intentionally disabled; the D1 bootstrap does NOT exercise the app's Admin create-user API or verified browser sign-in.
+
+
+## RUN-IAM-20261102-01 — Isolated local workerd PBKDF2 boundary observation
+
+| Field | Observed / verified |
+| --- | --- |
+| Date/timezone | 2026-11-02 10:42 ICT (03:42 UTC), GitHub Actions UTC timestamps |
+| Task / plan | PCS `T-IAM-KDF-S2` / checklist `CMS-08 S2`; [bounded test plan](IAICT_KDF_BOUNDARY_PLAN.md) |
+| Repository / observed SHA | `ntdung-tds/iaict-portal` / `82380adafceaa239f24438ee85fa8ef10cc9d343` (CI test code head at runtime, before this report commit) |
+| Environment | **LOCAL_WORKERD** in GitHub-hosted Ubuntu runner; `workerd` npm `1.20261012.1`; `compatibilityDate=2026-10-12`, `nodejs_compat`; loopback-only, no Cloudflare account/bindings |
+| CI run / job | [portal-ci #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088); **kdf-local-workerd** job succeeded; [job log](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088/job/125082350924) |
+| Test runner | `scripts/kdf-workerd/run-local.mjs`, `config.capnp`, `probe.mjs` |
+| Input data | Synthetic fixed bytes only. Never logs password/salt/key bits; no sessions, D1, R2, Access or real accounts |
+| Deployed Worker / D1 / Access / production | **NOT_USED / NOT_MODIFIED** by this experiment; no remote diagnostic Worker deployed |
+| 600000 iterations | **NOT_RUN_RESOURCE_GATE** (deliberate bounded-probe policy) |
+| IAM real signed-in acceptance | **NOT_RUN**, no proof of actual CMS role login |
+| Visual evidence | **NO_IMAGE_REQUIRED** for pure runtime boundary; private [IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), no new image uploaded |
+| Defect / retest | No observed failure for the two bounded iterations. No claim of full KDF performance or live-auth acceptance |
+| Owner / ADR | Architectural decision **PENDING**; SRS **FROZEN**. No parameter or migration changes authorized |
+
+| Case ID | Layer / scope | Expected | Actual observed | Verdict |
+| --- | --- | --- | --- | --- |
+| IAM-AUTH-018 | Isolated local workerd, PBKDF2-HMAC-SHA-256, 100000 iterations | One 256-bit derivation succeeds with synthetic bytes | **SUCCESS**, 256 bits, **11 ms** (single observation) | **PASS — LOCAL_WORKERD ONLY** |
+| IAM-AUTH-019 | Same local process, 100001 iterations | Record real success or rejection, do not assume a fixed 100000 hard limit | **SUCCESS**, 256 bits, **12 ms** (single observation) | **PASS — OBSERVATION COMPLETE** |
+| KDF-S2-P03 | Proposed 600000 probe | Only if extra resource test authorized | Not executed by design | **NOT_RUN** |
+| IAM-FUT-001 | Full native MFA | End-to-end enrollment, secure stored secret, replay block and recovery | Not implemented or exercised | **NOT_RUN** |
+
+**Interpretation:** `100001` succeeds in this precisely versioned **local** workerd. Therefore the previously hypothesized strict 100000-iteration runtime ceiling is **not supported by this measurement**. This does not prove production/staging runtime parity, unconstrained higher iterations, resistance to DoS, or suitability of a KDF upgrade. The current app still accepts exactly `100000` iterations by its own `derivePassword` guard. Keep its parameter unchanged pending an architecture decision. No interpretation of 11/12 ms as a performance benchmark (single sample).
+
