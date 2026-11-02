@@ -206,3 +206,14 @@ This is a **source-only foundation**, not a change to active login. New `lib/nat
 **Future D1 integration rule:** D1 SQLite `is_active` and role flags often arrive as integer `0`/`1`. Call sites must normalize them explicitly from trusted D1 semantics (e.g. `is_active === 1`), **not** cast with TypeScript or rely on `Boolean(raw)`; unknown / ambiguous values fail closed. Never allow a request-provided flag to determine assurance. The read-only candidate result does not consume a challenge or grant a session.
 
 No Worker or login route imports this module; this is not proof of hosted MFA. **ADR still PROPOSED, SRS still FROZEN.** No factor migration, live secrets, staging/production change or Owner authentication-policy approval.
+
+
+## 2026-11-02 — Disposable D1 first-factor challenge CAS
+
+[PR #53](https://github.com/ntdung-tds/iaict-portal/pull/53) adds a **standalone test** of a synthetic first-factor challenge's one-time SQL `UPDATE` in an ephemeral Miniflare 5 D1 database, with [QA `RUN-IAM-20261102-10`](../qa/IAICT_TEST_RUNS.md) and case `IAM-FUT-012`. On source SHA `15b9b84a072af824eb467f59783f9b73106887a4`, [CI #41424145730](https://github.com/ntdung-tds/iaict-portal/actions/runs/41424145730) observed **26/26 assertion groups PASS**, including **exactly one change among 16 simultaneous attempts** at the same challenge hash. The first CI failed an aggregate test-fixture count, preserved in history and corrected by counting only newly redeemed challenges.
+
+The SQL checks active synthetic user, active role, current credential fingerprint **and revision** in a same-statement `EXISTS` clause, plus challenge owner, purpose, five-minute validity, unused status, attempt count, lock and replay CAS. This is stronger than trusting a prior SELECT; password rotation cannot be bypassed by restoring the previous fingerprint when the monotonic revision changes.
+
+**Do not overgeneralize:** this is **one-row challenge CAS**, not an atomic cross-entity MFA login transaction. It does *not* prove all-or-nothing semantics for (challenge consume, verified TOTP counter advance, session issue, audit). In particular, a D1 `batch()` call is not automatically evidence that conditional zero-row writes prevent later session INSERT statements. Before approving actual MFA, implement/test a transaction pattern that makes success depend on BOTH verified factor step and challenge consumption and prevents session issuance under any lost race, mismatch, disabled user or D1 failure. If full atomicity cannot be established in the selected platform, stop and seek a reviewed design instead of best-effort separate writes.
+
+Test-only tables are `synthetic_mfa_users` and `synthetic_mfa_challenges`; **no actual schema migration, OTP verification, session, secret, binding, Worker route, Access or production change**. ADR-0002 **PROPOSED**, SRS **FROZEN**, Owner/security approval not granted; `IAM-FUT-001` hosted MFA still NOT_RUN.

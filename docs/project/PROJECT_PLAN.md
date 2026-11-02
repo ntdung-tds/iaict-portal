@@ -45,3 +45,9 @@ Safely complete IAICT-developed CMS/IAM foundations on staging, prove real-role 
 - Static pass: PR #50 helper remains unused by login/Worker, so no change to real authentication; identified runtime type coercion risk.
 - Adversarial pass: strict literal boolean checks for account/role in challenge and session predicates; strict primitive strings for token/digest. D1 integer `0`/`1` needs trusted explicit normalization at integration.
 - `IAM-FUT-011` extends existing case (no new case): 20/20 local Node tests PASS at SHA `828d1060`, full 559/559 Vitest; `RUN-IAM-20261102-09`. Still 84 cases, ADR PROPOSED, SRS FROZEN, real MFA NOT_RUN.
+
+### CMS-08/S5 — isolated D1 challenge one-time redemption (2026-11-02)
+
+- [PR #53](https://github.com/ntdung-tds/iaict-portal/pull/53): `IAM-FUT-012` synthetic Miniflare v5 D1 user/challenge tables, no hosted migration. SQL-only conditional challenge UPDATE checks owner, purpose, TTL, lock/attempts, active account/role and current credential fingerprint **plus revision** in one statement. 16 concurrent attempts yielded one change; 26 checks PASS at SHA `15b9b84a`, [CI #41424145730](https://github.com/ntdung-tds/iaict-portal/actions/runs/41424145730).
+- Scope **LOCAL_D1_CAS_ONLY**: no actual factor or session, OTP check, audit, or all-or-nothing cross-table transaction. Prior initial aggregate fixture-count CI fail preserved. QA registry **85 cases**; ADR PROPOSED, SRS FROZEN.
+- Before real MFA route: select and prove a transaction design preventing any session issuance on a lost challenge or TOTP CAS race. Owner/security policy, key management and forward-only migration approval required.

@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 14,
-  "updated_at": "2026-11-02T09:34:14.135Z",
+  "revision": 15,
+  "updated_at": "2026-11-02T09:54:32.088Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T09:34:14.135Z",
+    "updated_at": "2026-11-02T09:54:32.088Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -75,7 +75,8 @@
             "IAM-FUT-008",
             "IAM-FUT-009",
             "IAM-FUT-010",
-            "IAM-FUT-011"
+            "IAM-FUT-011",
+            "IAM-FUT-012"
           ],
           "unit": {
             "status": "PASS",
@@ -141,9 +142,23 @@
             "live_route_wired": false,
             "review_passes": 2,
             "runtime_type_input_hardened": true
+          },
+          "isolated_challenge_cas": {
+            "status": "PASS",
+            "case_id": "IAM-FUT-012",
+            "assertion_groups": 26,
+            "parallel_attempts": 16,
+            "accepted_same_challenge": 1,
+            "environment": "LOCAL_MINIFLARE_D1",
+            "run_id": "RUN-IAM-20261102-10",
+            "source_sha": "15b9b84a072af824eb467f59783f9b73106887a4",
+            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41424145730",
+            "real_otp_verified": false,
+            "real_session_issued": false,
+            "hosted_d1_tested": false
           }
         },
-        "description": "Isolated AES-GCM, local D1 CAS and pending pre-MFA challenge/assurance helpers have bounded PASS only. New unimported module produces digest-only 256-bit challenge and fail-closed session assurance predicate; full login still issues password sessions, so MFA not enabled. Real D1 challenge persistence, OTP, sessions, hosted E2E, key and recovery NOT_RUN."
+        "description": "Local-only AES-GCM, factor counter CAS, 256-bit challenge helper, and new first-factor challenge single-row D1 CAS have bounded PASS. The new SQL CAS checks credential revision/active role in the same statement, 1/16 wins; does not atomically commit OTP factor counter/session, not connected to login. Full real MFA, key binding, recovery and role E2E NOT_RUN."
       },
       {
         "id": "T-IAM-ONBOARDING",
@@ -190,13 +205,13 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR #51 MERGED 940c88805ae3b0547badb741363919cb011d9e15; exact tested head 3bf637a9e13cafdc083af5d663b6456f8cbb2785: portal CI #41417660739 SUCCESS, 20/20 IAM-FUT-011 local tests, 559/559 Vitest; public staging #41417660826 SUCCESS (21/21 browser, 24/24 GET). Third independent read-only source audit on 2026-11-02 confirmed no newly observed defect in isolated helper. QA 84 cases, full hosted MFA still NOT_RUN.",
-      "next_action": "Do not rerun or remerge PR #51. Review and test an isolated D1 first-factor challenge CAS/expiration/race/rollback contract and all native session reader integration boundaries; obtain separate Owner/security decisions for future hosted D1 migrations, MFA policy, keys and recovery before activation. Issue #30 remains open.",
+      "last_completed_step": "PR #52 merged c11ac258cbdd52e16ebfa2aebda2b8af4e3ebdbe, PCS rev14. PR #53 isolated D1 pre-MFA challenge single-row CAS: IAM-FUT-012 26/26 checks PASS, 1/16 concurrent attempts accepted, source SHA 15b9b84a072af824eb467f59783f9b73106887a4, CI #41424145730; QA 85 cases, RUN-IAM-20261102-10. Initial synthetic fixture-count CI failure preserved; real MFA still NOT_RUN.",
+      "next_action": "Validate exact final PR #53 portal-ci and public read-only staging, synchronize living QA Google Doc with 85-case registry and merge if gates PASS. Then investigate transactional all-or-nothing challenge+verified factor counter+session issuance on disposable D1, and obtain Owner/security approval before real D1 migration, MFA policy/keys or Worker integration.",
       "blockers": [
-        "Isolated MFA helper is NOT imported by login/Worker; full password session is still issued immediately on password success; actual MFA NOT_ENFORCED.",
-        "MFA policy by role, D1 migration, hosted KMS/secret binding and recovery/rollout need explicit security/Owner decision. ADR PROPOSED, SRS FROZEN.",
-        "Real 7-role staged auth E2E and hosted D1 challenge/OTP verification NOT_RUN.",
-        "Staging HTTP 503 Issue #30 root cause unresolved, preserve error history."
+        "Single-row challenge CAS is LOCAL_D1_ONLY; it does not prove multi-row challenge+TOTP counter+session atomicity, hosted D1 consistency, or real MFA login.",
+        "Current native password route still issues full password session; pre-MFA helper unimported. No authorized D1 factor/challenge migrations, key binding, recovery or enforce policy. ADR PROPOSED/SRS FROZEN.",
+        "Authenticated seven-role and second Admin staging E2E NOT_RUN pending approved identities and Access.",
+        "Intermittent staging HTTP 503 root cause still unconfirmed (Issue #30)."
       ],
       "actor": "pcs-solo-lead"
     },

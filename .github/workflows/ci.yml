@@ -131,3 +131,5 @@ jobs:
         run: node scripts/mfa-workerd/run-local.mjs
       - name: Test replay-safe MFA step CAS against isolated Miniflare D1 (no deploy)
         run: node scripts/mfa-d1-cas/run-local.mjs
+      - name: Test atomic pre-MFA challenge consumption against isolated Miniflare D1 (no deploy)
+        run: node scripts/mfa-preauth-d1-cas/run-local.mjs
