@@ -97,3 +97,13 @@ test("Chromium renders the authorized role menu on staging", async ({ page }) =>
     await expect(sidebar.locator('a[href="/admin"]')).toHaveCount(0);
   }
 });
+
+test("Chromium renders CMS dashboard for authorized content roles", async ({ page }) => {
+  test.skip(!isGlobalCmsUser, "Newsroom roles must not read CMS overview; API case checks its 403.");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const response = await page.goto("/admin", { waitUntil: "domcontentloaded" });
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole("heading", { name: "Tổng quan quản trị" })).toBeVisible();
+  await expect(page.locator('section[aria-label="Tổng quan CMS"]')).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
