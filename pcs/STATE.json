@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 7,
-  "updated_at": "2026-11-02T04:18:23.857Z",
+  "revision": 8,
+  "updated_at": "2026-11-02T04:34:46.740Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T04:18:23.857Z",
+    "updated_at": "2026-11-02T04:34:46.740Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -72,7 +72,8 @@
           "required": true,
           "status": "PARTIAL",
           "case_ids": [
-            "IAM-FUT-008"
+            "IAM-FUT-008",
+            "IAM-FUT-009"
           ],
           "unit": {
             "status": "PASS",
@@ -82,15 +83,24 @@
             "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41386111393"
           },
           "not_run": [
-            "WORKER_RUNTIME_AES_GCM",
+            "HOSTED_WORKER_SECRET_BINDING",
             "D1_FACTOR_STORAGE",
             "MFA_ENROLLMENT",
             "REPLAY_SAFE_CHALLENGE",
-            "RECOVERY",
+            "KEY_ROTATION_AND_RECOVERY",
             "LIVE_AUTHENTICATED"
-          ]
+          ],
+          "local_workerd": {
+            "status": "PASS",
+            "test_count": 11,
+            "run_id": "RUN-IAM-20261102-03",
+            "source_sha": "23c0960dba63905dfcf90fff2309e81b78f6e838",
+            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41389043762",
+            "version": "1.20261012.1",
+            "compatibility_date": "2026-10-12"
+          }
         },
-        "description": "Independent CMS-08/S3 AES-GCM helper passed 6 unit tests at immutable SHA; KDF-S2 findings inform architecture but are NOT an acceptance prerequisite for an isolated crypto unit test. Live factor schema, key lifecycle, Worker runtime, MFA enrollment/recovery remain NOT_RUN, ADR and Owner decision pending."
+        "description": "AES-GCM seed envelope is UNIT-PASS (6 tests) and now exact source crypto library LOCAL_WORKERD-PASS (11 checks), separate immutable QA runs. This does NOT constitute secret binding, hosted parity, key lifecycle, schema, replay, enrollment, recovery or Owner acceptance."
       },
       {
         "id": "T-IAM-ONBOARDING",
@@ -137,12 +147,12 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR #43 MERGED into the active development branch at 2f9cfa37e339af9b01521dc3ae403346f4ac54e9; final CI #41386418466 and read-only staging acceptance #41386418469 PASS. Encryption helper unit evidence RUN-IAM-20261102-02 at exact source SHA 8355bcdc; canonical 81 QA cases synced with living Google Doc. Read-only Cloudflare Worker deployment IDs confirmed unchanged on 2026-11-02.",
-      "next_action": "Review ADR-0002's proposed key lifecycle and encrypted factor D1 state model, assess Worker AES-GCM parity and missing negative/abuse/replay tests before any forward-only D1 migration or authenticated MFA integration. Preserve Cloudflare Access and production.",
+      "last_completed_step": "Isolated workerd npm 1.20261012.1 proved exact lib/mfa-secret-crypto.ts AES-GCM helper 11/11 PASS at SHA 23c0960d, GitHub CI #41389043762, QA RUN-IAM-20261102-03. Minimal key rotation/forward-only D1 factor design proposed in ADR-0002, no migration or real secret.",
+      "next_action": "Verify final PR #45 CI and public staging gate, mirror QA 82-case living Doc, merge safe tests/proposals. Then review D1 state schema and simulate atomic one-time OTP CAS race before enrollment implementation; request Owner/security sign-off for any real key/migration/privileged stage.",
       "blockers": [
-        "Key provisioning, rotation/retention/revocation, factor enrollment state/TTL, recovery and D1 CAS replay are not implemented or approved.",
-        "AES-GCM helper's six Vitest tests are Node/UNIT evidence only; local workerd AES-GCM and authenticated browser scenarios NOT_RUN.",
-        "Owner/security approval required before remote Worker changes, MFA storage/enrollment or Cloudflare Access cutover; seven-role IAM staging E2E remains blocked."
+        "MFA key binding, rotation/restore/secret lifecycle and D1 factor storage are PROPOSED, not implemented or approved.",
+        "Authenticated MFA enrollment, atomic replay gate, rate limit, recovery, and 7-role E2E NOT_RUN.",
+        "Hosted Workers binding parity and Owner authorization for any real D1/staging/Access changes NOT_VERIFIED; Access remains in place."
       ],
       "actor": "pcs-solo-lead"
     },
