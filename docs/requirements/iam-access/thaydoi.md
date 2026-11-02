@@ -103,3 +103,14 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 - **Bằng chứng đúng SHA:** `2bee360c3552e9dcfe60c94e7719b9d8ae7d33a5`; [CI #41393225236](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236), job `kdf-local-workerd` PASS. Các lần thử đầu thất bại do cấu hình Miniflare 5 được giữ trong lịch sử CI, không được gọi PASS.
 - **Ảnh hưởng thực tế:** chỉ mã test/CI/QA/ADR/PCS. Không đổi UI/API, TOTP, session, D1 staging/production, Cloudflare Worker, Access, R2, khóa thật hay người dùng. D1 remote, mã OTP thật, recovery và E2E **NOT_RUN**.
 - **SRS:** FROZEN / chưa có lệnh “chốt”. Không tự coi thiết kế D1 là yêu cầu hoặc schema được duyệt.
+
+
+### CHG-IAM-ACCESS-20261102-06 — Thiết kế hợp đồng tích hợp MFA với phiên đăng nhập thực tế (CHƯA_CHỐT)
+
+- **Nguồn quyết định:** yêu cầu tiếp tục CMS-08/S3; Issue [#37](https://github.com/ntdung-tds/iaict-portal/issues/37); [ADR-0002](../../adr/0002-iaict-native-mfa-totp-staged.md) PROPOSED; [PR #49](https://github.com/ntdung-tds/iaict-portal/pull/49) (đề xuất, không triển khai).
+- **Trước (đọc trực tiếp mã):** `lib/native-auth.ts` cấp full `iaict_auth_sessions` sau mật khẩu; `app/api/auth/login/route.ts` trả cookie `__Host-iaict_session` khi thành công; `nativeActorEmail()`, `nativeSessionPrincipal()`, `app/api/auth/session/route.ts` không phân biệt MFA assurance. Không có MFA native tích hợp. **Đây là rủi ro bypass nếu chỉ thêm UI OTP**, không phải tuyên bố lỗi production hiện đang bật MFA.
+- **Sau (CHỈ THIẾT KẾ):** hợp đồng first-factor → pre-MFA challenge giới hạn (TTL/one-time/bind credential) → xác minh OTP + D1 CAS + challenge consume + session/audit nguyên tử → full-session nhận diện `auth_level` tại tất cả middleware đọc phiên. Key binding riêng môi trường, recovery độc lập, revoke session trên reset, migration forward-only/rollback và pilot theo vai trò với Cloudflare Access giữ nguyên.
+- **API/UI:** chỉ vẽ luồng dự kiến; **không thêm endpoint, cookie, header, frontend, công tắc enforce hoặc redirect** trong PR này.
+- **D1/secret/security:** nêu logical schema `iam_mfa_factors`, `iam_mfa_challenges`, `iam_mfa_recovery_codes` và nâng assurance của session ở mức proposal; **không tạo migration, không provision key, không cập nhật binding/Access/Worker, không sửa D1 thật**.
+- **QA:** cập nhật phạm vi dự kiến cho các case `IAM-FUT-001`, `IAM-FUT-002`, `IAM-FUT-004`; `IAM-FUT-010` local CAS PASS vẫn chỉ giới hạn test; **các luồng MFA đăng nhập/recovery/7-role hosted NOT_RUN**. Danh mục giữ **83 case**. Kết quả CI cho chính PR sẽ ghi sau khi chạy, tuyệt đối không coi CI tài liệu là E2E.
+- **Trạng thái:** `T-IAM-MFA-F2` IN_PROGRESS / QA PARTIAL, Owner MFA security acceptance NOT GIVEN. **SRS FROZEN**; chủ dự án quyết định lúc hoàn tất có đồng bộ SRS hay không.
