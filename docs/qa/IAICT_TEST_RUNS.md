@@ -379,3 +379,28 @@
 | `IAM-FUT-004` | Authenticated 7-role staging | Access/RBAC/assurance remain secure after revoke and regrant | No authorized live fixtures | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
 
 **This is a synthetic D1 contract proof, NOT a live MFA feature.** Final PR SHA CI and public staging acceptance are separately required before merge.
+
+
+## RUN-IAM-20261102-12 — Iterative security review loop for synthetic pre-MFA D1 CAS
+
+| Field | Evidence and honest limitation |
+| --- | --- |
+| Date | 2026-11-02, Asia/Ho_Chi_Minh |
+| Scope | Existing `IAM-FUT-012`, P0; [PR #55](https://github.com/ntdung-tds/iaict-portal/pull/55); **85 QA cases unchanged** |
+| Loop 1 — inspect and identify | Merged PR #54 already tested current role/active-bit revoke→restore, but lacked role-scope/permission updates while `has_active_role=1` and factor reset while user status/credentials are unchanged. Synthetic challenge creation also mirrored the security revision in JS, rather than reading authoritative D1 |
+| Loop 1 — minimal fix | Source-only `scripts/mfa-preauth-d1-cas/run-local.mjs`: seed challenge from current D1 `security_revision`, increment epoch on synthetic role-scope and factor reset events, verify old challenge is still denied despite unchanged active flags |
+| Loop 1 — observed CI | PR #55 source SHA `b80fb136097dd5da2e0ccb95f0770d567a00f8a0`, [portal CI #41433990774](https://github.com/ntdung-tds/iaict-portal/actions/runs/41433990774), `kdf-local-workerd` job #125239205340 **SUCCESS**: **31/31** synthetic D1 assertion groups PASS, exactly **1/16** same-challenge CAS writes accepted; unchanged synthetic-only explicit result markers |
+| Loop 2 — independent inspection | Compare SQL conditional update to test matrix: current user/factor epoch equality; credential revision/password rotation; role revocation and restoration; account disable/reactivation; role-scope change while active; factor reset; replay; expiry; wrong owner/token; lockout; missing D1 metadata; fresh independent-user eligibility. All **in-scope listed invariants represented by negative/positive tests**. No further reproducible code defect found in this bounded SQL CAS harness on this inspection |
+| Loop 3 — closure criterion | Re-execute *final exact PR head* full portal CI and independent public staging acceptance after QA/PCS doc updates. Close this review only if all gates PASS and no high-priority in-scope defect remains. If a gate fails, keep PR OPEN and iterate; never classify older red runs as PASS |
+| Past evidence | `RUN-IAM-20261102-11` (29/29 at PR #54) retained unchanged; this run adds 2 scenarios, not 2 test cases |
+| Critical boundaries | This **does not** prove atomic verification of actual OTP + factor counter CAS + challenge consumption + full-session creation + audit; does not exercise hosted D1 or actual revocation handlers. Real hosted `IAM-FUT-001/002/004` **NOT_RUN**, live user security epoch **NOT_IMPLEMENTED** |
+| Media | **NO_IMAGE_REQUIRED**, [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Release | SRS FROZEN, ADR-0002 PROPOSED, owner approval NOT GIVEN. No D1 migration, Worker, login/API, Cloudflare Access, secret or production modification |
+
+| Case | Environment | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-012` | Local Miniflare D1 synthetic user/challenge | Scope/factor change invalidates prior token, one 16-way CAS winner | **31/31 groups PASS; 1/16 accepted**, local only | **PASS — LOCAL_D1_CAS_ONLY** | [CI #41433990774](https://github.com/ntdung-tds/iaict-portal/actions/runs/41433990774) |
+| `IAM-FUT-001` | Hosted IAM with approved users | Verified OTP, challenge/factor/session atomic transaction | No integration | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Authenticated seven-role staging | Session assurance and policy/revocation enforced at every protected endpoint | No authorized E2E fixtures | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Stop rule is scope-bound**, not a claim of absolute absence of all vulnerabilities. PR remains open until exact final SHA CI + staging gates pass.

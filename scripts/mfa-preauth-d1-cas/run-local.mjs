@@ -90,7 +90,6 @@ try {
   `).run();
   check("DISPOSABLE_EMPTY_SCHEMA",
     (await db.prepare("SELECT COUNT(*) AS n FROM synthetic_mfa_challenges").first()).n === 0);
-  let currentSecurityRevision = 1;
   for (const id of [USER, OTHER]) {
     await db.prepare(`
       INSERT INTO synthetic_mfa_users
@@ -98,11 +97,23 @@ try {
       VALUES(?,1,1,?,1,1)
     `).bind(id, FP).run();
   }
+  const userEpoch = async userId => {
+    const result = await db.prepare(
+      "SELECT security_revision AS epoch FROM synthetic_mfa_users WHERE user_id=?"
+    ).bind(userId).first();
+    if (!result || !Number.isSafeInteger(result.epoch) || result.epoch < 0)
+      throw Error("INVALID_SYNTHETIC_SECURITY_EPOCH");
+    return result.epoch;
+  };
   const seed = async (overrides={}) => {
     const token = randomBytes(32).toString("hex");
+    const userId = overrides.userId ?? USER;
+    // Read epoch from D1, the authoritative synthetic state, not a parallel
+    // JavaScript counter that could accidentally mask a missing SQL increment.
+    const securityRevision = await userEpoch(userId);
     const data = {
-      userId: USER, fingerprint: FP, credRevision: 1,
-      securityRevision: currentSecurityRevision, purpose: "LOGIN",
+      userId, fingerprint: FP, credRevision: 1,
+      securityRevision, purpose: "LOGIN",
       created: NOW - 1000, expires: NOW + TTL_MS - 1000,
       consumed: null, failed: 0, locked: null, revision: 0,
       ...overrides,
@@ -196,7 +207,6 @@ try {
     UPDATE synthetic_mfa_users
       SET has_active_role=0,security_revision=security_revision+1 WHERE user_id=?
   `).bind(USER).run();
-  currentSecurityRevision += 1;
   check("ROLE_REVOKED_DENIED",
     await consume(fresh,{credRevision:3}) === false && (await row(fresh)).rev === 0);
   await db.prepare("UPDATE synthetic_mfa_users SET has_active_role=1 WHERE user_id=?")
@@ -209,7 +219,6 @@ try {
     UPDATE synthetic_mfa_users
       SET is_active=0,security_revision=security_revision+1 WHERE user_id=?
   `).bind(USER).run();
-  currentSecurityRevision += 1;
   check("ACCOUNT_DISABLED_DENIED",
     await consume(beforeDisable,{credRevision:3}) === false &&
     (await row(beforeDisable)).rev === 0);
@@ -220,6 +229,29 @@ try {
     (await row(beforeDisable)).rev === 0);
   // Restore current account/role bits for test-only cases below. This DOES NOT
   // restore the older security revision and cannot revive pre-revocation tokens.
+  // A privilege change can happen while both coarse-grained authorization bits
+  // remain 1. The epoch must still invalidate the previous challenge.
+  const beforeRoleScopeChange = await seed({credRevision:3});
+  const epochBeforeRoleChange = await userEpoch(USER);
+  await db.prepare(
+    "UPDATE synthetic_mfa_users SET security_revision=security_revision+1 WHERE user_id=?"
+  ).bind(USER).run();
+  check("ROLE_SCOPE_CHANGED_OLD_CHALLENGE_DENIED",
+    await userEpoch(USER) === epochBeforeRoleChange + 1 &&
+    await consume(beforeRoleScopeChange,{credRevision:3}) === false &&
+    (await row(beforeRoleScopeChange)).rev === 0);
+
+  // A factor rebind or MFA policy reset must invalidate outstanding primary
+  // proofs even without changing the password, role-exists flag or is_active.
+  const beforeFactorReset = await seed({credRevision:3});
+  const epochBeforeFactorReset = await userEpoch(USER);
+  await db.prepare(
+    "UPDATE synthetic_mfa_users SET security_revision=security_revision+1 WHERE user_id=?"
+  ).bind(USER).run();
+  check("FACTOR_RESET_OLD_CHALLENGE_DENIED",
+    await userEpoch(USER) === epochBeforeFactorReset + 1 &&
+    await consume(beforeFactorReset,{credRevision:3}) === false &&
+    (await row(beforeFactorReset)).rev === 0);
 
   stage = "NEGATIVE_STATES";
   const staleSecurityRevision = await seed({credRevision:3,securityRevision:1});
@@ -254,7 +286,7 @@ try {
   const valid = await seed({credRevision:3});
   check("FRESH_CHALLENGE_STILL_ACCEPTED",
     await consume(valid,{credRevision:3}) === true && (await row(valid)).rev === 1);
-  const separate = await seed({userId:OTHER,securityRevision:1});
+  const separate = await seed({userId:OTHER});
   check("INDEPENDENT_USER_ACCEPTED",
     await consume(separate,{userId:OTHER}) === true && (await row(separate)).rev === 1);
   const all = await db.prepare(`
