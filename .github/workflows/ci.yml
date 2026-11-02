@@ -106,3 +106,22 @@ jobs:
         run: node scripts/verify-rc-integrity.mjs
       - name: Independently validate release triggers and QA media rules
         run: node scripts/verify-release-safety.mjs
+
+  kdf-local-workerd:
+    # Standalone local workerd only. No Cloudflare credentials, deploy or bindings.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Install dependencies including locked local workerd
+        run: npm ci --no-audit --no-fund
+      - name: Probe isolated 100000 and 100001 PBKDF2 boundary (no deploy)
+        run: node scripts/kdf-workerd/run-local.mjs
