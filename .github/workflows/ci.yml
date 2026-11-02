@@ -129,3 +129,5 @@ jobs:
         run: node scripts/kdf-workerd/run-local.mjs
       - name: Test exact AES-GCM MFA helper on isolated local workerd (no deploy)
         run: node scripts/mfa-workerd/run-local.mjs
+      - name: Test replay-safe MFA step CAS against isolated Miniflare D1 (no deploy)
+        run: node scripts/mfa-d1-cas/run-local.mjs

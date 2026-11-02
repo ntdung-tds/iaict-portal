@@ -32,6 +32,8 @@
 
 | 2026-11-02T11:47:00+07:00 | [PR #46](https://github.com/ntdung-tds/iaict-portal/pull/46), local workerd harness reliability review. `IAM-FUT-009` [RUN-IAM-20261102-04](../qa/IAICT_TEST_RUNS.md), observed SHA `702ce448`, [CI #41390187476](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476) | Fixed shared test check accumulator, sanitized error output; 11/11 checks PASS for **each of 2** sequential synthetic Worker requests, invalid path/method 404; **full MFA remains NOT_RUN**, catalog remains 82 | Final PR #46 CI / living QA Doc; next isolated D1 replay CAS proof |
 
+| 2026-11-02T12:21:00+07:00 | [PR #47](https://github.com/ntdung-tds/iaict-portal/pull/47), local Miniflare D1 `IAM-FUT-010` [RUN-IAM-20261102-05](../qa/IAICT_TEST_RUNS.md), exact source SHA `2bee360c`, [CI #41393225236](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236) | 15/15 assertions **PASS locally**; same counter 16 parallel CAS writes **1 success**, negative states/owner/monotonic checked; QA catalog **83 cases**; initial Miniflare harness failures preserved. Not hosted MFA | Final PR CI + living QA Doc sync; staged actual factor migration and OTP integration **NOT_APPROVED** |
+
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.
 - **RISK / pending:** full MFA enrollment, secret key lifecycle, reset/recovery, scoped permission/IDOR, hosted Worker KDF/AES-GCM parity, R2 media upload, offboarding and personal-data safeguards. Isolated workerd 100001 PBKDF2 already succeeded; it does NOT establish general hosted behavior.
