@@ -39,3 +39,9 @@ IAICT uses native password/session backed by D1 and keeps Cloudflare Access prot
 - NIST SP 800-63B-4, final: https://pages.nist.gov/800-63-4/sp800-63b.html
 - OWASP Multifactor Authentication Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html
 - RFC 4226 (HOTP): https://www.rfc-editor.org/rfc/rfc4226
+
+## 2026-11-02 — Local workerd KDF evidence (not an approval)
+
+- [QA RUN-IAM-20261102-01](../qa/IAICT_TEST_RUNS.md), [CI run #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088): synthetic workerd `1.20261012.1`, compatibility `2026-10-12`, **100000 SUCCESS (11 ms)** and **100001 SUCCESS (12 ms)**, both 256 bits.
+- This contradicts a strict 100000-iteration limit for the tested **local** runtime only. 600000, live staging and full MFA remain **NOT_RUN**; these timings are not throughput benchmarks.
+- Keep current `lib/native-auth.ts` `PBKDF2_ITERATIONS=100000` and its equality guard; no automatic parameter migration. Future KDF changes require distinct security, CPU load, availability, migration and rollback review; ADR-0002 remains **PROPOSED**.
