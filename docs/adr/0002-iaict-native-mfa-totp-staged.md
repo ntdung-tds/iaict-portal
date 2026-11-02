@@ -228,3 +228,12 @@ The next synthetic Miniflare D1 test adds a monotonically increasing `security_r
 **Future backend rule:** a reliable security epoch (or atomic deletion/revocation of outstanding challenges) must cover any security-relevant change, including account disable, role revoke, permission/policy change, administrative credential reset and factor rebind. The epoch increment must be coupled to the change under the authoritative D1 transaction semantics, not maintained only by a non-atomic application callback. The final OTP + factor replay counter + challenge + full-session transaction remains separately unproved.
 
 This review **does not enable native MFA**, migrate real D1, modify login/Worker, change Access or grant Owner approval. ADR-0002 PROPOSED; SRS FROZEN.
+
+
+## 2026-11-02 — Iterative synthetic D1 challenge CAS review
+
+Continue a **bounded inspect → negative test → minimal correction → CI → independent re-review** loop on `IAM-FUT-012`, without turning it into an unbounded requirement or a runtime orchestrator. After prior PR #54, additional in-scope transitions still need synthetic tests: a **change in role scope despite the active-role bit remaining set**, and MFA factor reset/rebinding despite no password or coarse access-state change. The synthetic test now reads authoritative account security revision from D1 when issuing challenges rather than mirroring it in a JavaScript counter, and verifies old challenge invalidation across these changes.
+
+The security epoch must advance on **all future real security-relevant changes**, be part of the authoritative transaction and be checked when consuming a challenge. A synthetic unit cannot prove real event coverage. Iteration ends when documented distinct checks find no further actionable issue *within the local challenge CAS scope*, all final-head gates pass, and real MFA remains not run. Never characterize a passing unit or this loop as proof of full OTP/session atomicity, remote D1 correctness or perfect security.
+
+No real IAM user, Worker, Access, D1 binding/migration, MFA secret or production deployment changed. ADR PROPOSED; SRS FROZEN.
