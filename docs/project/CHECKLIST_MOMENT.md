@@ -221,3 +221,20 @@ The prior draft snapshot at `2026-11-02T17-13-ICT.md` had a formatting-only malf
 - `IAM-FUT-013` / [RUN-IAM-20261102-13](../qa/IAICT_TEST_RUNS.md) initial source SHA `f621f1ea9896010b720aecd25b4120cfa1ec6618`, [portal CI #41442058049](https://github.com/ntdung-tds/iaict-portal/actions/runs/41442058049) local D1 job SUCCESS: **20/20 assertion groups PASS**, **1/16** same-token and **1/2** distinct-token same TOTP-step accepted, **4 synthetic sessions + 4 success audits**. Late session UNIQUE and audit UNIQUE failure rolled back both earlier CAS writes; wrong TOTP, expired/revoked/disabled/changed credentials and factor rotation denied.
 - **86 QA cases**, new P0 `IAM-FUT-013`. Real `IAM-FUT-001/002/004` hosted MFA/roles/recovery **NOT_RUN**; no real login/session routes, hosted D1, keys, remote migrations or Cloudflare Access changes. No product source or actual Worker changed.
 - `T-IAM-MFA-F2` IN_PROGRESS / QA PARTIAL; PCS **19 proposed**, ADR-0002 PROPOSED, SRS FROZEN and Owner approval NOT GIVEN. **Next:** exact-final-head portal-ci + public staging, Google QA v1.9 sync and only then merge; separate real MFA integration/secret custody/7-role E2E required. QA media **NO_IMAGE_REQUIRED**, [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+
+## CMS-08 / 2026-11-02 real IAM schema security design (PROPOSED)
+
+# PCS Moment — IAICT Portal
+
+**PCS Universal 3.2.0 · Solo · Revision 23 PROPOSED · CMS-08 real IAM security design review**
+
+- Baseline [PR #60](https://github.com/ntdung-tds/iaict-portal/pull/60) **MERGED** at `caab71d0fd54edabacf5a59296440b7d88aea2e3`, PCS revision 22 current. [PR #59](https://github.com/ntdung-tds/iaict-portal/pull/59) previously verified actual `lib/totp.ts` in **local Node + synthetic Miniflare D1**, 27/27 assertions; 559/559 Vitest and 86 QA cases at [CI #41457724289](https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724289). These are prior-run results, **not new evidence**.
+- This review maps exact real `admin_users`, `admin_user_roles`, `iaict_password_credentials_v2`, `iaict_auth_sessions` and server readers/mutations to a proposed authoritative epoch, encrypted factor, challenge, session assurance and independent recovery contract. See [review](../docs/iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md) and `CHG-IAM-ACCESS-20261102-14`.
+- **Finding:** current native password login creates full session; there is no actual MFA-assurance column or authoritative security revision. These are implementation gaps for proposed future MFA, **not** proof of a deployed MFA exploit.
+- **DESIGN ONLY:** no D1 migration, Worker/login/session code change, secrets, Cloudflare Access, R2, users, production or staging runtime change. Real `IAM-FUT-001/002/004`, recovery, hosted D1 and seven-role E2E **NOT_RUN**.
+- ADR-0002 **PROPOSED**, SRS **FROZEN**, Owner MFA/security acceptance **NOT GIVEN**. QA: 86 cases; **no new run claimed**; images **NO_IMAGE_REQUIRED**, private [evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+## Next precise action
+
+Verify this exact-head documentation PR's CI and public-only staging acceptance; fix only concrete review issues, then merge if gates pass. Next **separate** decision: approve or revise real IAM epoch/assurance/key/recovery design **before** any migration, live MFA API/Worker or release. Do not re-run completed PR #59 or enable MFA from this review.
