@@ -40,3 +40,8 @@ Safely complete IAICT-developed CMS/IAM foundations on staging, prove real-role 
 - [PR #50](https://github.com/ntdung-tds/iaict-portal/pull/50): add **unimported** `lib/native-mfa-preauth.ts`, 256-bit token + digest-only record, separate five-minute HttpOnly/Secure pending cookie, candidate-only expiration/account/credential validation and explicit server-side session-assurance predicate.
 - QA `IAM-FUT-011`, `RUN-IAM-20261102-08`: local Vitest 16/16 PASS on SHA `aee43667`, full 555/555 PASS. 84 cases; real MFA login/recovery remains NOT_RUN.
 - **No live integration** to `authenticateNativePassword`, `nativeActorEmail`, Worker, route, D1 or Access. Before any real activation: owner/security-controlled schema/keys, atomic first-factor challenge+OTP CAS+session transaction, old session policy, approved 7-role staging QA and rollback. SRS FROZEN, ADR PROPOSED.
+
+### CMS-08/S5 — two-pass security correction, PR #51 (02/11/2026)
+- Static pass: PR #50 helper remains unused by login/Worker, so no change to real authentication; identified runtime type coercion risk.
+- Adversarial pass: strict literal boolean checks for account/role in challenge and session predicates; strict primitive strings for token/digest. D1 integer `0`/`1` needs trusted explicit normalization at integration.
+- `IAM-FUT-011` extends existing case (no new case): 20/20 local Node tests PASS at SHA `828d1060`, full 559/559 Vitest; `RUN-IAM-20261102-09`. Still 84 cases, ADR PROPOSED, SRS FROZEN, real MFA NOT_RUN.
