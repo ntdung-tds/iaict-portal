@@ -26,6 +26,8 @@ jobs:
         run: node scripts/verify-migrations.mjs
       - name: Verify QA catalog, case links and PR change impact
         run: npm run verify:qa
+      - name: Validate current Checklist Moment, project progress, and immutable snapshot
+        run: npm run verify:checklist-moment
       - name: Verify multi-agent instructions and portable Skill
         run: npm run verify:agent-skill
       - name: Verify SRS freeze and per-component change records
