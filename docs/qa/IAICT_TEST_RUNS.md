@@ -128,3 +128,27 @@
 
 **Interpretation:** `100001` succeeds in this precisely versioned **local** workerd. Therefore the previously hypothesized strict 100000-iteration runtime ceiling is **not supported by this measurement**. This does not prove production/staging runtime parity, unconstrained higher iterations, resistance to DoS, or suitability of a KDF upgrade. The current app still accepts exactly `100000` iterations by its own `derivePassword` guard. Keep its parameter unchanged pending an architecture decision. No interpretation of 11/12 ms as a performance benchmark (single sample).
 
+
+
+## RUN-IAM-20261102-02 — AES-256-GCM TOTP seed protection helper (unit only)
+
+| Field | Verified observation |
+|---|---|
+| Date | 2026-11-02 (Asia/Ho_Chi_Minh); GitHub Actions UTC job timestamp |
+| Task / CHG | PCS `T-IAM-MFA-F2`, CMS-08/S3 (isolated substep), `CHG-IAM-ACCESS-20261102-02` |
+| Exact tested SHA | `8355bcdcdc66ce55bede8eeee50a0a8a1b38bf57` (PR #43 initial source+requirements snapshot) |
+| CI evidence | [portal-ci #41386111393](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386111393); verify job PASS |
+| Environment | GitHub Actions Node 22 + Vitest, **UNIT / SYNTHETIC**, not real Worker MFA enrollment or D1 |
+| Unit suite | `lib/mfa-secret-crypto.test.ts`: **6/6 PASS**; aggregate 54 Vitest files / **539/539 PASS** |
+| Security assertions | Nonextractable AES-256 key; 160-bit seed roundtrip; independent randomized IV; owner/factor/key AAD binding; tampered IV/ciphertext/wrong key rejected; malformed input rejected |
+| Tests not performed | Workers runtime AES-GCM parity, Worker secret binding, key rotation, forward-only factor D1 schema, atomic OTP replay, enrollment/verification session, recovery, 7-role real browser QA: **NOT_RUN** |
+| Deployment | **NOT DEPLOYED**; no live password/account/D1/Cloudflare/Access/production changes |
+| Visual evidence | **NO_IMAGE_REQUIRED**; [private IAM QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp); no screenshot created |
+| Approval status | ADR-0002 remains PROPOSED, SRS FROZEN, Owner feature acceptance **NOT GIVEN** |
+
+| Case | Layer / role | Expected | Actual | Verdict | Evidence |
+|---|---|---|---|---|---|
+| `IAM-FUT-008` | Unit / synthetic key, no user | AES-GCM encrypt/decrypt roundtrip and tamper/swap failure | 6 relevant assertions groups PASS, no authentication session | **PASS — UNIT ONLY** | [CI #41386111393](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386111393) |
+| `IAM-FUT-001` | Live MFA / real authorized role | Secure factor enrollment, OTP challenge and replay guard | No integrated enrollment or real role QA | **NOT_RUN** | Issue #37 |
+
+**Scope warning:** The CI on this source SHA predates later documentation/checkpoint edits on the same PR. Reconfirm all CI gates at the PR's final head before merge; never transfer this test verdict to a deployed Worker.
