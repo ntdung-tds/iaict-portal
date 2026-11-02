@@ -404,3 +404,30 @@
 | `IAM-FUT-004` | Authenticated seven-role staging | Session assurance and policy/revocation enforced at every protected endpoint | No authorized E2E fixtures | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
 
 **Stop rule is scope-bound**, not a claim of absolute absence of all vulnerabilities. PR remains open until exact final SHA CI + staging gates pass.
+
+
+## RUN-IAM-20261102-13 — Synthetic verified OTP + challenge/factor/session/audit transaction on isolated D1
+
+| Field | Observed facts and scope |
+| --- | --- |
+| Date | 2026-11-02 (Asia/Ho_Chi_Minh) |
+| Test/PR | **`IAM-FUT-013`**, P0 Security/AUTO; [PR #57](https://github.com/ntdung-tds/iaict-portal/pull/57); Issue #37 |
+| Source tested (before QA edits) | `f621f1ea9896010b720aecd25b4120cfa1ec6618` |
+| Observed runner | [portal CI #41442058049](https://github.com/ntdung-tds/iaict-portal/actions/runs/41442058049), `kdf-local-workerd` job #125266084414 **SUCCESS**; `[mfa-atomic-d1] OBSERVED` |
+| Test environment | **LOCAL_MINIFLARE_D1** with fresh randomized DB UUID, synthetic random 20-byte HMAC-SHA1 seed created within test, synthetic user/factor/challenge/session/audit/guard tables; no real D1 Worker binding or OTP account |
+| Atomicity mechanism | One `D1.batch()` with challenge conditional UPDATE, immediate `CHECK(observed=1)` using SQLite `changes()`, factor counter conditional UPDATE, second CHECK guard, synthetic MFA-assured session INSERT, audit INSERT. A zero-row CAS forces a *database SQL error* and rollback; checking `meta.changes` after a committed batch alone would be too late |
+| Verified execution | **20/20 synthetic assertion groups PASS**; **16** simultaneous requests for the same challenge with **1 successful complete transaction**; two different challenges using the same factor time-step yielded **1** complete transaction, losing challenge not consumed; **4 committed synthetic MFA sessions and 4 matching success audit entries** |
+| Negative proofs | Wrong/malformed TOTP, same-challenge replay, two-challenge same-step replay, 0-row CAS rollback, session UNIQUE failure, late audit UNIQUE failure, expiry, security/credential revision changed between OTP check and batch, account disable and factor disable/secret-version rotation between verification and batch. Snapshots demonstrate no partial challenge/factor/session/audit state on rejected attempts |
+| Independent design review | Compared the SQL and injection cases against ADR-0002: challenge user+credential/security revision validated in DB, factor owner/status/secret version and monotonic counter checked on D1, session/audit issued only if batch succeeds; audit failure tested after session insertion and rolls back earlier writes. **No additional reproducible in-scope defect** in this synthetic multi-entity proof on this pass. This is *not* a claim that live MFA is verified |
+| Limits | Test uses a **standalone synthetic Node HMAC-SHA1 verifier** (0-step window), **not** the running TypeScript TOTP module or hardware-bound secret; no real login session token, key encryption, API CSRF/throttle, recovery, hosted D1 transaction, Worker deployment or real 7-role E2E. Does NOT prove remote execution or live key lifecycle |
+| Other tests | `IAM-FUT-010/011/012` remain local-only historical; full CI and public staging gate to be verified on **final PR SHA** before merge |
+| Evidence media | **NO_IMAGE_REQUIRED**; [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) |
+| Approval | ADR-0002 PROPOSED, SRS FROZEN, Owner MFA/security approval NOT GIVEN |
+
+| Case ID | Environment / role | Expected | Observed | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-013` | Local Miniflare D1 synthetic user/factor/session | Verified synthetic OTP + challenge and factor CAS yield one session and audit atomically or no writes | **20/20 groups PASS**, 1/16 same-challenge and 1/2 different challenge same step accepted; 4 synthetic sessions and 4 success audit | **PASS — SYNTHETIC_ATOMIC_D1_ONLY** | [CI #41442058049](https://github.com/ntdung-tds/iaict-portal/actions/runs/41442058049) |
+| `IAM-FUT-001` | Hosted approved IAM users | Full MFA login route and server-recognized MFA session with live factor/OTP | No actual route integration | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-002/004` | Authenticated hosted recovery/7 roles | Safe recovery, session revocation and per-route MFA enforcement | Identities/feature not available for acceptance | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Bounded result:** The local D1 batch rollback and guard pattern is supported by this test. Production transaction design must still use actual typed TOTP helpers, vetted secret custody, a real schema and hosted tests with Owner/security acceptance; avoid treating 20/20 local PASS as real MFA completion.
