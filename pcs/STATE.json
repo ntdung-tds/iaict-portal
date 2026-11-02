@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 2,
-  "updated_at": "2026-11-02T01:47:51.824Z",
+  "revision": 3,
+  "updated_at": "2026-11-02T03:24:39.710Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T01:47:51.824Z",
+    "updated_at": "2026-11-02T03:24:39.710Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -20,6 +20,23 @@
       "summary": "Existing Next.js/React/Cloudflare implementation. PCS architecture inventory is pending verification; no architecture change proposed."
     },
     "tasks": [
+      {
+        "id": "T-IAM-KDF-S2",
+        "title": "CMS-08/S2 — verify PBKDF2 compatibility in isolated Workers runtime",
+        "status": "IN_PROGRESS",
+        "priority": "P0",
+        "risk": "HIGH",
+        "classification": "PUBLIC",
+        "security_sensitive": true,
+        "requires_owner_approval": true,
+        "github_issue": "https://github.com/ntdung-tds/iaict-portal/issues/37",
+        "dependencies": [],
+        "qa": {
+          "required": true,
+          "status": "NOT_RUN"
+        },
+        "description": "Scope is planning and bounded synthetic workerd evidence only (PROJECT_PLAN P0-B; CHECKLIST_MOMENT CMS-08 S2). Test plan prepared at docs/qa/IAICT_KDF_BOUNDARY_PLAN.md; no runtime probe, credential write, staging deploy, or architecture approval claimed."
+      },
       {
         "id": "T-IAM-ONBOARDING",
         "title": "Secure native-account onboarding and recovery",
@@ -64,12 +81,13 @@
     "approvals": [],
     "artifacts": [],
     "current": {
-      "active_task": null,
-      "last_completed_step": "Created a minimal PCS Solo project checkpoint and linked two public, unaccepted GitHub backlog items (#37, #39); no application or deployment changes.",
-      "next_action": "Reconcile the active development baseline (PR #36), Issue #37 IAM onboarding, Issue #39 R2 media and QA evidence; choose a safe next task for implementation. Do not infer acceptance from historical PRs or CI.",
+      "active_task": "T-IAM-KDF-S2",
+      "last_completed_step": "PCS Solo bootstrap PR #40 merged on active IAM/R2 development branch; KDF boundary plan for CMS-08/S2 prepared, real Worker measurements NOT_RUN.",
+      "next_action": "Execute bounded synthetic PBKDF2 compatibility experiment in isolated local workerd; record actual 100000/100001 observations and optional gated 600000; verify SHA and add QA run; review ADR before any IAM/migration changes.",
       "blockers": [
-        "Public repository: do not enable privileged PCS public operators until content classification and Owner authorization are independently verified.",
-        "Live role-based IAM/media end-to-end acceptance remains unverified; consult the project's actual latest QA run before any release claim."
+        "Real workerd boundary experiment not executed; do not infer hard-cap from Node unit tests or proposal.",
+        "Any remote diagnostic Worker, staging IAM changes, real-user QA, or production/Access change requires separately verified authorization and security gates.",
+        "Public repository: public-only PCS metadata; privileged public PCS operators not enabled (public_content_reviewed=false)."
       ],
       "actor": "pcs-solo-bootstrap"
     },
