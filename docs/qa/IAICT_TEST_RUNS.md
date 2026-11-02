@@ -431,3 +431,23 @@
 | `IAM-FUT-002/004` | Authenticated hosted recovery/7 roles | Safe recovery, session revocation and per-route MFA enforcement | Identities/feature not available for acceptance | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
 
 **Bounded result:** The local D1 batch rollback and guard pattern is supported by this test. Production transaction design must still use actual typed TOTP helpers, vetted secret custody, a real schema and hosted tests with Owner/security acceptance; avoid treating 20/20 local PASS as real MFA completion.
+
+
+## RUN-IAM-20261102-14 — Real TOTP helper parity inside isolated synthetic D1 batch
+
+| Field | Verified evidence and boundary |
+| --- | --- |
+| Date / owner | 2026-11-02 (Asia/Ho_Chi_Minh); PCS Solo Lead; Owner security acceptance NOT GIVEN |
+| PR / case | [PR #59](https://github.com/ntdung-tds/iaict-portal/pull/59), existing P0 `IAM-FUT-013`, **86 QA cases unchanged**; `CHG-IAM-ACCESS-20261102-13` |
+| Baseline | [Merged PR #58](https://github.com/ntdung-tds/iaict-portal/pull/58) left `IAM-FUT-013` at **20/20** synthetic Node-HMAC-based local D1 proof. This historical result is retained unchanged |
+| Review 1 / change | The previous verifier reproduced HMAC independently, never calling `lib/totp.ts`. Bundle actual repository `lib/totp.ts` with esbuild into local Node WebCrypto and use its `matchTotpCounter()` as OTP candidate; cross-check generation against independent Node HMAC and RFC 6238 SHA-1 8-digit known vector |
+| Review 2 / correction | Fixed rare randomized negative-case flake: fixed wrong OTP might match a valid ±1-step code; choose wrong input absent from all three admissible codes. Add deterministic out-of-window RFC rejection. No SQL CAS or backend auth source modified |
+| Exact tested code/checkpoint SHA | `5e13f97da067f12c3d21de460092ecd37aa8298d`; [portal-ci #41456996101](https://github.com/ntdung-tds/iaict-portal/actions/runs/41456996101) **SUCCESS, 4/4 jobs**; local workerd job `kdf-local-workerd` **27/27 groups PASS**; QA registry **86**, full **559/559 Vitest** |
+| Actual local result | **27/27**: actual generator/matcher RFC and independent-HMAC parity, exact/adjacent/replay/malformed/out-of-window; existing atomic D1 challenge+factor guarded CAS, rollback after session/audit failures and synthetic audit matching. **1/16** concurrent same challenge accepted; **1/2** distinct challenges using same TOTP step accepted; **4 synthetic session + 4 audit success records** |
+| Public staging check | [staging-acceptance #41456996063](https://github.com/ntdung-tds/iaict-portal/actions/runs/41456996063) **SUCCESS**: 21/21 public Chromium, 24/24 anonymous GET, 0 observed HTTP 503/5xx/network errors **in this sample only**; intermittent [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains OPEN |
+| Merge gate | Exact final PR HEAD must pass portal-ci (4 jobs) and public read-only staging again after this documentation commit; do **not** reuse earlier SHA status as proof of a later SHA |
+| Explicit NOT_RUN | **Real MFA enrollment/sign-in/recovery/7-role authenticated E2E** (`IAM-FUT-001/002/004`), live session assurance and pre-MFA route enforcement, hosted D1, production encrypted secret/KMS, real security epoch, D1 migration, key rotation |
+| Operational constraints | Node local module + disposable synthetic Miniflare D1 only. No changes to `lib/totp.ts`, Worker/auth routes, user credentials, actual tables, Cloudflare Access, R2 or staging/production deploy. SRS **FROZEN**, ADR-0002 **PROPOSED**, owner/security approval **NOT GIVEN** |
+| Evidence media | **NO_IMAGE_REQUIRED**; [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp). No private images/logs to GitHub |
+
+**Conclusion:** The actual TOTP helper now participates in the *isolated* D1 batch harness and passed the bounded security regression. This does NOT implement MFA in IAICT Portal or approve a live migration, account enrollment or Access cutover. The next action is to review authoritative IAM schema/epoch/assurance and recovery under a separate approved scope.
