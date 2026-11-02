@@ -1,16 +1,14 @@
 # PCS Moment — IAICT Portal
 
-**PCS Universal 3.2.0 · Solo · Revision 7 · Post-merge security review**
+**PCS Universal 3.2.0 · Solo · Revision 8 · CMS-08/S3 Worker crypto verification**
 
-- **Canonical:** `pcs/STATE.json` revision **7** on the reviewed project branch after this checkpoint PR is merged; verify HEAD before use.
-- [PR #43](https://github.com/ntdung-tds/iaict-portal/pull/43) **MERGED** at `2f9cfa37e339af9b01521dc3ae403346f4ac54e9`; final [portal-ci #41386418466](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386418466) and [public/read-only staging acceptance #41386418469](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386418469) PASS.
-- **Active task:** `T-IAM-MFA-F2`, IN_PROGRESS, QA PARTIAL. [IAM-FUT-008 / RUN-IAM-20261102-02](../docs/qa/IAICT_TEST_RUNS.md) — AES-256-GCM TOTP seed envelope **6/6 Node/Vitest UNIT PASS** at source SHA `8355bcdcdc66ce55bede8eeee50a0a8a1b38bf57`. No Worker runtime AES-GCM probe, D1 MFA factor storage, key provisioning/rotation, enrollment/replay/recovery or real-login acceptance; all **NOT_RUN**.
-- **Dependency review:** isolated MFA-F2 test was incorrectly marked dependent on `T-IAM-KDF-S2` being ACCEPTED. That hard dependency is removed: KDF findings inform design but need not block unrelated crypto-unit development. Both workstreams retain independent security/Owner release gates.
-- Prior `T-IAM-KDF-S2` remains IN_PROGRESS/QA PARTIAL: isolated local workerd PBKDF2 100000/100001 PASS in [RUN-IAM-20261102-01](../docs/qa/IAICT_TEST_RUNS.md); hosted parity and overall architecture decision pending. `T-IAM-ONBOARDING` and `T-MEDIA-R2` are PLANNED. **No feature/flow/release accepted.**
-- Detailed status authority: [CHECKLIST_MOMENT](../docs/project/CHECKLIST_MOMENT.md), [PROJECT_PLAN](../docs/project/PROJECT_PLAN.md), [PROJECT_PROGRESS](../docs/project/PROJECT_PROGRESS.md), QA CSV **81 cases** and immutable run ledger. [Living Google Doc](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) synchronized.
-- Read-only Cloudflare deployment verification 2026-11-02: staging version `1b8cfe71-88ef-4e21-8937-4f8590daaba4`, production version `e7c703f7-fc4c-4313-b14c-0a2c94e0613d`, both unchanged since historical baseline. No deployment or live mutation for this review.
-- SRS remains **FROZEN / UNAPPROVED**; ADR-0002 **PROPOSED**; module `thaydoi.md` is the requirements change authority. Public-only repository metadata; `public_content_reviewed=false`. QA images: private Drive, review requires **NO_IMAGE_REQUIRED**. Source handoff to Drive only on “bàn giao”.
+- `pcs/STATE.json` revision **8**, active `T-IAM-MFA-F2` **IN_PROGRESS**, QA **PARTIAL**; proposed by [PR #45](https://github.com/ntdung-tds/iaict-portal/pull/45) until merged to `feat/staging-native-login-r2-20261030`.
+- **Observed execution:** exact helper `lib/mfa-secret-crypto.ts` bundled and run in isolated **local workerd 1.20261012.1**, compatibility date `2026-10-12`: **11/11 crypto checks PASS** at source SHA `23c0960dba63905dfcf90fff2309e81b78f6e838` in [CI #41389043762](https://github.com/ntdung-tds/iaict-portal/actions/runs/41389043762); [RUN-IAM-20261102-03](../docs/qa/IAICT_TEST_RUNS.md), case `IAM-FUT-009`. Earlier `IAM-FUT-008` Node unit 6/6 PASS at its own SHA. QA CSV now **82 cases**, not 82 passes.
+- **Scope:** no deployed Worker, D1/R2, Access, real secret, MFA session or production change. Hosted secret binding, live factor table, replay CAS, key rotation/restore, recovery and 7-role authenticated acceptance **NOT_RUN**.
+- **Architecture:** [ADR-0002](../docs/adr/0002-iaict-native-mfa-totp-staged.md) adds **PROPOSED** key lifecycle and minimal factor D1 contract, not a migration/approved SRS. SRS **FROZEN**, full source Drive handoff **DEFERRED** until “bàn giao”.
+- Other tasks: KDF-S2 local workerd proof PARTIAL and architecture review pending; onboarding and R2 media PLANNED. No feature/flow/release ACCEPTED; PCS remains minimal pointer, [Checklist Moment](../docs/project/CHECKLIST_MOMENT.md), [Plan](../docs/project/PROJECT_PLAN.md), [Progress](../docs/project/PROJECT_PROGRESS.md) and QA records are detailed authorities.
+- Repo PUBLIC, PCS `public_content_reviewed=false`; QA imaging **NO_IMAGE_REQUIRED**; private [IAM evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
 
-## Next precise action
+## Next precise step
 
-Review a minimal key-lifecycle proposal (secret binding, key versioning, rotation and restore) and pending/active D1 factor schema with replay-safe CAS and security/Owner gate; validate AES-GCM under targeted workerd separately if needed. Do **not** infer permission to create MFA factors, deploy Worker, remove Access, migrate D1 or change production.
+Verify PR #45 final SHA CI + public read-only staging acceptance and living QA Google Doc case 82, then merge if clean. Review D1 factor contract and build an **isolated synthetic atomic replay CAS concurrency test** before any live MFA operation. Never change production or Access by default.
