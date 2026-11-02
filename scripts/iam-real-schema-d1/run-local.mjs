@@ -40,7 +40,11 @@ try {
     "0023_iaict_auth_pbkdf2_workers.sql", "0024_iaict_activation_invites.sql",
   ]) {
     const original = await readFile(new URL("../../cloudflare/migrations/" + name, import.meta.url), "utf8");
-    await db.exec(original);
+    // Miniflare D1 exec() parses line-by-line; multi-line CREATE statements
+    // must instead be issued as individual complete SQL statements. The actual
+    // migration source remains byte-for-byte unchanged on disk.
+    const statements = original.split(/;\s*(?:\r?\n|$)/).map(s => s.trim()).filter(Boolean);
+    for (const statement of statements) await db.prepare(statement).run();
   }
   const hasTable = async name => !!await db.prepare(
     "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
