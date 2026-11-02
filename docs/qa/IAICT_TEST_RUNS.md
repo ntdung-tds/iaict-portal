@@ -488,3 +488,17 @@
 The 8 new Chromium tests are browser-rendered **with API mocks** and cannot establish authenticated RBAC in deployed staging. The existing anonymous staging Chromium acceptance is an independent layer. No password, JWT, cookie, screenshot, API secret, D1 mutation, Worker deployment or production change was made. The role/browser tool is prepared for genuine Access sessions but must not be run on CI or substitute synthetic fixture addresses for real identities. No QA image required; [private evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
 
 **Review history:** QA verifier rejected the initial MANUAL test's automated reference; corrected to `—`. Requirements verifier rejected source changes without `thaydoi.md`; added `CHG-IAM-ACCESS-20261103-02`. Final-head CI/staging gate must be recorded after this ledger commit before merge.
+
+## RUN-IAM-20261103-03 — live staging QA identity and Access preflight (read-only plus empty Secrets Store setup)
+
+| Item | Scope / expected | Observed 2026-11-03 | Verdict |
+| --- | --- | --- | --- |
+| QA staging D1 fixtures | Registered eight test roles | **8 rows**, **0 active**, **0 v2 password credentials**, **0 Access subjects**; 10 total CMS users; aggregate-only live D1 reads | **PASS AUDIT / NOT LOGIN-READY** |
+| Protected staging Access | Check current login gate without bypass | **1 staging Access app**, allow policy **Cloudflare account members**; **1** current Access user. No policy modified | **PASS READ-ONLY** |
+| QA mailbox availability | Deliverable project-owned identities distinct per role | Cloudflare account **0 DNS zones, 0 Email Routing destinations**. No new controlled test inbox provisioned | **BLOCKED** |
+| Encrypted secret infrastructure | Secure persistent place for future QA secret entries | Created Cloudflare Secrets Store `iaict_staging_qa_credentials`; readback **1 store present**, **0 secrets**. Account-level encrypted service exists, but no password entries and no validated retrieval/automation lifecycle | **PASS EMPTY STORE ONLY** |
+| IAM-USER-020 and authenticated role matrix | Eight legitimate Access/private Chromium sessions, 7 roles and second Admin | No new user activated, no native password created, no signed-in browser run; no identity policy change | **BLOCKED / NOT_RUN** |
+
+- **Execution:** connected Cloudflare management API; only *read* hosted staging D1 aggregates and Access/email/zone config; the **single write** created one *empty encrypted account-level Secrets Store* for later QA credential use. No Worker/D1 account writes, no Cloudflare account membership invites, no Access policy edits, no new login session, no production changes.
+- **Security guard:** prior access-tool-read failure from 2026-11-03 resolved; do not keep it as current blocker. Cloudflare Access account-member-only rule means **adding D1 users alone cannot grant Access**. Do not invite personal Cloudflare account members to bypass onboarding. Creating a secret store does **not** establish an approved vault operating process or prove a secret has been saved. Owner's staging-only QA account creation permission remains in force via PR #66. Test case catalog stays **89**; prior `RUN-IAM-20261103-02` observations preserved.
+- **Evidence:** API aggregate counts and configuration metadata only; no screenshot required. Private [QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp). GitHub CI/public Chromium is regression proof only, not authenticated browser E2E.
