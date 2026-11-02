@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * IAM-FUT-013: ephemeral local D1 multi-entity MFA transaction contract.
- * Synthetic HMAC-SHA1 TOTP only. NEVER a real session, live secret, migration,
+ * Real lib/totp.ts verifier against synthetic secret and disposable D1 only.
+ * NEVER a real session, live secret, migration,
  * real Cloudflare D1 binding, Worker login route or authorized MFA user.
  *
  * D1 batch rollback must happen on zero-row CAS: each UPDATE is immediately
@@ -10,6 +11,7 @@
  */
 import { createHash, createHmac, randomBytes, randomUUID } from "node:crypto";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
+import { build } from "esbuild";
 
 const NOW=1_800_000_000_000, PERIOD=30_000, TTL=300_000;
 const USER="synthetic-qa-user", FACTOR="synthetic-factor", SECRET=randomBytes(20);
@@ -23,13 +25,6 @@ const codeFor=(secret,now)=>{
   const off=h[h.length-1]&15;
   return String((h.readUInt32BE(off)&0x7fffffff)%1_000_000).padStart(6,"0");
 };
-const candidate=(secret,code,now)=>{
-  if(typeof code!=="string"||!/^[0-9]{6}$/.test(code)||
-     !Number.isSafeInteger(now)||now<0)return null;
-  const expected=codeFor(secret,now);let difference=0;
-  for(let i=0;i<6;i++)difference|=expected.charCodeAt(i)^code.charCodeAt(i);
-  return difference===0?Math.floor(now/PERIOD):null;
-};
 const UPDATE_CHALLENGE="UPDATE synthetic_challenges SET consumed_at_ms=?,revision=revision+1 WHERE challenge_hash=? AND user_id=? AND factor_id=? AND purpose='LOGIN' AND credential_revision=? AND security_revision=? AND consumed_at_ms IS NULL AND revision>=0 AND created_at_ms>=0 AND created_at_ms<=? AND expires_at_ms>? AND expires_at_ms>created_at_ms AND expires_at_ms-created_at_ms<=? AND failed_attempts BETWEEN 0 AND 4 AND (locked_until_ms IS NULL OR locked_until_ms<=?) AND EXISTS(SELECT 1 FROM synthetic_users u WHERE u.user_id=synthetic_challenges.user_id AND u.is_active=1 AND u.has_active_role=1 AND u.credential_revision=synthetic_challenges.credential_revision AND u.security_revision=synthetic_challenges.security_revision)";
 const UPDATE_FACTOR="UPDATE synthetic_factors SET last_accepted_step=?,revision=revision+1 WHERE factor_id=? AND user_id=? AND status='ACTIVE' AND secret_version=? AND (locked_until_ms IS NULL OR locked_until_ms<=?) AND (last_accepted_step IS NULL OR last_accepted_step<?) AND EXISTS(SELECT 1 FROM synthetic_challenges c WHERE c.challenge_hash=? AND c.factor_id=synthetic_factors.factor_id AND c.user_id=synthetic_factors.user_id AND c.consumed_at_ms=?)";
 const GUARD="INSERT INTO synthetic_changes_guard(observed) VALUES(changes())";
@@ -37,6 +32,36 @@ const INSERT_SESSION="INSERT INTO synthetic_sessions(session_id,user_id,challeng
 const INSERT_AUDIT="INSERT INTO synthetic_audit(event_id,session_id,user_id,event_type,created_at_ms) VALUES(?,?,?,'MFA_LOGIN_SUCCESS',?)";
 let mf,stage="BOOT";
 try {
+  stage="LOAD_REAL_TOTP_HELPER";
+  // Bundle the *actual* TypeScript source used by the portal, not a rewritten
+  // TOTP algorithm. Keep this local Node WebCrypto + synthetic D1 only.
+  const bundled=await build({
+    entryPoints:["lib/totp.ts"],bundle:true,platform:"node",format:"esm",
+    write:false,target:"node22",logLevel:"silent",
+  });
+  if(bundled.outputFiles?.length!==1)throw Error("REAL_TOTP_BUNDLE_MISSING");
+  const realTotp=await import("data:text/javascript;base64,"+
+    Buffer.from(bundled.outputFiles[0].contents).toString("base64"));
+  const {generateTotpCode,matchTotpCounter}=realTotp;
+  if(typeof generateTotpCode!=="function"||typeof matchTotpCounter!=="function")
+    throw Error("REAL_TOTP_EXPORT_MISSING");
+  const key=Uint8Array.from(SECRET),currentStep=Math.floor(NOW/PERIOD);
+  stage="TOTP_PARITY";
+  const rfcKey=new TextEncoder().encode("12345678901234567890");
+  assert("ACTUAL_MODULE_RFC6238_SHA1_8_DIGIT",
+    await generateTotpCode(rfcKey,59000,{hash:"SHA-1",digits:8})==="94287082");
+  assert("ACTUAL_GENERATOR_EQUALS_INDEPENDENT_NODE_HMAC",
+    await generateTotpCode(key,NOW)===codeFor(SECRET,NOW));
+  assert("ACTUAL_MATCH_ACCEPTS_EXACT_STEP",
+    await matchTotpCounter(key,codeFor(SECRET,NOW),NOW,{window:1})===currentStep);
+  assert("ACTUAL_MATCH_ACCEPTS_ADJACENT_STEP",
+    await matchTotpCounter(key,codeFor(SECRET,NOW+PERIOD),NOW,{window:1})===currentStep+1);
+  assert("ACTUAL_MATCH_REJECTS_STALE_COUNTER",
+    await matchTotpCounter(key,codeFor(SECRET,NOW),NOW,{
+      window:1,lastAcceptedCounter:currentStep,
+    })===null);
+  assert("ACTUAL_MATCH_REJECTS_MALFORMED_CODE",
+    await matchTotpCounter(key,"12345",NOW,{window:1})===null);
   mf=new Miniflare(convertV4MiniflareOptions({
     modules:true,script:"export default { fetch(){return new Response('synthetic only')} }",
     compatibilityDate:"2026-10-12",compatibilityFlags:["nodejs_compat"],
@@ -90,7 +115,12 @@ try {
     const factor=await factorRow(),user=await userRow();
     if(factor?.status!=="ACTIVE"||typeof factor.secret_hex!=="string"||
        !/^[a-f0-9]{40}$/.test(factor.secret_hex)||!user)return false;
-    const step=candidate(Buffer.from(factor.secret_hex,"hex"),code,now);
+    // Cryptographic candidate comes from actual lib/totp.ts; this pre-read
+    // counter is advisory. The D1 factor CAS below remains authoritative.
+    const step=await matchTotpCounter(
+      Uint8Array.from(Buffer.from(factor.secret_hex,"hex")),code,now,
+      {window:1,lastAcceptedCounter:factor.last_accepted_step??-1},
+    );
     if(step===null)return false;
     if(afterVerify)await afterVerify();
     try {
@@ -237,7 +267,8 @@ try {
     same_token_parallel:16,same_token_winners:race.filter(Boolean).length,
     same_counter_distinct_challenge_winners:competitor.filter(Boolean).length,
     committed_synthetic_mfa_sessions:sessionCount,
-    committed_synthetic_audits:audited,synthetic_hmac_sha1_checked:true,
+    committed_synthetic_audits:audited,real_totp_module_used:true,
+    independent_node_hmac_oracle:true,actual_rfc6238_vector_checked:true,
     actual_mfa_implemented:false,hosted_d1:false,real_session:false,
     verdict:"PASS",
   }));
