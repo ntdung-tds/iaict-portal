@@ -24,3 +24,8 @@ Safely complete IAICT-developed CMS/IAM foundations on staging, prove real-role 
 3. `CHECKLIST_MOMENT.md` tracks last substep and pause/resume; `PROJECT_PROGRESS.md` records delivered/blocked evidence and current checkpoint. Both updated with each significant state change.
 4. Uploaded `IAICT_IAM_v1_2_FRESH_DOWNLOAD.docx` provides 20 IAM proposals, KDF hard-cap risks and KDF-01–06 / IAM-T33–43 proposed tests. They must be reviewed, mapped and approved separately; not all are implementation requirements.
 5. No scheduled completion date or % total project done asserted without defined scope and owner acceptance.
+
+### CMS-08/S3 local D1 CAS proof (2026-11-02, QA-only)
+- `IAM-FUT-010` / `RUN-IAM-20261102-05`: isolated Miniflare D1 SQL CAS, 15 check groups PASS; among 16 concurrent writes of the same synthetic TOTP counter, only one was accepted (source SHA `2bee360c`, [CI #41393225236](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236)).
+- **Nothing deployed**: schema only in disposable test D1; actual D1 factor table, validated TOTP candidate, real login, key provisioning, concurrency in hosted D1 and recovery still NOT_RUN.
+- Continue risk-proportionate security review, not additional PCS infrastructure. ADR-0002 PROPOSED, no SRS freeze lift or Owner sign-off.
