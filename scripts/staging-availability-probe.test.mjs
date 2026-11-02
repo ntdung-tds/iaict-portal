@@ -87,3 +87,68 @@ test("rejects invalid sweep counts before any network request", async () => {
       /INVALID_STAGING_PROBE_OPTIONS/);
   }
 });
+
+
+test("exposes CF-Ray and safe public classifications for a 503 without examining its body", async () => {
+  const logs = [];
+  let readBody = false;
+  const result = await probeStaging({
+    ...quiet, cycles: 1, paths: ["/"],
+    report: entry => logs.push(entry),
+    request: async () => {
+      const response = new Response("synthetic error page", {
+        status: 503, headers: {
+          "CF-Ray": "8aa9bb11223344dd-BKK",
+          "Server": "cloudflare",
+          "CF-Cache-Status": "DYNAMIC",
+          "Content-Type": "text/html; charset=utf-8",
+          "Set-Cookie": "sensitive-session=SECRET_SHOULD_NOT_LOG",
+          "X-Internal-Error": "SECRET_SHOULD_NOT_LOG",
+        },
+      });
+      const original = response.text.bind(response);
+      response.text = async () => { readBody = true; return original(); };
+      return response;
+    },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.http503, 1);
+  assert.deepEqual(result.observations[0].failureHeaders, {
+    cfRay: "8aa9bb11223344dd-BKK", serverClass: "cloudflare",
+    cacheClass: "DYNAMIC", contentClass: "html",
+  });
+  assert.equal(readBody, false);
+  assert.equal(logs.some(line => line.includes("SECRET_SHOULD_NOT_LOG")), false);
+});
+
+test("invalid CF-Ray and arbitrary server headers never leak raw diagnostic values", async () => {
+  const result = await probeStaging({
+    ...quiet, cycles: 1, paths: ["/tin-tuc"],
+    request: async () => new Response(null, { status: 503, headers: {
+      "CF-Ray": "evil;Authorization=secret",
+      "Server": "private-custom-service",
+      "CF-Cache-Status": "private_value",
+      "Content-Type": "text/plain",
+      "X-Private-Token": "never-log-me",
+    }}),
+  });
+  assert.deepEqual(result.observations[0].failureHeaders, {
+    cfRay: null, serverClass: "other",
+    cacheClass: null, contentClass: "other",
+  });
+  assert.equal(JSON.stringify(result).includes("never-log-me"), false);
+  assert.equal(JSON.stringify(result).includes("private-custom-service"), false);
+});
+
+test("successful 200 responses do not add diagnostics or alter fail-closed outcomes", async () => {
+  let index = 0;
+  const result = await probeStaging({
+    ...quiet, cycles: 2, paths: ["/"],
+    request: async () => new Response(null, { status: ++index === 1 ? 503 : 200,
+      headers: { "CF-Ray": "8aa9bb11223344dd-BKK" } }),
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.failed, 1);
+  assert.equal(result.observations[0].failureHeaders.cfRay, "8aa9bb11223344dd-BKK");
+  assert.equal("failureHeaders" in result.observations[1], false);
+});
