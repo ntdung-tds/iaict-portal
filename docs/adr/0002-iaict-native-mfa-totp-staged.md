@@ -195,3 +195,14 @@ This is a **source-only foundation**, not a change to active login. New `lib/nat
 **Required next stage before a feature toggle:** Implement a forward-only D1 challenge/session assurance model and prove transactional single-redemption semantics under race and failures. Password verification and full-session issuance must be separated; all Worker, API, CMS, account and role session-read paths must evaluate a trusted, centrally derived effective MFA policy including old sessions. A CAS result affecting zero rows must never grant a full session. Rate limiting, Origin/CSRF, factor key binding, actual OTP matching, recovery and authorized seven-role staging acceptance need independent evidence. When no factor/required key is available under a required policy, fail closed or use a specifically approved constrained onboarding/recovery route; never silently downgrade.
 
 **Approval boundary:** owner/security review is needed before deploying a new MFA factor table, provisioning live keys, enforcing MFA on users, changing Access or production. ADR-0002 remains **PROPOSED**, SRS remains **FROZEN**. No Cloudflare resources altered by this test-only PR.
+
+
+## 2026-11-02 — Two-pass hardening of isolated challenge/session assurance
+
+[PR #51](https://github.com/ntdung-tds/iaict-portal/pull/51) reviews the isolated PR #50 primitives in two independent passes: (1) static analysis of trust boundaries against current native login/Worker/D1, and (2) adversarial runtime-input validation with synthetic objects/values.
+
+**Finding (corrected in isolated source):** previously `!accountActive` and `!hasActiveRole` would treat the string `"false"` and numeric 1 as truthy. Token and digest regular-expression checks also depended on TypeScript string annotations that do not validate values arriving from JavaScript/D1. Both exported checks now require **literal boolean `true`** for account/role authorization flags; token and SHA-256 digests require **primitive strings**. Test-case `IAM-FUT-011` added four negative scenarios (20 total, [RUN-IAM-20261102-09](../qa/IAICT_TEST_RUNS.md)). Prior PASS evidence is retained as historical baseline, not retroactively reinterpreted.
+
+**Future D1 integration rule:** D1 SQLite `is_active` and role flags often arrive as integer `0`/`1`. Call sites must normalize them explicitly from trusted D1 semantics (e.g. `is_active === 1`), **not** cast with TypeScript or rely on `Boolean(raw)`; unknown / ambiguous values fail closed. Never allow a request-provided flag to determine assurance. The read-only candidate result does not consume a challenge or grant a session.
+
+No Worker or login route imports this module; this is not proof of hosted MFA. **ADR still PROPOSED, SRS still FROZEN.** No factor migration, live secrets, staging/production change or Owner authentication-policy approval.
