@@ -202,3 +202,10 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 
 
 - **Actual bounded evidence on code SHA `6a41f698906801f7c2a59ccf283d19794809fd9f`:** QA [RUN-IAM-20261103-01](../../qa/IAICT_TEST_RUNS.md), 43/43 Miniflare D1 assertions PASS; CI #41516228656 all four jobs PASS including 30/30 local Chromium; public staging #41516228434 21/21 Chromium + 24/24 GET PASS. Two harness bugs corrected before this run. Case IAM-FUT-014 READY, 87-case registry. This is NOT implemented live MFA or hosted D1; final documentation SHA needs separate CI/staging.
+
+
+### CHG-IAM-ACCESS-20261103-02 — Chromium role navigation regression
+- **Scope:** QA-only browser tests. Seven synthetic roles plus forbidden-session UI on local Chromium, with the CMS session API explicitly stubbed (MOCK); add dedicated actual-browser `page.goto` staging assertions for authorized per-role Access sessions (NOT_RUN until legitimate credentials/Access/vault).
+- **Change:** New `e2e/cms-role-navigation.spec.ts`, additions to `e2e/staging-authenticated.spec.ts`, CI `browser-visual` inclusion and QA cases `IAM-USER-019` (AUTO/MOCK) and `IAM-USER-020` (MANUAL/REAL_AUTH). No new API mocks claimed as real backend acceptance.
+- **Owner authorization:** PR #66 permits creation of reusable staging test accounts; prior restricted registry contains 8 disabled `example.test` fixture rows, not logins. Real 8-user staging acceptance requires legitimate identity, Access and secure vault; keep `NOT_RUN` status until actually observed.
+- **Runtime limits:** no Worker login code, D1 migration, real identity, Access policy, secrets, production or staging deployment changed. SRS remains **FROZEN**, ADR-0002 **PROPOSED**. Link run evidence after exact-head CI completes.
