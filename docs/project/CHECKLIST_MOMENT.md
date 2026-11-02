@@ -1,5 +1,5 @@
 # IAICT Portal — CHECKLIST MOMENT (LIVE)
-**Moment ID:** `MOMENT-IAICT-20261102-1544-ICT` · **Captured:** `2026-11-02T15:44:00+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
+**Moment ID:** `MOMENT-IAICT-20261102-1601-ICT` · **Captured:** `2026-11-02T16:01:00+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
 **Project:** IAICT Portal / CMS / CRM / IAM · **Status:** ACTIVE / NOT ACCEPTED · **Owner acceptance:** NOT GIVEN.
 **Evidence scope:** code/runtime baseline audited at source HEAD `a6afff7ecb0ed27bc4bddeb4374e2fe333312745` at observation time; this is a baseline **before** checklist-only commits. PR [#36](https://github.com/ntdung-tds/iaict-portal/pull/36) DRAFT on `feat/staging-native-login-r2-20261030`.
 **Related records:** [PROJECT_PLAN](PROJECT_PLAN.md) · [PROJECT_PROGRESS](PROJECT_PROGRESS.md) · [append-only moment history](checklist-moments/) · [QA run ledger](../qa/IAICT_TEST_RUNS.md) · [82-case catalog](../qa/IAICT_TEST_CASES.csv) · [14 module change logs](../requirements/README.md).
@@ -169,3 +169,11 @@ Source: user-supplied IAM report v1.2, Appendix C (`IAM-01`–`IAM-10`) and Appe
 - [RUN-IAM-20261102-08](../qa/IAICT_TEST_RUNS.md) / `IAM-FUT-011`: **16/16 Node/Vitest PASS** on SHA `aee436679d3efb76b13adb755fe5b58b560639ca`, [CI #41414835791](https://github.com/ntdung-tds/iaict-portal/actions/runs/41414835791); full suite 555/555 at that SHA. **84 total registered cases**, not 84 PASS.
 - `IAM-FUT-001/002/004` real challenge, OTP, recovery and seven-role browser remain **NOT_RUN**. `CHG-IAM-ACCESS-20261102-07`, ADR-0002 PROPOSED, SRS FROZEN; PCS revision **12 proposed**, T-IAM-MFA-F2 IN_PROGRESS / QA PARTIAL, Owner approval not granted.
 - Next: final exact-head CI + staging public-only check, living Google QA Doc sync, merge if green; future owner-approved real D1 challenge/session transaction and Access-protected E2E. No migration, secret, real account, Worker, Access or production change. Media **NO_IMAGE_REQUIRED**; [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+## P. 2026-11-02 CMS-08/S5 — two-pass audit of isolated pre-MFA helper
+
+- Baseline [PR #50](https://github.com/ntdung-tds/iaict-portal/pull/50) MERGED `1df08cd94f352b4e87223f0c4e4faf0ae0494ed2`, PCS revision **12**, QA **84 cases**, `IAM-FUT-011` original 16/16 isolated PASS.
+- **Pass 1 — static:** cross-check actual code, native-auth/Worker, PR #50 changed file list, QA/ADR; original module is UNIMPORTED (no live MFA enforcement). Found JS truthy-string/numeric boolean and potential implicit string coercion.
+- **Pass 2 — adversarial:** [PR #51](https://github.com/ntdung-tds/iaict-portal/pull/51) now requires literal boolean `true` and primitive token/digest string, with malformed D1/JSON-like regression tests. `IAM-FUT-011` **20/20 Node/Vitest PASS**, total **559/559** at SHA `828d106029b75b73afb4ccf1c79c1e853c26a2c6`, [CI #41416918807](https://github.com/ntdung-tds/iaict-portal/actions/runs/41416918807); [RUN-IAM-20261102-09](../qa/IAICT_TEST_RUNS.md). Initial CI #41416787752 QA-gate FAIL (catalog not yet revised) preserved.
+- **84-case registry unchanged**, CHG-IAM-ACCESS-20261102-08 logged, ADR-0002 PROPOSED, SRS FROZEN; PCS revision **13 proposed**. `T-IAM-MFA-F2` IN_PROGRESS / QA PARTIAL, `IAM-FUT-001/002/004` hosted MFA/recovery/roles NOT_RUN.
+- **Next:** final exact PR SHA portal CI + public read-only staging, update living QA Doc; merge correction if green. No actual login/Worker integration, D1 migration, MFA secret binding, Access or production change. Media **NO_IMAGE_REQUIRED**, [IAM Drive evidence](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
