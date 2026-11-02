@@ -56,3 +56,16 @@ The IAICT owner has **explicitly authorized** project agents to provision, confi
 - Existing `IAM-USER-016`, `IAM-SESS-008`, `IAM-ACC-005`, `IAM-ACC-006` retain their prior scope.
 
 **Project handover is not in scope.** Issue [#38](https://github.com/ntdung-tds/iaict-portal/issues/38) is DEFERRED and must not be activated until the user explicitly says `bàn giao`.
+
+
+## 6. 2026-11-03 preflight — no usable signed-in test identity yet
+
+**Owner authorization:** PR #66 permits the agents to create and retain staging QA accounts without seeking the same permission again. This does not create a deliverable inbox or valid Cloudflare Access identity automatically.
+
+**Observed from existing restricted registry:** eight synthetic `example.test` QA rows were previously provisioned disabled, without native passwords, real Access subjects or sessions. This was a registry read, **not** a fresh hosted D1 query. No account was activated, modified or given a new password in this pass.
+
+**External integration constraints:** connected Cloudflare management API is present, but Access-app read was blocked by platform tool safety; no approved encrypted password-manager connector was available to persist test credentials; no managed test mailbox/inbox was connected for actual onboarding. These are concrete tool/integration blockers, not a new Owner permission request.
+
+**Testing progress:** [PR #69](https://github.com/ntdung-tds/iaict-portal/pull/69) adds true rendered Chromium `page.goto` checks to the authenticated staging-only Playwright suite and 8 local rendered-role regression tests. **IAM-USER-019 = LOCAL_CHROMIUM_MOCK** (passes are not real identity acceptance). **IAM-USER-020 = AUTHENTICATED STAGING NOT_RUN** until a legitimate `storageState` exists in protected local storage. See [RUN-IAM-20261103-02](./IAICT_TEST_RUNS.md). Separate 7-role + second Admin expected server status matrix remains UNVERIFIED.
+
+**When ready:** reuse test identity or create IAICT-controlled deliverable mailbox; enroll in Access through normal protected flow, provision native credential through real audited onboarding, store password/recovery only in an approved encrypted vault; keep nonsecret stable user/role/vault references in Drive. Run the existing private Playwright config with a separate external chmod600 state per role. Do not weaken Access or upload credentials to GitHub, Drive, CI, screenshots or chat.
