@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 28,
-  "updated_at": "2026-11-02T20:16:39.057Z",
+  "revision": 29,
+  "updated_at": "2026-11-02T20:47:03.657Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T20:16:39.057Z",
+    "updated_at": "2026-11-02T20:47:03.657Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -246,7 +246,7 @@
       {
         "id": "T-IAM-ONBOARDING",
         "title": "Secure native-account onboarding and recovery",
-        "status": "PLANNED",
+        "status": "IN_PROGRESS",
         "priority": "P0",
         "risk": "HIGH",
         "classification": "PUBLIC",
@@ -257,9 +257,22 @@
         "dependencies": [],
         "qa": {
           "required": true,
-          "status": "NOT_RUN"
+          "status": "PARTIAL",
+          "role_chromium": {
+            "mock_case": "IAM-USER-019",
+            "mock_status": "PASS_LOCAL_CHROMIUM_MOCK",
+            "mock_run": "RUN-IAM-20261103-02",
+            "mock_new_tests": 8,
+            "mock_total_browser_tests": 38,
+            "real_auth_case": "IAM-USER-020",
+            "real_auth_status": "BLOCKED_NOT_RUN",
+            "qa_identities": "8_DISABLED_SYNTHETIC_NOT_LOGIN_READY",
+            "access": "ADMIN_MANAGEMENT_TOOL_BLOCKED",
+            "credential_vault": "NOT_CONNECTED",
+            "login_or_access_bypass": false
+          }
         },
-        "description": "Existing Issue #37 documents invitation, account activation, recovery and privileged MFA acceptance. Not completed or accepted; reconcile with current PR #36 and live QA before implementation."
+        "description": "Existing Issue #37 documents invitation, account activation, recovery and privileged MFA acceptance. Not completed or accepted; reconcile with current PR #36 and live QA before implementation. 2026-11-03: real-browser RBAC QA scaffold expanded; mocked local Chromium 8 role/anonymous cases PASS; real 8-identity staging acceptance remains NOT_RUN pending legitimate inbox/Access/vault. Owner staging-account creation preauthorized in PR66."
       },
       {
         "id": "T-MEDIA-R2",
@@ -287,15 +300,16 @@
     "approvals": [],
     "artifacts": [],
     "current": {
-      "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR #67 MERGED as ebf535fcebf39376d8a967ba3db33c7351bc3049 (IAM-FUT-014, RUN-IAM-20261103-01). Exact final PR HEAD 710005634d23292ac15e07e2fcd9a75224daf506: portal CI #41517014672 SUCCESS 4/4, 43/43 local D1 real migration-baseline proof, 30/30 local Chromium; staging #41517014915 SUCCESS 21/21 real public Chromium + 24/24 public GET. QA 87 cases; Google QA Doc v2.1 synchronized and metadata title readback. No live MFA or hosted D1 migration. PCS revision 28 closes stale PR67 merge instruction.",
-      "next_action": "NEXT distinct staging QA acceptance task: inspect/reuse restricted IAICT test account registry first; under standing Owner authorization PR #66, provision legitimate staging test mailboxes, Access membership and native credentials using real audited flows if safe secure-vault storage is available. Store NONSECRET identifiers/role/status and vault references only, no passwords/token in GitHub/Drive/chat; run authorized real Chromium 7-role + second-Admin positive/negative role matrix and capture bounded QA evidence. If any required mailbox/Access/vault connector is missing, record specific BLOCKED, continue safe anonymous/local Chromium and work on unrelated approved tasks. Keep Access protection; no production or live MFA enforcement. SRS FROZEN.",
+      "active_task": "T-IAM-ONBOARDING",
+      "last_completed_step": "PR #69 QA browser work under review: eight new real local Chromium tests with simulated API sessions PASS (38/38 total, code SHA eb395141aaa052d5136797e3876b240b710a6bcf); protected staging-only real role page navigation added but no authorized role session, so LIVE_AUTH NOT_RUN. QA 89, RUN-IAM-20261103-02. Real role QA blocked by external vault/email/Access tooling; no accounts or secrets created, no Access modifications. PCS rev29 proposed; exact-final-head CI/staging required.",
+      "next_action": "Finish PR #69 exact-head portal CI/local Chromium and live anonymous staging acceptance, resolve any failures then merge. Next distinct step: under standing Owner staging-only account authority PR #66, establish approved encrypted password vault and deliverable IAICT-controlled QA mailbox plus legitimate Cloudflare Access application enrollment; then provision/reuse 8 QA role identities and run protected browser suite using private role-specific storageState, preserving nonsecret registry metadata. Never bypass Access or mark real E2E PASS without real execution. SRS FROZEN; no production or live MFA deploy.",
       "blockers": [
         "Actual lib/totp.ts now exercised only in Node local synthetic D1 proof; hosted D1 integration, real encrypted factor/key binding, real IAM session and recovery still NOT_IMPLEMENTED/NOT_RUN.",
         "User/factor security epoch and encrypted MFA keys remain unprovisioned for real IAM. Hosted D1 migration, Access cutover, policy and recovery need explicit Owner approval; ADR PROPOSED, SRS FROZEN.",
         "Current login mints full native session after password; future enforcement needs split first-factor challenge, verified session assurance on all server readers and old-session invalidation.",
         "Authorized seven-role and second-Admin hosted E2E NOT_RUN; public staging 503 Issue #30 remains unresolved.",
-        "Before any MFA-required rollout, verify actual per-environment IAICT_NATIVE_AUTH_ENABLED configuration: worker.ts supports Access JWT OR native fallback; password-only native session cannot satisfy MFA_REQUIRED even if Access path fails. Current production configuration NOT_VERIFIED in this design task."
+        "Before any MFA-required rollout, verify actual per-environment IAICT_NATIVE_AUTH_ENABLED configuration: worker.ts supports Access JWT OR native fallback; password-only native session cannot satisfy MFA_REQUIRED even if Access path fails. Current production configuration NOT_VERIFIED in this design task.",
+        "REAL_AUTH_8_ROLE_E2E: existing Drive registry only documents 8 disabled example.test D1 fixtures, no valid Access identities or credentials. Cloudflare Access application management attempt blocked by platform tool safety, approved encrypted password vault not connected, no controlled inbox provisioned. Owner authorization PR66 covers staging test accounts, but these technical prerequisites remain."
       ],
       "actor": "pcs-solo-lead"
     },
