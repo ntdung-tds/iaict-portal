@@ -276,3 +276,28 @@
 | `IAM-FUT-004` | Hosted staging; 7 roles and second Admin | Pending challenge and old session cannot bypass Access/RBAC or server-side MFA assurance | Accounts disabled, not run | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
 
 **Strict scope:** This QA record describes a source-code and threat-model review, not execution/acceptance of the proposed MFA design. Final CI SHA shall be appended/recorded in the PR once completed; a documentation-only CI pass is not an MFA feature pass.
+
+
+## RUN-IAM-20261102-08 — Isolated first-factor challenge / native session-assurance guard
+
+| Field | Actual result and scope |
+| --- | --- |
+| Time | 2026-11-02 ~15:41 ICT (08:41 UTC) |
+| Case / PR | `IAM-FUT-011`, P0 security / synthetic local unit, [PR #50](https://github.com/ntdung-tds/iaict-portal/pull/50), Issue #37 |
+| Exact source SHA tested | `aee436679d3efb76b13adb755fe5b58b560639ca` (source code/test/log snapshot before later ADR/PCS documentation changes) |
+| CI | [portal-ci #41414835791](https://github.com/ntdung-tds/iaict-portal/actions/runs/41414835791), `verify` job #125176056864 **SUCCESS** |
+| Runtime | Node/Vitest only, no Cloudflare Worker deployment, no remote D1, no MFA/role account |
+| Actual | **16/16 tests PASS** in `lib/native-mfa-preauth.test.ts`; complete Vitest suite **555/555 PASS** (55 test files). QA catalog **84 cases** and requirements gate PASS; SRS frozen unchanged |
+| Verified scenarios | 256-bit random token and digest-only proposed record, 5-min separate Secure/HttpOnly pending cookie, invalid/ambiguous cookie, account/credential mismatch, stale/consumed/locked challenge, attempts exhausted, unknown assurance policy fail-closed, MFA-required rejects password-only and legacy, invalid MFA time denied |
+| Explicit negative proof | `pendingChallengeEligibleForCas()` is deliberately **read-only**; it can return true twice for an unchanged candidate. It does **not** perform D1 CAS/OTP validation or issue a full session. No live session readers use these helpers yet |
+| Known gaps | Real MFA enrollment/recovery/session enforcement, active-account session rotation, protected admin Worker routing, hosted challenge storage, cross-request replay and seven-role authenticated E2E **NOT_RUN**; Owner/security approval NOT GIVEN |
+| QA media | **NO_IMAGE_REQUIRED**, [private IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Deployment | **NONE**, no API/UI route or real database/account/config change, Access and production unchanged |
+
+| Case ID | Test layer / role | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-011` | Node/Vitest, synthetic records | Distinct restricted challenge, no raw token in stored record, strict TTL and server-derived assurance policy | **16/16 PASS** isolated module only | **PASS — ISOLATED_UNIT_ONLY** | [CI #41414835791](https://github.com/ntdung-tds/iaict-portal/actions/runs/41414835791) |
+| `IAM-FUT-001` | Hosted Worker, approved real accounts | Password verification without MFA does not create a full session; OTP CAS/challenge must commit | New module not wired to login, no MFA factors | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Authenticated seven-role staging | Server-side assurance and RBAC checked from D1 for every route | QA users remain disabled; no live role testing | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Important:** a successful unit test of the isolated predicate does not prove the production/staging login route enforces it. Existing `native-auth.ts`, `worker.ts`, login routes and D1 schema are intentionally unchanged. Final PR SHA CI and staging acceptance must be separately verified before merge.
