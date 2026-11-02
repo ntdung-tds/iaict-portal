@@ -1,5 +1,5 @@
 # IAICT Portal — CHECKLIST MOMENT (LIVE)
-**Moment ID:** `MOMENT-IAICT-20261102-2211-ICT` · **Captured:** `2026-11-02T22:11:04+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
+**Moment ID:** `MOMENT-IAICT-20261103-0311-ICT` · **Captured:** `2026-11-03T03:11:46+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
 **Project:** IAICT Portal / CMS / CRM / IAM · **Status:** ACTIVE / NOT ACCEPTED · **Owner acceptance:** NOT GIVEN.
 **Evidence scope:** code/runtime baseline audited at source HEAD `a6afff7ecb0ed27bc4bddeb4374e2fe333312745` at observation time; this is a baseline **before** checklist-only commits. PR [#36](https://github.com/ntdung-tds/iaict-portal/pull/36) DRAFT on `feat/staging-native-login-r2-20261030`.
 **Related records:** [PROJECT_PLAN](PROJECT_PLAN.md) · [PROJECT_PROGRESS](PROJECT_PROGRESS.md) · [append-only moment history](checklist-moments/) · [QA run ledger](../qa/IAICT_TEST_RUNS.md) · [82-case catalog](../qa/IAICT_TEST_CASES.csv) · [14 module change logs](../requirements/README.md).
@@ -252,3 +252,15 @@ Verify this exact-head documentation PR's CI and public-only staging acceptance;
 ## Next precise action
 
 Complete exact-head documentation CI/public staging and source/link/checkpoint consistency checks. Close this **scoped review loop** only when no actionable review/documentation defect remains. Next **separate** local QA-only D1 epoch/assurance proof; no real MFA rollout without distinct Owner/security approval.
+
+
+## CMS-08 / IAM-FUT-014 — D1 real-baseline local QA (2026-11-03T03:11:46+07:00)
+
+**PCS Universal 3.2.0 Solo · Revision 27 PROPOSED · QA 87 cases.**
+
+- [RUN-IAM-20261103-01](../qa/IAICT_TEST_RUNS.md): actual four migrations on disposable Miniflare D1 **43/43 PASS** at code SHA `6a41f698906801f7c2a59ccf283d19794809fd9f`, CI [#41516228656](https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228656) **SUCCESS 4/4**, local Chromium **30/30**, staging real public Chromium [#41516228434](https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228434) **21/21**, public GET **24/24**. Final post-documentation SHA gates still required.
+- **Limit:** ephemeral epoch/factor/session schema is **test-only**; real MFA, encrypted factor keys, hosted D1, authorized role login, recovery and production **NOT_RUN/NOT_CHANGED**. SRS FROZEN, ADR PROPOSED; no screenshots, restricted Drive QA evidence only.
+
+## Next precise action
+
+Exact-final-head CI + Chromium staging of PR #67, merge on green; next separate safe staging QA account provisioning with secure mailbox/Access/vault. No real MFA activation.

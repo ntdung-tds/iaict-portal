@@ -7,7 +7,7 @@
 |---|---:|---:|---:|---:|---|
 | CMS/CRM-1 **scoped checklist** | **5/10** | 1 | 2 | 2 | Includes narrow infrastructure / QA artifact checkpoints, not full CMS release |
 | IAM v1.2 **20 proposed target outcomes** | **0/20 full acceptance** | 5 | 1 | 14 | Prototype/partial code exists; no assertion that all 20 are approved requirements |
-| QA case catalog | **86 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
+| QA case catalog | **87 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
 | Authorized live 7-role authentication | **0/7 role E2E proven** | — | 7 | — | Eight disabled D1 fixtures are not valid logins |
 
 ## Verified chronology — append only (new rows at bottom)
@@ -53,6 +53,8 @@
 
 | 2026-11-02T21:18:16+07:00 | [PR #61](https://github.com/ntdung-tds/iaict-portal/pull/61) **MERGED** as `c96737a3`, [PR #62](https://github.com/ntdung-tds/iaict-portal/pull/62) **MERGED** as `fe37a26a`; [real-schema MFA design](../iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md), `CHG-IAM-ACCESS-20261102-14` | Source/read-only 3-round schema, epoch, Access/native, recovery design review; [CI PR61 #41461155654](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461155654) PASS, [staging #41461155651](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461155651) PASS, [PR62 CI #41461960405](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461960405) and [staging #41461960457](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461960457) PASS. PCS revision 24 canonical; 86-case QA; no new real MFA test | Review the design and safely prove epoch/assurance with disposable local D1; hosted schema, recovery/Owner approval not granted |
 | 2026-11-02T22:11:00+07:00 | Post-merge iterative review of PCS rev24 and [MFA schema design](../iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md) | Found and documented policy-flip during password verification → full-session INSERT TOCTOU, Access-or-native path assurance ambiguity; corrected current QA counter and stale revision label. **DESIGN_ONLY, NO_NEW_QA_RUN** | Exact new docs PR CI/public staging; separate local-only epoch proof before Owner-approved integration |
+
+| 2026-11-03T03:11:00+07:00 | [PR #67](https://github.com/ntdung-tds/iaict-portal/pull/67) — `IAM-FUT-014`, [RUN-IAM-20261103-01](../qa/IAICT_TEST_RUNS.md), `CHG-IAM-ACCESS-20261103-01`, code SHA `6a41f698` | Applied actual 0001/0022/0023/0024 SQL in random disposable D1; test-only epoch/assurance constraints **43/43 PASS** after 2 harness-only corrections. [CI #41516228656](https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228656) 4/4 including Chromium local **30/30**; [live staging #41516228434](https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228434) public Chromium **21/21** and 24/24 GET; 87 QA cases. No hosted migration or real MFA | Final PR evidence-commit SHA gates before merge; separate authorized test account provisioning for real E2E |
 
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.

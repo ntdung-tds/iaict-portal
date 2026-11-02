@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
   "revision": 27,
-  "updated_at": "2026-11-03T00:00:00.000Z",
+  "updated_at": "2026-11-02T20:11:46.254Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T00:00:00.000Z",
+    "updated_at": "2026-11-02T20:11:46.254Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -221,6 +221,24 @@
             "final_pr_head_sha": "17eabc0fa896eea531aa186160f607f6ee66ea21",
             "final_portal_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724289",
             "final_public_staging": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724115"
+          },
+          "local_real_schema_epoch": {
+            "status": "PASS_LOCAL_ONLY",
+            "case_id": "IAM-FUT-014",
+            "test_count": 43,
+            "run_id": "RUN-IAM-20261103-01",
+            "source_sha": "6a41f698906801f7c2a59ccf283d19794809fd9f",
+            "ci_url": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228656",
+            "actual_migration_sources": [
+              "0001",
+              "0022",
+              "0023",
+              "0024"
+            ],
+            "extension_schema": "TEST_ONLY_DISPOSABLE",
+            "hosted_d1_tested": false,
+            "browser_live_public": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228434",
+            "real_mfa_implemented": false
           }
         },
         "description": "MFA foundation still IN_PROGRESS/QA PARTIAL. Actual lib/totp.ts generator/matcher now passed 27/27 groups when bundled into local synthetic atomic D1 harness (PR #59); 1/16 same challenge, 1/2 same factor step, 4 simulated sessions/audits. No real login/session/Factor schema/MFA enrollment/hosted D1/7-role E2E."
@@ -270,8 +288,8 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "PR under QA review: real-schema-baseline disposable D1 epoch CAS test source and IAM-FUT-014 case written. No observed new PASS yet; exact-head CI and Chromium staging pending. Prior browser-qa policy PR65 merged and owner standing test account permission PR66 merged. No hosted migration or real MFA.",
-      "next_action": "Verify new IAM-FUT-014 disposable Miniflare D1 test on exact PR HEAD; iterate on any failure; verify all CI jobs including local Chromium and live staging Chromium, record actual run ID/results, then merge only when green. After merge, next distinct work is authorized staging QA identity provisioning if secure mailbox/Access/vault available; otherwise proceed with isolated IAM proof. No production or live MFA changes.",
+      "last_completed_step": "IAM-FUT-014 real source migrations 0001/0022/0023/0024 applied in disposable Miniflare D1; 43/43 synthetic epoch/policy CAS groups PASS at code SHA 6a41f698906801f7c2a59ccf283d19794809fd9f (portal CI #41516228656 SUCCESS 4/4, local Chromium 30/30); anonymous real staging Chromium #41516228434 21/21 plus 24/24 HTTP PASS. Two harness fixes retained, no real MFA, deployment or hosted D1. Run RUN-IAM-20261103-01, QA 87.",
+      "next_action": "AFTER exact-HEAD CI and public-staging gate for PR #67 (including QA ledger and PCS changes), merge into active development; then provision legitimate reusable staging QA accounts under Owner standing authority PR66 through approved mailbox/Cloudflare Access and encrypted password vault. If any such integration unavailable, capture specific BLOCKED and continue feasible real Chromium tests. No hosted MFA migration, Worker enforcement or production changes without distinct approval; SRS FROZEN.",
       "blockers": [
         "Actual lib/totp.ts now exercised only in Node local synthetic D1 proof; hosted D1 integration, real encrypted factor/key binding, real IAM session and recovery still NOT_IMPLEMENTED/NOT_RUN.",
         "User/factor security epoch and encrypted MFA keys remain unprovisioned for real IAM. Hosted D1 migration, Access cutover, policy and recovery need explicit Owner approval; ADR PROPOSED, SRS FROZEN.",
