@@ -94,3 +94,12 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 - **Sau:** gom kết quả theo từng request, trả mã lỗi cho phép; cùng workerd local gửi hai request liên tiếp và thử path/method không hợp lệ. Không sửa `lib/mfa-secret-crypto.ts`, key, dữ liệu hay luồng MFA.
 - **Kiểm thử:** `RUN-IAM-20261102-04` / `IAM-FUT-009`, [CI #41390187476](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476), source SHA `702ce448ae1a63a6ab3e768a01104f14d16a183c`: 11/11 mỗi lượt (2 lượt), HTTP 404 cho path/method sai, **LOCAL_WORKERD PASS**. Final PR head gate xác minh riêng.
 - **Giới hạn:** Không có Worker deployed, D1, Access, secret binding, MFA E2E hoặc production thay đổi. ADR-0002 PROPOSED, SRS FROZEN, hình QA NO_IMAGE_REQUIRED.
+
+
+### CHG-IAM-ACCESS-20261102-05 — Chứng minh CAS chống dùng lại OTP trên D1 cô lập (chưa tích hợp MFA)
+- **Ngày / trạng thái:** 02/11/2026, QA_ONLY / CHƯA_CHỐT; PR [#47](https://github.com/ntdung-tds/iaict-portal/pull/47); Issue #37; ADR-0002 PROPOSED.
+- **Trước:** nguyên tắc D1 atomic `last_accepted_counter` chỉ nằm ở ADR, chưa có kết quả thực thi với D1 mô phỏng; MFA enrollment/session/replay thật NOT_RUN.
+- **Sau:** thêm duy nhất bộ test `scripts/mfa-d1-cas/run-local.mjs`, chạy với Miniflare v5 `convertV4MiniflareOptions` và D1 SQLite **in-memory/ephemeral**. Tạo schema factor **chỉ trong test**; không thêm migration thật hoặc API. `IAM-FUT-010` và `RUN-IAM-20261102-05` ghi lại 15 nhóm kiểm tra, 16 yêu cầu đồng thời cùng counter chỉ 1 thành công trên D1 cục bộ.
+- **Bằng chứng đúng SHA:** `2bee360c3552e9dcfe60c94e7719b9d8ae7d33a5`; [CI #41393225236](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236), job `kdf-local-workerd` PASS. Các lần thử đầu thất bại do cấu hình Miniflare 5 được giữ trong lịch sử CI, không được gọi PASS.
+- **Ảnh hưởng thực tế:** chỉ mã test/CI/QA/ADR/PCS. Không đổi UI/API, TOTP, session, D1 staging/production, Cloudflare Worker, Access, R2, khóa thật hay người dùng. D1 remote, mã OTP thật, recovery và E2E **NOT_RUN**.
+- **SRS:** FROZEN / chưa có lệnh “chốt”. Không tự coi thiết kế D1 là yêu cầu hoặc schema được duyệt.
