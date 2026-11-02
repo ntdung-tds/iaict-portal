@@ -1,33 +1,39 @@
-# IAICT Portal — PCS Solo integration proposal
+# IAICT Portal — PCS Solo integration
 
-**Status:** DRAFT / no merge / no deployment. **Baseline:** `feat/staging-native-login-r2-20261030`. **Reference:** [PCS Universal 3.2.0](https://github.com/ntdung-tds/pcs-universal/blob/main/START_HERE.md).
+**PCS:** Universal 3.2.0; **status:** bootstrap checkpoint (revision 2). The initial tracking change is [PR #40](https://github.com/ntdung-tds/iaict-portal/pull/40), based on `feat/staging-native-login-r2-20261030`. Verify actual merge and latest HEAD before declaring activation on a chosen branch.
 
 ## Goal and boundaries
 
-Adopt existing PCS Universal **Solo behavior**, not a second PCS variant, service, GitHub App, coordinator or agent registry. A single AI plans, implements, reviews evidence and stores a coherent STATE/Moment checkpoint. Do not import unverified historical work as ACCEPTED, and do not introduce workflow gates merely for adoption.
+Use PCS Universal in **Solo** mode. No separate PCS product, second canonical state, contributor registry, Gateway, Github Inbox or daemon. Each project session reads `pcs/MOMENT.md`, verifies `pcs/STATE.json` revision and actual HEAD, reads only the relevant backlog/task/evidence, and saves an honest checkpoint in its authorized branch.
 
-This PR only proposes a minimal state and resume snapshot. It **does not** modify Next.js, Cloudflare Workers, Access, D1, R2, CI, branch policies or SRS, and does not deploy to staging or production. It does not claim the PCS runtime end-to-end integration has passed.
+This bootstrap modifies **tracking files only**. It does not edit Next.js, Cloudflare Workers, Access, D1, R2, CI, SRS, staging or production and is not an end-to-end certification of PCS or the application.
 
-## Existing sources remain authoritative
+## Single source of truth per concern
 
-| Concern | Existing authority (do not duplicate) | PCS use |
+| Concern | Existing authority (do not duplicate) | PCS behavior |
 | --- | --- | --- |
-| Current development | Draft [PR #36](https://github.com/ntdung-tds/iaict-portal/pull/36), related open Issues/PRs | Reference in task/feature progress after verifying branch HEAD |
-| Requirement baseline | `docs/requirements/SRS.md` — FROZEN / UNAPPROVED | Read-only; Owner-only decision to “chốt SRS” |
-| Requirement changes | `docs/requirements/README.md` and each module’s `thaydoi.md` | Link task/feature ID to existing CHG ID; avoid second parallel canonical ledger |
-| QA case management | `docs/qa/IAICT_TEST_CASES.csv` | Link case IDs, never reinterpret READY as PASS |
-| QA executions | `docs/qa/IAICT_TEST_RUNS.md` and actual GitHub CI/Cloudflare evidence | Link immutable run SHA, distinguish unit/browser/live/NOT_RUN |
-| QA images/video | Private Google Drive QA folders already recorded with the test cases | Do not upload evidence media to GitHub |
-| Source-code handoff | [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) | Only after separate explicit Owner “bàn giao” request |
-| Live IAM/R2 work | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37), [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39) | Backlog candidates; not automatically accepted |
+| Current development | [PR #36](https://github.com/ntdung-tds/iaict-portal/pull/36), active GitHub Issues/PRs | Map only verified task status; review branch SHA on resume |
+| SRS baseline | `docs/requirements/SRS.md`, **FROZEN / UNAPPROVED** | Read-only until the Owner explicitly says “chốt SRS” |
+| Requirement changes | `docs/requirements/README.md` and existing module-specific `thaydoi.md` | Link tasks to existing CHG IDs; **do not** create duplicate `pcs/SRS_CHANGES.md` by default |
+| QA cases | `docs/qa/IAICT_TEST_CASES.csv` | Keep source test-case IDs; READY is not PASS |
+| QA runs | `docs/qa/IAICT_TEST_RUNS.md` and actual GitHub CI/Cloudflare proof | Keep immutable SHA and true PASS/FAIL/BLOCKED/NOT_RUN status |
+| Visual QA evidence | Private Google Drive QA folders already linked in the test registry | No QA image/video/traces on GitHub |
+| Source handoff | [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) | Only after Owner explicitly says “bàn giao” |
+| Initial PCS backlog | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) (IAM), [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39) (CMS R2) | Both `PLANNED`, HIGH-risk; unverified live acceptance; no implied approval |
 
-## Next safe adoption steps
+## Security and governance
 
-1. Review this draft and verify that the project can lawfully keep PUBLIC-only PCS tracking metadata. The GitHub repo is PUBLIC; do **not** mark `public_content_reviewed=true` or enable privileged PCS operators based on this draft alone. Private content, credentials, real identities, private test evidence, internal SRS or sensitive approval provenance must stay out of this public repo.
-2. Reconcile actual development branch, stacked PRs, Issues and QA files. Populate task/feature/flow/release IDs only from verified work, with status and dependency evidence. No bulk backfill as ACCEPTED.
-3. Review and merge the PCS tracking PR into the **chosen active development baseline** without triggering deployment. Once merged, use `pcs/MOMENT.md` as the short resume entrypoint and `pcs/STATE.json` as the canonical project-progress snapshot; verify revision and HEAD before every subsequent write.
-4. Continue the existing project workflow: staging-first, technical QA, Owner reviews outcomes, production only with explicit approval. Existing per-module requirement change logs remain canonical; any future use of PCS `pcs/SRS_CHANGES.md` helpers requires a deliberate adapter/mapping decision to prevent double-writing.
+- **PUBLIC repository**: keep the PCS checkpoint strictly PUBLIC-safe. `public_content_reviewed=false` deliberately blocks any implied privileged PCS public-repo operation. Do not include secrets, identities, restricted SRS, internal approvals or sensitive evidence. Owner approval for IAM/production/security changes must be authenticated under applicable rules, never inferred from normal chat feedback.
+- PCS Solo has no contributor registration or self-approval bypass. GitHub PR review and branch protections continue to apply; use read-before-write / conditional blob SHA checks and do not force-update any branch.
+- No automatic deployment, runtime migration, SRS synchronization, delivery of source to Drive, or promotion to production.
 
-## Meaning of status
+## Adoption and continued operation
 
-**DRAFT** here means tracking is proposed, **not activated**. No existing project change or test has been retroactively accepted, and no production/staging operation was authorized.
+1. Verify PR #40 is merged into the chosen **active development branch**, review changed files and actual CI; if still pending, don't call its state canonical.
+2. Reconcile PR #36, Issue #37 and Issue #39 with the actual code, QA case/run records and Worker SHA; update PCS backlog and product/architecture maps only from verified information.
+3. For changes: choose an active task, branch/PR per risk, implement, test appropriate layers, save `STATE` revision + updated `MOMENT` consistently. **Task technical completion ≠ feature/flow/release acceptance**.
+4. Keep staging-first, QA evidence, business-level Owner feedback and separate verified approval for production/security-sensitive changes.
+
+### Resume command
+
+`Tiếp tục dự án IAICT Portal theo PCS, sử dụng trạng thái mới nhất trên GitHub.`
