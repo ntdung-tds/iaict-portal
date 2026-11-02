@@ -104,3 +104,79 @@ Proposed replay verification SQL concept (not runnable migration): `UPDATE iam_m
 **Refinement to proposed future D1 contract:** factor writes must be conditioned on `status='ACTIVE'`, authenticated `user_id` plus `factor_id`, no current lockout and strictly increasing counter; success only if a single conditional D1 write returns `success=true` **and** integer `meta.changes=1`. The current local test adds a test-only `locked_until` check to the previously illustrative SQL. Never trust a preceding SELECT or the fact that the HTTP/SQL request completed; never enable MFA session before committing the CAS **and** checking all primary-authentication/challenge requirements.
 
 **Explicit gaps:** the schema was an isolated minimal test table with synthetic identifiers, *not* a canonical migration or the actual `admin_users` relationship. No real TOTP code was generated/matched for this check, no new/old step-window validation, lockout retry policy, D1 batch session/audit atomicity, hosted replica consistency, cross-region concurrency, first-factor session validation or recovery. `IAM-FUT-001` remains NOT_RUN. These require separate integration/security evidence and Owner approval before provisioning secrets, adding a forward-only migration or exposing MFA APIs. **ADR-0002 remains PROPOSED; SRS remains FROZEN.**
+
+
+## 2026-11-02 — F2/F3 native MFA integration contract (security design, not approved)
+
+**Basis:** source read at merged [PR #47](https://github.com/ntdung-tds/iaict-portal/pull/47) base `11e3af741ede3e3d0d17c9e6d34034a8bb388876`, code `lib/native-auth.ts`, `app/api/auth/login/route.ts`, `app/api/auth/session/route.ts`, `app/api/account/password/route.ts`, `worker.ts`, `lib/totp.ts`, `lib/mfa-secret-crypto.ts`, `lib/cms-roles.ts`. **This section is design-only**; the existing login/password/session code remains in place until a separately reviewed, tested feature PR. Owner/security acceptance **NOT GIVEN**; ADR remains **PROPOSED**.
+
+### A. Confirmed existing security boundary — primary migration risk
+
+| Existing code | Confirmed behavior | Required change before enforcing native MFA |
+| --- | --- | --- |
+| `authenticateNativePassword()`, `lib/native-auth.ts` | Immediately inserts an `iaict_auth_sessions` row in D1 on a correct password, then returns a full session token (existing `__Host-iaict_session`); it does not check MFA status | **Split password-verification from full-session issuance**. For an MFA-required account create only a restricted, expiring first-factor challenge; never create the full admin session during password-only authentication |
+| `POST /api/auth/login` | Sets the full-session cookie after password success | Under an explicitly enabled per-user/policy MFA gate, return a generic `mfaRequired`/continuation state without full-session cookie; challenge is in a separate secure HttpOnly cookie, not a browser-controlled user ID |
+| `nativeActorEmail()` / `nativeSessionPrincipal()` and `GET /api/auth/session` | Resolve an active session against `iaict_auth_sessions`, active user and roles but currently **no assurance-level check** | Require server-side `auth_level='mfa'`/recent step-up when effective policy requires it, including for **previously minted** native sessions. Never trust the client-side page state or `X-IAICT-Verified-Email` |
+| `worker.ts` admin checks | Cloudflare Access remains the outer admin gate; native cookie may satisfy Worker identity when enabled, and internal verified header is stripped from incoming requests | Keep Access. Native fallback must only accept a server-verified **MFA-complete** native principal when enforcement is enabled. A pre-MFA challenge can never authorize `/admin*` or `/api/admin*` |
+| Password rotation in `setNativePassword()` | Rotates credential and revokes native sessions through D1 conditional writes | Also revoke outstanding pre-MFA challenges and step-up authorizations on any credential reset, user disable or role removal; verify credential snapshot at challenge redemption |
+
+**Explicit hazard:** adding an OTP form to today's login endpoint is **not** MFA, because the current first-factor call has already created a privileged session. Closing only the UI route cannot fix this server-side bypass.
+
+### B. Proposed state machines, TTL and failure rules (not runtime flags)
+
+```text
+LOGIN: START
+  → PASSWORD_FAILED                   [generic denial, throttle; no session]
+  → PRIMARY_VERIFIED                 [server-side credential snapshot, no full session]
+      → POLICY_NOT_REQUIRED          [legacy pilot path only while independently approved]
+      → MFA_ENROLLMENT_REQUIRED      [restricted enrollment challenge; no CMS session]
+      → MFA_CHALLENGE_PENDING        [one-time opaque challenge, expires in ≤5 min]
+          → EXPIRED / REVOKED / LOCKED [deny; no full session]
+          → TOTP_INVALID / REPLAYED   [deny; bounded attempts; no full session]
+          → MFA_VERIFIED              [atomic challenge consumption + replay CAS
+                                        + full-session creation + audit]
+              → FULL_SESSION          [server-derived assurance, least-privilege roles]
+```
+
+- Pending challenge must be generated with ≥256 bits of cryptographic randomness; store **only SHA-256 digest** in D1; optionally present a distinct `__Host-iaict_mfa_pending` Secure/HttpOnly/SameSite=Lax cookie; TTL proposal **5 minutes**, no refresh upon failed OTP. **The pending cookie is never accepted by normal session/auth middleware.** `Cache-Control: no-store` on all auth responses; same-origin POST / CSRF validation; JSON/body bounds; no user enumeration.
+- Challenge fields proposed: `challenge_hash, user_id, credential_version/fingerprint, primary_verified_at, created_at, expires_at, consumed_at, failed_attempts, blocked_until, purpose, revision`. Never persist plaintext password, OTP, seed, full token or recovery code. Check active user, current roles and unchanged credential **again when redeeming**; concurrent password reset must invalidate the challenge. Rate-limit per challenge **and** per account/IP at the server; log metadata without identifiers/credentials that could become secrets.
+- **Only the server** evaluates effective MFA policy from account/roles/security settings. For a user required to have MFA but without an ACTIVE factor, route to an Access-protected, tightly scoped enrollment/bootstrap flow; do not fail open to CMS. Propose privileged-role pilot first (`admin`, `news_admin`) under Access, then expand policy to other roles after owner sign-off; final enforcement policy for all 7 roles remains an **Owner decision**.
+- Never upgrade a pre-MFA token to a full session by changing a JS variable or reusing the same cookie. Rotate to a separate, fresh 256-bit full session token only on confirmed completion, with server-side `auth_level` and `mfa_verified_at`. Any old native session without adequate assurance must be rejected for newly protected admin access when policy flips; revoke/rotate affected old sessions at rollout. Stronger step-up on sensitive account/factor changes may require a separately time-bounded `step_up_verified_at`.
+- Bound effective time checks to server-controlled milliseconds; never trust user time/counter, role or factor ID from requests as authority. UI can show setup/verification states but never makes the authorization decision.
+
+### C. Draft persistence contract — no SQL migration is authorized
+
+These are **proposed logical entities**, not finalized table names or DDL. Before building a forward-only migration, read actual applied D1 schema and FK/index/unique policies and record a reversible data plan.
+
+| Logical entity | Key invariant | Proposed fields / consistency |
+| --- | --- | --- |
+| `iam_mfa_factors` | One owner `user_id` per factor, no unconfirmed factor can authenticate | `factor_id, user_id, status(PENDING/ACTIVE/DISABLED), envelope_version, algorithm, key_id, iv_b64url, ciphertext_b64url, created_at, pending_expires_at, confirmed_at, disabled_at, failed_attempts, locked_until, last_accepted_counter, revision`; FK to actual IAM identity after schema cross-check |
+| `iam_mfa_challenges` | One-time first-factor proof, never a session | `challenge_hash` PK, `user_id`, purpose, password-credential fingerprint/revision, expires, consumed/lock fields, attempts/revision; prepared statements and bounded cleanup |
+| `iam_mfa_recovery_codes` | One-time redemption, no plaintext in D1 | owner, recovery-code digest derived with secure salt/pepper design, issued/used timestamps, revision; at least 128 bits per random code; never return old codes |
+| `iaict_auth_sessions` enhancement | Every privileged native session proves appropriate assurance when policy requires it | Forward-only `auth_level` and `mfa_verified_at`/factor reference, with legacy NULL mapping **NOT_MFA**. All server-side readers and Worker fallback updated together; no default upgrade for old rows |
+| Existing `audit_logs` | Security events are immutable metadata without secrets | login challenge created/failed/consumed, factor enroll/disable/rotate, recovery attempts, session revoke, policy changes. No OTP, plaintext seed, full session token/hash, encrypted backup material or raw headers |
+
+**Transaction rule (requires implementation proof):** validating an OTP with `matchTotpCounter()` only yields a candidate step. A single authoritative D1 commit must prove the challenge is active/unused, account/credential policy still valid, factor ACTIVE/unlocked, and `last_accepted_counter` advances strictly, then consume the challenge and issue **one** full session and safe audit event. A successful SELECT, a promise resolution or `UPDATE` affecting zero rows **must not** issue a session. Need `success===true` and `meta.changes===1` for the CAS, and test rollback/partial-write behavior **of the chosen actual D1 transactional pattern**. D1 `batch()` ordering alone is not proof that logical conditional failures abort subsequent inserts: tests must prove no orphaned session under 0-row CAS, mismatched/expired challenge, timeout and concurrent requests. A higher accepted TOTP step must never be accepted solely because it is newer if its code/challenge is wrong.
+
+**Race matrix:** same user/factor/OTP on two requests → **≤1** session; wrong challenge or wrong password → 0; invalid or expired pending → 0; password rotation/role revoke/user disable between primary and OTP → 0; wrong user/factor challenge binding → 0; locked/PENDING/DISABLED → 0; credential/key outage or D1 error → **fail closed**, no secret leakage. Change of roles must affect currently valid sessions immediately as today, plus current MFA policy.
+
+### D. Proposed key lifecycle, recovery, rollout and rollback
+
+1. **Environment key isolation:** distinct staging/production secret binding or KMS; only explicit key IDs accepted. No key bytes in D1, GitHub, logs, QA folders or client. Securely provision/recover before first real factor; do not assume nonextractable `CryptoKey` solves key source/rotation. Key rotation: new enrollments encrypt with active ID, read-only legacy decrypt with retained old key, revision-CAS re-encrypt each factor with new IV and verify readback, retain old key through rollback/backup verification. Unknown/missing/revoked key fails closed; never silently disable MFA to recover.
+2. **Enrollment:** only after an approved recent password recheck and valid secure session / restricted enrollment context; create PENDING factor, set short expiry, show otpauth once, confirm one TOTP code, activate with atomic D1 state update, invalidate previous pending drafts, audit. Idempotent retry must not leak or create multiple ACTIVE factors. Administrative roles with no authenticators must have a controlled Access-backed onboarding plan **before** enforcement, not a special permanent MFA bypass.
+3. **Recovery:** issue independently random one-time recovery codes shown once to user; persist only keyed/salted verifier. A recovery code must be consumed via atomic CAS, trigger revocation of outstanding challenges and older sessions, require controlled new factor binding and audit/notification. Privileged lost-device/no-code recovery needs independent identity verification + dual human approval and a delay/cooldown (no email-only reset). Disabling MFA requires recent reauth + current active factor or a reviewed recovery process.
+4. **Rollout:** (a) no-op schema and local mock tests under inactive gate, (b) staged synthetic identities, no secret in tests, (c) authorized real QA sessions for seven roles and second Admin, (d) privileged-role enrollment pilot under Access, (e) enforce server-side on *all* native session readers, (f) owner security acceptance, (g) consider Access cutover **only as separate decision**. No implicit activation from merge.
+5. **Rollback:** roll back enforcement flag without deleting factor rows or removing key bindings; preserve challenge/session audit and encrypted factors for a controlled retry. No rollback may convert an MFA-only user into privileged password-only access unless an explicitly approved emergency policy exists; keep Access as external safety boundary. Restore old Worker/version with old decrypt keys available and known D1 migration compatibility.
+
+### E. Required verification before an implementation PR can be called ready
+
+| ID / source | Required negative proof | Current disposition |
+| --- | --- | --- |
+| `IAM-FUT-001` existing | Password success without OTP **does not issue** `__Host-iaict_session` for required accounts; pending challenge cannot reach admin; successful OTP + CAS yields one server-recognized MFA session; no old-session bypass | **NOT_RUN** |
+| `IAM-FUT-010` existing | Local 16-way CAS single winner; then **hosted** transaction-level session/challenge/CAS success and failure rollback across concurrency | **LOCAL_D1_ONLY_PASS**; hosted/session not run |
+| `IAM-FUT-002` existing | Lost device, replayed recovery code, wrong/expired code, two-person privileged recovery, immediate session revocation | **NOT_RUN** |
+| `IAM-FUT-004` existing | All 7 roles: Access + native session policy, direct API IDOR/CSRF and no pre-MFA challenge as actor | **NOT_RUN / identity fixtures disabled** |
+| `IAM-FUT-008/009` existing | Cross-key decrypt and rotation, tampered metadata, missing/old key, privileged caller boundary | AES-GCM **LOCAL_ONLY_PASS**, hosted binding/rotation not run |
+| `IAM-REL-007` existing | Preflight staging Worker version, D1 schema, Access, rollback and production unchanged | **NOT_RUN for MFA deploy** |
+
+**Owner/security decisions required before code/migration:** (i) role-based vs all-user enforcement and onboarding exception policy, (ii) separate challenge TTL and throttle thresholds, (iii) Worker secret/KMS ownership, rotation and recoverable key backups, (iv) how existing sessions are invalidated at enforcement, (v) factor count/recovery-code issuance/privileged reset approval, (vi) exactly which staging identities can perform real E2E. Until then do not deploy, migrate or change Access. Keep **ADR-0002 PROPOSED**, **SRS FROZEN**, `T-IAM-MFA-F2` **IN_PROGRESS / QA PARTIAL**.
