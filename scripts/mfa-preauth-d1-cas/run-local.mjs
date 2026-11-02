@@ -127,9 +127,9 @@ try {
   const consume = async (token, {
     userId=USER, fingerprint=FP, credRevision=1, now=NOW,
   }={}) => {
-    if (typeof token !== "string" || !TOKEN.test(token) ||
+    if (typeof token !== "string" || token.length !== 64 || !TOKEN.test(token) ||
         typeof userId !== "string" || !userId ||
-        typeof fingerprint !== "string" || !TOKEN.test(fingerprint) ||
+        typeof fingerprint !== "string" || fingerprint.length !== 64 || !TOKEN.test(fingerprint) ||
         !Number.isSafeInteger(credRevision) || credRevision < 0 ||
         !Number.isSafeInteger(now) || now < 0) return false;
     const outcome = await db.prepare(sql).bind(
@@ -245,6 +245,7 @@ try {
     await consume(malformed,{credRevision:-1}) === false &&
     await consume(malformed,{now:-1,credRevision:3}) === false &&
     await consume(malformed,{userId:"",credRevision:3}) === false &&
+    await consume(malformed+"\\n",{credRevision:3}) === false &&
     await consume({}, {credRevision:3}) === false &&
     (await row(malformed)).rev === 0);
   check("FAIL_CLOSED_ON_MISSING_D1_METADATA",
@@ -253,7 +254,7 @@ try {
   const valid = await seed({credRevision:3});
   check("FRESH_CHALLENGE_STILL_ACCEPTED",
     await consume(valid,{credRevision:3}) === true && (await row(valid)).rev === 1);
-  const separate = await seed({userId:OTHER});
+  const separate = await seed({userId:OTHER,securityRevision:1});
   check("INDEPENDENT_USER_ACCEPTED",
     await consume(separate,{userId:OTHER}) === true && (await row(separate)).rev === 1);
   const all = await db.prepare(`
