@@ -28,7 +28,16 @@ vi.mock("vinext/server/fetch-handler", () => ({
         "/api/admin/_qa/news-review": roles.NEWSROOM_REVIEW_ROLES,
         "/api/admin/_qa/news-admin": roles.NEWSROOM_ADMIN_ROLES,
       };
-      const allow = gates[new URL(request.url).pathname];
+      const path = new URL(request.url).pathname;
+      // Real production CMS user API, only the vinext dispatch is replaced.
+      // No synthetic authorization response: the route runs its own checks/SQL.
+      if (path === "/api/admin/cms/users") {
+        const route = await import("../app/api/admin/cms/users/route");
+        if (request.method === "GET") return route.GET(request);
+        if (request.method === "POST") return route.POST(request);
+        return new Response("QA method unsupported", { status: 405 });
+      }
+      const allow = gates[path];
       if (!allow) return new Response("QA dispatch route missing", { status: 404 });
       try {
         const actor = await requireNewsroomActor(request, env.DB, allow as readonly (typeof roles.CMS_ROLE_CODES)[number][]);
@@ -71,19 +80,23 @@ describe("real native ingress and RBAC against disposable original-schema D1; mo
   let mf: Miniflare;
   let db: D1DatabaseLike;
   const sessions = new Map<RoleName, string>();
+  const passwords = new Map<RoleName, string>();
   const ctx = { waitUntil(_promise: Promise<unknown>) {} };
 
   async function fetchGate(
     role: RoleName | null, gate = "cms-read",
-    options?: { method?: string; origin?: string; forgedActor?: string; cookie?: string; native?: boolean },
+    options?: { method?: string; origin?: string; forgedActor?: string; cookie?: string; native?: boolean; body?: Record<string, unknown> },
   ) {
     const headers = new Headers();
     const token = role ? sessions.get(role) : undefined;
     if (options?.cookie ?? token) headers.set("Cookie", NATIVE_COOKIE + "=" + (options?.cookie ?? token));
     if (options?.origin) headers.set("Origin", options.origin);
     if (options?.forgedActor) headers.set("X-IAICT-Verified-Email", options.forgedActor);
-    return worker.fetch(new Request(root + "/api/admin/_qa/" + gate, {
+    if (options?.body) headers.set("Content-Type", "application/json");
+    const url = gate === "cms-users" ? "/api/admin/cms/users" : "/api/admin/_qa/" + gate;
+    return worker.fetch(new Request(root + url, {
       method: options?.method ?? "GET", headers,
+      body: options?.body ? JSON.stringify(options.body) : undefined,
     }), {
       DB: db, IAICT_NATIVE_AUTH_ENABLED: options?.native === false ? "false" : "true",
       // Neither real Access assertion nor JWKS is present in any request.
@@ -116,6 +129,7 @@ describe("real native ingress and RBAC against disposable original-schema D1; mo
       await db.prepare("INSERT INTO admin_user_roles(user_id,role_id) VALUES(?,?)")
         .bind(username(role), "role-" + roleCode(role)).run();
       const password = randomPassword();
+      passwords.set(role, password);
       await setNativePassword(db, { id: username(role), email: email(role) }, password);
       const token = await authenticateNativePassword(db, email(role), password);
       if (!token) throw new Error("Isolated user login setup failed");
@@ -161,6 +175,75 @@ describe("real native ingress and RBAC against disposable original-schema D1; mo
     expect((await fetchGate("admin", "cms-admin", {method:"POST"})).status).toBe(403);
     expect((await fetchGate("admin", "cms-admin", {method:"POST", origin:root})).status).toBe(200);
   });
+
+
+  it("uses the REAL CMS users route: Admin GET succeeds, non-admin GET and foreign-Origin POST fail closed", async () => {
+    const admin = await fetchGate("admin", "cms-users");
+    expect(admin.status).toBe(200);
+    const data = await admin.json() as {users: Array<{id:string}>};
+    expect(data.users.length).toBe(8);
+    expect(data.users.some(u => u.id === username("admin2"))).toBe(true);
+    expect((await fetchGate("editor", "cms-users")).status).toBe(403);
+    expect((await fetchGate("admin", "cms-users", {
+      method: "POST", origin: "https://untrusted.invalid",
+      body: {id: username("editor"), email: email("editor"), roles: ["viewer"]},
+    })).status).toBe(403);
+  });
+
+  it("REAL CMS user-role update atomically revokes old native session across remove and regrant", async () => {
+    // No fake DB response: actual CMS user POST performs CAS, updates RBAC,
+    // deletes every native session and records the edit in one D1 batch.
+    const target: RoleName = "editor";
+    const tokenBefore = sessions.get(target)!;
+    const list = await fetchGate("admin", "cms-users");
+    const body = await list.json() as {
+      users: Array<{id:string;updated_at:string;display_name:string|null;is_active:number;roles:string[]}>;
+    };
+    const current = body.users.find(u => u.id === username(target));
+    expect(current?.roles).toEqual(["editor"]);
+    const changes = {
+      id: username(target), email: email(target),
+      displayName: current!.display_name ?? "", isActive: true,
+      roles: ["viewer"], updatedAt: current!.updated_at,
+    };
+    const removed = await fetchGate("admin", "cms-users", {
+      method:"POST", origin:root, body:changes,
+    });
+    expect(removed.status, await removed.clone().text()).toBe(200);
+    const removedBody = await removed.json() as {updatedAt:string};
+    expect(removedBody.updatedAt).not.toBe(current!.updated_at);
+    expect((await fetchGate(target, "cms-read", {cookie:tokenBefore})).status).toBe(401);
+    expect((await db.prepare("SELECT COUNT(*) AS n FROM iaict_auth_sessions WHERE user_id=?")
+      .bind(username(target)).first<{n:number}>())?.n).toBe(0);
+
+    const tokenViewer = await authenticateNativePassword(db, email(target), passwords.get(target)!);
+    expect(tokenViewer).toMatch(/^[0-9a-f]{64}$/);
+    expect((await fetchGate(target, "cms-read", {cookie:tokenViewer!})).status).toBe(200);
+    expect((await fetchGate(target, "cms-edit", {cookie:tokenViewer!})).status).toBe(403);
+
+    // Client replays the stale revision: must return conflict with no D1 writes,
+    // and must NOT invalidate a session issued after the first successful edit.
+    const stale = await fetchGate("admin", "cms-users", {
+      method:"POST", origin:root,
+      body: {...changes, roles:["editor"]},
+    });
+    expect(stale.status).toBe(409);
+    expect((await fetchGate(target, "cms-read", {cookie:tokenViewer!})).status).toBe(200);
+
+    const regrant = await fetchGate("admin", "cms-users", {
+      method:"POST", origin:root,
+      body: {...changes, roles:["editor"],updatedAt:removedBody.updatedAt},
+    });
+    expect(regrant.status, await regrant.clone().text()).toBe(200);
+    expect((await fetchGate(target, "cms-read", {cookie:tokenBefore})).status).toBe(401);
+    expect((await fetchGate(target, "cms-read", {cookie:tokenViewer!})).status).toBe(401);
+
+    const tokenAfter = await authenticateNativePassword(db, email(target), passwords.get(target)!);
+    expect(tokenAfter).toMatch(/^[0-9a-f]{64}$/);
+    sessions.set(target, tokenAfter!);
+    expect((await fetchGate(target, "cms-edit")).status).toBe(200);
+    expect((await db.prepare("PRAGMA foreign_key_check").all()).results).toHaveLength(0);
+  }, 40_000);
 
   it("rejects deleted role and deactivated user even if the old native cookie is retained", async () => {
     await db.prepare("DELETE FROM admin_user_roles WHERE user_id=?")
