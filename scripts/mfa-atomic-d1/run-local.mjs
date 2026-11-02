@@ -62,6 +62,10 @@ try {
     })===null);
   assert("ACTUAL_MATCH_REJECTS_MALFORMED_CODE",
     await matchTotpCounter(key,"12345",NOW,{window:1})===null);
+  assert("ACTUAL_MATCH_REJECTS_OUTSIDE_WINDOW",
+    await matchTotpCounter(rfcKey,"94287082",150_000,{
+      hash:"SHA-1",digits:8,window:1,
+    })===null);
   mf=new Miniflare(convertV4MiniflareOptions({
     modules:true,script:"export default { fetch(){return new Response('synthetic only')} }",
     compatibilityDate:"2026-10-12",compatibilityFlags:["nodejs_compat"],
@@ -150,7 +154,12 @@ try {
   const step1=NOW,step2=NOW+PERIOD,step3=NOW+2*PERIOD,
     step4=NOW+3*PERIOD,step5=NOW+4*PERIOD;
   stage="HAPPY_PATH";
-  const original=await seed(),wrong=codeFor(SECRET,NOW)==="999999"?"000000":"999999";
+  const original=await seed();
+  // Choose a wrong OTP guaranteed not to match any code in the ±1 window.
+  // Fixed "wrong" constants can coincide with a valid random TOTP and flake.
+  const allowedCodes=new Set([-PERIOD,0,PERIOD].map(offset=>codeFor(SECRET,NOW+offset)));
+  let wrong="000000";
+  while(allowedCodes.has(wrong))wrong=String(Number(wrong)+1).padStart(6,"0");
   const before=await snapshot(original);
   assert("WRONG_TOTP_DENIED_NO_WRITES",
     await attempt({token:original,code:wrong})===false&&
