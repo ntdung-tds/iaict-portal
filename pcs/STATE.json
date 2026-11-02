@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 25,
-  "updated_at": "2026-11-02T15:11:04.855Z",
+  "revision": 26,
+  "updated_at": "2026-11-02T15:16:45.850Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T15:11:04.855Z",
+    "updated_at": "2026-11-02T15:16:45.850Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -269,8 +269,8 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "Post-merge review loop after PR #61 (c96737a3) and PR #62 (fe37a26a), PCS rev24 canonical. Found documentation drift (Moment proposed label, 82/86 progress inventory, orphan progress row) and prospective PASSWORD_ONLY session issuance TOCTOU during policy transition; corrected design constraints and source-aligned future negative tests. No new real QA run, no changes to application/Worker/hosted D1/Access/production; revision 25 captures this documentation-only review.",
-      "next_action": "Review-loop output: doc-only corrections to real IAM epoch/assurance architecture; run exact PR HEAD CI/public staging and link/PCS checks, fix concrete in-scope findings until clear. NEXT distinct scope only: disposable local D1 proof of policy flip before session INSERT, stale-epoch session rejection, revoked/regranted roles and Account disable/reactivate using real-schema baseline; no hosted migration or MFA activation without Owner/security approval.",
+      "last_completed_step": "PR #63 MERGED cbfc31c082a06664d6bd50f481a0969828ebd593 after scoped inspect/fix/recheck loop. Exact final PR HEAD c01971f76f53a78ab3627f769c909b8654ab9c49 portal CI #41469258376 SUCCESS, staging public-only #41469258378 SUCCESS; 7 changed docs/PCS files, zero broken internal links on inspected set, QA catalog 86, Checklist Moment aligned, design policy-flip/session INSERT/Access-or-native negative tests recorded. No product/auth code change; no real MFA QA. Revision 26 corrects stale post-merge action pointer.",
+      "next_action": "NEXT DISTINCT QA-ONLY TASK: on disposable local D1 based on actual 0001/0022/0023/0024 IAM schema, prove policy/epoch CAS at PASSWORD_ONLY session insertion (including mid-PBKDF2 switch to MFA_REQUIRED), stale session assurance denial, role revoke/regrant, deactivate/reactivate, password/factor changes and atomic rollback; register tests/run only after execution. No new audit loop required absent concrete findings; no live D1 migration, Worker login MFA enablement, Access cutover, secrets or production change without explicit Owner/security approval. SRS FROZEN.",
       "blockers": [
         "Actual lib/totp.ts now exercised only in Node local synthetic D1 proof; hosted D1 integration, real encrypted factor/key binding, real IAM session and recovery still NOT_IMPLEMENTED/NOT_RUN.",
         "User/factor security epoch and encrypted MFA keys remain unprovisioned for real IAM. Hosted D1 migration, Access cutover, policy and recovery need explicit Owner approval; ADR PROPOSED, SRS FROZEN.",
