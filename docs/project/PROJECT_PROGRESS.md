@@ -7,7 +7,7 @@
 |---|---:|---:|---:|---:|---|
 | CMS/CRM-1 **scoped checklist** | **5/10** | 1 | 2 | 2 | Includes narrow infrastructure / QA artifact checkpoints, not full CMS release |
 | IAM v1.2 **20 proposed target outcomes** | **0/20 full acceptance** | 5 | 1 | 14 | Prototype/partial code exists; no assertion that all 20 are approved requirements |
-| QA case catalog | **81 documented** | — | — | — | Prepared cases; 78 is not PASS count |
+| QA case catalog | **81 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
 | Authorized live 7-role authentication | **0/7 role E2E proven** | — | 7 | — | Eight disabled D1 fixtures are not valid logins |
 
 ## Verified chronology — append only (new rows at bottom)
@@ -26,11 +26,13 @@
 
 | 2026-11-02T11:04:00+07:00 | [PR #43](https://github.com/ntdung-tds/iaict-portal/pull/43): unused AES-256-GCM seed envelope helper, 6 synthetic unit tests, [CI #41386111393](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386111393), [RUN-IAM-20261102-02](../qa/IAICT_TEST_RUNS.md) | SHA `8355bcdc` **6/6 tests PASS / 539/539 full Vitest**; D1 factor/enrollment, MFA E2E, real role QA **NOT_RUN**; ADR still proposed | Final PR gate + living QA Doc synchronization, reviewed factor schema/key lifecycle |
 
+| 2026-11-02T11:19:00+07:00 | Read-only review of [PR #43](https://github.com/ntdung-tds/iaict-portal/pull/43) and Cloudflare Workers, PCS/QA/ADR traceability. Merge `2f9cfa37`, [CI #41386418466](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386418466), [public acceptance #41386418469](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386418469) | 6/6 AES-GCM **unit only**; local workerd AES-GCM, factor D1, MFA login/recovery **NOT_RUN**. Correct stale PR43 pending language, note 81 cases not execution; remove unjustified PCS hard dependency from S3 to unaccepted S2 | Continue reviewed key lifecycle and factor-state architecture; no live mutation |
+
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.
-- **RISK / pending:** full MFA, reset/recovery, scoped permission/IDOR, KDF workerd >100000 verification, R2 media upload, offboarding and personal-data safeguards; uploaded research report does NOT resolve implementation.
+- **RISK / pending:** full MFA enrollment, secret key lifecycle, reset/recovery, scoped permission/IDOR, hosted Worker KDF/AES-GCM parity, R2 media upload, offboarding and personal-data safeguards. Isolated workerd 100001 PBKDF2 already succeeded; it does NOT establish general hosted behavior.
 - **DEFERRED:** production + Access removal, SRS approval, full-source Drive handoff [#38](https://github.com/ntdung-tds/iaict-portal/issues/38). Different explicit commands apply.
 - **Regression test:** any docs/code change must rerun `portal-ci`/gate on exact new SHA; status from older SHA does not transfer.
 
 ## Cross-chat handoff
-Open [CHECKLIST_MOMENT](CHECKLIST_MOMENT.md), choose **latest timestamped snapshot**, compare GitHub PR HEAD/CI and Cloudflare runtime, resume **CMS-08 S2** or record a new evidence-based decision when blocked. No need to infer progress from prose in preceding chats. Keep old progress rows append-only, add new row and moment snapshot when switching tasks.
+Open [CHECKLIST_MOMENT](CHECKLIST_MOMENT.md), choose **latest timestamped snapshot**, compare GitHub PR HEAD/CI and Cloudflare runtime, resume **CMS-08 S3 / T-IAM-MFA-F2** or record a new evidence-based decision when blocked. No need to infer progress from prose in preceding chats. Keep old progress rows append-only, add new row and moment snapshot when switching tasks.

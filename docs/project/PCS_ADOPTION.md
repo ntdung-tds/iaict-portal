@@ -1,6 +1,6 @@
 # IAICT Portal — PCS Solo integration
 
-**PCS:** Universal 3.2.0; **status:** bootstrap checkpoint (revision 2). The initial tracking change is [PR #40](https://github.com/ntdung-tds/iaict-portal/pull/40), based on `feat/staging-native-login-r2-20261030`. Verify actual merge and latest HEAD before declaring activation on a chosen branch.
+**PCS:** Universal 3.2.0; **status:** adopted in the active development branch. Bootstrap [PR #40](https://github.com/ntdung-tds/iaict-portal/pull/40) merged at `5473d954`; review the latest [`pcs/STATE.json`](../../pcs/STATE.json) revision and [`pcs/MOMENT.md`](../../pcs/MOMENT.md) on every resume instead of treating this adoption guide as a frozen status report.
 
 ## Goal and boundaries
 
@@ -29,7 +29,7 @@ This bootstrap modifies **tracking files only**. It does not edit Next.js, Cloud
 
 ## Adoption and continued operation
 
-1. Verify PR #40 is merged into the chosen **active development branch**, review changed files and actual CI; if still pending, don't call its state canonical.
+1. Verify the current **active development branch**, current PCS revision and actual HEAD/CI; PR #40 is already merged, so don't re-run the bootstrap.
 2. Reconcile PR #36, Issue #37 and Issue #39 with the actual code, QA case/run records and Worker SHA; update PCS backlog and product/architecture maps only from verified information.
 3. For changes: choose an active task, branch/PR per risk, implement, test appropriate layers, save `STATE` revision + updated `MOMENT` consistently. **Task technical completion ≠ feature/flow/release acceptance**.
 4. Keep staging-first, QA evidence, business-level Owner feedback and separate verified approval for production/security-sensitive changes.

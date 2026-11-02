@@ -41,6 +41,12 @@
 - Ghi `commit SHA`, `Worker version`, D1 migration count, browser + phiên bản, viewport, timezone, ID của run/defect; không dùng chữ "mới nhất" làm định danh.
 - Khi Cloudflare Browser Rendering trả HTTP 429, đánh `BLOCKED` và ghi lý do; không coi là PASS.
 
+## Bổ sung 02/11/2026 — CI kiểm tra Checklist Moment
+
+- Workflow `portal-ci` phải thực thi lệnh có sẵn `npm run verify:checklist-moment` cho mọi PR; bước này so khớp Moment ID với snapshot cuối, đếm trạng thái 10 CMS, kiểm tra 20 IAM và so khớp Progress. Đây là **xác minh cấu trúc tài liệu**, không phải bằng chứng kiểm thử IAM live, SRS approval hay production readiness.
+- Nếu CI này FAIL: sửa dữ liệu trạng thái hoặc snapshot trên **nhánh PR**, không bỏ qua validator. Ghi nhận SHA và run thực tế sau khi CI hoàn tất. Giữ testcase/QA run của chức năng riêng.
+- Thay đổi này không mở thêm hệ thống báo cáo; tiếp tục dùng PCS STATE/Moment, Checklist Moment và QA CSV/Run ledger đã có.
+
 ## 4. Tần suất test, yêu cầu cập nhật cùng thay đổi
 
 1. Khi có PR thay đổi `lib/native-*`, `app/api/auth`, `app/api/account`, `app/api/admin/cms`, `components/admin/user-management`, `lib/cms-roles`, `worker.ts`, `cloudflare/migrations`, `cloudflare.config.ts` hoặc luồng Release/Access: xác định mã REQ và test case bị ảnh hưởng; sửa/thêm test case **trong cùng PR** (nếu không cần sửa, ghi justification và liên kết case); bổ sung unit/browser test khi hợp lý.

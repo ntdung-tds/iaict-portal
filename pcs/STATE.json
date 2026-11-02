@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 6,
-  "updated_at": "2026-11-02T04:04:05.828Z",
+  "revision": 7,
+  "updated_at": "2026-11-02T04:18:23.857Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-02T04:04:05.828Z",
+    "updated_at": "2026-11-02T04:18:23.857Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -67,9 +67,7 @@
         "security_sensitive": true,
         "requires_owner_approval": true,
         "github_issue": "https://github.com/ntdung-tds/iaict-portal/issues/37",
-        "dependencies": [
-          "T-IAM-KDF-S2"
-        ],
+        "dependencies": [],
         "qa": {
           "required": true,
           "status": "PARTIAL",
@@ -92,7 +90,7 @@
             "LIVE_AUTHENTICATED"
           ]
         },
-        "description": "AES-256-GCM standalone seed envelope helper has 6/6 unit tests PASS at observed SHA. Not imported by auth flows; actual MFA factor schema, enrollment, recovery and live worker remain NOT_RUN; ADR/approval pending."
+        "description": "Independent CMS-08/S3 AES-GCM helper passed 6 unit tests at immutable SHA; KDF-S2 findings inform architecture but are NOT an acceptance prerequisite for an isolated crypto unit test. Live factor schema, key lifecycle, Worker runtime, MFA enrollment/recovery remain NOT_RUN, ADR and Owner decision pending."
       },
       {
         "id": "T-IAM-ONBOARDING",
@@ -139,14 +137,14 @@
     "artifacts": [],
     "current": {
       "active_task": "T-IAM-MFA-F2",
-      "last_completed_step": "MFA-F2 isolated AES-GCM helper and 6 unit tests passed CI on observed initial source SHA 8355bcdc (539/539 aggregate); immutable QA RUN-IAM-20261102-02 recorded. No live MFA behavior changed.",
-      "next_action": "Complete PR #43 final SHA checks, sync living QA document to 81 cases, merge if gates pass; then review ADR and model forward-only D1 factor schema/key rotation before any live integration.",
+      "last_completed_step": "PR #43 MERGED into the active development branch at 2f9cfa37e339af9b01521dc3ae403346f4ac54e9; final CI #41386418466 and read-only staging acceptance #41386418469 PASS. Encryption helper unit evidence RUN-IAM-20261102-02 at exact source SHA 8355bcdc; canonical 81 QA cases synced with living Google Doc. Read-only Cloudflare Worker deployment IDs confirmed unchanged on 2026-11-02.",
+      "next_action": "Review ADR-0002's proposed key lifecycle and encrypted factor D1 state model, assess Worker AES-GCM parity and missing negative/abuse/replay tests before any forward-only D1 migration or authenticated MFA integration. Preserve Cloudflare Access and production.",
       "blockers": [
-        "ADR-0002 remains PROPOSED, no approved key binding/rotation or forward-only D1 MFA factor schema.",
-        "No actual authenticated enrollment, replay-proof D1 counter, step-up or recovery tests; full MFA remains NOT_RUN.",
-        "No real-role IAM E2E; Cloudflare Access must stay enabled and production untouched."
+        "Key provisioning, rotation/retention/revocation, factor enrollment state/TTL, recovery and D1 CAS replay are not implemented or approved.",
+        "AES-GCM helper's six Vitest tests are Node/UNIT evidence only; local workerd AES-GCM and authenticated browser scenarios NOT_RUN.",
+        "Owner/security approval required before remote Worker changes, MFA storage/enrollment or Cloudflare Access cutover; seven-role IAM staging E2E remains blocked."
       ],
-      "actor": "pcs-solo-bootstrap"
+      "actor": "pcs-solo-lead"
     },
     "policy": {
       "production": "EXPLICIT_APPROVAL",
