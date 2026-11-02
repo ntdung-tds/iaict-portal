@@ -555,3 +555,20 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Media and security | No password, browser cookie, Access JWT or screenshot persisted; no production/staging Worker deployment. Media folder [restricted IAM Drive QA](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) — no image required for local API assertions |
 
 **Verdict:** **PASS LOCAL_WORKER_INGRESS_REAL_D1_WITH_MOCK_HTTP_DISPATCH**. Does **not** prove real positive Cloudflare Access enrollment, actual hosted Admin API actions, or true signed-in role-browser E2E. The source SHA above was observed green; this documentation revision must receive its own exact-head CI and public staging Chromium checks before merge. SRS remains FROZEN; no live MFA implementation.
+
+## RUN-IAM-20261103-07 — Real CMS role mutation API and native-session non-resurrection (isolated D1)
+
+| Item | What was executed / observed | Verdict |
+| --- | --- | --- |
+| New `IAM-USER-021` integration test | Actual `worker.ts` ingress, `app/api/admin/cms/users/route.ts` GET/POST, `native-auth.ts` session validation, `requireNewsroomActor` role lookup and real isolated Miniflare D1 from committed migrations. Only the vinext HTTP dispatcher maps the actual route in the test; this is **NOT** hosted CMS or live Access sign-in | **PASS LOCAL_ACTUAL_ADMIN_ROUTE_REAL_D1** |
+| Admin authorization | Native Admin can read actual user list; Editor cannot read user-management data (403); forged cross-Origin mutation request rejected (403) | **PASS** |
+| Role reduction and session revocation | Admin updates Editor→Viewer using actual CAS D1 batch, old Editor session immediately returns 401 and is deleted; new Viewer session can read but cannot edit CMS | **PASS** |
+| Stale optimistic update | Replay of original `updatedAt` is rejected **409** without revoking the newer Viewer session | **PASS** |
+| Role regrant | Admin updates Viewer→Editor using fresh CAS version; earlier Editor and Viewer sessions remain invalid (401). Newly minted Editor session receives edit permission; D1 foreign keys remain valid | **PASS** |
+| First CI round (before fixture fix) | [Portal CI #41539239411](https://github.com/ntdung-tds/iaict-portal/actions/runs/41539239411) failed 1/580 due to test fixture omitting the original CMS migration `0019_v17_full_cms.sql` and its `cms_revisions` table. This was **missing local test schema**, not a proven product defect. No application security code was changed | **FIXTURE DEFECT FOUND→CORRECTED** |
+| Fixed-source CI round | [Portal CI #41539487495](https://github.com/ntdung-tds/iaict-portal/actions/runs/41539487495) **4/4 jobs SUCCESS**; `lib/native-worker.real-d1.roles.test.ts` **14/14 PASS**, total Vitest **580/580**, local Chromium regression **38/38** | **PASS FIXED SOURCE** |
+| Real public staging | [Staging acceptance #41539487478](https://github.com/ntdung-tds/iaict-portal/actions/runs/41539487478) runs 24 real Chromium tests including 3 negative sign-in/Access tests plus 24 public HTTP probes; report status only after run completion, no assumption that test passed before observed | **PENDING WHEN LOG FIRST WRITTEN** |
+| Positive live role browser | 8 disabled `example.test` staging QA fixtures remain without controlled independent inboxes or valid Access state. Existing Cloudflare Secrets Store is empty and write-only, not a recoverable password manager | **BLOCKED / NOT_RUN** |
+
+- Code SHA `049346fe3f6528dd2b2fd0082619bfe18471fac9` is the **post-fix pre-report HEAD**; evidence/PCS changes require another exact-head CI and real public staging Chromium run before merge. [PR #77](https://github.com/ntdung-tds/iaict-portal/pull/77). Registered QA case `IAM-USER-021`, catalog **95**.
+- This is a real code+SQL Admin API test in local isolated Miniflare, with mocked vinext request dispatch ONLY. No actual hosted admin account, session, password, role, activation, Access policy, or production mutation. Test passwords generated only in process and never stored/logged. No screenshot required; [private IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).

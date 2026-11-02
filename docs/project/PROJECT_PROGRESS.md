@@ -7,7 +7,7 @@
 |---|---:|---:|---:|---:|---|
 | CMS/CRM-1 **scoped checklist** | **5/10** | 1 | 2 | 2 | Includes narrow infrastructure / QA artifact checkpoints, not full CMS release |
 | IAM v1.2 **20 proposed target outcomes** | **0/20 full acceptance** | 5 | 1 | 14 | Prototype/partial code exists; no assertion that all 20 are approved requirements |
-| QA case catalog | **94 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
+| QA case catalog | **95 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
 | Authorized live 7-role authentication | **0/7 role E2E proven** | — | 7 | — | Eight disabled D1 fixtures are not valid logins |
 
 ## Verified chronology — append only (new rows at bottom)
@@ -65,6 +65,8 @@
 | 2026-11-03 · end-to-end real staging negative security acceptance | [RUN-IAM-20261103-05](../qa/IAICT_TEST_RUNS.md) · [PR #75](https://github.com/ntdung-tds/iaict-portal/pull/75) | 3 new real deployed-staging negative checks: unknown-user UI login 401/no cookie, Origin 403/invalid activate 400, forged Access headers denied over five protected paths. **24/24 real public staging Chromium**, 24/24 GET; **566/566** unit, **38/38** local Chromium, 4/4 CI; D1 quick_check ok, zero FK errors, 8 QA users still disabled. Catalog **93** | 7-role + Admin2 genuinely authenticated positive browser matrix still BLOCKED/NOT_RUN pending independent controlled QA inbox, Access enrollment and recoverable vault |
 
 | 2026-11-03 · native-cookie Worker/RBAC matrix in isolated D1 | [RUN-IAM-20261103-06](../qa/IAICT_TEST_RUNS.md) · [PR #76](https://github.com/ntdung-tds/iaict-portal/pull/76) | Actual worker.ts ingress + actual auth and RBAC SQL on original-migration disposable D1, downstream HTTP dispatcher clearly MOCKED. **12/12 new tests PASS, 56 role decisions**, 578/578 Vitest, 38/38 local Chromium, 4/4 CI; real staging regression 24/24 Chromium and 24/24 HTTP; QA catalog **94** | Positive hosted Access 7-role + Admin2 E2E still BLOCKED/NOT_RUN; controlled mailboxes, Access enrollment and private recoverable password vault needed |
+
+| 2026-11-03 — real CMS Admin API session revocation / role regrant regression | [RUN-IAM-20261103-07](../qa/IAICT_TEST_RUNS.md) · [PR #77](https://github.com/ntdung-tds/iaict-portal/pull/77) | New `IAM-USER-021` invokes actual Worker + CMS users GET/POST in original-schema isolated D1 (only vinext routing mocked): editor→viewer→editor, revoked session does not resurrect, stale CAS 409 preserves new session. First CI uncovered missing CMS migration **in test fixture**; fixed; **14/14 integration and 580/580 unit PASS**, CI 4/4 and local Chromium 38/38. QA catalog **95** | Exact doc-HEAD CI / real public staging gate, then merge; positive 8-role Access E2E remains BLOCKED/NOT_RUN |
 
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.
