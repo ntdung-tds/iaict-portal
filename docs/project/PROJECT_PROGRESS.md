@@ -7,7 +7,7 @@
 |---|---:|---:|---:|---:|---|
 | CMS/CRM-1 **scoped checklist** | **5/10** | 1 | 2 | 2 | Includes narrow infrastructure / QA artifact checkpoints, not full CMS release |
 | IAM v1.2 **20 proposed target outcomes** | **0/20 full acceptance** | 5 | 1 | 14 | Prototype/partial code exists; no assertion that all 20 are approved requirements |
-| QA case catalog | **89 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
+| QA case catalog | **90 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
 | Authorized live 7-role authentication | **0/7 role E2E proven** | — | 7 | — | Eight disabled D1 fixtures are not valid logins |
 
 ## Verified chronology — append only (new rows at bottom)
@@ -59,6 +59,8 @@
 | 2026-11-03 — staging role-browser QA preflight | [RUN-IAM-20261103-02](../qa/IAICT_TEST_RUNS.md) · [PR #69](https://github.com/ntdung-tds/iaict-portal/pull/69) | Added IAM-USER-019/020 (89 catalog); 8 new local Chromium role navigation tests with explicit API mock, **38/38 local browser PASS** on initial observed code SHA. 8 existing QA fixtures remain documented disabled, real-role Chrome NOT_RUN due no legitimate Access session and secure test vault | Confirm exact-final-head CI/public Chromium, connect approved vault + controlled mailbox/Access, run authenticated 8-account matrix |
 
 | 2026-11-03 — live QA identity audit and empty secrets store | [RUN-IAM-20261103-03](../qa/IAICT_TEST_RUNS.md) · [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) | Read-only live D1: 8 QA disabled, 0 native passwords, 0 Access subjects. Staging Access app/policy now readable: account-member-only, 1 Access user; Cloudflare account no routing destinations or DNS zones. Created **empty** encrypted account-level QA Secrets Store, verified 0 secrets. Real 8-role E2E **BLOCKED/NOT_RUN**, 89 QA cases unchanged | Connect project-owned deliverable QA mailbox plus least-privilege Access enrollment; validate secret-store use before creating credentials |
+
+| 2026-11-03 — native auth real-function local D1 integration | [RUN-IAM-20261103-04](../qa/IAICT_TEST_RUNS.md) · [PR #73](https://github.com/ntdung-tds/iaict-portal/pull/73) | 7 actual TypeScript-native auth function integration tests PASS at code SHA `d380dfd4` on 8 synthetic roles and actual 0001/0022/0023/0024 D1 migrations. QA catalog 90. Cloudflare Access has only Cloudflare IdP (no OTP); Outlook.com plus tags share one inbox, not independent QA accounts. No hosted D1, Access or production changes | Exact final PR CI/staging Chromium gates; then controlled project QA inbox/OTP onboarding; real role E2E NOT_RUN |
 
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.
