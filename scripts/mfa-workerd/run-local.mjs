@@ -50,18 +50,37 @@ try {
     "SWAPPED_IV_BLOCKED", "SWAPPED_CIPHERTEXT_BLOCKED",
     "WRONG_KEY_BLOCKED", "MALFORMED_IV_BLOCKED",
   ];
-  const valid = response.status === 200 && data.test_id === "IAM-FUT-009" &&
-    data.runtime === "LOCAL_WORKERD" && data.deployed === false &&
-    data.compatibility_date === "2026-10-12" &&
-    data.passed === expected.length &&
-    Object.keys(data.results || {}).length === expected.length &&
-    expected.every(key => data.results[key] === "PASS");
+  const acceptable = (result, body) => result.status === 200 &&
+    body.test_id === "IAM-FUT-009" &&
+    body.runtime === "LOCAL_WORKERD" && body.deployed === false &&
+    body.compatibility_date === "2026-10-12" &&
+    body.passed === expected.length &&
+    Object.keys(body.results || {}).length === expected.length &&
+    expected.every(key => body.results[key] === "PASS");
+  // Reuse the same local Worker isolate: results must be independent per request.
+  const origin = "http://127.0.0.1:19388";
+  const repeatResponse = await fetch(origin + "/mfa-crypto-probe", {
+    signal: AbortSignal.timeout(2000),
+  });
+  const repeatData = await repeatResponse.json();
+  const badRoute = await fetch(origin + "/not-a-probe", {
+    signal: AbortSignal.timeout(2000),
+  });
+  const badMethod = await fetch(origin + "/mfa-crypto-probe", {
+    method: "POST", signal: AbortSignal.timeout(2000),
+  });
+  const repeatIsolated = acceptable(response, data) && acceptable(repeatResponse, repeatData);
+  const rejectedInvalidRoutes = badRoute.status === 404 && badMethod.status === 404;
+  const valid = repeatIsolated && rejectedInvalidRoutes;
   console.log("[mfa-workerd] OBSERVED " + JSON.stringify({
     source: "lib/mfa-secret-crypto.ts (esbuild bundled into isolated workerd)",
     workerd_npm_version: version, compatibility_date: data.compatibility_date,
     test_id: "IAM-FUT-009", passed: data.passed,
     check_ids: expected, verdict: valid ? "PASS" : "FAIL",
-    actual_http_status: response.status, worker_deployed: false,
+    actual_http_status: response.status,
+    identical_check_sets_for_two_requests: repeatIsolated,
+    invalid_path_and_method_rejected: rejectedInvalidRoutes,
+    worker_deployed: false,
     credentials_used: false, d1_r2_access_used: false,
   }));
   if (!valid) throw Error("ISOLATED_AES_GCM_PROBE_FAILED_" + (data.sanitized_error ?? response.status));
