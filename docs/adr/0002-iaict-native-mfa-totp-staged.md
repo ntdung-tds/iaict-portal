@@ -51,3 +51,16 @@ IAICT uses native password/session backed by D1 and keeps Cloudflare Access prot
 The isolated `lib/mfa-secret-crypto.ts` helper uses AES-256-GCM with a new 96-bit nonce per encryption and authenticated metadata linking the owner, factor and key version. Its tests cover roundtrips, nondeterministic nonces, altered records, mismatched ownership and invalid key material. No production route imports this helper; it does not enroll a factor, mint sessions or store data.
 
 **Next design decisions (not yet approved):** separate Worker-managed key provision and rotation, forward-only D1 factor schema and pending/active lifecycle, replay-safe transaction, recovery and real staging acceptance. Current application authentication remains unchanged; this is not permission to modify Access, staging or production. `IAM-FUT-008` covers only the helper; `IAM-FUT-001` end-to-end MFA remains NOT_RUN. ADR-0002 stays PROPOSED.
+
+## 2026-11-02 — Independent post-merge scope and threat-model review
+
+[PR #43](https://github.com/ntdung-tds/iaict-portal/pull/43) was merged at `2f9cfa37e339af9b01521dc3ae403346f4ac54e9` after full PR CI and public/read-only staging acceptance PASS. The current crypto helper is **not imported by any login or account route added in this PR**; six isolated Node/Vitest unit tests are a bounded *cryptographic-helper* result, not approval of MFA enrollment, authentication, secret storage or Cloudflare runtime compatibility.
+
+**Must be resolved before a live factor migration or endpoint:**
+- **Key lifecycle:** define protected binding/KMS retrieval, `keyId` lookup, confidentiality of old keys during rotation, key-loss recovery, separate staging/production keys and safe deployment rollback. A `CryptoKey` marked nonextractable only protects the key after import; source material still needs secret handling and lifecycle.
+- **Nonce and records:** 96-bit random AES-GCM IV collision is **extremely unlikely**, not mathematically impossible; bound encryptions per key with a rotation policy. Persist envelope metadata, owner/factor state, key version and audit transactionally and validate lengths/format on reads.
+- **Enrollment and replay:** pending/confirmed factor lifecycle and TTL, fresh first-factor reauth, CSRF control, server-side attempt limits, fail-closed challenge flow; TOTP code match alone **does not** create a privileged session. Store/reject accepted step via atomic D1 conditional update to block parallel replay.
+- **Recovery:** independent identity verification, one-time recovery codes, dual approval for privileged resets, immediate session/factor invalidation and complete audit; avoid email-only MFA bypass.
+- **Verification gap:** `IAM-FUT-008` was tested in Node/Vitest. Workerd AES-GCM compatibility, actual secret binding, D1 migrations, concurrency, multi-role and browser scenarios remain **NOT_RUN**.
+
+**Decision:** continue with an architecture proposal and isolated testing. Do not enlarge the runtime implementation or create a secret/migration until risk, rollback, recovery and Owner/security decision are documented. **ADR status stays PROPOSED.**
