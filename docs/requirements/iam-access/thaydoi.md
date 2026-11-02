@@ -86,3 +86,11 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 - **QA:** `IAM-FUT-009` READY; chưa phải MFA enrollment/login E2E (`IAM-FUT-001` vẫn NOT_RUN). Evidence local CI log, ảnh NO_IMAGE_REQUIRED.
 - **Kiến trúc:** ADR-0002 tiếp tục PROPOSED; thiết kế vòng đời khóa, factor D1, CAS replay và recovery cần review trước bất kỳ tích hợp thực tế.
 - **SRS:** FROZEN / CHƯA_CHỐT.
+
+
+### CHG-IAM-ACCESS-20261102-04 — Review PR #45: độc lập trạng thái workerd crypto probe
+- **Trạng thái:** QA_ONLY / CHƯA_CHỐT, 02/11/2026. [PR #46](https://github.com/ntdung-tds/iaict-portal/pull/46).
+- **Trước:** `IAM-FUT-009` 11/11 PASS tại SHA `23c0960d` nhưng biến `checks` nằm ở phạm vi module, có thể dùng lại giữa các HTTP request trên cùng Worker isolate; lỗi ngoại lệ được cắt chuỗi thay vì cho phép tên lỗi an toàn.
+- **Sau:** gom kết quả theo từng request, trả mã lỗi cho phép; cùng workerd local gửi hai request liên tiếp và thử path/method không hợp lệ. Không sửa `lib/mfa-secret-crypto.ts`, key, dữ liệu hay luồng MFA.
+- **Kiểm thử:** `RUN-IAM-20261102-04` / `IAM-FUT-009`, [CI #41390187476](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476), source SHA `702ce448ae1a63a6ab3e768a01104f14d16a183c`: 11/11 mỗi lượt (2 lượt), HTTP 404 cho path/method sai, **LOCAL_WORKERD PASS**. Final PR head gate xác minh riêng.
+- **Giới hạn:** Không có Worker deployed, D1, Access, secret binding, MFA E2E hoặc production thay đổi. ADR-0002 PROPOSED, SRS FROZEN, hình QA NO_IMAGE_REQUIRED.
