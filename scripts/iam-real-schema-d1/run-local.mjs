@@ -175,7 +175,7 @@ try {
   // This test assumes the OTP has already been verified by a separate layer.
   // It proves local D1 epoch/factor/policy transaction invariants ONLY.
   const redeem = async (token,{beforeBatch,auditId=randomUUID()}={}) => {
-    const hash=sha(token),fullSession=sha(randomBytes(32).toString("hex"));
+    const hash=sha(token),sessionToken=randomBytes(32).toString("hex"),fullSession=sha(sessionToken);
     if(beforeBatch) await beforeBatch();
     try {
       const result=await db.batch([
@@ -204,7 +204,7 @@ try {
       ]);
       if(result.length!==5||result.some(x=>x?.success!==true)||
         [0,1,2,3,4].some(i=>changed(result[i])!==1))throw Error("UNEXPECTED_REDEMPTION_BATCH");
-      return fullSession;
+      return sessionToken;
     }catch(e){
       if(/constraint/i.test(String(e)))return null;
       throw e;
