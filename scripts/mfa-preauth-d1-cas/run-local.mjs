@@ -227,8 +227,8 @@ try {
   check("INDEPENDENT_USER_ACCEPTED",
     await consume(separate,{userId:OTHER}) === true && (await row(separate)).rev === 1);
   const all = await db.prepare(`
-    SELECT COUNT(*) AS n FROM synthetic_mfa_challenges WHERE consumed_at_ms IS NOT NULL
-  `).first();
+    SELECT COUNT(*) AS n FROM synthetic_mfa_challenges WHERE consumed_at_ms>=?
+  `).bind(NOW).first();
   check("ONLY_ELIGIBLE_CHALLENGES_CHANGED",
     all.n === 4); // original winner, expired lock, fresh, other user
   check("NO_SESSION_OR_FACTOR_TABLE_CREATED",
