@@ -1,5 +1,5 @@
 # IAICT Portal — CHECKLIST MOMENT (LIVE)
-**Moment ID:** `MOMENT-IAICT-20261102-2118-ICT` · **Captured:** `2026-11-02T21:18:16+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
+**Moment ID:** `MOMENT-IAICT-20261102-2211-ICT` · **Captured:** `2026-11-02T22:11:04+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
 **Project:** IAICT Portal / CMS / CRM / IAM · **Status:** ACTIVE / NOT ACCEPTED · **Owner acceptance:** NOT GIVEN.
 **Evidence scope:** code/runtime baseline audited at source HEAD `a6afff7ecb0ed27bc4bddeb4374e2fe333312745` at observation time; this is a baseline **before** checklist-only commits. PR [#36](https://github.com/ntdung-tds/iaict-portal/pull/36) DRAFT on `feat/staging-native-login-r2-20261030`.
 **Related records:** [PROJECT_PLAN](PROJECT_PLAN.md) · [PROJECT_PROGRESS](PROJECT_PROGRESS.md) · [append-only moment history](checklist-moments/) · [QA run ledger](../qa/IAICT_TEST_RUNS.md) · [82-case catalog](../qa/IAICT_TEST_CASES.csv) · [14 module change logs](../requirements/README.md).
@@ -236,3 +236,19 @@ The prior draft snapshot at `2026-11-02T17-13-ICT.md` had a formatting-only malf
 ## Next precise action
 
 Verify this exact-head documentation PR's CI and public-only staging acceptance; fix only concrete review issues, then merge if gates pass. Next **separate** decision: approve or revise real IAM epoch/assurance/key/recovery design **before** any migration, live MFA API/Worker or release. Do not re-run completed PR #59 or enable MFA from this review.
+
+
+## CMS-08 — post-merge iterative review checkpoint (2026-11-02T22:11:04+07:00)
+
+# PCS Moment — IAICT Portal
+
+**PCS Universal 3.2.0 · Solo · Revision 25 (review-loop documentation checkpoint)**
+
+- Prior **Revision 24 is canonical**, verified by merged [PR #62](https://github.com/ntdung-tds/iaict-portal/pull/62) as `fe37a26a29985bd69ecef28547b86defe53b14c8`. [PR #61](https://github.com/ntdung-tds/iaict-portal/pull/61) earlier merged source-mapped IAM review; exact-head [CI #41461155654](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461155654) and [public staging #41461155651](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461155651) **SUCCESS** (historical, not re-executed here). PR #62 [CI #41461960405](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461960405) and [public staging #41461960457](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461960457) also **SUCCESS**.
+- Post-merge iterative review of [real IAM MFA schema/epoch/assurance design](../docs/iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md): finding→fix→recheck. Fixed stale "revision 24 PROPOSED" text and 82/86 current QA inventory, restored latest progress into verified chronology. Identified **missing prospective policy+epoch guard for PASSWORD_ONLY session INSERT** when policy switches during password verification; require transactionally checked policy/epoch and server-side assured session on all native authorization paths. Clarified Access **OR** native identity assurance is separately decided; deployed configuration **NOT VERIFIED**.
+- Scope **DESIGN_ONLY**, `CHG-IAM-ACCESS-20261102-14` continued. **86 QA cases** (catalog only); prior local synthetic `IAM-FUT-013` 27/27 and 559/559 Vitest are historical. **No new automated QA run claimed**. Real hosted D1, encrypted MFA keys, enrollment, recovery, session policy, seven-role E2E **NOT_RUN**. SRS **FROZEN**, ADR-0002 **PROPOSED**, Owner security approval **NOT GIVEN**.
+- **No** D1 migration, Worker, login route, Cloudflare Access, R2, users, credentials, staging deploy or production change. Images **NO_IMAGE_REQUIRED**; restricted [QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+## Next precise action
+
+Complete exact-head documentation CI/public staging and source/link/checkpoint consistency checks. Close this **scoped review loop** only when no actionable review/documentation defect remains. Next **separate** local QA-only D1 epoch/assurance proof; no real MFA rollout without distinct Owner/security approval.

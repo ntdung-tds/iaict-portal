@@ -7,7 +7,7 @@
 |---|---:|---:|---:|---:|---|
 | CMS/CRM-1 **scoped checklist** | **5/10** | 1 | 2 | 2 | Includes narrow infrastructure / QA artifact checkpoints, not full CMS release |
 | IAM v1.2 **20 proposed target outcomes** | **0/20 full acceptance** | 5 | 1 | 14 | Prototype/partial code exists; no assertion that all 20 are approved requirements |
-| QA case catalog | **82 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
+| QA case catalog | **86 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
 | Authorized live 7-role authentication | **0/7 role E2E proven** | — | 7 | — | Eight disabled D1 fixtures are not valid logins |
 
 ## Verified chronology — append only (new rows at bottom)
@@ -50,6 +50,10 @@
 
 | 2026-11-02T19:11:00+07:00 | [PR #57](https://github.com/ntdung-tds/iaict-portal/pull/57), `IAM-FUT-013`, [RUN-IAM-20261102-13](../qa/IAICT_TEST_RUNS.md) | Full **synthetic** D1 batch guards challenge+factor CAS, then creates session+audit. **20/20 local groups PASS**, 1/16 same challenge, 1/2 same OTP step, session/audit conflicts rollback; source SHA `f621f1ea`. QA **86 cases**; no real MFA deployment or E2E | Final CI/public staging; living QA Doc, merge if green; independent real TOTP+schema+key/session integration design |
 
+
+| 2026-11-02T21:18:16+07:00 | [PR #61](https://github.com/ntdung-tds/iaict-portal/pull/61) **MERGED** as `c96737a3`, [PR #62](https://github.com/ntdung-tds/iaict-portal/pull/62) **MERGED** as `fe37a26a`; [real-schema MFA design](../iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md), `CHG-IAM-ACCESS-20261102-14` | Source/read-only 3-round schema, epoch, Access/native, recovery design review; [CI PR61 #41461155654](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461155654) PASS, [staging #41461155651](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461155651) PASS, [PR62 CI #41461960405](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461960405) and [staging #41461960457](https://github.com/ntdung-tds/iaict-portal/actions/runs/41461960457) PASS. PCS revision 24 canonical; 86-case QA; no new real MFA test | Review the design and safely prove epoch/assurance with disposable local D1; hosted schema, recovery/Owner approval not granted |
+| 2026-11-02T22:11:00+07:00 | Post-merge iterative review of PCS rev24 and [MFA schema design](../iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md) | Found and documented policy-flip during password verification → full-session INSERT TOCTOU, Access-or-native path assurance ambiguity; corrected current QA counter and stale revision label. **DESIGN_ONLY, NO_NEW_QA_RUN** | Exact new docs PR CI/public staging; separate local-only epoch proof before Owner-approved integration |
+
 ## Current blockers / risk register pointers
 - **BLOCKED #34:** authenticated 7-role & 2-admin browser acceptance needs IAICT-controlled inbox, Cloudflare Access, vault-backed test identities. Never spoof or enable synthetic fixture accounts solely to get green tests.
 - **RISK / pending:** full MFA enrollment, secret key lifecycle, reset/recovery, scoped permission/IDOR, hosted Worker KDF/AES-GCM parity, R2 media upload, offboarding and personal-data safeguards. Isolated workerd 100001 PBKDF2 already succeeded; it does NOT establish general hosted behavior.
@@ -58,6 +62,3 @@
 
 ## Cross-chat handoff
 Open [CHECKLIST_MOMENT](CHECKLIST_MOMENT.md), choose **latest timestamped snapshot**, compare GitHub PR HEAD/CI and Cloudflare runtime, resume **CMS-08 S3 / T-IAM-MFA-F2** or record a new evidence-based decision when blocked. No need to infer progress from prose in preceding chats. Keep old progress rows append-only, add new row and moment snapshot when switching tasks.
-
-
-| 2026-11-02 · CMS-08 / schema design | [Real IAM schema/security epoch review](../iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md), `CHG-IAM-ACCESS-20261102-14` | Read-only mapping of actual IAM tables, mutation paths, session assurance, security epoch, factor/recovery and rollback. No schema/code change; **DESIGN_ONLY**, MFA real E2E NOT_RUN, Owner approval pending | Exact PR HEAD docs CI/staging read-only; approve architecture/recovery before any real migration |
