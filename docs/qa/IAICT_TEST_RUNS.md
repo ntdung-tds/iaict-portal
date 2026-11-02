@@ -326,3 +326,29 @@
 | `IAM-FUT-001` | Real hosted IAM | Verify OTP and atomically consume challenge before privileged session | Not integrated | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
 
 **Do not infer live MFA enforcement from a unit test.** Final source SHA CI and anonymous staging acceptance must be verified separately before merging PR #51.
+
+
+## RUN-IAM-20261102-10 — One-time pre-MFA challenge CAS, isolated disposable D1
+
+| Field | Observed / verified |
+| --- | --- |
+| Date (ICT) | 2026-11-02 |
+| Case and risk | `IAM-FUT-012`, P0 security, [PR #53](https://github.com/ntdung-tds/iaict-portal/pull/53), [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| Exact source SHA executed | `15b9b84a072af824eb467f59783f9b73106887a4` (final tested code prior to documentation commits) |
+| CI | [portal-ci #41424145730](https://github.com/ntdung-tds/iaict-portal/actions/runs/41424145730), `kdf-local-workerd` job #125206551257 **SUCCESS**; `[mfa-preauth-d1-cas] OBSERVED` |
+| Environment | **LOCAL_MINIFLARE_D1** / new UUID ephemeral D1 with `synthetic_mfa_users` and `synthetic_mfa_challenges` only; no configured Cloudflare account, real D1 binding, migration, actual Worker route or user |
+| Actual | **26/26 SQL/security assertion groups PASS**. **16** concurrent attempts to consume the *same* challenge; exactly **1** conditional UPDATE changed a row (`success=true` and integer `meta.changes=1`). 15 attempts rejected |
+| Negative behavior | Same-challenge replay, expiry at exact boundary, future/overlong TTL, wrong owner, invalid token hash, wrong credential, credential revision rotated then fingerprint restored, stale revision, account disabled, role revoked, wrong challenge purpose, too many/negative attempts, lock until, already consumed, malformed context, missing D1 metadata all deny. Fresh and independent-user challenges can succeed. Only newly consumed rows counted |
+| Initial setup failure | [CI #41423994454](https://github.com/ntdung-tds/iaict-portal/actions/runs/41423994454) `kdf-local-workerd` **FAIL** at final aggregate fixture assertion: the intentionally pre-consumed fixture was included in the total. Corrected count to `consumed_at_ms >= synthetic now`, retested; **previous FAIL preserved**, not recast as a security pass |
+| Security/transaction limit | This is **only one atomic challenge-row UPDATE** with server-owned synthetic current user account/role and credential revision checked by SQL `EXISTS`. It does **not** verify an OTP/TOTP counter, commit factor and session atomically, create a session, write security audit or prove remote D1 consistency/rollback |
+| Other code / deployment | No change to real `lib/native-auth.ts`, login, Worker, session readers, real D1, Access, secrets, R2, staging or production |
+| Media | **NO_IMAGE_REQUIRED**; [private IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Approval | ADR-0002 PROPOSED, SRS FROZEN, security/Owner policy approval NOT GIVEN |
+
+| Case | Environment and role | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-012` | Local Miniflare D1, synthetic users | At most one successful redemption, server state/credential revision validated in same SQL update, fail closed | **26/26 check groups PASS; 1/16 parallel writes** | **PASS — LOCAL_D1_CAS_ONLY** | [CI #41424145730](https://github.com/ntdung-tds/iaict-portal/actions/runs/41424145730) |
+| `IAM-FUT-001` | Approved real staging IAM accounts | Verified OTP and full session issued exactly once after atomic proof of challenge, factor step and user/session policy | No integration exists | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Authorized seven-role E2E staging | Protected APIs reject pending/legacy sessions and enforce RBAC/Access | Not tested live | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Boundary:** The new test does not import the preauth TypeScript module into a real route; its D1 schema is strictly synthetic. Neither a successful conditional UPDATE nor this PASS grants a native IAM session. Full MFA transaction semantics remain NOT_RUN.
