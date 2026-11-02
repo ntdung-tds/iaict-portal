@@ -111,7 +111,8 @@ describe("real native ingress and RBAC against disposable original-schema D1; mo
     }));
     db = await mf.getD1Database("DB") as unknown as D1DatabaseLike;
     for (const name of [
-      "0001_core.sql", "0022_iaict_native_auth.sql",
+      "0001_core.sql", "0019_v17_full_cms.sql",
+      "0022_iaict_native_auth.sql",
       "0023_iaict_auth_pbkdf2_workers.sql", "0024_iaict_activation_invites.sql",
     ]) {
       const sql = await readFile(new URL("../cloudflare/migrations/" + name, import.meta.url), "utf8");
