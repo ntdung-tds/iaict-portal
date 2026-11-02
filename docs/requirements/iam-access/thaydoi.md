@@ -134,3 +134,12 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 - Compatibility requirement: D1 SQLite active/role numbers must be explicitly normalized to strict booleans by the **future trusted server-side caller**. Current module remains unimported by login/session/Worker; no migration, no live auth behavior change, no alternate authentication path or MFA activation.
 - QA: Extend existing `IAM-FUT-011` by four negative test scenarios, no new test case, total registry **84**. The prior 16/16 PASS stays historical; new count and exact SHA require new CI evidence, and full hosted MFA remains NOT_RUN.
 - SRS FROZEN, ADR-0002 PROPOSED, Owner MFA security approval NOT GIVEN. No remote D1, Access, production, or staging Worker updates.
+
+
+### CHG-IAM-ACCESS-20261102-09 — Atomic first-factor challenge CAS, disposable local D1 only
+- **Date/status:** 2026-11-02, QA_ONLY / CHƯA_CHỐT. [PR #53](https://github.com/ntdung-tds/iaict-portal/pull/53); Issue #37; ADR-0002 PROPOSED.
+- **Before:** `IAM-FUT-011` tests a read-only pre-MFA candidate in Node; `IAM-FUT-010` tests local factor replay counter CAS. Neither proves that a first-factor challenge can be consumed once with account/credential changes checked in D1.
+- **After:** add **test-only** `scripts/mfa-preauth-d1-cas/run-local.mjs` with two disposable synthetic tables and one conditional `UPDATE` of challenge's consumed timestamp/revision, requiring `success === true` and `meta.changes === 1`. SQL checks current server-owned user record: active account, current role, credential fingerprint **and monotonic revision**, plus challenge owner, purpose, expiry, TTL, failed attempts and lockout. New QA case `IAM-FUT-012` P0, increasing registry **84 → 85** cases.
+- **Security boundary:** A successful challenge CAS is only a **storage primitive**; it does not validate a real OTP, update factor counter, issue session, write audit, implement transaction across all three, or protect an actual login route. Never claim that this is hosted D1 parity or MFA enrollment/acceptance.
+- **API/UI/D1:** no changes to existing login/session/Worker/API/UI, no forward migration, no hosted D1 binding, no real credential/secret, no staging or production deployment, no Access/R2 change.
+- **QA and trace:** append-only `RUN-IAM-20261102-10` after actual CI evidence; test historical failures and exact SHAs remain separate. SRS **FROZEN**, Owner/security approval **NOT GIVEN**, ADR-0002 **PROPOSED**.
