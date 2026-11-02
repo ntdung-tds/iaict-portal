@@ -57,6 +57,14 @@
 
 **Khi có phát hiện lỗi:** ghi FAIL vào run mới → tạo BUG và ảnh Drive FAIL → commit fix → rerun cùng case + tests hồi quy → record PASS của rerun nếu thực sự đạt; **không ghi đè FAIL gốc**.
 
+## 4B. Chủ dự án cho phép chủ động tạo và lưu tài khoản test (02/11/2026)
+
+**Ủy quyền thường trực:** AI agent được chủ động tạo, cấu hình, kích hoạt, quản lý và tái sử dụng các **tài khoản kiểm thử staging của IAICT** để thực hiện kiểm thử thực tế trên trình duyệt, bao gồm các vai trò CMS/CRM. Không chờ xin phép lại chỉ vì chưa có tài khoản test. Kiểm tra danh mục test account hạn chế truy cập trên Drive trước để tái sử dụng; tài khoản `example.test` trước đây đang bị vô hiệu hóa, chưa phải tài khoản đăng nhập thật.
+
+**Lưu giữ để lần sau sử dụng:** ghi ID, email alias, role, trạng thái, thời điểm, liên kết case/run và mã tham chiếu mục trong **kho mật khẩu mã hóa được phê duyệt** vào registry riêng tư. Chỉ lưu mật khẩu, mã khôi phục trong vault đã kết nối, không ghi bí mật vào GitHub, Drive, ChatGPT, CI, báo cáo hay screenshot. Không tuyên bố đã lưu hoặc có thể khôi phục mật khẩu nếu chưa xác nhận việc ghi/đọc kho bảo mật. Session/browser state luôn để trong môi trường riêng an toàn ngoài repo; ưu tiên phiên giới hạn thời gian.
+
+Cho phép thao tác thử nghiệm có kiểm soát trên staging với dữ liệu giả và kế hoạch hoàn tác; không bỏ qua chính sách Cloudflare Access, không giả mạo danh tính, không sử dụng dữ liệu khách hàng, không tự suy diễn quyền triển khai production. Nếu thực sự thiếu tích hợp email, Access hoặc vault thì ghi lý do `BLOCKED` cho đúng ca authenticated E2E, chủ động tiếp tục phần browser test khác. Không tự nâng kết quả mock thành real E2E PASS.
+
 ## 4A. Bắt buộc kiểm thử thực tế bằng trình duyệt khi có thể
 
 **Quyết định của chủ dự án (02/11/2026):** Không được bỏ qua kiểm thử bằng trình duyệt nếu hạng mục có thể kiểm chứng thực tế bằng trình duyệt. Áp dụng trong từng bước phát triển và từng vòng rà soát/sửa lỗi, không chỉ cuối release.
