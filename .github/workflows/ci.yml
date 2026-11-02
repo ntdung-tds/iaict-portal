@@ -135,3 +135,5 @@ jobs:
         run: node scripts/mfa-preauth-d1-cas/run-local.mjs
       - name: Test synthetic verified OTP and multi-table MFA batch rollback (no deploy)
         run: node scripts/mfa-atomic-d1/run-local.mjs
+      - name: Prove epoch and policy CAS against real IAM migrations in disposable D1 (no deploy)
+        run: node scripts/iam-real-schema-d1/run-local.mjs
