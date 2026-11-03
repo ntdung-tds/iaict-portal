@@ -91,7 +91,7 @@ export type MediaPolicyAuthorization =
       | "SCOPE_DENIED"
       | "ROLE_DENIED"
       | "STATE_DENIED"
-      | "UNVERIFIED_SCAN" }>;
+      | "UNVERIFIED_SCAN" | "SCANNER_UNAVAILABLE" }>;
 
 const ACTION_ROLES: Record<MediaPolicyAction, readonly MediaPolicyRole[]> = {
   upload: ["admin", "editor"],
@@ -166,13 +166,21 @@ export function evaluateMediaPolicyAction(action: unknown, raw: unknown): MediaP
       }
       return deny("STATE_DENIED");
     case "review":
-      return status === "SCAN_PASSED" ? { allowed: true, requiresAudit: true } : deny("STATE_DENIED");
+      if (status !== "SCAN_PASSED") return deny("STATE_DENIED");
+      // There is no operational scanner yet: no promotion or human review
+      // of an allegedly safe file is possible without scanner attestation.
+      return MEDIA_POLICY.scan.serviceConfigured
+        ? { allowed: true, requiresAudit: true } : deny("SCANNER_UNAVAILABLE");
     case "publish":
       if (verified !== true) return deny("UNVERIFIED_SCAN");
-      return status === "REVIEW_APPROVED" ? { allowed: true, requiresAudit: true } : deny("STATE_DENIED");
+      if (status !== "REVIEW_APPROVED") return deny("STATE_DENIED");
+      return MEDIA_POLICY.scan.serviceConfigured
+        ? { allowed: true, requiresAudit: true } : deny("SCANNER_UNAVAILABLE");
     case "read-approved-bytes":
       if (verified !== true) return deny("UNVERIFIED_SCAN");
-      return status === "AVAILABLE" ? { allowed: true, requiresAudit: true } : deny("STATE_DENIED");
+      if (status !== "AVAILABLE") return deny("STATE_DENIED");
+      return MEDIA_POLICY.scan.serviceConfigured
+        ? { allowed: true, requiresAudit: true } : deny("SCANNER_UNAVAILABLE");
     case "revoke":
       return status === "AVAILABLE" || status === "REVIEW_APPROVED"
         ? { allowed: true, requiresAudit: true } : deny("STATE_DENIED");
@@ -186,6 +194,9 @@ export function evaluateMediaPolicyAction(action: unknown, raw: unknown): MediaP
 
 /** Gate for any future serving/publish adapter, including admin and public. */
 export function mediaCanBecomePublic(value: unknown): boolean {
+  // A forged boolean is never a scanner verdict. In this version, no scanner
+  // service is configured, so no object can become public through this helper.
+  if (!MEDIA_POLICY.scan.serviceConfigured) return false;
   if (value === null || typeof value !== "object") return false;
   try {
     const source = value as { status?: unknown; trustedScanner?: unknown; trustedDerivative?: unknown; revoked?: unknown };
