@@ -816,3 +816,16 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Follow-up | Final **documentation HEAD CI/staging still PENDING** at capture; rerun on exact final PR SHA, merge only if green and independently verify postmerge |
 | QA media | NO_IMAGE_REQUIRED for unit suite; [private Drive evidence](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) only. IAM PAUSED; SRS/production unchanged |
 
+
+## RUN-MEDIA-20261103-05 — Media preflight dynamic-policy TOCTOU test-first reproduction
+
+| Field | Evidence / status |
+| --- | --- |
+| Source baseline | `74792c91e6e2e9a77bea02e95dddabec3941dfe9`, merged PR #88, PCS canonical rev51 |
+| Defect | Pure helper re-reads policy size/MIME getters after nominal validation; a changing getter can bypass initially validated policy. Throwing getter propagates an exception. No hosted Media/API implication |
+| Test-first SHA | `02d5c7f930e1c7c7e82ccfdfae3353b180e16755`: 3 new negative regression test definitions under existing `CMS-MEDIA-015` |
+| Initial CI | **PENDING** (test-first PR gate not complete at record creation); do not claim test-failure CI until observed |
+| Synthetic local proof | Dynamic maxBytes getter: first read 1 and later 100 permits 6-byte candidate; dynamic MIME getter: validated image/png then later image/jpeg allows claimed JPEG. This is confined to adversarial configuration getters |
+| Fix strategy | Copy validated fields once into immutable primitives/local Set and return structured `POLICY_NOT_CONFIGURED` for failing getters. Preserve previous PASS after separate rerun `RUN-MEDIA-20261103-06` |
+| Security scope | `CMS-MEDIA-015` only; existing 127-case catalog unchanged, Media 001..012 PLANNED/NOT_RUN, no real R2 or Worker upload |
+| Evidence | No screenshots needed; [QA private Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) reserved for real browser |
