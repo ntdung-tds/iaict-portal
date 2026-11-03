@@ -588,3 +588,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 
 **Result boundary:** LOCAL_ACTUAL_ADMIN_ROUTE_REAL_D1 with MOCK_HTTP_DISPATCH; must not be counted as actual hosted Access/API browser acceptance. SRS **FROZEN**; production untouched.
 
+
+## RUN-CMS-20261103-01 — CMS article malformed JSON and protected cache boundary
+
+| Field | Result |
+| --- | --- |
+| Scope | `CMS-ART-001`, `CMS-ART-002`; first non-IAM hardening slice after Owner paused IAM |
+| Source | [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79) · [CMS article route](../../app/api/admin/cms/articles/route.ts) · [local test](../../lib/cms-articles-atomic.test.ts) |
+| Environment | Original CMS migration sources in disposable Node SQLite; real CMS route handlers, **mocked authorization actor**; no Cloudflare Access session, hosted D1, Worker deploy or credential mutation |
+| Planned assertions | Invalid JSON/null/scalar/array/typed ID rejected with HTTP 400 and zero D1 writes; non-JSON media type refused; authenticated CMS GET/POST/DELETE responses explicitly no-store |
+| Current status | **NOT_RUN ON FINAL PR SHA** — introduced source/test; await exact-head GitHub CI; do not infer PASS from committing code |
+| Hosted CMS E2E | **NOT_RUN** (Owner IAM PAUSED, no new authenticated-browser session) |
+| Screenshots | NOT_CAPTURED — isolated API assertions have no visual artifacts |
+| Evidence | [Private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp); update outcome with immutable SHA and run IDs only after actual workflow |
+
