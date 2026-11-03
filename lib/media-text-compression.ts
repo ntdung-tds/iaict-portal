@@ -96,7 +96,7 @@ export async function compressEligibleTextFile(
   if (typeof CompressionStream !== "function")
     return { ok: false, code: "COMPRESSION_UNAVAILABLE" };
 
-  const source = new ReadableStream<Uint8Array>({
+  const source = new ReadableStream<BufferSource>({
     start(controller) {
       controller.enqueue(original);
       controller.close();
