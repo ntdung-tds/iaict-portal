@@ -49,17 +49,31 @@ function reject(code: MediaUploadRejectionCode): MediaUploadPreflight {
   return { ok: false, code };
 }
 
-function isApprovedPolicy(value: unknown): value is MediaUploadPolicy {
-  if (value === null || typeof value !== "object") return false;
-  const candidate = value as Partial<MediaUploadPolicy>;
-  if (!Number.isSafeInteger(candidate.maxBytes) || (candidate.maxBytes ?? 0) <= 0) return false;
-  if (!Array.isArray(candidate.allowedMimeTypes) || candidate.allowedMimeTypes.length === 0) return false;
-  const seen = new Set<string>();
-  for (const mime of candidate.allowedMimeTypes) {
-    if (typeof mime !== "string" || !MEDIA_KINDS.includes(mime as MediaImageMime) || seen.has(mime)) return false;
-    seen.add(mime);
+type ValidatedMediaPolicy = Readonly<{
+  maxBytes: number;
+  allowedMimeTypes: ReadonlySet<MediaImageMime>;
+}>;
+
+/** Snapshot untrusted policy exactly once to avoid getter/Proxy TOCTOU. */
+function validatedPolicySnapshot(value: unknown): ValidatedMediaPolicy | null {
+  if (value === null || typeof value !== "object") return null;
+  try {
+    if (Array.isArray(value)) return null;
+    const candidate = value as Partial<MediaUploadPolicy>;
+    const maxBytes = candidate.maxBytes;
+    const allowed = candidate.allowedMimeTypes;
+    if (typeof maxBytes !== "number" || !Number.isSafeInteger(maxBytes) || maxBytes <= 0) return null;
+    if (!Array.isArray(allowed) || allowed.length === 0) return null;
+    const seen = new Set<MediaImageMime>();
+    for (const mime of allowed) {
+      if (typeof mime !== "string" || !MEDIA_KINDS.includes(mime as MediaImageMime) || seen.has(mime as MediaImageMime)) return null;
+      seen.add(mime as MediaImageMime);
+    }
+    return { maxBytes, allowedMimeTypes: seen };
+  } catch {
+    // A malformed/revoked Proxy or throwing getter is an invalid configuration.
+    return null;
   }
-  return true;
 }
 
 function safeDisplayFilename(value: unknown): string | null {
@@ -85,7 +99,8 @@ function signatureMime(bytes: Uint8Array): MediaImageMime | null {
 }
 
 export function validateMediaUploadPreflight(input: unknown, policy: unknown): MediaUploadPreflight {
-  if (!isApprovedPolicy(policy)) return reject("POLICY_NOT_CONFIGURED");
+  const approved = validatedPolicySnapshot(policy);
+  if (!approved) return reject("POLICY_NOT_CONFIGURED");
   if (input === null || typeof input !== "object" || Array.isArray(input)) return reject("INVALID_INPUT");
   const candidate = input as MediaUploadCandidate;
   const filename = safeDisplayFilename(candidate.filename);
@@ -95,14 +110,14 @@ export function validateMediaUploadPreflight(input: unknown, policy: unknown): M
 
   if (typeof candidate.declaredMimeType !== "string") return reject("UNSUPPORTED_MIME");
   const claimed = candidate.declaredMimeType.trim().toLowerCase();
-  if (!MEDIA_KINDS.includes(claimed as MediaImageMime) || !policy.allowedMimeTypes.includes(claimed as MediaImageMime)) return reject("UNSUPPORTED_MIME");
+  if (!MEDIA_KINDS.includes(claimed as MediaImageMime) || !approved.allowedMimeTypes.has(claimed as MediaImageMime)) return reject("UNSUPPORTED_MIME");
   const mime = claimed as MediaImageMime;
   if (!EXTENSIONS[mime].includes(extension)) return reject("MIME_EXTENSION_MISMATCH");
 
   if (!(candidate.bytes instanceof Uint8Array)) return reject("INVALID_INPUT");
   const bytes = candidate.bytes;
   if (bytes.byteLength === 0) return reject("EMPTY_FILE");
-  if (bytes.byteLength > policy.maxBytes) return reject("TOO_LARGE");
+  if (bytes.byteLength > approved.maxBytes) return reject("TOO_LARGE");
   if (candidate.declaredSize !== undefined) {
     if (!Number.isSafeInteger(candidate.declaredSize) || (candidate.declaredSize as number) < 0) return reject("INVALID_DECLARED_SIZE");
     if (candidate.declaredSize !== bytes.byteLength) return reject("DECLARED_SIZE_MISMATCH");
