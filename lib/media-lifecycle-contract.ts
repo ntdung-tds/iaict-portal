@@ -60,13 +60,15 @@ function isState(value: unknown): value is MediaLifecycleState {
  * The database, not this object, must atomically arbitrate stale writes.
  */
 export function planMediaTransition(input: unknown): MediaTransitionPlan {
-  if (input === null || typeof input !== "object" || Array.isArray(input)) {
+  if (input === null || typeof input !== "object") {
     return { ok: false, code: "INVALID_TRANSITION_INPUT" };
   }
   let from: unknown;
   let to: unknown;
   let expectedRevision: unknown;
   try {
+    // Array.isArray itself throws for a revoked Proxy; keep it inside fail-closed guard.
+    if (Array.isArray(input)) return { ok: false, code: "INVALID_TRANSITION_INPUT" };
     const candidate = input as Record<string, unknown>;
     from = candidate.from;
     to = candidate.to;
