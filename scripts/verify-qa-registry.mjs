@@ -56,7 +56,7 @@ export function validateCatalog(rows,{fileExists=existsSync}={}){
     for(const [key,value] of Object.entries(row)){
       if(!value)errors.push(`line ${line}: missing ${key}`);
     }
-    if(!/^IAM-(AUTH|SESS|INV|USER|ACC|REL|UI|FUT)-\d{3}$/.test(row.id))
+    if(!/^(?:IAM-(AUTH|SESS|INV|USER|ACC|REL|UI|FUT)|CMS-(ART|NEWS|MEDIA|TRAIN|CRM|UI|SEO|OPS))-\d{3}$/.test(row.id))
       errors.push(`line ${line}: invalid ID ${row.id}`);
     if(seen.has(row.id))errors.push(`line ${line}: duplicate ID ${row.id}`);
     seen.add(row.id);
