@@ -955,3 +955,18 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Canonical QA status | **127 cases / 15 Media** unchanged. `CMS-MEDIA-001..012` hosted R2/D1 upload/security/real-role E2E **PLANNED/NOT_RUN**. Google QA Master v2.15 unchanged; no new test case IDs |
 | Environment and rollback | No Worker deployed, no D1 schema/data mutation, no R2 object operations, no Access/IAM/production changes, SRS FROZEN. Rollback source via revert of PR #95, not Cloudflare rollback. [OPS Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) intermittent old staging 503 remains OPEN. Media screenshots NO_IMAGE_REQUIRED. |
 
+
+
+## RUN-MEDIA-20261104-05 — B3.6 owner-requested image/file compression: scoped source and test history
+
+| Item | Test evidence and release boundary |
+| --- | --- |
+| Owner requirement | User explicitly requested “Nhớ thêm nén ảnh, nén tệp nhé” on 2026-11-04. [ADR-MEDIA-20261104-02-COMPRESSION](../adr/ADR-MEDIA-20261104-02-COMPRESSION.md), `CHG-MEDIA-R2-20261104-03`, [PR #97](https://github.com/ntdung-tds/iaict-portal/pull/97) |
+| Source implementation | `lib/media-image-optimization.ts` plans **image derivative encoder settings ONLY** (not actual image output); `lib/media-text-compression.ts` **actually gzip compresses a synthetic local UTF-8 text/csv/json buffer** using bounded CompressionStream and no upload route. Neither module is imported by Worker/R2/D1/IAM or allowed to bypass scan |
+| Scope | 1920px max display, 480px max thumbnail, no upscaling, JPEG 82%, WebP 80%, PNG lossless; requires trusted full decode + EXIF strip, scanner still missing. Gzip text ≤5 MiB, only keep if ≥5% savings; explicit UTF-8/size/MIME failures, skip larger encoding. ZIP batch download noted as **FUTURE/NOT_IMPLEMENTED**, non-image upload **NOT_ALLOWED** |
+| First actual RED | Initial [CI #41738993427](https://github.com/ntdung-tds/iaict-portal/actions/runs/41738993427) verify FAIL before Vitest due strict TypeScript `CompressionStream` input type mismatch, `ReadableStream<Uint8Array>` vs `BufferSource`; corrected to BufferSource stream `305a2ed9`, `e3794e6f` |
+| Second actual RED | [CI #41739162192](https://github.com/ntdung-tds/iaict-portal/actions/runs/41739162192) verify FAIL TypeScript `Uint8Array<ArrayBufferLike>` cannot be enqueued as `BufferSource`, solved by explicitly preserving newly copied `Uint8Array<ArrayBuffer>` type at `99e7ec2f`. **Both failures preserved**; do not call local test PASS until exact final CI completes |
+| Final scope / CI | [CI #41739314575](https://github.com/ntdung-tds/iaict-portal/actions/runs/41739314575) **verify PASS; 65 Vitest files / 685 of 685 tests PASS** at source SHA `99e7ec2fb3d8ab041bd9634e94829d6faafa8980`; other jobs may still be running; staging public [#41739314580](https://github.com/ntdung-tds/iaict-portal/actions/runs/41739314580) **PENDING**, tests old deployed Worker only. Real image decode, re-encode, scan, R2 compression readback, authenticated upload and browser interactions are **NOT_RUN** |
+| Canonical QA / security | Existing **127 test definitions, 15 CMS-MEDIA** unchanged, Google QA Master v2.15 untouched. Hosted `CMS-MEDIA-001..012` remain PLANNED/NOT_RUN. Scanner service `serviceConfigured=false` (hard stop), no D1/R2/Cloudflare IAM/staging/production mutations, frozen SRS preserved. Screenshot not applicable for source-only tests; future evidence only restricted QA Drive. |
+| Ops dependency | [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains open for earlier public staging intermittent 503 and network errors. Unit/pass or public smoke on old deployed Worker is not Media B3.6 live acceptance. |
+
