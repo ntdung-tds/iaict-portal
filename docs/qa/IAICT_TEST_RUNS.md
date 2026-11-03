@@ -632,3 +632,29 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Evidence | QA data synthetic; no screenshot, cookies or secrets. Restricted [Drive QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) if a future sanitized visual reproduction requires it |
 | Risk / rollback | Affected source: `app/api/admin/news/ingest/route.ts`, tests and documentation only; no staging D1 mutation or production deployment; SRS FROZEN; Owner IAM PAUSED |
 
+
+## RUN-CMS-20261103-04 — Reproducible Newsroom test-fixture failure (original PR #82 head)
+
+| Field | Observed outcome |
+| --- | --- |
+| Date | 2026-11-03 |
+| Source SHA | `2a8c2576372ae41a54ca3e6fe3e38f495c720174` |
+| CI | [portal-ci #41575273050](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575273050): **FAIL verify / 588 passed, 1 failed (589 total)**; other jobs not evidence of this specific lifecycle case |
+| Test case | `CMS-NEWS-001`: second RSS ingestion unexpectedly returned HTTP 500 instead of 200; `CMS-NEWS-002/003/004` passed at this tested SHA |
+| Root cause | **TEST FIXTURE**, not proven product regression: `fetch` spy returned the same already-consumed `Response` on two calls (`mockResolvedValue(new Response(...))`). `fetchNewsSourceCandidates` reads response text each time; a consumed body is not reusable. |
+| Fix / retest | Change RSS spy to `mockImplementation(async () => new Response(...))` so every request has a fresh independent response; committed at `32d849113d2953997ada4dc9bfa584741b0e8935`. Follow-up new run `RUN-CMS-20261103-05`. |
+| Risk | No hosted Cloudflare Access/D1/Worker, RSS network or production write performed. No screenshot or credentials. |
+
+## RUN-CMS-20261103-05 — Corrected Newsroom original-migration SQLite + live public staging (verified source SHA)
+
+| Field | Observed outcome |
+| --- | --- |
+| Date and exact source SHA | 2026-11-03 · `32d849113d2953997ada4dc9bfa584741b0e8935` |
+| Scope | [PR #82](https://github.com/ntdung-tds/iaict-portal/pull/82), [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81), `CMS-NEWS-001/002/003/004` |
+| Real source execution (local) | **PASS_LOCAL_ORIGINAL_MIGRATION_SQLITE** — actual Newsroom API and RSS parser, actual Core+V16+V17 SQLite migration schema, real review CAS/claims, CMS article archival and published-site DB queries. **Mock boundaries:** authorization actor and upstream RSS HTTP only |
+| Corrected portal CI | [run 41575415530](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415530) **4/4 jobs PASS**, **589/589 Vitest**, **38/38 local Chromium**. QA registry **103 cases**, frozen SRS, PCS checklist, requirements and release gates PASS |
+| Actual deployed public staging | [run 41575415524](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415524) **24/24 real Chromium PASS**, **24/24 HTTP probes PASS**, observed 503=0, 5xx=0, network errors=0 |
+| Deployment/auth distinction | Staging Chromium/HTTP exercised **previously deployed Worker**, **not** PR #82 Newsroom ingest code. Genuine Access-authenticated CMS/Newsroom browser lifecycle **NOT_RUN** (IAM Owner PAUSED). Real remote RSS fetch was **mocked** in local integration test. |
+| Evidence | [Private Drive QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), no screenshots required for database/API assertions; no credentials, cookies or PII committed |
+| Documentation-head gate | **NOT_RUN yet** at time this immutable record was written; exact post-evidence source SHA CI must pass before merge |
+
