@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 50,
-  "updated_at": "2026-11-03T10:56:25.593Z",
+  "revision": 51,
+  "updated_at": "2026-11-03T11:47:26.571Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T10:56:25.593Z",
+    "updated_at": "2026-11-03T11:47:26.571Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -360,7 +360,7 @@
         "dependencies": [],
         "qa": {
           "required": true,
-          "status": "PLANNED_NOT_RUN",
+          "status": "PARTIAL_LOCAL_ONLY",
           "case_ids": [
             "CMS-MEDIA-001",
             "CMS-MEDIA-002",
@@ -373,18 +373,21 @@
             "CMS-MEDIA-009",
             "CMS-MEDIA-010",
             "CMS-MEDIA-011",
-            "CMS-MEDIA-012"
+            "CMS-MEDIA-012",
+            "CMS-MEDIA-013",
+            "CMS-MEDIA-014",
+            "CMS-MEDIA-015"
           ],
           "run_id": "RUN-MEDIA-20261103-01",
-          "catalog_case_count": 124,
+          "catalog_case_count": 127,
           "baseline_sha": "844f7ddf37d2314eed55f1fe3f766e6610684226",
           "threat_model": "docs/requirements/media-r2/MEDIA_R2_THREAT_MODEL_2026-11-03.md",
           "master_google_doc": "https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit",
-          "master_doc_sync": "VERIFIED_124_CASES_12_MEDIA_PLANNED",
+          "master_doc_sync": "VERIFIED_127_CASES_15_MEDIA",
           "real_staging_upload": "NOT_RUN",
           "hosted_r2_mutations": "NOT_RUN",
           "owner_design_approval": false,
-          "master_doc_version": "2.13",
+          "master_doc_version": "2.14",
           "master_doc_verified_at": "2026-11-03",
           "master_doc_media_case_count": 12,
           "master_doc_source": "https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit",
@@ -403,9 +406,36 @@
             "cloudflare_mutations": "NONE",
             "verified_on": "2026-11-03",
             "media_e2e": "NOT_RUN"
-          }
+          },
+          "local_preflight": {
+            "status": "PASS_SOURCE_CI_UNWIRED_ONLY",
+            "case_ids": [
+              "CMS-MEDIA-013",
+              "CMS-MEDIA-014",
+              "CMS-MEDIA-015"
+            ],
+            "test_file": "lib/media-upload-contract.test.ts",
+            "source_file": "lib/media-upload-contract.ts",
+            "run_id": "RUN-MEDIA-20261103-03",
+            "hosting": "NOT_WIRED",
+            "approved_live_policy": false,
+            "test_policy": "FIXTURE_ONLY",
+            "local_preview": "PASS_9_OF_9_NONCANONICAL",
+            "live_browser": "NOT_RUN",
+            "r2_write": "NOT_RUN",
+            "scanner": "NOT_IMPLEMENTED",
+            "test_source_sha": "139ea0b1aee543fbe328dab7c4ebbded10ba905c",
+            "ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737599",
+            "public_staging_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737613",
+            "portal_ci_jobs_passed": 4,
+            "local_test_definitions": 9,
+            "authenticated_e2e": "NOT_RUN"
+          },
+          "master_doc_media_count": 15,
+          "master_doc_new_auto_cases": 3,
+          "master_doc_case_count": 127
         },
-        "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records.\n2026-11-03 DESIGN ONLY: documented staging R2 threat model, 12 planned manual QA cases with RUN-MEDIA-20261103-01 NOT_RUN and CHG-MEDIA-R2-20261103-01. Actual upload code, scanner, role browser, D1/R2 hosted E2E remain unimplemented/not run. Owner must approve security design before hosted behavior. IAM owner-paused; SRS frozen and production untouched."
+        "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records.\n2026-11-03 DESIGN ONLY: documented staging R2 threat model, 12 planned manual QA cases with RUN-MEDIA-20261103-01 NOT_RUN and CHG-MEDIA-R2-20261103-01. Actual upload code, scanner, role browser, D1/R2 hosted E2E remain unimplemented/not run. Owner must approve security design before hosted behavior. IAM owner-paused; SRS frozen and production untouched.\nB3.2 isolated pure preflight implemented on test branch; 3 AUTO READY local test cases (013..015) pending exact-SHA CI and Master QA sync. Old 12 hosted/API Media cases still PLANNED/NOT_RUN. No live file type/size approved and no Worker/R2/D1/IAM/production/SRS mutation."
       },
       {
         "id": "T-PORTAL-CMS-FIRST",
