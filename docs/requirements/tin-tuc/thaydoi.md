@@ -20,7 +20,7 @@
 
 | CHG-TIN-TUC-20261103-03 | 2026-11-03 | Rà soát 2 vòng: giới hạn cổng HTTPS nguồn RSS, ký tự XML lỗi và hủy stream không chặn xử lý | CODED / LOCAL_PASS / HOSTED_NOT_RUN | Issue #81 · PR #84 | CMS-NEWS-007..009 · RUN-CMS-20261103-08/09 | CHƯA_CHỐT |
 
-| CHG-TIN-TUC-20261103-04 | 2026-11-03 | Vòng lặp rà soát Newsroom: phân biệt href thật và nguồn HTML ẩn trước khi nhập tin | CODED / CI_PENDING | Issue #81 · PR PENDING | CMS-NEWS-010..013 · RUN-CMS-20261103-10 | CHƯA_CHỐT |
+| CHG-TIN-TUC-20261103-04 | 2026-11-03 | Vòng lặp rà soát Newsroom: phân biệt href thật và nguồn HTML ẩn trước khi nhập tin | CODED / LOCAL_PASS / HOSTED_NOT_RUN | Issue #81 · PR #85 | CMS-NEWS-010..013 · RUN-CMS-20261103-10..12 | CHƯA_CHỐT |
 
 ## Thay đổi chi tiết
 
@@ -88,6 +88,8 @@
 - **Process gate correction:** first PR head `7ca215f1...` [portal-ci #41614538770](https://github.com/ntdung-tds/iaict-portal/actions/runs/41614538770) **FAIL** because QA catalog case `CMS-NEWS-013` had invalid test layer `Regression`. Corrected to allowed `Integration` and preserved failure in `RUN-CMS-20261103-11`. This was a documentation validator issue, not demonstrated product bug.
 - **QA loop:** `CMS-NEWS-010` fake HTML anchor attributes, `CMS-NEWS-011` end-to-end HTML fetch adapter fixture, `CMS-NEWS-012` script/style/template/comment link exclusion, `CMS-NEWS-013` malformed/unclosed HTML comment; `RUN-CMS-20261103-10` initial **NOT_RUN pending exact-SHA CI**. Run all previous Core+Newsroom SQLite, source redirect, body-limit, URL/XML, public Chromium/HTTP regressions and review the final patch once more. Stop the bounded loop only when new detected reproducible defects are zero **within these tests and code paths**.
 - **Exclusions / rollback:** no production or staging Worker deploy, no Cloudflare Access/IAM/hosted D1, no real-origin HTTP, no source-only Drive handoff, no change to source seeds, scheduler, CMS business policy or frozen SRS. Reverse the reviewed PR if real source pages reveal a compatible HTML parsing issue, then record/retest rather than assuming success.
+
+**Review-loop verified source result:** `RUN-CMS-20261103-11` documents first [CI #41614538770](https://github.com/ntdung-tds/iaict-portal/actions/runs/41614538770) **FAIL** at QA layer validation (invalid `Regression`); corrected to supported `Integration` and re-reviewed nested template parsing. At source SHA `5116f6e79cb9a0257ef041cbad8cbe28f17a3ee6`, [portal CI #41615306414](https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306414) **4/4 PASS, 609/609 Vitest (25 adapter), 38/38 Chromium local**; [public staging #41615306400](https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306400) **24/24 Chromium + 24/24 HTTP PASS**, no observed HTTP 503/5xx/network errors. `RUN-CMS-20261103-12` contains actual source evidence. Independent source re-review found no new reproducible case in scoped HTML source parser; final QA documentation HEAD and postmerge gates still pending. Staging checks run older Worker, live-origin and authenticated Newsroom E2E **NOT_RUN**; SRS remains frozen.
 
 ## Các thay đổi tiếp theo
 
