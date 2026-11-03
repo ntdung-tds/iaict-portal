@@ -887,7 +887,7 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | PR/merged SHA | [PR #91](https://github.com/ntdung-tds/iaict-portal/pull/91) MERGED to development at `79e401e00b7f7426ba4cc9d1047734d21a7a007a` |
 | Final premerge gate | `9961978df0696da2e1fc6e582aab91fe86aa1dff`: [portal-ci #41673789698](https://github.com/ntdung-tds/iaict-portal/actions/runs/41673789698) **4/4 PASS**, [public staging #41673789867](https://github.com/ntdung-tds/iaict-portal/actions/runs/41673789867) **PASS** |
 | Postmerge source CI | [portal-ci #41674297770](https://github.com/ntdung-tds/iaict-portal/actions/runs/41674297770) **4/4 PASS** on exact merge SHA, including verify, local workerd, browser-visual, ancestry |
-| Postmerge public staging | [staging-acceptance #41674297780](https://github.com/ntdung-tds/iaict-portal/actions/runs/41674297780) **IN_PROGRESS at initial record**; public old deployed Worker smoke only, never B3.3 helper live E2E |
+| Postmerge public staging | [staging-acceptance #41674297780](https://github.com/ntdung-tds/iaict-portal/actions/runs/41674297780) **PASS 1/1**, both real public Chromium and repeated public HTTP availability probe succeeded; public old deployed Worker smoke only, never B3.3 helper live E2E |
 | QA/regressions | Original `RUN-MEDIA-20261103-08` preserves red→fix→green source CI (633/633). **127 canonical cases / 15 Media**, no new case IDs; `CMS-MEDIA-001..012` hosted scanner/API/D1/R2 and authorized browser remain **PLANNED/NOT_RUN** |
 | Operational changes | No new Worker deployment, D1 migration, hosted R2 object read/write/delete, IAM/Access, SRS, production or handover. All seven MED-DEC decisions remain PROPOSED. No screenshot required |
 
