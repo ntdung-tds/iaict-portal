@@ -60,6 +60,7 @@
 - **Phát hiện tái lập:** policy object có getter thay đổi `maxBytes` hoặc `allowedMimeTypes` theo lần đọc; helper ban đầu kiểm tra chính sách rồi truy xuất lại từng thuộc tính và có thể quyết định sai theo giá trị mới. Getter ném lỗi có thể làm helper thoát bằng exception thay vì trả mã từ chối. Phạm vi: preflight thuần, không phải API upload.
 - **Test-first:** mở rộng `CMS-MEDIA-015` với ba regression case dùng getter thay đổi theo lần đọc và getter ném lỗi; ghi lần FAIL gốc ở `RUN-MEDIA-20261103-05` khi kiểm thử thực thi thực tế.
 - **Hướng khắc phục:** chuẩn hóa `maxBytes` và `allowedMimeTypes` vào snapshot primitive/Set một lần; nếu đọc/duyệt chính sách thất bại, trả `POLICY_NOT_CONFIGURED`. Rà soát và chạy lại trên immutable SHA; ghi riêng `RUN-MEDIA-20261103-06`.
+- **Ba vòng CI tái lập / retest:** 3 source-test Unit FAIL từ getter policy, getter input, override byteLength; lần lượt test-first SHAs `ed0afd11`, `7dc4bc5e`, `9838c230`. Bản sửa lần 3 `7b85189d`: [Portal CI #41635067760](https://github.com/ntdung-tds/iaict-portal/actions/runs/41635067760) 4/4 PASS và [public staging #41635067742](https://github.com/ntdung-tds/iaict-portal/actions/runs/41635067742) PASS trên Worker cũ; chi tiết [RUN-MEDIA-20261103-06](../../qa/IAICT_TEST_RUNS.md). Google Master QA **v2.15** đã đồng bộ, đọc lại **127 cases / 15 Media**; không bổ sung case ID mới.
 - **Giới hạn:** không chốt định dạng MIME/dung lượng live; không nối API, IAM/Access, R2/D1, Worker, production; SRS CHƯA_CHỐT. 12 case live Media 001..012 vẫn NOT_RUN.
 
 ## Các thay đổi tiếp theo
