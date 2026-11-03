@@ -110,11 +110,24 @@ function safeDisplayFilename(value: unknown): string | null {
   return filename;
 }
 
-function signatureMime(bytes: Uint8Array): MediaImageMime | null {
+const NATIVE_BYTE_LENGTH_GETTER =
+  Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), "byteLength")?.get;
+
+/** Read the intrinsic typed-array slot, not a subclass/Proxy override. */
+function trustedByteLength(bytes: Uint8Array): number | null {
+  try {
+    const actual = NATIVE_BYTE_LENGTH_GETTER?.call(bytes);
+    return typeof actual === "number" && Number.isSafeInteger(actual) && actual >= 0 ? actual : null;
+  } catch {
+    return null;
+  }
+}
+
+function signatureMime(bytes: Uint8Array, actualLength: number): MediaImageMime | null {
   // Signature recognition only; this does not validate an entire decoded image.
-  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
-  if (bytes.length >= 8 && [137, 80, 78, 71, 13, 10, 26, 10].every((n, i) => bytes[i] === n)) return "image/png";
-  if (bytes.length >= 12 && [82, 73, 70, 70].every((n, i) => bytes[i] === n) &&
+  if (actualLength >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (actualLength >= 8 && [137, 80, 78, 71, 13, 10, 26, 10].every((n, i) => bytes[i] === n)) return "image/png";
+  if (actualLength >= 12 && [82, 73, 70, 70].every((n, i) => bytes[i] === n) &&
       [87, 69, 66, 80].every((n, i) => bytes[i + 8] === n)) return "image/webp";
   return null;
 }
@@ -137,14 +150,16 @@ export function validateMediaUploadPreflight(input: unknown, policy: unknown): M
 
   if (!(candidate.bytes instanceof Uint8Array)) return reject("INVALID_INPUT");
   const bytes = candidate.bytes;
-  if (bytes.byteLength === 0) return reject("EMPTY_FILE");
-  if (bytes.byteLength > approved.maxBytes) return reject("TOO_LARGE");
+  const actualLength = trustedByteLength(bytes);
+  if (actualLength === null) return reject("INVALID_INPUT");
+  if (actualLength === 0) return reject("EMPTY_FILE");
+  if (actualLength > approved.maxBytes) return reject("TOO_LARGE");
   if (candidate.declaredSize !== undefined) {
     if (!Number.isSafeInteger(candidate.declaredSize) || (candidate.declaredSize as number) < 0) return reject("INVALID_DECLARED_SIZE");
-    if (candidate.declaredSize !== bytes.byteLength) return reject("DECLARED_SIZE_MISMATCH");
+    if (candidate.declaredSize !== actualLength) return reject("DECLARED_SIZE_MISMATCH");
   }
-  if (signatureMime(bytes) !== mime) return reject("SIGNATURE_MISMATCH");
-  return { ok: true, mimeType: mime, displayFilename: filename, byteLength: bytes.byteLength };
+  if (signatureMime(bytes, actualLength) !== mime) return reject("SIGNATURE_MISMATCH");
+  return { ok: true, mimeType: mime, displayFilename: filename, byteLength: actualLength };
 }
 
 const V4_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
