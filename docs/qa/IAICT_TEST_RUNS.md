@@ -908,3 +908,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Existing QA baseline | **127 cases** / **15 Media**; no new/edited canonical case. `CMS-MEDIA-001..012` (including `CMS-MEDIA-004` hosted stream enforcement) **PLANNED/NOT_RUN**; Google Master v2.15 remains unchanged |
 | Mutation / approvals | **NONE** to Worker, R2/D1, Access, IAM, production or SRS. All `MED-DEC-01..07` still PROPOSED; owner release/policy approval NOT_GIVEN. No screenshot required; future private QA evidence only in [Drive folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
 
+
+
+## RUN-MEDIA-20261104-02 — B3.4 exact merged SHA and postmerge source/runtime boundaries
+
+| Field | Evidence and explicit limitations |
+| --- | --- |
+| Merge | [PR #93](https://github.com/ntdung-tds/iaict-portal/pull/93) MERGED into development at SHA `3ad07ef3c34bf7a1e7a95a4fccc5164d5c629fdb`; prior PR exact docs head `4dd7d5d6fa2e77f3d86e5f1fa35e0ae1a2be0bc4` |
+| Final premerge CI | [Portal CI #41725367275](https://github.com/ntdung-tds/iaict-portal/actions/runs/41725367275) **4/4 PASS**, [real public staging #41725367238](https://github.com/ntdung-tds/iaict-portal/actions/runs/41725367238) **PASS** on previous deployed Worker; no hosted Media B3.4 upload |
+| Postmerge Portal CI | [#41725885901](https://github.com/ntdung-tds/iaict-portal/actions/runs/41725885901) **4/4 PASS** at exact merge SHA |
+| Postmerge public staging | [#41725885741](https://github.com/ntdung-tds/iaict-portal/actions/runs/41725885741) **IN_PROGRESS at initial record**, targets previously deployed Worker; cannot validate unwired B3.4 helper |
+| Original failure history | [RUN-MEDIA-20261104-01](../qa/IAICT_TEST_RUNS.md) preserves 2 RED→GREEN rounds: initial 645/647, independent review 647/650, final source [650/650 PASS](https://github.com/ntdung-tds/iaict-portal/actions/runs/41724127069). Old Worker staging [#41724126823](https://github.com/ntdung-tds/iaict-portal/actions/runs/41724126823) first failed 3/24 HTTP 503 with 1 flaky Chromium, rerun 24/24 browser + 24/24 HTTP PASS. [Operations #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains OPEN |
+| QA coverage | 127 canonical case definitions (15 Media) unchanged. `CMS-MEDIA-001..012` remain **PLANNED / NOT_RUN**. B3.4 pure stream inspector does not impose a live MIME/size/chunk policy, scanner, verified ownership or D1/R2 storage transaction |
+| Boundary | No Worker deployment, staging/prod R2 writes, hosted D1 changes, Access IAM mutations, SRS edits or source Drive handover. MED-DEC-01..07 still PROPOSED. QA screenshots NO_IMAGE_REQUIRED; future restricted Drive [folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
+
