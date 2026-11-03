@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 44,
-  "updated_at": "2026-11-03T05:37:35.491Z",
+  "revision": 45,
+  "updated_at": "2026-11-03T09:09:40.240Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T05:37:35.491Z",
+    "updated_at": "2026-11-03T09:09:40.240Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -439,7 +439,7 @@
       {
         "id": "T-NEWSROOM-SOURCE-BOUNDARIES",
         "title": "Independent Newsroom review — source URL redirects and bounded streaming size",
-        "status": "IN_PROGRESS",
+        "status": "DONE",
         "priority": "P0",
         "risk": "HIGH",
         "classification": "PUBLIC",
@@ -466,9 +466,38 @@
           "public_staging_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604067",
           "real_upstream": "NOT_RUN",
           "deployed_new_worker": "NOT_RUN",
-          "final_doc_ci": "PENDING"
+          "final_doc_ci": "PENDING",
+          "postmerge_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41585438582",
+          "postmerge_staging": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41585438581"
         },
-        "description": "Second audit after PR #82 merge found redirect follow without allowed destination check and body allocation via response.text before size guard. Bounded fix on fix/newsroom-source-boundaries-review-20261103; external source actual HTTP NOT_RUN and no production/staging/IAM mutation. Exact source SHA 043b270b now 4/4 Portal CI PASS / 594 Vitest / 38 local Chromium; public Chromium+HTTP 24+24 PASS on old staged Worker. Final docs SHA CI and merge pending."
+        "description": "Second audit after PR #82 merge found redirect follow without allowed destination check and body allocation via response.text before size guard. Bounded fix on fix/newsroom-source-boundaries-review-20261103; external source actual HTTP NOT_RUN and no production/staging/IAM mutation. Exact source SHA 043b270b now 4/4 Portal CI PASS / 594 Vitest / 38 local Chromium; public Chromium+HTTP 24+24 PASS on old staged Worker. Final docs SHA CI and merge pending. PR #83 merged at c86ff18adfef49b5454cc71b2649aa81ae840bd1; exact postmerge portal CI 4/4, 594 Vitest, 38 local Chromium, public 24 browser + 24 HTTP PASS. This is source/test completion only; new Worker deployment/hosted E2E NOT_RUN."
+      },
+      {
+        "id": "T-NEWSROOM-TWO-PASS-REVIEW",
+        "title": "Newsroom re-review twice: HTTPS ports, XML numeric references and stalled upstream body cancellation",
+        "status": "IN_PROGRESS",
+        "priority": "P0",
+        "risk": "HIGH",
+        "classification": "PUBLIC",
+        "security_sensitive": true,
+        "requires_owner_approval": false,
+        "github_issue": "https://github.com/ntdung-tds/iaict-portal/issues/81",
+        "dependencies": [],
+        "qa": {
+          "required": true,
+          "status": "NOT_RUN",
+          "case_ids": [
+            "CMS-NEWS-007",
+            "CMS-NEWS-008",
+            "CMS-NEWS-009"
+          ],
+          "run_id": "RUN-CMS-20261103-08",
+          "environment": "LOCAL_DETERMINISTIC_HTTP_STREAM",
+          "hosted_authenticated": "NOT_RUN",
+          "live_upstream": "NOT_RUN",
+          "production": "UNCHANGED"
+        },
+        "description": "Owner explicitly requested two review passes after PR #83. Independent read found custom port URLs under allowlisted host, out-of-range XML numeric entities raising RangeError, and awaiting a non-cooperating response body cancellation on redirect/oversize paths. Source+tests on fix/newsroom-second-two-pass-review-20261103 pending exact-SHA CI. No IAM, SRS or production changes."
       }
     ],
     "features": [],
