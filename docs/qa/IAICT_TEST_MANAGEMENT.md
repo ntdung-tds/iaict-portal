@@ -175,3 +175,7 @@ The historical IAM QA baseline has 97 cases. [Issue #79](https://github.com/ntdu
 ## 2026-11-03 — Newsroom QA expansion
 
 Add CMS-NEWS-001..004 (103 total registered cases) for Newsroom route, original Core/Newsroom/CMS SQLite migrations, synthetic RSS, review CAS, publication and CMS archive. Mock actor and upstream HTTP only. Hosted authenticated E2E remains NOT_RUN. Update Google Master QA Doc after test evidence; IAM stays PAUSED.
+
+## 2026-11-03 — Independent Newsroom source HTTP safety review
+
+Current registry adds `CMS-NEWS-005` (validate approved HTTPS source redirects before fetch, bound hop count) and `CMS-NEWS-006` (actual response byte cap on chunked feed including stream cancellation). **105 total case records**, separate from earlier `CMS-NEWS-001..004`. These tests use injected synthetic HTTP/ReadableStream, not live upstream servers or Access-authenticated Chromium. Preserved evidence and review change ID: `CHG-TIN-TUC-20261103-02`, `RUN-CMS-20261103-06`. No IAM scope expansion.
