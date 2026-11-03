@@ -34,6 +34,7 @@ export type TextCompressionResult =
     }>
   | Readonly<{ ok: false; code:
       | "INVALID_INPUT"
+      | "INVALID_TEXT_ENCODING"
       | "UNSUPPORTED_FORMAT"
       | "EMPTY_INPUT"
       | "TOO_LARGE"
@@ -86,6 +87,11 @@ export async function compressEligibleTextFile(
   }
   const original = trustedCopy(rawBytes);
   if (!original) return { ok: false, code: "INVALID_INPUT" };
+  // The first iteration only supports valid UTF-8 text. Never infer safe file
+  // content from a caller-controlled MIME or extension alone.
+  try {
+    new TextDecoder("utf-8", { fatal: true }).decode(original);
+  } catch { return { ok: false, code: "INVALID_TEXT_ENCODING" }; }
 
   if (typeof CompressionStream !== "function")
     return { ok: false, code: "COMPRESSION_UNAVAILABLE" };
