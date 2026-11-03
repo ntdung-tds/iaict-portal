@@ -5,9 +5,9 @@
 ## Scope counters (not global project %)
 | Scope | Done / Total | In progress | Blocked | Not started | Meaning |
 |---|---:|---:|---:|---:|---|
-| CMS/CRM-1 **scoped checklist** | **5/10** | 1 | 2 | 2 | Includes narrow infrastructure / QA artifact checkpoints, not full CMS release |
+| CMS/CRM-1 **scoped checklist** | **5/10** | 0 | 2 | 2 | Plus **1 owner-DEFERRED IAM checkpoint**; not full CMS release |
 | IAM v1.2 **20 proposed target outcomes** | **0/20 full acceptance** | 5 | 1 | 14 | Prototype/partial code exists; no assertion that all 20 are approved requirements |
-| QA case catalog | **95 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
+| QA case catalog | **99 documented** | — | — | — | Case definitions are not evidence of execution; verify each Run ID |
 | Authorized live 7-role authentication | **0/7 role E2E proven** | — | 7 | — | Eight disabled D1 fixtures are not valid logins |
 
 ## Verified chronology — append only (new rows at bottom)
@@ -80,3 +80,4 @@
 
 ## Cross-chat handoff
 Open [CHECKLIST_MOMENT](CHECKLIST_MOMENT.md), choose **latest timestamped snapshot**, compare GitHub PR HEAD/CI and Cloudflare runtime, resume **CMS-08 S3 / T-IAM-MFA-F2** or record a new evidence-based decision when blocked. No need to infer progress from prose in preceding chats. Keep old progress rows append-only, add new row and moment snapshot when switching tasks.
+| 2026-11-03 · Owner paused IAM, Portal phase 1 started | [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79), [14-module inventory](PORTAL_REMAINING_WORK_2026-11-03.md), [CMS change log](../requirements/cms-workflow/thaydoi.md), `CMS-ART-001/002`, `RUN-CMS-20261103-01` | Owner-PAUSED 3 IAM PCS tasks. Previous 8 QA Access identities + D1 roles exist but actual positive-role login remains NOT_RUN; no further IAM mutation. First CMS code guards + regression tests committed on a separate PR branch, exact-SHA CI PENDING. Original 97 IAM cases + 2 CMS tests = 99 documented; no whole-project percentage. | Verify CI, classify historical PRs without blind merge, continue CMS/Newsroom and Media. Production, SRS sync, whole-source handoff remain blocked by separate owner decisions |
