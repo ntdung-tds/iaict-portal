@@ -743,3 +743,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Current result | **NOT_RUN on amended source/docs SHA**. Do not label the original 4/4 portal CI or 600+ Vitest PASS. Append separate actual outcome after complete retest. |
 | Boundaries | Original website staging public only; synthetic Newsroom source HTML and upstream HTTP. No live authenticated admin, hosted D1/Access or production deployment. IAM remains owner-paused, SRS frozen. |
 
+
+## RUN-CMS-20261103-12 — Review loop source gate PASS after QA-label fix and nested-template re-review
+
+| Field | Observed evidence |
+| --- | --- |
+| Verified source commit | `5116f6e79cb9a0257ef041cbad8cbe28f17a3ee6`; [PR #85](https://github.com/ntdung-tds/iaict-portal/pull/85), [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) |
+| Earlier failure preserved | `RUN-CMS-20261103-11` initial `verify` FAIL due unsupported QA layer `Regression`; corrected the case to `Integration`, preserving case ID `CMS-NEWS-013`. Separately fixed nested-template hidden-link leak and added two focused regression tests. |
+| Test scope | **PASS_LOCAL_SOURCE_FIXTURE**. Real `parseHtmlNewsCandidates` and `fetchNewsSourceCandidates` with synthetic HTML/HTTP. Cases `CMS-NEWS-010..013` assert genuine href and reject fake `data-href`/title, hidden comments/scripts/styles/templates, nested/unclosed templates. Original Core/V16/V17 SQLite Newsroom integration (mocked actor and RSS HTTP) also runs in global Vitest. |
+| Exact source CI | [portal-ci #41615306414](https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306414): **4/4 jobs PASS**, **609/609 Vitest**, **25/25 source-adapter tests**, **38/38 local Chromium**. QA validator **112 cases**, SRS freeze and PCS/checklist/requirements gates PASS. |
+| Real public staging | [staging #41615306400](https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306400): **24/24 Chromium PASS**, **24/24 repeated HTTP probes PASS**, observed 503=0, 5xx=0, networkErrors=0. |
+| Independent post-fix source re-review | Read back patched parser and 25 adapter tests at immutable SHA. No additional reproducible defect detected in explicitly scoped HTML source extraction cases after third iteration; no broader zero-bug claim or full DOM parser certification. |
+| Explicit exclusions | Public staging still tests **previous deployed Worker**, not this PR code. Real external-origin HTML fetch and authenticated Newsroom browser E2E remain **NOT_RUN**; IAM PAUSED; no staging/production deployment, hosted D1/Access, SRS sync or private screenshots. |
+| Final documentation HEAD and merge | **PENDING** at capture; rerun exact final-documentation SHA CI and public staging acceptance before merge, then verify postmerge SHA. |
+
