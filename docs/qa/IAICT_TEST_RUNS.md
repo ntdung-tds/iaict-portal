@@ -788,3 +788,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Controls | No Worker deploy, hosted R2/D1 mutation, Access/credential change, production change, or SRS approval implied |
 | Google Master readback | [v2.13](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) verified header **124** and all 12 distinct `CMS-MEDIA-001..012` PLANNED/MANUAL/NOT_RUN after document sync; no media execution PASS implied |
 | Live R2 metadata only | **PASS_READ_ONLY_BUCKET_METADATA** (Cloudflare GET only, 2026-11-03): bucket `iaict-portal-staging-media` exists APAC, `r2.dev` disabled, 0 custom domains, 1 enabled default multipart-abort lifecycle rule; no evidence of app object retention. CORS query unverified. **No object listing/read/write/delete**. Master Google QA v2.13 updated/read back; all media functional test cases remain **NOT_RUN**. |
+
+## RUN-MEDIA-20261103-02 — B3.2 pure upload preflight code (initial, before CI)
+
+| Field | Evidence / scope |
+| --- | --- |
+| Baseline | development `4b96dd1ce89de662f8ba57dd5db76268675dbd05`, [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39) |
+| Code | `lib/media-upload-contract.ts` isolated helper, `lib/media-upload-contract.test.ts` |
+| New cases | `CMS-MEDIA-013/014/015` AUTO READY; 127 total catalog |
+| Local exploratory execution | Standalone Node/TypeScript smoke: 9/9 test groups PASS using a locally constructed test shim. This is not canonical GitHub CI evidence |
+| CI / Chromium / public staging | **NOT_RUN at capture**, exact PR-head QA evidence to be added after actual workflows complete |
+| Hosted media upload / R2 scan / login | **NOT_IMPLEMENTED / NOT_RUN**; 12 earlier `CMS-MEDIA-001..012` remain PLANNED |
+| Product policy | Required explicit policy, test MIME and size are fixtures, **no Owner-approved runtime settings** |
+| SRS / production / secrets | Untouched; IAM PAUSED, no Worker deployed, no R2/D1 mutations, no screenshot generated |
+| Drive | https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3 |

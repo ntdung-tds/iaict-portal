@@ -57,3 +57,9 @@ Existing GitHub CSV is canonical. Added `CMS-MEDIA-001..012` with priorities P0/
 - **Gate to close Issue #39:** all 12 cases mapped to actual automated/manual test runs at appropriate layers, real authorized CMS staging browser and isolated R2 readback PASS, scanner/quarantine policy implemented, rollback verified and owner acceptance. Until then Issue stays OPEN.
 
 **Evidence policy:** [restricted Drive QA](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3); no credentials, real user files, private test screenshots or tokens in GitHub. No QA images required for this document-only slice.
+
+## 6. B3.2 pure contract boundary — no live activation
+
+The isolated `lib/media-upload-contract.ts` adds preflight checks for filename safety, MIME/extension/file-signature matching for synthetic JPEG/PNG/WebP fixtures, declared and actual byte lengths, and UUIDv4-only private quarantine key generation. The caller **must** pass an explicit policy. No production/staging default MIME/size policy exists in this helper. The helper is not imported by any API, Worker or UI.
+
+Passing preflight proves only small local input invariants. It **does not** prove a fully decoded image, malware-free payload, sanitized metadata/EXIF, streamed memory cap, quotas, authorized upload, object lifecycle, scanner, signed download or public visibility. Existing external-URL media CMS remains unchanged. Exact CI and `CMS-MEDIA-013..015` check only this narrow scope; all real hosted cases `001..012` remain NOT_RUN.
