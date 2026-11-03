@@ -12,7 +12,7 @@ export const MEDIA_POLICY = Object.freeze({
   id: MEDIA_POLICY_ID,
   environment: "staging" as const,
   file: Object.freeze({
-    mimeTypes: ["image/jpeg", "image/png", "image/webp"] as const,
+    mimeTypes: Object.freeze(["image/jpeg", "image/png", "image/webp"] as const),
     maxBytes: 10 * 1024 * 1024, // 10 MiB; bytes, not MB
     maxPixels: 25_000_000,
     maxDimension: 8192,
@@ -119,29 +119,36 @@ function deny(code: Exclude<MediaPolicyAuthorization, {allowed:true}>["code"]): 
 export function evaluateMediaPolicyAction(action: unknown, raw: unknown): MediaPolicyAuthorization {
   if (typeof action !== "string" || !Object.hasOwn(ACTION_ROLES, action)) return deny("INVALID_CONTEXT");
   if (raw === null || typeof raw !== "object") return deny("INVALID_CONTEXT");
-  let actorId: unknown, actorScopeId: unknown, roles: unknown;
+  let actorId: unknown, actorScopeId: unknown;
   let assetScopeId: unknown, uploaderId: unknown, status: unknown, verified: unknown;
+  // Use one immutable snapshot of the role collection. A Proxy can throw on
+  // .length, change an element, or swap .includes after preliminary validation.
+  const roleSnapshot: MediaPolicyRole[] = [];
   try {
     if (Array.isArray(raw)) return deny("INVALID_CONTEXT");
     const ctx = raw as MediaPolicyContext;
     actorId = ctx.actorId;
     actorScopeId = ctx.actorScopeId;
-    roles = ctx.roles;
+    const roles = ctx.roles;
     assetScopeId = ctx.assetScopeId;
     uploaderId = ctx.uploaderId;
     status = ctx.status;
     verified = ctx.verifiedScanAndDerivative;
-  } catch { return deny("INVALID_CONTEXT"); }
-  if (invalidId(actorId) || invalidId(actorScopeId) || !Array.isArray(roles) ||
-      roles.length === 0 || roles.length > 16) return deny("INVALID_CONTEXT");
-  let permitted = false;
-  try {
-    for (const role of roles) {
-      if (typeof role !== "string" || role.length > 40) return deny("INVALID_CONTEXT");
-      if (ACTION_ROLES[action as MediaPolicyAction].includes(role as MediaPolicyRole)) permitted = true;
+    if (!Array.isArray(roles)) return deny("INVALID_CONTEXT");
+    const size = roles.length;
+    if (!Number.isSafeInteger(size) || size < 1 || size > 16) return deny("INVALID_CONTEXT");
+    for (let i = 0; i < size; i++) {
+      const role: unknown = roles[i];
+      if (typeof role !== "string" || role.length > 40 ||
+          !["admin", "editor", "reviewer", "viewer", "news_admin", "news_editor", "news_reviewer"].includes(role)) {
+        return deny("INVALID_CONTEXT");
+      }
+      roleSnapshot.push(role as MediaPolicyRole);
     }
   } catch { return deny("INVALID_CONTEXT"); }
-  if (!permitted) return deny("ROLE_DENIED");
+  if (invalidId(actorId) || invalidId(actorScopeId)) return deny("INVALID_CONTEXT");
+  if (!roleSnapshot.some(role => ACTION_ROLES[action as MediaPolicyAction].includes(role)))
+    return deny("ROLE_DENIED");
   if (action === "upload") return { allowed: true, requiresAudit: true };
 
   if (invalidId(assetScopeId) || invalidId(uploaderId)) return deny("INVALID_CONTEXT");
@@ -153,8 +160,8 @@ export function evaluateMediaPolicyAction(action: unknown, raw: unknown): MediaP
       // Viewer can only see approved metadata; editor can inspect own drafts;
       // admin/reviewer can inspect scoped records but never receive raw bytes.
       if (status === "AVAILABLE" ||
-          (roles.includes("admin") || roles.includes("reviewer")) && status !== "DELETED" ||
-          (roles.includes("editor") && actorId === uploaderId && status !== "DELETED")) {
+          (roleSnapshot.includes("admin") || roleSnapshot.includes("reviewer")) && status !== "DELETED" ||
+          (roleSnapshot.includes("editor") && actorId === uploaderId && status !== "DELETED")) {
         return { allowed: true, requiresAudit: true };
       }
       return deny("STATE_DENIED");
