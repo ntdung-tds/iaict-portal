@@ -380,10 +380,15 @@
           "baseline_sha": "844f7ddf37d2314eed55f1fe3f766e6610684226",
           "threat_model": "docs/requirements/media-r2/MEDIA_R2_THREAT_MODEL_2026-11-03.md",
           "master_google_doc": "https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit",
-          "master_doc_sync": "PENDING_READBACK",
+          "master_doc_sync": "VERIFIED_124_CASES_12_MEDIA_PLANNED",
           "real_staging_upload": "NOT_RUN",
           "hosted_r2_mutations": "NOT_RUN",
-          "owner_design_approval": false
+          "owner_design_approval": false,
+          "master_doc_version": "2.13",
+          "master_doc_verified_at": "2026-11-03",
+          "master_doc_media_case_count": 12,
+          "master_doc_source": "https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit",
+          "master_doc_real_media_runs": 0
         },
         "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records.\n2026-11-03 DESIGN ONLY: documented staging R2 threat model, 12 planned manual QA cases with RUN-MEDIA-20261103-01 NOT_RUN and CHG-MEDIA-R2-20261103-01. Actual upload code, scanner, role browser, D1/R2 hosted E2E remain unimplemented/not run. Owner must approve security design before hosted behavior. IAM owner-paused; SRS frozen and production untouched."
       },

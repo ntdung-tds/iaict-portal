@@ -786,3 +786,4 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Change / plan | `CHG-MEDIA-R2-20261103-01`; [Media threat model](../requirements/media-r2/MEDIA_R2_THREAT_MODEL_2026-11-03.md) |
 | Screenshots and artifacts | NO_IMAGE_REQUIRED; future private [Drive media QA root](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
 | Controls | No Worker deploy, hosted R2/D1 mutation, Access/credential change, production change, or SRS approval implied |
+| Google Master readback | [v2.13](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) verified header **124** and all 12 distinct `CMS-MEDIA-001..012` PLANNED/MANUAL/NOT_RUN after document sync; no media execution PASS implied |
