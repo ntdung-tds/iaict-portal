@@ -2,7 +2,14 @@ import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { gunzipSync } from "node:zlib";
 
-test.describe("B3.7 real local-browser compression workbench", () => {
+test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL bytes]", () => {
+  test.beforeEach(async ({ page }) => {
+    // Only the CMS shell session is mocked. Canvas, ZIP, gzip and downloads
+    // are executed by real Chromium, not stubbed.
+    await page.route("**/api/admin/cms/session", route => route.fulfill({
+      json: { ok: true, actor: { id: "local-test", roles: ["editor"] } },
+    }));
+  });
   test("renders responsive three tools and creates real JPEG/PNG image bytes", async ({ page }) => {
     await page.goto("/admin/tools/compression");
     await expect(page.getByRole("heading", { name: "Trung tâm nén ảnh & tệp" })).toBeVisible();
