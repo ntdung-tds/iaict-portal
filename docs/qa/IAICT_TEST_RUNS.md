@@ -862,3 +862,18 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Next decision | B3.3 format/size, scanner/quarantine, private object ownership and lifecycle, approval before hosted implementation. IAM owner-PAUSED; SRS FROZEN; production HOLD |
 | QA media | NO_IMAGE_REQUIRED for this GitHub CI and Worker metadata check; future browser evidence ONLY in private [Drive QA folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
 
+
+
+## RUN-MEDIA-20261103-08 — B3.3 grouped Media lifecycle fixture FAIL → FIX → RETEST (source only)
+
+| Field | Exact evidence and limitations |
+| --- | --- |
+| Source scope | [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39), [PR #91](https://github.com/ntdung-tds/iaict-portal/pull/91), `CHG-MEDIA-R2-20261103-04`: proposed policy decisions + **pure unwired** lifecycle graph/CAS revision pair and negative fixtures. No hosted API |
+| Initial RED SHA | `7202f84c6cb36c96be93f223efc0a6f925a7d3e2`, [Portal CI #41672527992](https://github.com/ntdung-tds/iaict-portal/actions/runs/41672527992): verify **FAIL**, Vitest **631 PASS / 2 FAIL** (633 total). Defect 1: revoked Proxy made Array.isArray throw outside try. Defect 2: test-helper default parameter coerced explicit undefined revision to zero (fixture bug, not product security bypass). |
+| Fixes | `375fd429a9963645aa08894ca929981a5098148e` moves Array.isArray under catch; `12dd8c1cd83bff603d0fbca090c37119d0228ee0` corrects explicit undefined test fixture. Both issues retained as historical failed runs; retest exact final SHA required |
+| Retest final code SHA | **PENDING exact PR-head CI** after correcting the two issues; do not claim PASS from source inspection |
+| Public staging Chromium | **PENDING final SHA**, previous deployment only; pure module not imported by runtime and not browser-visible |
+| Real CMS Media | `CMS-MEDIA-001..012` remain **PLANNED/NOT_RUN**. No scanner, actual D1 CAS, R2 write, permitted MIME-size policy, real role login or upload E2E |
+| Registry and synchronization | **127** canonical case definitions unchanged / **15** Media; Google Master QA v2.15 previously readback; no case content changes |
+| Owner/environment | All MED-DEC-01..07 **PROPOSED / NOT APPROVED**. IAM PAUSED, SRS FROZEN, no Worker deploy, staging/production/D1/R2/Access mutation or screenshots. QA media private [Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3), **NOT_CAPTURED / NO_IMAGE_REQUIRED** |
+
