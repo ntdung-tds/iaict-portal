@@ -126,19 +126,29 @@ type Entry = {
  * Compresses eligible plain-text files only if DEFLATE saves at least 5%.
  */
 export async function createLocalZipArchive(raw: unknown): Promise<LocalZipOutput> {
-  if (!Array.isArray(raw) || raw.length === 0) return { ok: false, code: "INVALID_INPUT" };
-  if (raw.length > LOCAL_ZIP_POLICY.maxFiles) return { ok: false, code: "TOO_MANY_FILES" };
+  // An Array.isArray on a revoked Proxy itself can throw. Snapshot the
+  // collection exactly once before touching any entry's getters.
+  const items: unknown[] = [];
+  try {
+    if (!Array.isArray(raw)) return { ok: false, code: "INVALID_INPUT" };
+    const length = raw.length;
+    if (!Number.isSafeInteger(length) || length === 0) return { ok: false, code: "INVALID_INPUT" };
+    if (length > LOCAL_ZIP_POLICY.maxFiles) return { ok: false, code: "TOO_MANY_FILES" };
+    for (let i = 0; i < length; i++) items.push(raw[i]);
+  } catch { return { ok: false, code: "INVALID_INPUT" }; }
 
   let totalInput = 0;
   let totalEstimate = 22;
   const inputs: Array<{ filename: Uint8Array<ArrayBuffer>; data: Uint8Array<ArrayBuffer>; name: string }> = [];
   const seen = new Set<string>();
 
-  for (const item of raw) {
-    if (!item || typeof item !== "object" || Array.isArray(item)) return { ok: false, code: "INVALID_INPUT" };
+  for (const item of items) {
     let name: unknown, original: unknown;
-    try { name = (item as LocalZipInput).name; original = (item as LocalZipInput).bytes; }
-    catch { return { ok: false, code: "INVALID_INPUT" }; }
+    try {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return { ok: false, code: "INVALID_INPUT" };
+      name = (item as LocalZipInput).name;
+      original = (item as LocalZipInput).bytes;
+    } catch { return { ok: false, code: "INVALID_INPUT" }; }
     const safe = validateName(name);
     if (!safe) return { ok: false, code: "INVALID_FILENAME" };
     const key = safe.normalize("NFKC").toLocaleLowerCase("en-US");
