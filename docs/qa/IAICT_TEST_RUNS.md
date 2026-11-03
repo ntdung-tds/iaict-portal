@@ -940,3 +940,18 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | QA registry / evidence | **127 unchanged canonical cases (15 Media)**, Google QA Master v2.15 unchanged; these new source fixtures are supplementary, not new canonical IDs. No screenshot required for source tests; any later authenticated media photos only in private [Drive QA](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3). |
 | Safety | No IAM/Access changes, staging/production deployment, live D1/R2 mutation, SRS baseline edit, credentials or source handover. Owner has selected MED-DEC policy **for staged implementation**, not final live feature acceptance. |
 
+
+
+## RUN-MEDIA-20261104-04 — B3.5 policy PR #95 exact postmerge evidence
+
+| Field | Exact evidence and acceptance boundary |
+| --- | --- |
+| Approved technical decision | [ADR-MEDIA-20261104-01](../adr/ADR-MEDIA-20261104-01.md) is **ACCEPTED FOR STAGING IMPLEMENTATION** by user delegation 2026-11-04; **not** production release or SRS baseline acceptance |
+| PR | [#95](https://github.com/ntdung-tds/iaict-portal/pull/95) **MERGED** at `0e6e6c1359aa54630ce88126216dcf8282d58ea9` |
+| Final premerge HEAD | `337709b07ff5d5d51df9ccaa3803b9f9c3150804`, [portal CI #41732758712](https://github.com/ntdung-tds/iaict-portal/actions/runs/41732758712) **4/4 PASS**, [public staging #41732758427](https://github.com/ntdung-tds/iaict-portal/actions/runs/41732758427) **PASS** against older deployed staging Worker |
+| Exact postmerge | [Portal CI #41733320486](https://github.com/ntdung-tds/iaict-portal/actions/runs/41733320486) **4/4 PASS**, [public staging #41733320046](https://github.com/ntdung-tds/iaict-portal/actions/runs/41733320046) **PASS**, both at exact merge SHA; public Chromium did **not** exercise new Media code (no Worker deploy) |
+| Test-first trace | [RUN-MEDIA-20261104-03](#run-media-20261104-03--delegated-policy-v1-and-private-admission-red--fix--green-source-only) preserves source RED 661/663 → GREEN, independent RED 662/664 → GREEN **672/672 Vitest** and late documentation validation regression; full source policy + private plan only |
+| Real scanner | **NOT CONFIGURED**, `MEDIA_POLICY.scan.serviceConfigured=false`; review/publish/serve denied even with synthetic flags. ClamAV-compatible is a selected architecture/provider class, not an active service |
+| Canonical QA status | **127 cases / 15 Media** unchanged. `CMS-MEDIA-001..012` hosted R2/D1 upload/security/real-role E2E **PLANNED/NOT_RUN**. Google QA Master v2.15 unchanged; no new test case IDs |
+| Environment and rollback | No Worker deployed, no D1 schema/data mutation, no R2 object operations, no Access/IAM/production changes, SRS FROZEN. Rollback source via revert of PR #95, not Cloudflare rollback. [OPS Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) intermittent old staging 503 remains OPEN. Media screenshots NO_IMAGE_REQUIRED. |
+
