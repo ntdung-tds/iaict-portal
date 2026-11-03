@@ -1,9 +1,11 @@
 # IAICT Portal — CHECKLIST MOMENT (LIVE)
-**Moment ID:** `MOMENT-IAICT-20261103-0311-ICT` · **Captured:** `2026-11-03T03:11:46+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
+**Moment ID:** `MOMENT-IAICT-20261103-0944-ICT` · **Captured:** `2026-11-03T09:44:32+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
 **Project:** IAICT Portal / CMS / CRM / IAM · **Status:** ACTIVE / NOT ACCEPTED · **Owner acceptance:** NOT GIVEN.
 **Evidence scope:** code/runtime baseline audited at source HEAD `a6afff7ecb0ed27bc4bddeb4374e2fe333312745` at observation time; this is a baseline **before** checklist-only commits. PR [#36](https://github.com/ntdung-tds/iaict-portal/pull/36) DRAFT on `feat/staging-native-login-r2-20261030`.
 **Related records:** [PROJECT_PLAN](PROJECT_PLAN.md) · [PROJECT_PROGRESS](PROJECT_PROGRESS.md) · [append-only moment history](checklist-moments/) · [QA run ledger](../qa/IAICT_TEST_RUNS.md) · [82-case catalog](../qa/IAICT_TEST_CASES.csv) · [14 module change logs](../requirements/README.md).
 **Input document:** user-supplied `IAICT_IAM_v1_2_FRESH_DOWNLOAD.docx` (dated 2026-10-31, appendix C/G/H–K); research/architecture proposal reviewed at older SHA `5d29e28b14a2f9aaedcfc59da6acb0665391d443`, **not an approved SRS or proof of implementation**. Do not commit the user file, private personal data, secrets or screenshots to GitHub.
+
+**2026-11-03 OVERRIDE — OWNER IAM PAUSE:** IAM checklist items reflect historical implementation evidence only. No further IAM development, live identity onboarding or role browser authentication during this pause. Current action is [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79) (14-module Portal inventory and CMS article JSON/cache guard) on a separate feature branch; stage and production remain unchanged. QA catalog 99 after CMS-ART-001/002; current Run is NOT_RUN pending CI. See [workstream inventory](PORTAL_REMAINING_WORK_2026-11-03.md) and PCS rev39. Older below-described IAM next-action pointers are superseded by this owner instruction.
 
 ## How to interpret checkboxes (strict)
 - `[x] DONE`: only the **explicitly bounded deliverable** has evidence; e.g. "D1 fixture created" does **not** mean "role login passed".
@@ -14,7 +16,7 @@
 - Progress = DONE / total *in this fixed scoped checklist*, NEVER count a partially implemented item as DONE. Issues/PRs remain task authority; this file is a time-indexed operational projection.
 
 ## A. CMS/CRM-1 — 10 scoped checklist items
-**Progress:** **5/10 DONE (50% scoped only)**; 1 IN_PROGRESS; 2 BLOCKED; 2 NOT_STARTED. **NOT** "50% toàn dự án", "CMS nghiệm thu" or "release-ready".
+**Progress:** **5/10 DONE (50% scoped only)**; 0 IN_PROGRESS; 2 BLOCKED; 2 NOT_STARTED; 1 DEFERRED due owner IAM pause. **NOT** "50% toàn dự án", "CMS nghiệm thu" or "release-ready".
 
 | ID | Check | State | Scope and evidence at this moment | Missing / next substep |
 |---|---|---|---|---|
@@ -25,7 +27,7 @@
 | CMS-05 | [x] | DONE | Eight synthetic D1 role fixtures created, mapped and **DISABLED**, with 0 credentials: [RUN-03](../qa/IAICT_TEST_RUNS.md), [private inventory](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit). | DONE **only for disabled fixture provisioning**; not signed-in QA |
 | CMS-06 | [ ] | BLOCKED | Seven-role *real* Access + CMS/Newsroom read-only role matrix, [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34), tests `IAM-AUTH-017/IAM-USER-017`: **NOT_RUN**. | Controlled IAICT QA inbox, valid Access memberships, isolated password vault; no spoofing |
 | CMS-07 | [ ] | BLOCKED | Real 2-admin concurrent browser write `IAM-USER-018`: **NOT_RUN**. CI/mock cannot substitute. | Same authorized QA identities plus isolated staging test records; rollback plan |
-| CMS-08 | [ ] | IN_PROGRESS | IAM P0 security path for independent CMS access: `lib/totp.ts` RFC6238 primitive tested ([RUN-02](../qa/IAICT_TEST_RUNS.md)); [ADR-0002 PROPOSED](../adr/0002-iaict-native-mfa-totp-staged.md). | **Current checkpoint:** primitive implemented only. S2 local workerd 100000/100001 probes **PASS (LOCAL ONLY)** at [RUN-IAM-20261102-01](../qa/IAICT_TEST_RUNS.md), workerd 1.20261012.1; 600000/live hosting **NOT_RUN**. S3 AES-GCM envelope **6/6 Node unit PASS, 11/11 local workerd PASS and repeat-request retest PASS** ([RUN-IAM-20261102-02](../qa/IAICT_TEST_RUNS.md)); actual factor D1, key binding, enrollment, replay and recovery **NOT_RUN**. ADR review remains pending; full MFA **NOT_RUN** |
+| CMS-08 | [ ] | DEFERRED | IAM P0 security path for independent CMS access: `lib/totp.ts` RFC6238 primitive tested ([RUN-02](../qa/IAICT_TEST_RUNS.md)); [ADR-0002 PROPOSED](../adr/0002-iaict-native-mfa-totp-staged.md). | **Current checkpoint:** primitive implemented only. S2 local workerd 100000/100001 probes **PASS (LOCAL ONLY)** at [RUN-IAM-20261102-01](../qa/IAICT_TEST_RUNS.md), workerd 1.20261012.1; 600000/live hosting **NOT_RUN**. S3 AES-GCM envelope **6/6 Node unit PASS, 11/11 local workerd PASS and repeat-request retest PASS** ([RUN-IAM-20261102-02](../qa/IAICT_TEST_RUNS.md)); actual factor D1, key binding, enrollment, replay and recovery **NOT_RUN**. ADR review remains pending; full MFA **NOT_RUN** |
 | CMS-09 | [ ] | NOT_STARTED | Dedicated staging R2 binding `MEDIA_BUCKET` exists, **but no upload/malware/MIME/ACL/lifecycle pipeline**. [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39). | Threat model, upload API, granular media tests, UI and authorized E2E; media NOT_RUN |
 | CMS-10 | [ ] | NOT_STARTED | Complete shared permission + resource scopes/CRM ownership, security gates and production promotion **not completed**. [IAM v1.2 backlog](#b-iam-v12-backlog-crosswalk-20-items). | Build policy engine with IDOR matrix, independent security acceptance; production requires separate approval |
 
@@ -88,6 +90,12 @@ Source: user-supplied IAM report v1.2, Appendix C (`IAM-01`–`IAM-10`) and Appe
 - **Automation:** new `scripts/verify-checklist-moment.mjs` plus `.test.mjs`, attached to `npm run verify` in `package.json`. Four focused local Node tests PASS before GitHub commit; **GitHub CI must still be checked at the exact final documentation SHA** (prior artifact source `ae0d486f7d758e6493fa70f55b80a58c94c26b02` was under verification at this moment). No claim that final HEAD CI passed yet.
 - **Live status unchanged:** CMS/CRM 5/10 DONE within expressly bounded scope; `CMS-08 / S2` is next work; 7-role and two-admin QA remain BLOCKED/NOT_RUN. Product IAM report v1.2 still a research proposal. Staging/production Worker not modified by this project-governance work; SRS remains frozen; owner approvals pending.
 - **Resume contract:** At next session verify fresh HEAD CI and latest Cloudflare readback *before* any KDF experiment or credential/security mutation. If new CI is failing, fix the governance test and save a new moment. Do not self-promote on the strength of this snapshot.
+
+## 2026-11-03 — Current portal phase 1 execution handoff
+- **Scope:** Owner pauses IAM. First non-IAM PR records 14-module gap inventory and adds fail-closed CMS article mutations and no-store private responses with SQLite regression tests.
+- **Cases:** CMS-ART-001/002; RUN-CMS-20261103-01 currently NOT_RUN on final head. Local route test uses mocked actor, not genuine Access login.
+- **Safety:** no IAM changes, no production deploy, no SRS sync, no source Drive handoff. Existing historical 8-role live acceptance remains NOT_RUN. 
+- **Next:** open and verify Portal CMS PR exact SHA CI; reconcile historic PRs; select Newsroom acceptance then Media R2.
 
 ## E. Updating this live file and preserving history
 1. At **start of every chat/task batch**, read this LIVE checklist, most recent immutable moment, plan, progress, PR/CI, QA run and Cloudflare state. Never re-start a DONE item just because the chat changed.
