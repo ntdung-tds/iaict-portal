@@ -617,3 +617,18 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Media evidence | NO_IMAGE_REQUIRED for local API; real public test screenshots/traces not stored to GitHub. [Private Drive folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) available for sanitized visual artifacts when applicable |
 | Evidence-commit status | **NOT_RUN** until exact final documentation head is retested in GitHub CI |
 
+
+## RUN-CMS-20261103-03 — Newsroom source-to-public atomic SQLite lifecycle
+
+| Field | Value |
+| --- | --- |
+| Issue / scope | [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) · `CMS-NEWS-001/002/003/004` |
+| Environment | Actual `app/api/admin/news/ingest/route.ts`, `lib/news-repository.ts`, `lib/news-source-adapters.ts`, `app/api/admin/cms/articles/route.ts` and `lib/public-news.ts`, with disposable **original Core + V16/V17 migration SQLite** |
+| Mock boundaries | **Only the authenticated actor and outbound RSS HTTP fixture are mocked**. No genuine Cloudflare Access login, remote D1, real external feed request or deployed Worker execution |
+| Checks | RSS ingest and duplicate, manual approval CAS, stale publication/refusal, single article + provenance + audit, public visible then hidden after CMS archive, malformed JSON/Content-Type/role, upstream feed 503 failed run |
+| Source SHA, CI | **PENDING** before first PR run; bind to exact immutable tested SHA, update through a separate append-only result record |
+| Result | **NOT_RUN** pending actual CI. Do not infer PASS from created source and test file |
+| Hosted browser acceptance | **NOT_RUN** for signed-in CMS/Newsroom; real public staging tests may run in GitHub Actions against previously deployed Worker, which is not the PR code |
+| Evidence | QA data synthetic; no screenshot, cookies or secrets. Restricted [Drive QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) if a future sanitized visual reproduction requires it |
+| Risk / rollback | Affected source: `app/api/admin/news/ingest/route.ts`, tests and documentation only; no staging D1 mutation or production deployment; SRS FROZEN; Owner IAM PAUSED |
+
