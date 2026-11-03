@@ -922,3 +922,20 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | QA coverage | 127 canonical case definitions (15 Media) unchanged. `CMS-MEDIA-001..012` remain **PLANNED / NOT_RUN**. B3.4 pure stream inspector does not impose a live MIME/size/chunk policy, scanner, verified ownership or D1/R2 storage transaction |
 | Boundary | No Worker deployment, staging/prod R2 writes, hosted D1 changes, Access IAM mutations, SRS edits or source Drive handover. MED-DEC-01..07 still PROPOSED. QA screenshots NO_IMAGE_REQUIRED; future restricted Drive [folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
 
+
+
+## RUN-MEDIA-20261104-03 — Delegated policy v1 and private admission RED → FIX → GREEN (source only)
+
+| Field | Evidence and strict scope |
+| --- | --- |
+| Owner authorization | User statement **2026-11-04** delegates reasonable Media R2 policy selection to AI Technical Lead. [ADR-MEDIA-20261104-01](../adr/ADR-MEDIA-20261104-01.md) ACCEPTED_FOR_STAGING_IMPLEMENTATION, `CHG-MEDIA-R2-20261104-02`; **not** chốt SRS, production approval or scanner availability |
+| Scope | [PR #95](https://github.com/ntdung-tds/iaict-portal/pull/95) adds versioned `MEDIA_POLICY`, scoped CMS role/state guards, source-only `planPrivateMediaAdmission` that generates quarantine-only opaque keys after preflight. **No new HTTP route, Worker import, D1 migration/row, R2 object write, scanner, derivative or publish API.** |
+| Initial RED CI | Commit `94f784d954a3bc4ac752af6d79ff048aaba7d21e`, [Portal CI #41730471532](https://github.com/ntdung-tds/iaict-portal/actions/runs/41730471532) verify **FAIL**: **661 passed / 2 failed** of 663. (1) allowed MIME array not deeply frozen, (2) malicious role Proxy getter threw outside guarded snapshot. Both security regressions repaired in `ed9edad2e82d847e448d4b21abb08450d49afa8e`. |
+| First GREEN | Source SHA `ed9edad2e82d847e448d4b21abb08450d49afa8e`, [Portal CI #41730696244](https://github.com/ntdung-tds/iaict-portal/actions/runs/41730696244) **4/4 PASS**, library case contracts fixed |
+| Independent gate RED | Source `006fb6b294ee93d6e226c2601d5ac35212274ad9`, [Portal CI #41731001162](https://github.com/ntdung-tds/iaict-portal/actions/runs/41731001162) verify **FAIL**: **662 passed / 2 failed** of 664. Confirmed scanner-unconfigured publish/review/serve decisions could be marked allowed and forged trusted flags could indicate a public object. Fail-closed fix `91c59eabb89622d26c8ef5aa0b71d18fa05171a8`, tests updated `052da31cb56b5a50152a2c2e9894060d254eceab`. |
+| Final source GREEN | Source SHA `052da31cb56b5a50152a2c2e9894060d254eceab`, [Portal CI #41731336930](https://github.com/ntdung-tds/iaict-portal/actions/runs/41731336930) verify **PASS**, **63 Vitest files / 672 of 672 PASS** including 8 private admission unit tests; separate browser/other jobs must still be checked before merge |
+| R2 and scanner | `MEDIA_POLICY.scan.serviceConfigured=false`, so even synthetic claims with trusted flags **cannot** allow review, publish or byte-serving. An approved **architecture choice** of isolated ClamAV-compatible scanning is **not an operating scanner**. `CMS-MEDIA-001..012` hosted tests remain **PLANNED/NOT_RUN**; no D1/R2/real-role browser acceptance |
+| Public staging | GitHub workflow for PR #95 tests **previous deployed Worker** only. Do not equate with actual B3.5 behavior; [Ops Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) intermittent 503 remains OPEN. |
+| QA registry / evidence | **127 unchanged canonical cases (15 Media)**, Google QA Master v2.15 unchanged; these new source fixtures are supplementary, not new canonical IDs. No screenshot required for source tests; any later authenticated media photos only in private [Drive QA](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3). |
+| Safety | No IAM/Access changes, staging/production deployment, live D1/R2 mutation, SRS baseline edit, credentials or source handover. Owner has selected MED-DEC policy **for staged implementation**, not final live feature acceptance. |
+
