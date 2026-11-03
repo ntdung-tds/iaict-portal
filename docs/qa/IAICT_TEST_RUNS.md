@@ -862,3 +862,19 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Next decision | B3.3 format/size, scanner/quarantine, private object ownership and lifecycle, approval before hosted implementation. IAM owner-PAUSED; SRS FROZEN; production HOLD |
 | QA media | NO_IMAGE_REQUIRED for this GitHub CI and Worker metadata check; future browser evidence ONLY in private [Drive QA folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
 
+
+
+## RUN-MEDIA-20261103-08 — B3.3 grouped Media lifecycle fixture FAIL → FIX → RETEST (source only)
+
+| Field | Exact evidence and limitations |
+| --- | --- |
+| Source scope | [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39), [PR #91](https://github.com/ntdung-tds/iaict-portal/pull/91), `CHG-MEDIA-R2-20261103-04`: proposed policy decisions + **pure unwired** lifecycle graph/CAS revision pair and negative fixtures. No hosted API |
+| Initial RED SHA | `7202f84c6cb36c96be93f223efc0a6f925a7d3e2`, [Portal CI #41672527992](https://github.com/ntdung-tds/iaict-portal/actions/runs/41672527992): verify **FAIL**, Vitest **631 PASS / 2 FAIL** (633 total). Defect 1: revoked Proxy made Array.isArray throw outside try. Defect 2: test-helper default parameter coerced explicit undefined revision to zero (fixture bug, not product security bypass). |
+| Fixes | `375fd429a9963645aa08894ca929981a5098148e` moves Array.isArray under catch; `12dd8c1cd83bff603d0fbca090c37119d0228ee0` corrects explicit undefined test fixture. Historical RED source run retained and separately retested GREEN |
+| Retest fixed code SHA | `12dd8c1cd83bff603d0fbca090c37119d0228ee0`: [Portal CI #41672877119](https://github.com/ntdung-tds/iaict-portal/actions/runs/41672877119) **4/4 PASS**, 60 Vitest files / **633/633 PASS**, local Chromium job PASS. This verifies only pure unconnected B3.3 helper on that immutable source SHA; final docs-HEAD and postmerge checks remain separate |
+| Public staging Chromium | [Staging acceptance #41672877117](https://github.com/ntdung-tds/iaict-portal/actions/runs/41672877117) **PASS** for public/browser smoke on *previous Worker deployment*; not evidence that B3.3 media code is running on staging. Postmerge readback separately required |
+| Real CMS Media | `CMS-MEDIA-001..012` remain **PLANNED/NOT_RUN**. No scanner, actual D1 CAS, R2 write, permitted MIME-size policy, real role login or upload E2E |
+| Registry and synchronization | **127** canonical case definitions unchanged / **15** Media; Google Master QA v2.15 previously readback; no case content changes |
+| CI governance regression | On docs HEAD `63a29e5b8197f87cdfb6122406b70f84a054f633`, [CI #41673147492](https://github.com/ntdung-tds/iaict-portal/actions/runs/41673147492) verify FAIL **INVALID_MOMENT_ID**; revised live/snapshot ID separator in commits `d5e599f9` and `0ff68b55`. Original documentation failure preserved; exact final HEAD CI still required |
+| Owner/environment | All MED-DEC-01..07 **PROPOSED / NOT APPROVED**. IAM PAUSED, SRS FROZEN, no Worker deploy, staging/production/D1/R2/Access mutation or screenshots. QA media private [Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3), **NOT_CAPTURED / NO_IMAGE_REQUIRED** |
+
