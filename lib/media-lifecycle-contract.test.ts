@@ -53,7 +53,9 @@ describe("Media B3.3 source-only transition graph (future CMS-MEDIA-006/007)", (
 
   it("requires a monotonic safe nonnegative integer revision", () => {
     for (const revision of [-1, 1.5, Number.NaN, Infinity, Number.MAX_SAFE_INTEGER, "3", null, undefined]) {
-      expect(transition("QUARANTINED", "SCAN_PENDING", revision))
+      // Use a direct object for explicit undefined: the convenience fixture
+      // helper intentionally supplies revision=0 when the argument is omitted.
+      expect(planMediaTransition({ from: "QUARANTINED", to: "SCAN_PENDING", expectedRevision: revision }))
         .toEqual({ ok: false, code: "INVALID_REVISION" });
     }
     expect(transition("QUARANTINED", "SCAN_PENDING", Number.MAX_SAFE_INTEGER - 1)).toEqual({
