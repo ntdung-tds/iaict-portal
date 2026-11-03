@@ -112,3 +112,113 @@ describe("CMS-MEDIA-015: mandatory policy and bounded byte preflight", () => {
     fail(candidate(), "TOO_LARGE", { allowedMimeTypes: ["image/png"], maxBytes: png.length - 1 });
   });
 });
+
+
+describe("CMS-MEDIA-015: stable policy snapshot (review-loop regression)", () => {
+  it("never re-reads a dynamic size getter after validation", () => {
+    let reads = 0;
+    const changingPolicy = {
+      allowedMimeTypes: ["image/png"],
+      get maxBytes() {
+        reads++;
+        return reads === 1 ? png.byteLength - 1 : 1024;
+      },
+    };
+    expect(validateMediaUploadPreflight(candidate(), changingPolicy))
+      .toEqual({ ok: false, code: "TOO_LARGE" });
+    expect(reads).toBe(1);
+  });
+
+  it("never re-reads a dynamic MIME allowlist getter after validation", () => {
+    let reads = 0;
+    const changingPolicy = {
+      maxBytes: 64,
+      get allowedMimeTypes() {
+        reads++;
+        return reads <= 3 ? ["image/png"] : ["image/jpeg"];
+      },
+    };
+    expect(validateMediaUploadPreflight(candidate("spoof.jpg", "image/jpeg", jpeg), changingPolicy))
+      .toEqual({ ok: false, code: "UNSUPPORTED_MIME" });
+    expect(reads).toBe(1);
+  });
+
+  it("rejects a policy getter that throws, without surfacing the exception", () => {
+    const throwingPolicy = {
+      allowedMimeTypes: ["image/png"],
+      get maxBytes(): number {
+        throw new Error("untrusted policy read");
+      },
+    };
+    expect(validateMediaUploadPreflight(candidate(), throwingPolicy))
+      .toEqual({ ok: false, code: "POLICY_NOT_CONFIGURED" });
+  });
+});
+
+
+describe("CMS-MEDIA-015: snapshot untrusted upload candidate (independent review)", () => {
+  it("returns INVALID_INPUT when reading a filename getter throws", () => {
+    const input = {
+      get filename(): string {
+        throw new Error("synthetic malicious accessor");
+      },
+      declaredMimeType: "image/png",
+      bytes: png,
+    };
+    expect(validateMediaUploadPreflight(input, fixturePolicy)).toEqual({ ok: false, code: "INVALID_INPUT" });
+  });
+
+  it("reads the declared MIME only once, even for a changing getter", () => {
+    let reads = 0;
+    const input = {
+      filename: "photo.png",
+      get declaredMimeType(): unknown {
+        reads++;
+        return reads === 1 ? "image/png" : undefined;
+      },
+      bytes: png,
+    };
+    expect(validateMediaUploadPreflight(input, fixturePolicy)).toMatchObject({ ok: true });
+    expect(reads).toBe(1);
+  });
+
+  it("reads actual bytes and claimed byte length once per preflight", () => {
+    let bytesReads = 0;
+    let sizeReads = 0;
+    const input = {
+      filename: "photo.png",
+      declaredMimeType: "image/png",
+      get bytes() {
+        bytesReads++;
+        return bytesReads === 1 ? png : new Uint8Array();
+      },
+      get declaredSize() {
+        sizeReads++;
+        return sizeReads === 1 ? png.byteLength : 1024;
+      },
+    };
+    expect(validateMediaUploadPreflight(input, fixturePolicy)).toMatchObject({ ok: true });
+    expect(bytesReads).toBe(1);
+    expect(sizeReads).toBe(1);
+  });
+});
+
+
+describe("CMS-MEDIA-015: native typed-array byte length (third review pass)", () => {
+  it("cannot bypass maxBytes with an overridden Uint8Array subclass getter", () => {
+    class SpoofedBytes extends Uint8Array {
+      get byteLength(): number { return 1; }
+      get length(): number { return 8; }
+    }
+    const huge = new SpoofedBytes(100);
+    huge.set(png.subarray(0, 8));
+    expect(validateMediaUploadPreflight(candidate("image.png", "image/png", huge), fixturePolicy))
+      .toEqual({ ok: false, code: "TOO_LARGE" });
+  });
+
+  it("returns INVALID_INPUT for a Proxy wrapping a typed array", () => {
+    const proxy = new Proxy(png, {});
+    expect(validateMediaUploadPreflight(candidate("image.png", "image/png", proxy), fixturePolicy))
+      .toEqual({ ok: false, code: "INVALID_INPUT" });
+  });
+});

@@ -816,3 +816,34 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Follow-up | Final **documentation HEAD CI/staging still PENDING** at capture; rerun on exact final PR SHA, merge only if green and independently verify postmerge |
 | QA media | NO_IMAGE_REQUIRED for unit suite; [private Drive evidence](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) only. IAM PAUSED; SRS/production unchanged |
 
+
+## RUN-MEDIA-20261103-05 — Media preflight dynamic-policy TOCTOU test-first reproduction
+
+| Field | Evidence / status |
+| --- | --- |
+| Source baseline | `74792c91e6e2e9a77bea02e95dddabec3941dfe9`, merged PR #88, PCS canonical rev51 |
+| Defect | Pure helper re-reads policy size/MIME getters after nominal validation; a changing getter can bypass initially validated policy. Throwing getter propagates an exception. No hosted Media/API implication |
+| Test-first SHA | `02d5c7f930e1c7c7e82ccfdfae3353b180e16755`: 3 new negative regression test definitions under existing `CMS-MEDIA-015` |
+| Initial CI | **PENDING** (test-first PR gate not complete at record creation); do not claim test-failure CI until observed |
+| Synthetic local proof | Dynamic maxBytes getter: first read 1 and later 100 permits 6-byte candidate; dynamic MIME getter: validated image/png then later image/jpeg allows claimed JPEG. This is confined to adversarial configuration getters |
+| Fix strategy | Copy validated fields once into immutable primitives/local Set and return structured `POLICY_NOT_CONFIGURED` for failing getters. Preserve previous PASS after separate rerun `RUN-MEDIA-20261103-06` |
+| Security scope | `CMS-MEDIA-015` only; existing 127-case catalog unchanged, Media 001..012 PLANNED/NOT_RUN, no real R2 or Worker upload |
+| Evidence | No screenshots needed; [QA private Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) reserved for real browser |
+
+
+## RUN-MEDIA-20261103-06 — Three bounded review-loop cycles: FAIL → FIX → PASS_LOCAL_FIXTURE
+
+| Stage | Exact SHA and observed result |
+| --- | --- |
+| Baseline | PR #88 merged at `74792c91e6e2e9a77bea02e95dddabec3941dfe9`, original postmerge CI [#41630834586](https://github.com/ntdung-tds/iaict-portal/actions/runs/41630834586) PASS |
+| RED #1 policy getter | Test-first SHA `ed0afd1110165ca95e0e79032a103f7a2fb7fe3e`, [portal CI #41633762844](https://github.com/ntdung-tds/iaict-portal/actions/runs/41633762844): **FAIL Unit tests** |
+| GREEN #1 | Fix `f9dab556f59720458774af67046df4f4623981f8`, [portal CI #41633986765](https://github.com/ntdung-tds/iaict-portal/actions/runs/41633986765) PASS: policy snapshot once |
+| RED #2 input getter | Test-first SHA `7dc4bc5edfc230503afc468f032055a84ca9232b`, [portal CI #41634251463](https://github.com/ntdung-tds/iaict-portal/actions/runs/41634251463): **FAIL Unit tests** |
+| GREEN #2 | Fix `09599e899641142ce819344b2bc776c28b9b394c`, [portal CI #41634397290](https://github.com/ntdung-tds/iaict-portal/actions/runs/41634397290) PASS: single candidate snapshot and safe invalid-input rejection |
+| RED #3 typed-array size | Test-first SHA `9838c230c1d62d104d246e42b66ad461103fe4eb`, [portal CI #41634825650](https://github.com/ntdung-tds/iaict-portal/actions/runs/41634825650): **FAIL Unit tests** |
+| GREEN #3 | Fix SHA `7b85189dbd11d119677aaef3dae7a8661e34ff13`, [portal CI #41635067760](https://github.com/ntdung-tds/iaict-portal/actions/runs/41635067760) **4/4 PASS**, [public staging #41635067742](https://github.com/ntdung-tds/iaict-portal/actions/runs/41635067742) **PASS**: intrinsic typed-array length, not overrideable subclass properties |
+| Case registry | Existing `CMS-MEDIA-015` refined to include accessor/size spoofing; **127** total (15 Media); [Google Master QA v2.15](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) readback verified |
+| Scoped independent review | No further reproducible issue observed after three fixes in these source fixture paths; **not** a guarantee of global zero bugs |
+| Explicit exclusions | Live upload API, malware scanner, real R2/D1 read/write, CMS account browser, streaming body cap, IAM/Access and production changes remain **NOT_RUN/NOT_IMPLEMENTED**; `CMS-MEDIA-001..012` PLANNED |
+| Last documentation SHA | **PENDING exact CI** when recorded; rerun both workflows after final docs and PCS checkpoint, then postmerge |
+
