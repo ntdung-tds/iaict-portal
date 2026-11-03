@@ -687,3 +687,16 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | QA media | No screenshot needed for deterministic HTTP adapter tests; no cookies, private user data or images committed. Restricted [Drive folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) retained. |
 | Final documentation-head CI | **NOT_RUN when record written**; must verify final PR-head SHA again, then merge and test postmerge. |
 
+
+## RUN-CMS-20261103-08 — Two independent Newsroom adapter review passes (pre-CI record)
+
+| Field | Scope and pending result |
+| --- | --- |
+| Reviewed baseline | Merged PR #83, development SHA `c86ff18adfef49b5454cc71b2649aa81ae840bd1` |
+| Pass 1 — findings | Source and candidate allowlisted URLs accepted nondefault HTTPS ports and credential-bearing candidate links. Malformed numeric XML entities (out-of-range/surrogate/invalid controls) could throw and abort ingestion. |
+| Pass 2 — findings | Waiting on source stream cancellation could indefinitely stall redirect/oversize paths. Declared oversized responses and invalid redirect bodies needed prompt resource cancellation even when rejecting. |
+| Fix | `lib/news-source-adapters.ts`: enforce default HTTPS port, no URL userinfo, XML 1.0 valid character ranges with U+FFFD replacement, and fire-and-forget cancellation with rejection handling while keeping max redirect/byte limits and fetch abort guard. |
+| Case IDs | `CMS-NEWS-007`, `CMS-NEWS-008`, `CMS-NEWS-009`; source tests in `lib/news-source-adapters.test.ts`; total **108** registered test cases. |
+| Test boundary | Full real Newsroom source parser/fetch adapter with injected deterministic `fetch`, controlled `Response` and `ReadableStream`; **no live network, no hosted D1/Access/session, no external RSS**. |
+| Execution state | **NOT_RUN on final PR SHA**. The code/test commits exist; actual CI results must be appended as a new immutable Run after execution. No PASS claim at this point. |
+| Safety | Owner IAM PAUSED; production, SRS and staged Worker unchanged; no screenshot/cookie/secret artifacts; restricted Drive root https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp |
