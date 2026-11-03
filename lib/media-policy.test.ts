@@ -149,8 +149,19 @@ describe("B3.5 CMS-only Media role and scope policy matrix — pure, not auth", 
     expect(check("read-metadata", { roles: badRoles })).toEqual({ allowed: false, code: "INVALID_CONTEXT" });
   });
 
+  it("never grants review, publish or byte delivery without a configured trusted scanner", () => {
+    expect(MEDIA_POLICY.scan.serviceConfigured).toBe(false);
+    for (const action of ["review", "publish", "read-approved-bytes"]) {
+      const status = action === "review" ? "SCAN_PASSED" :
+        action === "publish" ? "REVIEW_APPROVED" : "AVAILABLE";
+      expect(check(action, { status, verifiedScanAndDerivative: true }))
+        .toEqual({ allowed: false, code: "SCANNER_UNAVAILABLE" });
+    }
+  });
+
   it("does not accept client-style scanner flags as proof of public availability", () => {
-    expect(mediaCanBecomePublic({ status: "AVAILABLE", trustedScanner: true, trustedDerivative: true, revoked: false })).toBe(true);
+    // Even forged booleans MUST NOT turn on public serving while the scanner is unavailable.
+    expect(mediaCanBecomePublic({ status: "AVAILABLE", trustedScanner: true, trustedDerivative: true, revoked: false })).toBe(false);
     for (const fake of [
       {}, null, { status: "SCAN_PASSED", trustedScanner: true, trustedDerivative: true, revoked: false },
       { status: "AVAILABLE", trustedScanner: false, trustedDerivative: true, revoked: false },
