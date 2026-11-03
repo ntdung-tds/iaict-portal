@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 45,
-  "updated_at": "2026-11-03T09:09:40.240Z",
+  "revision": 46,
+  "updated_at": "2026-11-03T09:15:24.790Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T09:09:40.240Z",
+    "updated_at": "2026-11-03T09:15:24.790Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -485,19 +485,27 @@
         "dependencies": [],
         "qa": {
           "required": true,
-          "status": "NOT_RUN",
+          "status": "PASS_LOCAL_INJECTED_HTTP",
           "case_ids": [
             "CMS-NEWS-007",
             "CMS-NEWS-008",
             "CMS-NEWS-009"
           ],
-          "run_id": "RUN-CMS-20261103-08",
+          "run_id": "RUN-CMS-20261103-09",
           "environment": "LOCAL_DETERMINISTIC_HTTP_STREAM",
           "hosted_authenticated": "NOT_RUN",
           "live_upstream": "NOT_RUN",
-          "production": "UNCHANGED"
+          "production": "UNCHANGED",
+          "test_source_sha": "297ba4fbcf5cfdf262e0f8593c86320be37ed068",
+          "portal_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41609011114",
+          "public_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41609010947",
+          "vitest": 600,
+          "local_chromium": 38,
+          "public_chromium": 24,
+          "public_http": 24,
+          "final_docs_sha": "PENDING"
         },
-        "description": "Owner explicitly requested two review passes after PR #83. Independent read found custom port URLs under allowlisted host, out-of-range XML numeric entities raising RangeError, and awaiting a non-cooperating response body cancellation on redirect/oversize paths. Source+tests on fix/newsroom-second-two-pass-review-20261103 pending exact-SHA CI. No IAM, SRS or production changes."
+        "description": "Owner explicitly requested two review passes after PR #83. Independent read found custom port URLs under allowlisted host, out-of-range XML numeric entities raising RangeError, and awaiting a non-cooperating response body cancellation on redirect/oversize paths. Source+tests on fix/newsroom-second-two-pass-review-20261103 pending exact-SHA CI. No IAM, SRS or production changes. First exact source SHA 297ba4f... passed 4/4 CI, 600 Vitest, 38 local Chromium, 24 public staging Chromium + 24 HTTP (old Worker). Final evidence SHA CI and merge pending; no external RSS/live credentials."
       }
     ],
     "features": [],
