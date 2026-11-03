@@ -202,3 +202,23 @@ describe("CMS-MEDIA-015: snapshot untrusted upload candidate (independent review
     expect(sizeReads).toBe(1);
   });
 });
+
+
+describe("CMS-MEDIA-015: native typed-array byte length (third review pass)", () => {
+  it("cannot bypass maxBytes with an overridden Uint8Array subclass getter", () => {
+    class SpoofedBytes extends Uint8Array {
+      get byteLength(): number { return 1; }
+      get length(): number { return 8; }
+    }
+    const huge = new SpoofedBytes(100);
+    huge.set(png.subarray(0, 8));
+    expect(validateMediaUploadPreflight(candidate("image.png", "image/png", huge), fixturePolicy))
+      .toEqual({ ok: false, code: "TOO_LARGE" });
+  });
+
+  it("returns INVALID_INPUT for a Proxy wrapping a typed array", () => {
+    const proxy = new Proxy(png, {});
+    expect(validateMediaUploadPreflight(candidate("image.png", "image/png", proxy), fixturePolicy))
+      .toEqual({ ok: false, code: "INVALID_INPUT" });
+  });
+});
