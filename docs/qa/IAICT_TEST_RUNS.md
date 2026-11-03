@@ -970,3 +970,16 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Canonical QA / security | Existing **127 test definitions, 15 CMS-MEDIA** unchanged, Google QA Master v2.15 untouched. Hosted `CMS-MEDIA-001..012` remain PLANNED/NOT_RUN. Scanner service `serviceConfigured=false` (hard stop), no D1/R2/Cloudflare IAM/staging/production mutations, frozen SRS preserved. Screenshot not applicable for source-only tests; future evidence only restricted QA Drive. |
 | Ops dependency | [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains open for earlier public staging intermittent 503 and network errors. Unit/pass or public smoke on old deployed Worker is not Media B3.6 live acceptance. |
 
+
+
+## RUN-MEDIA-20261104-06 — B3.7 combined local Media compression tools
+
+| Field | Exact evidence / limits |
+| --- | --- |
+| Owner | 2026-11-04 "Hãy gộp các task trong phần này lại và hoàn thành nó" follows approved image/file compression requirement. [PR #98](https://github.com/ntdung-tds/iaict-portal/pull/98), `CHG-MEDIA-R2-20261104-04` |
+| Scope | **Real local-browser** image JPEG/PNG/WebP derivatives; **real ZIP32** archive from user-selected local files with CRC32/DEFLATE/STORE, safe UTF-8 names and bounded bytes/count; prior real gzip text/csv/json surfaced via responsive CMS UI `/admin/tools/compression`. No uploads to server/R2, no production Worker |
+| Tests | Vitest `lib/media-local-zip.test.ts` verifies local file records, central directory, CRC metadata and inflateRaw round-trip plus overflow/traversal/duplicate/proxy. `lib/media-local-image.test.ts` validates type/magic, animation flags, size and hostile inputs. `e2e/media-local-compression.spec.ts` exercises real Chromium generated PNG, ZIP and gzip downloads and 320px viewport, once local browser workflow picks it up |
+| Initial RED | [portal-ci #41742244914](https://github.com/ntdung-tds/iaict-portal/actions/runs/41742244914) **FAIL** at first PR SHA `f93e1c3e5e08b08bf14d3ecbfc7d4267cf8b027c`; `verify:qa` guard correctly blocked new QA-sensitive `components/admin/cms-shell.tsx` change with missing test-run/plan record. This entry fixes the governance failure, preserving RED history |
+| Next | Exact source tests, typecheck, build, local Chromium and old Worker public staging checks **PENDING** at this entry; append outcomes with immutable SHA. Never count public staging smoke as deployed compression E2E |
+| Security/release | Existing scanner not configured, no backend full decode/AV/D1 R2 quota/upload/permission integration, hosted CMS-MEDIA-001..012 **NOT_RUN**. Local tool handles selected files on-device only; `MEDIA_POLICY.scan.serviceConfigured=false` still denies CMS publication/serving. IAM PAUSED, SRS FROZEN, production HOLD. No screenshots to GitHub; private QA Drive only |
+
