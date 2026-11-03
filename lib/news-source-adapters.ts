@@ -57,15 +57,21 @@ const COMMON_ENTITIES: Record<string, string> = {
   quot: '"',
 };
 
+/** XML numeric references must resolve to valid Unicode scalar values. */
+function validXmlCodePoint(value: number) {
+  return Number.isInteger(value) && value >= 1 && value <= 0x10ffff
+    && (value < 0xd800 || value > 0xdfff);
+}
+
 function decodeEntities(value: string) {
   return value.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, entity: string) => {
     if (entity.startsWith("#x") || entity.startsWith("#X")) {
       const codePoint = Number.parseInt(entity.slice(2), 16);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+      return validXmlCodePoint(codePoint) ? String.fromCodePoint(codePoint) : "\uFFFD";
     }
     if (entity.startsWith("#")) {
       const codePoint = Number.parseInt(entity.slice(1), 10);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+      return validXmlCodePoint(codePoint) ? String.fromCodePoint(codePoint) : "\uFFFD";
     }
     return COMMON_ENTITIES[entity.toLowerCase()] ?? match;
   });
@@ -97,7 +103,8 @@ function normalizeDate(value: string | null) {
 function isAllowedUrl(value: string, definition: NewsSourceAdapterDefinition) {
   try {
     const url = new URL(value, definition.entryUrl);
-    return url.protocol === "https:" && definition.allowedHosts.includes(url.hostname.toLowerCase());
+    return url.protocol === "https:" && !url.port && !url.username && !url.password
+      && definition.allowedHosts.includes(url.hostname.toLowerCase());
   } catch {
     return false;
   }
@@ -233,7 +240,7 @@ function checkAllowedFeedUrl(value: string, definition: NewsSourceAdapterDefinit
   } catch {
     throw new Error("News source redirect target is not approved");
   }
-  if (url.protocol !== "https:" || !definition.allowedHosts.includes(url.hostname.toLowerCase())
+  if (url.protocol !== "https:" || url.port || !definition.allowedHosts.includes(url.hostname.toLowerCase())
     || url.username || url.password) {
     throw new Error("News source redirect target is not approved");
   }
