@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 47,
-  "updated_at": "2026-11-03T09:50:14.492Z",
+  "revision": 48,
+  "updated_at": "2026-11-03T10:02:42.717Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T09:50:14.492Z",
+    "updated_at": "2026-11-03T10:02:42.717Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -522,20 +522,33 @@
         "dependencies": [],
         "qa": {
           "required": true,
-          "status": "NOT_RUN",
+          "status": "PASS_LOCAL_SOURCE_FIXTURE",
           "case_ids": [
             "CMS-NEWS-010",
             "CMS-NEWS-011",
             "CMS-NEWS-012",
             "CMS-NEWS-013"
           ],
-          "run_id": "RUN-CMS-20261103-10",
+          "run_id": "RUN-CMS-20261103-12",
           "environment": "LOCAL_HTML_SOURCE_ADAPTER_HTTP_FIXTURE",
           "hosted_authenticated": "NOT_RUN",
           "live_upstream": "NOT_RUN",
-          "staging_deploy": "NOT_RUN"
+          "staging_deploy": "NOT_RUN",
+          "code_test_sha": "5116f6e79cb9a0257ef041cbad8cbe28f17a3ee6",
+          "initial_failure_run": "RUN-CMS-20261103-11",
+          "initial_failure_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41614538770",
+          "portal_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306414",
+          "public_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306400",
+          "vitest": 609,
+          "adapter_tests": 25,
+          "local_chromium": 38,
+          "public_chromium": 24,
+          "public_http": 24,
+          "post_fix_reproducible_defects_in_reviewed_paths": 0,
+          "real_external_html": "NOT_RUN",
+          "final_docs_ci": "PENDING"
         },
-        "description": "Owner asked for find→reproduce→fix→review loop. Pass1 reproduced fake data-href/title attribute being imported. Pass2 reproduced hidden comment/script/style/template anchors imported. Source patch and tests on fix/newsroom-review-loop-anchor-20261103. Full exact-SHA CI and public Chromium pending. Stop when zero new reproducible scoped issues after re-review and all gates green; no global zero-bug claim. IAM owner-paused, SRS frozen, production unchanged."
+        "description": "Owner asked for find→reproduce→fix→review loop. Pass1 reproduced fake data-href/title attribute being imported. Pass2 reproduced hidden comment/script/style/template anchors imported. Source patch and tests on fix/newsroom-review-loop-anchor-20261103. Full exact-SHA CI and public Chromium pending. Stop when zero new reproducible scoped issues after re-review and all gates green; no global zero-bug claim. IAM owner-paused, SRS frozen, production unchanged. Third iteration reproduced hidden nested outer-template anchor leak; fixed with depth-aware template tags and additional 2 tests. Initial PR verify failed QA label Regression, corrected to Integration. Exact source SHA 5116f6e7 passed portal CI 4/4, 609 Vitest, 25 adapter, 38 local Chromium; real public staging 24/24 Chromium and 24/24 HTTP on old Worker. Follow-up independent review of scoped HTML source paths found zero new reproducible issues. Final documentation-head CI and merge remain PENDING; no production/staging deploy or authenticated E2E."
       }
     ],
     "features": [],
