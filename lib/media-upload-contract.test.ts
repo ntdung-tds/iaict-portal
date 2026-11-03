@@ -112,3 +112,45 @@ describe("CMS-MEDIA-015: mandatory policy and bounded byte preflight", () => {
     fail(candidate(), "TOO_LARGE", { allowedMimeTypes: ["image/png"], maxBytes: png.length - 1 });
   });
 });
+
+
+describe("CMS-MEDIA-015: stable policy snapshot (review-loop regression)", () => {
+  it("never re-reads a dynamic size getter after validation", () => {
+    let reads = 0;
+    const changingPolicy = {
+      allowedMimeTypes: ["image/png"],
+      get maxBytes() {
+        reads++;
+        return reads === 1 ? png.byteLength - 1 : 1024;
+      },
+    };
+    expect(validateMediaUploadPreflight(candidate(), changingPolicy))
+      .toEqual({ ok: false, code: "TOO_LARGE" });
+    expect(reads).toBe(1);
+  });
+
+  it("never re-reads a dynamic MIME allowlist getter after validation", () => {
+    let reads = 0;
+    const changingPolicy = {
+      maxBytes: 64,
+      get allowedMimeTypes() {
+        reads++;
+        return reads <= 3 ? ["image/png"] : ["image/jpeg"];
+      },
+    };
+    expect(validateMediaUploadPreflight(candidate("spoof.jpg", "image/jpeg", jpeg), changingPolicy))
+      .toEqual({ ok: false, code: "UNSUPPORTED_MIME" });
+    expect(reads).toBe(1);
+  });
+
+  it("rejects a policy getter that throws, without surfacing the exception", () => {
+    const throwingPolicy = {
+      allowedMimeTypes: ["image/png"],
+      get maxBytes(): number {
+        throw new Error("untrusted policy read");
+      },
+    };
+    expect(validateMediaUploadPreflight(candidate(), throwingPolicy))
+      .toEqual({ ok: false, code: "POLICY_NOT_CONFIGURED" });
+  });
+});
