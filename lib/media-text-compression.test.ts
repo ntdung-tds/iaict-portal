@@ -7,8 +7,8 @@ import {
 const bytes = (s: string) => new TextEncoder().encode(s);
 
 async function unzip(bytes: Uint8Array): Promise<string> {
-  const source = new ReadableStream<Uint8Array>({
-    start(controller) { controller.enqueue(bytes); controller.close(); },
+  const source = new ReadableStream<BufferSource>({
+    start(controller) { controller.enqueue(new Uint8Array(bytes)); controller.close(); },
   });
   const stream = source.pipeThrough(new DecompressionStream("gzip"));
   const chunks: Uint8Array[] = [];
