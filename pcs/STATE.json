@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 55,
-  "updated_at": "2026-11-03T16:30:24.270Z",
+  "revision": 56,
+  "updated_at": "2026-11-03T21:49:18.148Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T16:30:24.270Z",
+    "updated_at": "2026-11-03T21:49:18.148Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -378,7 +378,7 @@
             "CMS-MEDIA-014",
             "CMS-MEDIA-015"
           ],
-          "run_id": "RUN-MEDIA-20261103-07",
+          "run_id": "RUN-MEDIA-20261104-01",
           "catalog_case_count": 127,
           "baseline_sha": "844f7ddf37d2314eed55f1fe3f766e6610684226",
           "threat_model": "docs/requirements/media-r2/MEDIA_R2_THREAT_MODEL_2026-11-03.md",
@@ -506,9 +506,57 @@
               "run_id": "RUN-MEDIA-20261103-09",
               "media_e2e": "NOT_RUN"
             }
+          },
+          "stream_inspector": {
+            "status": "PASS_SOURCE_CI_ONLY",
+            "change_id": "CHG-MEDIA-R2-20261104-01",
+            "pr": "https://github.com/ntdung-tds/iaict-portal/pull/93",
+            "source_file": "lib/media-stream-contract.ts",
+            "test_file": "lib/media-stream-contract.test.ts",
+            "design_doc": "docs/requirements/media-r2/MEDIA_R2_B3_4_STREAM_CONTRACT_2026-11-04.md",
+            "run_id": "RUN-MEDIA-20261104-01",
+            "original_red_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41723161906",
+            "original_red_sha": "a61e668efdeeaa6493dc799f591633b325b51c52",
+            "original_vitest": "645_PASS_2_FAIL_OF_647",
+            "fixes": [
+              "c8d232ab4944558cf76f96b1b7474a73ec18fa6c",
+              "bc5bcad89c9c663bd32c627e49154ec3cfd977a4",
+              "0cfdf1abfd10ad8808ec85948fd46825343cccdb"
+            ],
+            "local_fixture_policy_only": true,
+            "canonical_qa_case_count": 127,
+            "source_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41724127069",
+            "hosted_media_api": "NOT_IMPLEMENTED",
+            "hosted_stream_enforcement": "NOT_RUN",
+            "cloudflare_r2": "NOT_RUN",
+            "decision_approval": false,
+            "code_wired": false,
+            "source_sha": "0cfdf1abfd10ad8808ec85948fd46825343cccdb",
+            "portal_ci_jobs_passed": 4,
+            "vitest_passed": 650,
+            "independent_red_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41723921545",
+            "independent_red_sha": "836578ab986fcc70bf11fa3675af6c7bb5cae75e",
+            "independent_red_vitest": "647_PASS_3_FAIL_OF_650",
+            "local_negative_cases": 17,
+            "public_staging_first_attempt": {
+              "workflow": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41724126823",
+              "status": "FAIL",
+              "chrome": "23_PASS_1_FLAKY_503",
+              "http_probe": "21_PASS_3_FAIL_503_OF_24",
+              "worker_sha": "1b8cfe71-88ef-4e21-8937-4f8590daaba4"
+            },
+            "public_staging_rerun": {
+              "workflow": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41724126823",
+              "status": "PASS",
+              "chrome": "24_OF_24",
+              "http_probe": "24_OF_24",
+              "warning": "Original 503 failures preserved; ops Issue 30 OPEN"
+            },
+            "staging_503_issue": "https://github.com/ntdung-tds/iaict-portal/issues/30",
+            "production_unchanged_verified": true
           }
         },
-        "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records.\n2026-11-03 DESIGN ONLY: documented staging R2 threat model, 12 planned manual QA cases with RUN-MEDIA-20261103-01 NOT_RUN and CHG-MEDIA-R2-20261103-01. Actual upload code, scanner, role browser, D1/R2 hosted E2E remain unimplemented/not run. Owner must approve security design before hosted behavior. IAM owner-paused; SRS frozen and production untouched.\nB3.2 isolated pure preflight implemented on test branch; 3 AUTO READY local test cases (013..015) pending exact-SHA CI and Master QA sync. Old 12 hosted/API Media cases still PLANNED/NOT_RUN. No live file type/size approved and no Worker/R2/D1/IAM/production/SRS mutation.\nB3.2 3-pass code review: reproduced getter policy TOCTOU, changing/throwing candidate getters and typed-array size spoof in unit CI, fixed each and retested; no additional scoped issue detected. Upload/API/hosted R2 still NOT_RUN. Master QA v2.15 synced, case catalog 127.\nPostmerge PR89 at 9dc3bfc88c84 verified Portal CI 4/4 and live public staging 1/1; staged Worker version unchanged since 2026-10-31. Scoped B3.2 helper done; hosted upload not implemented or tested. RUN-MEDIA-20261103-07. No security policy approved.\nB3.3 batched PROPOSED design policy + pure unwired lifecycle/revision planner/tests on PR91, RUN-MEDIA-20261103-08 pending exact code CI; all real hosted cases 001..012 remain PLANNED/NOT_RUN. No policy values approved, IAM paused, production HOLD."
+        "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records.\n2026-11-03 DESIGN ONLY: documented staging R2 threat model, 12 planned manual QA cases with RUN-MEDIA-20261103-01 NOT_RUN and CHG-MEDIA-R2-20261103-01. Actual upload code, scanner, role browser, D1/R2 hosted E2E remain unimplemented/not run. Owner must approve security design before hosted behavior. IAM owner-paused; SRS frozen and production untouched.\nB3.2 isolated pure preflight implemented on test branch; 3 AUTO READY local test cases (013..015) pending exact-SHA CI and Master QA sync. Old 12 hosted/API Media cases still PLANNED/NOT_RUN. No live file type/size approved and no Worker/R2/D1/IAM/production/SRS mutation.\nB3.2 3-pass code review: reproduced getter policy TOCTOU, changing/throwing candidate getters and typed-array size spoof in unit CI, fixed each and retested; no additional scoped issue detected. Upload/API/hosted R2 still NOT_RUN. Master QA v2.15 synced, case catalog 127.\nPostmerge PR89 at 9dc3bfc88c84 verified Portal CI 4/4 and live public staging 1/1; staged Worker version unchanged since 2026-10-31. Scoped B3.2 helper done; hosted upload not implemented or tested. RUN-MEDIA-20261103-07. No security policy approved.\nB3.3 batched PROPOSED design policy + pure unwired lifecycle/revision planner/tests on PR91, RUN-MEDIA-20261103-08 pending exact code CI; all real hosted cases 001..012 remain PLANNED/NOT_RUN. No policy values approved, IAM paused, production HOLD.\n2026-11-04 B3.4: grouped bounded async source inspection, adversarial fixtures, design/readiness, QA and PCS in PR #93. First CI red 645/647 (non-byte Uint16Array accepted, test default undefined policy), corrected locally and exact SHA CI pending. No runtime wiring, scanner, D1/R2, IAM, SRS or production change."
       },
       {
         "id": "T-PORTAL-CMS-FIRST",
@@ -718,8 +766,8 @@
     "artifacts": [],
     "current": {
       "active_task": "T-MEDIA-R2",
-      "last_completed_step": "PR #91 MERGED at 79e401e00b7f7426ba4cc9d1047734d21a7a007a. B3.3 grouped 4 small tasks: proposed 7 security policies, unwired lifecycle transition graph, negative 633-Vitest fixture, QA/PCS docs. Final premerge portal #41673789698 4/4 PASS and public #41673789867 PASS; postmerge portal #41674297770 4/4 PASS. Public #41674297780 pending at initial checkpoint; old deployed Worker only. RUN-MEDIA-20261103-08/09, 127 canonical QA, 12 hosted Media cases NOT_RUN. Postmerge staging-acceptance #41674297780 completed SUCCESS; it tests old deployed Worker only, not hosted B3.3 Media.",
-      "next_action": "Publish PR #92 PCS rev55 postmerge record after exact docs-head CI and staging smoke; afterward request explicit Owner decision on MED-DEC-01..07 for B3.4 hosted upload, with IAM paused and SRS frozen. Do not deploy or migrate production.",
+      "last_completed_step": "B3.4 PR #93 isolated pure stream helper + 17 adversarial local tests: source initial CI #41723161906 RED 645/647, patched and #41723362864 GREEN 647/647; independent getter/iterator review CI #41723921545 RED 647/650, fixed 0cfdf1ab and #41724127069 GREEN 4/4 Portal CI, 650/650 Vitest. The real public staging browser still tests previously deployed Worker, no new upload endpoint or hosted Media E2E. RUN-MEDIA-20261104-01; 127 canonical QA cases unchanged. Public staging source-SHA #41724126823 first attempt FAIL intermittent 503 (Chrome 23 pass+1 flaky; HTTP 21/24) on old Worker; rerun 24/24 Chromium+24/24 HTTP PASS. Original FAIL preserved; Issue #30 OPEN. Cloudflare staging and production deployment versions unchanged.",
+      "next_action": "Verify exact final PR #93 docs-head Portal CI and public Chromium; if both PASS, merge and readback PCS rev56, verify postmerge. Keep operations Issue #30 OPEN due real intermittent 503; no staging/production deploy. MED-DEC-01..07 explicit approval before hosted Media B3.5. IAM PAUSED, SRS FROZEN.",
       "blockers": [
         "MEDIA B3.3: real format/byte limits, scanner or fail-closed quarantine, asset lifecycle/ownership/retention and approved staging-private upload design remain UNAPPROVED; CMS-MEDIA-001..012, authenticated hosted R2 E2E NOT_RUN.",
         "Actual lib/totp.ts now exercised only in Node local synthetic D1 proof; hosted D1 integration, real encrypted factor/key binding, real IAM session and recovery still NOT_IMPLEMENTED/NOT_RUN.",

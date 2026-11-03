@@ -18,6 +18,8 @@
 | CHG-MEDIA-R2-20261103-03 | 2026-11-03 | Rà soát lặp lớp preflight: lỗi TOCTOU đọc lại getter policy và ngoại lệ getter | REVIEW_LOOP / TEST_FIRST | Issue #39, PR review-loop | CMS-MEDIA-015, RUN-MEDIA-20261103-05..06 | CHƯA_CHỐT |
 | CHG-MEDIA-R2-20261103-04 | 2026-11-03 | Gộp B3.3: phương án quyết định về định dạng/size/scan/ownership, hợp đồng state transition thuần và fixture negative tests; không kết nối upload | PROPOSED / LOCAL_CODE_ONLY / NO_DEPLOYMENT | Issue #39 · PR B3.3 batch | RUN-MEDIA-20261103-08 — CI PENDING | CHƯA_CHỐT |
 
+| CHG-MEDIA-R2-20261104-01 | 2026-11-04 | B3.4 gộp hợp đồng kiểm tra stream có giới hạn byte/chunk, fixture test âm tính và tài liệu release gate (không nối runtime) | IN_PROGRESS / PURE_UNWIRED / NO_DEPLOY | Issue #39 · PR B3.4 | RUN-MEDIA-20261104-01 — PENDING_CI | CHƯA_CHỐT |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -75,6 +77,18 @@
 - **Bằng chứng:** `RUN-MEDIA-20261103-08` phân biệt local source CI với public staging (old deployed Worker). Các case `CMS-MEDIA-001..012` vẫn `PLANNED/NOT_RUN`; QA CSV vẫn 127 case và Google Master v2.15 không cần sửa.
 - **Rollback:** revert file/module/docs ở nhánh dev; không có hosted schema/runtime state để hoàn tác.
 - **SRS:** CHƯA_CHỐT; không tự đồng bộ vào baseline.
+
+
+### CHG-MEDIA-R2-20261104-01 — B3.4 bounded async stream inspection (preparatory, not upload)
+
+- **Nguồn:** yêu cầu chủ dự án gộp nhiều task trong 1 đợt; [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39), bảng quyết định B3.3; đề cương tham chiếu §5.3, §8, §10, §13. **SRS chưa chốt.**
+- **Trước → sau:** trước có preflight byte-array MIME/extension và graph vòng đời thuần, chưa có fixture stream chunk. Sau bổ sung `lib/media-stream-contract.ts` kiểm tra một stream bất đồng bộ với `maxBytes` và `maxChunks` do caller cấp, giữ tối đa 12 byte đầu và từ chối input lỗi/overflow; `lib/media-stream-contract.test.ts` kiểm tra các tình huống âm tính.
+- **Đảm bảo hữu hạn:** giới hạn tổng byte và số chunk, kể cả chunk rỗng; đọc intrinsic byte length; snapshot policy một lần; cố gắng đóng iterator khi từ chối. Chưa bảo đảm deadline network/backpressure hay dừng stream đang treo, không xác minh ảnh đã decode, không scan malware.
+- **Tác động:** API/Worker/R2/D1/IAM/Access/production **NONE**. Code **không được import vào route**; stream bị tiêu thụ và bỏ, không thể sử dụng như một uploader. Tài liệu [B3.4](./MEDIA_R2_B3_4_STREAM_CONTRACT_2026-11-04.md) mô tả các điều kiện tích hợp trong tương lai.
+- **Chưa quyết định:** chính sách live về định dạng/dung lượng/chunk, scanner, phân quyền/ownership, quota và retention; MED-DEC-01..07 vẫn **PROPOSED**.
+- **Kiểm thử:** `RUN-MEDIA-20261104-01` chỉ source/unit và public Chromium trên Worker cũ nếu CI chạy. 127 case canonical (15 Media) không đổi; `CMS-MEDIA-004` hosted stream và `CMS-MEDIA-001..012` vẫn **PLANNED/NOT_RUN**. Bằng chứng ảnh: NO_IMAGE_REQUIRED; khi cần ảnh thực tế chỉ lưu tại Drive QA riêng.
+- **Rollback:** revert 2 tệp lib/test và tài liệu liên quan trên nhánh phát triển; không có D1/R2 hoặc deploy nào để rollback.
+- **SRS:** CHƯA_CHỐT, không tự sửa baseline.
 
 ## Các thay đổi tiếp theo
 
