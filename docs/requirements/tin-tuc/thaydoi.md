@@ -14,7 +14,7 @@
 
 | CHG-TIN-TUC-20261031-02 | 2026-10-31 | Ghi nhận thiết kế nguồn tin/duyệt tin V16 | PROPOSED (đúng phạm vi) | PR #36 / docs gốc | Chi tiết bên dưới | CHƯA_CHỐT |
 
-| CHG-TIN-TUC-20261103-01 | 2026-11-03 | API ingest Newsroom fail-closed JSON và bằng chứng lifecycle tin thật trên SQLite migration gốc | CODED / CI_PENDING | Issue #81 · PR PENDING | CMS-NEWS-001..004 · RUN-CMS-20261103-03 | CHƯA_CHỐT |
+| CHG-TIN-TUC-20261103-01 | 2026-11-03 | API ingest Newsroom fail-closed JSON và bằng chứng lifecycle tin thật trên SQLite migration gốc | IMPLEMENTED / LOCAL_TEST_PASS / HOSTED_E2E_NOT_RUN | Issue #81 · PR #82 | CMS-NEWS-001..004 · RUN-CMS-20261103-04/05 | CHƯA_CHỐT |
 
 ## Thay đổi chi tiết
 
@@ -42,6 +42,8 @@
 - **Evidence:** `RUN-CMS-20261103-03` (CI pending); non-sensitive synthetic data only. Does **not** prove deployed Worker, actual external feed HTTP, Cloudflare Access-authenticated browser or production readiness. Existing policy default OFF, claim CAS and scheduler lease code not duplicated or changed.
 - **Rollback:** revert isolated reviewed PR if new content-type requirement breaks a legitimate client; continue to protect privileged routes. No D1 migration, Worker deployment, cloud identity change, secret, IAM code, SRS baseline update or production write.
 - **SRS:** remains FROZEN and CHƯA_CHỐT; changes stay in per-module log until owner explicitly decides to reconcile.
+
+**Thực thi thực tế 03/11/2026:** Ở SHA đầu `2a8c257`, một test dữ liệu mẫu thất bại vì mock RSS dùng lại `Response` đã đọc (`RUN-CMS-20261103-04`), không có bằng chứng lỗi sản phẩm. Sau sửa fixture thành response mới mỗi lần gọi ở SHA `32d849113d2953997ada4dc9bfa584741b0e8935`, [portal-ci #41575415530](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415530) **4/4 PASS, 589/589 Vitest, 38/38 local Chromium**; [staging public #41575415524](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415524) **24/24 Chromium + 24/24 HTTP PASS**, không quan sát 503/5xx/network errors. `RUN-CMS-20261103-05`. Các test Newsroom mới chạy route/repository/RSS và D1 SQLite schema thật **với actor/fetch mock**, không phải môi trường staging đã triển khai code mới; 8-role Access-authenticated và live external RSS **NOT_RUN**. QA registry hiện có 103 case. Chờ CI final docs SHA và merge; SRS FROZEN.
 
 ## Các thay đổi tiếp theo
 
