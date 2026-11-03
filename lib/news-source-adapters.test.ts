@@ -127,13 +127,12 @@ describe("V16 news source adapters", () => {
   });
 
   it("refuses declared excessive Content-Length before reading a body", async () => {
-    let consumed = false;
     const mock = vi.fn<typeof fetch>(async () => new Response(new ReadableStream({
-      pull(controller) { consumed = true; controller.enqueue(new Uint8Array([65])); controller.close(); },
+      pull(controller) { controller.enqueue(new Uint8Array([65])); controller.close(); },
     }), { status: 200, headers: { "content-length": "1500001" } }));
     await expect(fetchNewsSourceCandidates({ id: "mst-gov-vn" }, mock))
       .rejects.toThrow("Source response exceeds 1500000 bytes");
-    expect(consumed).toBe(false);
+    expect(mock).toHaveBeenCalledOnce();
   });
 
   it("rejects unknown source adapters", async () => {
