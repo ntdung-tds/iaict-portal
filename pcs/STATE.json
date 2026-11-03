@@ -388,7 +388,22 @@
           "master_doc_verified_at": "2026-11-03",
           "master_doc_media_case_count": 12,
           "master_doc_source": "https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit",
-          "master_doc_real_media_runs": 0
+          "master_doc_real_media_runs": 0,
+          "r2_read_only": {
+            "status": "PASS_READ_ONLY_BUCKET_METADATA",
+            "bucket": "iaict-portal-staging-media",
+            "region": "APAC",
+            "managed_r2_dev_enabled": false,
+            "custom_domain_count": 0,
+            "lifecycle_rule": "Default Multipart Abort Rule",
+            "app_retention_verified": false,
+            "cors": "UNVERIFIED",
+            "object_reads": "NOT_RUN",
+            "object_writes": "NOT_RUN",
+            "cloudflare_mutations": "NONE",
+            "verified_on": "2026-11-03",
+            "media_e2e": "NOT_RUN"
+          }
         },
         "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records.\n2026-11-03 DESIGN ONLY: documented staging R2 threat model, 12 planned manual QA cases with RUN-MEDIA-20261103-01 NOT_RUN and CHG-MEDIA-R2-20261103-01. Actual upload code, scanner, role browser, D1/R2 hosted E2E remain unimplemented/not run. Owner must approve security design before hosted behavior. IAM owner-paused; SRS frozen and production untouched."
       },

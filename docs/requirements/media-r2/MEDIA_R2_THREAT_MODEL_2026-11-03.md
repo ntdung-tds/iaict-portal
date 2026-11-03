@@ -10,6 +10,12 @@
 - No dedicated `CMS-MEDIA` case existed before this design slice (112-case prior registry). Do not mistake API absence for a negative live security test.
 - IAM is owner-PAUSED, real Media CMS role/browser E2E NOT_RUN; no new hosted D1/R2 test mutations and no Worker deployment in this task.
 
+## 1B. Real Cloudflare R2 read-only verification (2026-11-03)
+
+At the time of this separate **read-only** provider API query, `iaict-portal-staging-media` existed in **APAC**. Managed `r2.dev` public access was **disabled**, and the custom-domain list had **0** entries. A lifecycle query returned exactly one enabled rule, **Default Multipart Abort Rule**; this is **not** an application-level object expiration/retention/deletion policy. The CORS policy query did not complete successfully (do not claim CORS is configured or unconfigured).
+
+Scope of evidence: **PASS_READ_ONLY_BUCKET_METADATA only**. No object key listing, no bytes read, no upload/delete, no Cloudflare changes, no Worker binding or authenticated CMS API E2E. Media runtime gates and test cases `CMS-MEDIA-001..012` remain **PLANNED/NOT_RUN**. The same observation is recorded in Google Master QA v2.13.
+
 ## 2. Trust zones and attack surfaces
 
 | Boundary | Threat / possible failure | Proposed control / release gate |
