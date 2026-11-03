@@ -179,3 +179,7 @@ Add CMS-NEWS-001..004 (103 total registered cases) for Newsroom route, original 
 ## 2026-11-03 — Independent Newsroom source HTTP safety review
 
 Current registry adds `CMS-NEWS-005` (validate approved HTTPS source redirects before fetch, bound hop count) and `CMS-NEWS-006` (actual response byte cap on chunked feed including stream cancellation). **105 total case records**, separate from earlier `CMS-NEWS-001..004`. These tests use injected synthetic HTTP/ReadableStream, not live upstream servers or Access-authenticated Chromium. Preserved evidence and review change ID: `CHG-TIN-TUC-20261103-02`, `RUN-CMS-20261103-06`. No IAM scope expansion.
+
+## 2026-11-03 — Additional two independent Newsroom adapter review passes
+
+Following merged PR #83, `CMS-NEWS-007/008/009` extend the canonical registry from 105 to **108 cases**. Two review passes identified (1) approved-host URLs on nonstandard HTTPS ports and malformed XML entities, and (2) stalled upstream cancellation and response-body cleanup gaps. New tests use injected deterministic HTTP streams and original RSS parser/fetch adapter only; not live RSS, hosted Access or deployed Worker. Change `CHG-TIN-TUC-20261103-03`, pre-test `RUN-CMS-20261103-08`. No separate tracker or IAM scope expansion. Google Master Test Plan requires guarded update/readback when results are available.

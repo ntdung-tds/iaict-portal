@@ -57,15 +57,24 @@ const COMMON_ENTITIES: Record<string, string> = {
   quot: '"',
 };
 
+/** XML numeric references must resolve to valid Unicode scalar values. */
+function validXmlCodePoint(value: number) {
+  // XML 1.0 Char production: TAB / LF / CR, valid BMP text, or supplementary scalar.
+  return Number.isInteger(value) && (value === 0x9 || value === 0xa || value === 0xd
+    || (value >= 0x20 && value <= 0xd7ff)
+    || (value >= 0xe000 && value <= 0xfffd)
+    || (value >= 0x10000 && value <= 0x10ffff));
+}
+
 function decodeEntities(value: string) {
   return value.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, entity: string) => {
     if (entity.startsWith("#x") || entity.startsWith("#X")) {
       const codePoint = Number.parseInt(entity.slice(2), 16);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+      return validXmlCodePoint(codePoint) ? String.fromCodePoint(codePoint) : "\uFFFD";
     }
     if (entity.startsWith("#")) {
       const codePoint = Number.parseInt(entity.slice(1), 10);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+      return validXmlCodePoint(codePoint) ? String.fromCodePoint(codePoint) : "\uFFFD";
     }
     return COMMON_ENTITIES[entity.toLowerCase()] ?? match;
   });
@@ -97,7 +106,8 @@ function normalizeDate(value: string | null) {
 function isAllowedUrl(value: string, definition: NewsSourceAdapterDefinition) {
   try {
     const url = new URL(value, definition.entryUrl);
-    return url.protocol === "https:" && definition.allowedHosts.includes(url.hostname.toLowerCase());
+    return url.protocol === "https:" && !url.port && !url.username && !url.password
+      && definition.allowedHosts.includes(url.hostname.toLowerCase());
   } catch {
     return false;
   }
@@ -233,7 +243,7 @@ function checkAllowedFeedUrl(value: string, definition: NewsSourceAdapterDefinit
   } catch {
     throw new Error("News source redirect target is not approved");
   }
-  if (url.protocol !== "https:" || !definition.allowedHosts.includes(url.hostname.toLowerCase())
+  if (url.protocol !== "https:" || url.port || !definition.allowedHosts.includes(url.hostname.toLowerCase())
     || url.username || url.password) {
     throw new Error("News source redirect target is not approved");
   }
@@ -244,6 +254,7 @@ function checkAllowedFeedUrl(value: string, definition: NewsSourceAdapterDefinit
 async function readBoundedFeed(response: Response, maxBytes: number) {
   const lengthHeader = response.headers.get("content-length");
   if (lengthHeader !== null && /^\d+$/.test(lengthHeader.trim()) && Number(lengthHeader) > maxBytes) {
+    void response.body?.cancel().catch(() => {});
     throw new Error("Source response exceeds " + maxBytes + " bytes");
   }
   if (!response.body) return "";
@@ -258,7 +269,8 @@ async function readBoundedFeed(response: Response, maxBytes: number) {
       if (done) break;
       byteCount += value.byteLength;
       if (byteCount > maxBytes) {
-        await reader.cancel();
+        // An untrusted stream's cancellation may never resolve; fail closed immediately.
+        void reader.cancel().catch(() => {});
         throw new Error("Source response exceeds " + maxBytes + " bytes");
       }
       text += decoder.decode(value, { stream: true });
@@ -301,6 +313,9 @@ export async function fetchNewsSourceCandidates(
         response = current;
         break;
       }
+      // Redirect bodies are unused; cancel even on invalid targets, without
+      // waiting for a potentially stalled remote stream's cancel promise.
+      void current.body?.cancel().catch(() => {});
       if (hop === MAX_SOURCE_REDIRECTS) throw new Error("News source exceeded redirect limit");
       const location = current.headers.get("location");
       if (!location) throw new Error("News source redirect missing Location");
@@ -309,7 +324,6 @@ export async function fetchNewsSourceCandidates(
       } catch {
         throw new Error("News source redirect target is not approved");
       }
-      await current.body?.cancel();
     }
 
     if (!response) throw new Error("News source exceeded redirect limit");

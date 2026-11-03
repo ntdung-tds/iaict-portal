@@ -135,6 +135,81 @@ describe("V16 news source adapters", () => {
     expect(mock).toHaveBeenCalledOnce();
   });
 
+  it("rejects approved-host redirects to a nonstandard HTTPS port", async () => {
+    const mock = vi.fn<typeof fetch>(async () => new Response(null, {
+      status: 302, headers: { location: "https://mst.gov.vn:8443/rss/private" },
+    }));
+    await expect(fetchNewsSourceCandidates({ id: "mst-gov-vn" }, mock))
+      .rejects.toThrow("News source redirect target is not approved");
+    expect(mock).toHaveBeenCalledOnce();
+  });
+
+  it("rejects RSS and HTML article candidate URLs with custom ports or credentials", () => {
+    const rss = '<rss><channel><item>' +
+      '<title>Nội dung công nghệ Việt Nam cập nhật</title>' +
+      '<link>https://mst.gov.vn:9443/unsafe</link>' +
+      '</item><item>' +
+      '<title>Nội dung khoa học Việt Nam mới nhất</title>' +
+      '<link>https://tester:secret@mst.gov.vn/unsafe</link>' +
+      '</item></channel></rss>';
+    expect(parseRssNewsCandidates("mst-gov-vn", rss, NEWS_SOURCE_ADAPTERS[0])).toEqual([]);
+    const html = '<a href="https://baochinhphu.vn:9000/unsafe">Tin chính sách kinh tế xã hội mới</a>' +
+      '<a href="https://tester:secret@baochinhphu.vn/unsafe">Tin xây dựng Chính phủ điện tử</a>';
+    expect(parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1])).toEqual([]);
+  });
+
+  it("does not throw on invalid XML numeric entities in RSS titles or summaries", () => {
+    const rss = '<rss><channel><item>' +
+      '<title>Tin khoa học mới nhất &#x110000; về nghiên cứu</title>' +
+      '<link>https://mst.gov.vn/tin-khoa-hoc</link>' +
+      '<description>Thông tin &#99999999999999999999; và &#xD800; và &#x1; không hợp lệ.</description>' +
+      '</item></channel></rss>';
+    expect(() => parseRssNewsCandidates("mst-gov-vn", rss, NEWS_SOURCE_ADAPTERS[0]))
+      .not.toThrow();
+    const rows = parseRssNewsCandidates("mst-gov-vn", rss, NEWS_SOURCE_ADAPTERS[0]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].title).toContain("Tin khoa học");
+    expect(rows[0].excerpt).toContain("không hợp lệ");
+    expect(rows[0].excerpt).toContain("\uFFFD");
+    expect(rows[0].excerpt).not.toContain("\u0001");
+  });
+
+  it("accepts the implicit HTTPS default port but not custom ports", async () => {
+    const payload = "<rss><channel><item><title>Tin khoa học mới Việt Nam</title>" +
+      "<link>https://mst.gov.vn:443/tin-moi</link></item></channel></rss>";
+    const mock = vi.fn<typeof fetch>(async (url) => String(url).endsWith(".rss")
+      ? new Response(null, { status: 302, headers: { location: "https://mst.gov.vn:443/rss/new.xml" } })
+      : new Response(payload, { status: 200 }));
+    const result = await fetchNewsSourceCandidates({ id: "mst-gov-vn" }, mock);
+    expect(result.candidates).toHaveLength(1);
+    expect(result.candidates[0].sourceUrl).toBe("https://mst.gov.vn/tin-moi");
+  });
+
+  it("does not await a stalled redirect-body cancellation before the next approved fetch", async () => {
+    const payload = "<rss><channel><item><title>Tin khoa học Việt Nam mới nhất</title>" +
+      "<link>https://mst.gov.vn/tin-moi</link></item></channel></rss>";
+    const hungBody = new ReadableStream<Uint8Array>({
+      cancel() { return new Promise<void>(() => {}); },
+    });
+    let count = 0;
+    const mock = vi.fn<typeof fetch>(async () => ++count === 1
+      ? new Response(hungBody, { status: 302, headers: { location: "/rss/updated.xml" } })
+      : new Response(payload, { status: 200 }));
+    const result = await fetchNewsSourceCandidates({ id: "mst-gov-vn" }, mock);
+    expect(result.candidates).toHaveLength(1);
+    expect(mock).toHaveBeenCalledTimes(2);
+  });
+
+  it("cancels declared oversized response bodies even before streaming reads", async () => {
+    let cancelled = false;
+    const response = new Response(new ReadableStream<Uint8Array>({
+      cancel() { cancelled = true; },
+    }), { status: 200, headers: { "content-length": "1500001" } });
+    await expect(fetchNewsSourceCandidates({ id: "mst-gov-vn" }, vi.fn(async () => response)))
+      .rejects.toThrow("Source response exceeds 1500000 bytes");
+    expect(cancelled).toBe(true);
+  });
+
   it("rejects unknown source adapters", async () => {
     await expect(fetchNewsSourceCandidates({ id: "unknown" }, vi.fn<typeof fetch>())).rejects.toThrow(
       "No adapter configured",

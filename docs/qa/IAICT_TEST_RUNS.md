@@ -687,3 +687,29 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | QA media | No screenshot needed for deterministic HTTP adapter tests; no cookies, private user data or images committed. Restricted [Drive folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) retained. |
 | Final documentation-head CI | **NOT_RUN when record written**; must verify final PR-head SHA again, then merge and test postmerge. |
 
+
+## RUN-CMS-20261103-08 — Two independent Newsroom adapter review passes (pre-CI record)
+
+| Field | Scope and pending result |
+| --- | --- |
+| Reviewed baseline | Merged PR #83, development SHA `c86ff18adfef49b5454cc71b2649aa81ae840bd1` |
+| Pass 1 — findings | Source and candidate allowlisted URLs accepted nondefault HTTPS ports and credential-bearing candidate links. Malformed numeric XML entities (out-of-range/surrogate/invalid controls) could throw and abort ingestion. |
+| Pass 2 — findings | Waiting on source stream cancellation could indefinitely stall redirect/oversize paths. Declared oversized responses and invalid redirect bodies needed prompt resource cancellation even when rejecting. |
+| Fix | `lib/news-source-adapters.ts`: enforce default HTTPS port, no URL userinfo, XML 1.0 valid character ranges with U+FFFD replacement, and fire-and-forget cancellation with rejection handling while keeping max redirect/byte limits and fetch abort guard. |
+| Case IDs | `CMS-NEWS-007`, `CMS-NEWS-008`, `CMS-NEWS-009`; source tests in `lib/news-source-adapters.test.ts`; total **108** registered test cases. |
+| Test boundary | Full real Newsroom source parser/fetch adapter with injected deterministic `fetch`, controlled `Response` and `ReadableStream`; **no live network, no hosted D1/Access/session, no external RSS**. |
+| Execution state | **NOT_RUN on final PR SHA**. The code/test commits exist; actual CI results must be appended as a new immutable Run after execution. No PASS claim at this point. |
+| Safety | Owner IAM PAUSED; production, SRS and staged Worker unchanged; no screenshot/cookie/secret artifacts; restricted Drive root https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp |
+
+## RUN-CMS-20261103-09 — Verified original-source double-review of Newsroom adapter
+
+| Field | Actual observed evidence |
+| --- | --- |
+| Review source | PR #84 source SHA `297ba4fbcf5cfdf262e0f8593c86320be37ed068`, following 2 independent audit passes on merged PR #83 |
+| Case IDs | `CMS-NEWS-007` custom HTTPS port and candidate URL userinfo; `CMS-NEWS-008` invalid XML numeric character references with fallback U+FFFD; `CMS-NEWS-009` stalled redirect stream cancellation and declared over-limit body cancellation. |
+| Environment and scope | **PASS_LOCAL_INJECTED_HTTP** in actual `lib/news-source-adapters.ts` with deterministic `Response` and `ReadableStream` fixtures, no actual external RSS, Access session or hosted Worker. Existing Core+V16+V17 Newsroom SQLite lifecycle regression also passed via standard test suite (actor/upstream mock). |
+| Portal CI | [run 41609011114](https://github.com/ntdung-tds/iaict-portal/actions/runs/41609011114): **4/4 jobs PASS**, **600/600 Vitest**, **38/38 local Chromium**. Registry **108 cases**, frozen SRS and PCS/checklist guards PASS. |
+| Public staging | [run 41609010947](https://github.com/ntdung-tds/iaict-portal/actions/runs/41609010947): **24/24 Chromium PASS**, **24/24 repeated HTTP probes PASS**, observed HTTP 503=0, 5xx=0, network errors=0. |
+| Limitations | Public staging tests run **previously deployed Worker**, not PR #84 code. Real-origin RSS redirect/timeout behavior and authenticated Newsroom CMS browser E2E **NOT_RUN**. IAM Owner PAUSED; production/staging deployments and hosted D1/Access untouched. |
+| Earlier record | `RUN-CMS-20261103-08` recorded source-before-CI NOT_RUN; this append-only run reflects actual observed source SHA. |
+| Final documentation commit | **NOT_RUN at record capture**; exact final SHA CI and public staging must be rerun before merge. |
