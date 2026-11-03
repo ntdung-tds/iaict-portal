@@ -79,13 +79,17 @@ export async function inspectBoundedMediaStream(input: unknown, rawPolicy: unkno
   }
 
   let iterator: AsyncIterator<unknown>;
+  let next: () => Promise<IteratorResult<unknown>>;
   try {
-    // Read the factory once; do not accept sync-only iterables as live streams.
+    // Snapshot the factory and .next method once: untrusted getters can vary.
     const factory = (input as AsyncIterable<unknown>)[Symbol.asyncIterator];
     if (typeof factory !== "function") return reject("INVALID_STREAM");
     const created = factory.call(input) as AsyncIterator<unknown>;
-    if (!created || typeof created.next !== "function") return reject("INVALID_STREAM");
+    if (!created) return reject("INVALID_STREAM");
+    const nextMethod = created.next;
+    if (typeof nextMethod !== "function") return reject("INVALID_STREAM");
     iterator = created;
+    next = () => Reflect.apply(nextMethod, created, []) as Promise<IteratorResult<unknown>>;
   } catch {
     return reject("INVALID_STREAM");
   }
@@ -97,9 +101,11 @@ export async function inspectBoundedMediaStream(input: unknown, rawPolicy: unkno
   let prefixLength = 0;
   try {
     while (true) {
-      const item = await iterator.next();
+      const item = await next();
       if (item === null || typeof item !== "object") return reject("INVALID_STREAM");
-      if (item.done) {
+      const done = item.done; // snapshot a possibly dynamic getter once
+      if (done !== true && done !== false && done !== undefined) return reject("INVALID_STREAM");
+      if (done === true) {
         completed = true;
         if (total === 0) return reject("EMPTY_BODY");
         return { ok: true, totalBytes: total, chunkCount: chunks, signaturePrefix: Array.from(header.subarray(0, prefixLength)) };
@@ -110,7 +116,8 @@ export async function inspectBoundedMediaStream(input: unknown, rawPolicy: unkno
       chunks++;
       if (chunks > policy.maxChunks) return reject("TOO_MANY_CHUNKS");
 
-      const length = intrinsicByteLength(item.value);
+      const chunk = item.value; // same chunk for length and signature; no getter TOCTOU
+      const length = intrinsicByteLength(chunk);
       if (length === null) return reject("INVALID_CHUNK");
       if (length > policy.maxBytes - total) return reject("TOO_LARGE");
 
@@ -120,7 +127,7 @@ export async function inspectBoundedMediaStream(input: unknown, rawPolicy: unkno
         // be fooled by a subclass overriding .length or .byteLength.
         Uint8Array.prototype.set.call(
           header,
-          Uint8Array.prototype.subarray.call(item.value, 0, take),
+          Uint8Array.prototype.subarray.call(chunk, 0, take),
           prefixLength,
         );
         prefixLength += take;
