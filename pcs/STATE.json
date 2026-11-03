@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 42,
-  "updated_at": "2026-11-03T04:03:32.316Z",
+  "revision": 44,
+  "updated_at": "2026-11-03T05:37:35.491Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T04:03:32.316Z",
+    "updated_at": "2026-11-03T05:37:35.491Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -400,7 +400,7 @@
       {
         "id": "T-NEWSROOM-LIFECYCLE",
         "title": "Newsroom — real original-migration SQLite ingest, deduplication, review CAS, publication/archival and malformed input",
-        "status": "IN_PROGRESS",
+        "status": "DONE",
         "priority": "P0",
         "risk": "MEDIUM",
         "classification": "PUBLIC",
@@ -430,9 +430,45 @@
           "real_public_chromium": 24,
           "real_public_http": 24,
           "public_staging_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415524",
-          "final_head": "PENDING"
+          "final_head": "PENDING",
+          "postmerge_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41576292919",
+          "postmerge_staging": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41576292871"
         },
-        "description": "Owner IAM PAUSED. Dedicated PR branch test/newsroom-real-sqlite-lifecycle-20261103 based on 183868349. Actual Newsroom ingest route with structured JSON 400/no-store and real original Core+News+CMS SQL integration via synthetic RSS fixture; publish/archival is real repository and CMS API code. No hosted D1/Access/Worker mutation, SRS unchanged. First fixture test FAILED 588/589 due reused fetch Response; fresh response per invocation fixed it. Code-source exact SHA now 4/4 CI PASS / 589 Vitest / 38 local Chromium; live public staging 24 Chromium+24 HTTP PASS on old Worker. Documentation-final CI and PR merge PENDING; IAM still paused."
+        "description": "Owner IAM PAUSED. Dedicated PR branch test/newsroom-real-sqlite-lifecycle-20261103 based on 183868349. Actual Newsroom ingest route with structured JSON 400/no-store and real original Core+News+CMS SQL integration via synthetic RSS fixture; publish/archival is real repository and CMS API code. No hosted D1/Access/Worker mutation, SRS unchanged. First fixture test FAILED 588/589 due reused fetch Response; fresh response per invocation fixed it. Code-source exact SHA now 4/4 CI PASS / 589 Vitest / 38 local Chromium; live public staging 24 Chromium+24 HTTP PASS on old Worker. Documentation-final CI and PR merge PENDING; IAM still paused. PR #82 merged at 1bf71d4dccc3cb43454202b104b217bd61990bad, exact postmerge portal CI 4/4, 589/589 Vitest, local Chromium 38/38 and public staging 24/24 Chromium+24/24 HTTP PASS; completion is local/mock-actor Newsroom source acceptance only, hosted E2E NOT_RUN."
+      },
+      {
+        "id": "T-NEWSROOM-SOURCE-BOUNDARIES",
+        "title": "Independent Newsroom review — source URL redirects and bounded streaming size",
+        "status": "IN_PROGRESS",
+        "priority": "P0",
+        "risk": "HIGH",
+        "classification": "PUBLIC",
+        "security_sensitive": true,
+        "requires_owner_approval": false,
+        "github_issue": "https://github.com/ntdung-tds/iaict-portal/issues/81",
+        "dependencies": [],
+        "qa": {
+          "required": true,
+          "status": "PASS_LOCAL_INJECTED_HTTP",
+          "case_ids": [
+            "CMS-NEWS-005",
+            "CMS-NEWS-006"
+          ],
+          "run_id": "RUN-CMS-20261103-07",
+          "environment": "LOCAL_INJECTED_HTTP_STREAM",
+          "hosted_authenticated": "NOT_RUN",
+          "source_sha": "043b270b68aa1290bdb52bb6e7a44259cddc59fb",
+          "vitest_total": 594,
+          "local_chromium": 38,
+          "real_public_chromium": 24,
+          "real_public_http": 24,
+          "ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604136",
+          "public_staging_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604067",
+          "real_upstream": "NOT_RUN",
+          "deployed_new_worker": "NOT_RUN",
+          "final_doc_ci": "PENDING"
+        },
+        "description": "Second audit after PR #82 merge found redirect follow without allowed destination check and body allocation via response.text before size guard. Bounded fix on fix/newsroom-source-boundaries-review-20261103; external source actual HTTP NOT_RUN and no production/staging/IAM mutation. Exact source SHA 043b270b now 4/4 Portal CI PASS / 594 Vitest / 38 local Chromium; public Chromium+HTTP 24+24 PASS on old staged Worker. Final docs SHA CI and merge pending."
       }
     ],
     "features": [],

@@ -16,6 +16,8 @@
 
 | CHG-TIN-TUC-20261103-01 | 2026-11-03 | API ingest Newsroom fail-closed JSON và bằng chứng lifecycle tin thật trên SQLite migration gốc | IMPLEMENTED / LOCAL_TEST_PASS / HOSTED_E2E_NOT_RUN | Issue #81 · PR #82 | CMS-NEWS-001..004 · RUN-CMS-20261103-04/05 | CHƯA_CHỐT |
 
+| CHG-TIN-TUC-20261103-02 | 2026-11-03 | Rà soát lại Newsroom: chặn chuyển hướng không tin cậy và giới hạn dữ liệu RSS/HTML khi truyền theo luồng | CODED / LOCAL_PASS / DEPLOY_NOT_RUN | Issue #81 · PR #83 | CMS-NEWS-005/006 · RUN-CMS-20261103-06/07 | CHƯA_CHỐT |
+
 ## Thay đổi chi tiết
 
 ### CHG-TIN-TUC-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -44,6 +46,19 @@
 - **SRS:** remains FROZEN and CHƯA_CHỐT; changes stay in per-module log until owner explicitly decides to reconcile.
 
 **Thực thi thực tế 03/11/2026:** Ở SHA đầu `2a8c257`, một test dữ liệu mẫu thất bại vì mock RSS dùng lại `Response` đã đọc (`RUN-CMS-20261103-04`), không có bằng chứng lỗi sản phẩm. Sau sửa fixture thành response mới mỗi lần gọi ở SHA `32d849113d2953997ada4dc9bfa584741b0e8935`, [portal-ci #41575415530](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415530) **4/4 PASS, 589/589 Vitest, 38/38 local Chromium**; [staging public #41575415524](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415524) **24/24 Chromium + 24/24 HTTP PASS**, không quan sát 503/5xx/network errors. `RUN-CMS-20261103-05`. Các test Newsroom mới chạy route/repository/RSS và D1 SQLite schema thật **với actor/fetch mock**, không phải môi trường staging đã triển khai code mới; 8-role Access-authenticated và live external RSS **NOT_RUN**. QA registry hiện có 103 case. Chờ CI final docs SHA và merge; SRS FROZEN.
+
+
+### CHG-TIN-TUC-20261103-02 — External source fetching: redirects and bounded streaming
+
+- **Review source:** post-merge PR #82 at `1bf71d4dccc3cb43454202b104b217bd61990bad`; user requested a second independent review on 03/11/2026.
+- **Finding 1:** `lib/news-source-adapters.ts` accepted automatic HTTP redirects (`redirect: "follow"`). The configured seed feed host is allowed, but an upstream 3xx `Location` could lead to a foreign/unsafe host without validation before fetch. Candidate links are allowlisted, yet response-redirect destinations were not; the controls differ.
+- **Finding 2:** `response.text()` consumed the entire upstream feed before checking the actual decoded byte count, making the 1.5–2.5 MB cap ineffective against large chunked bodies with absent/incorrect `Content-Length`.
+- **Fix:** request `redirect: "manual"`; validate initial and subsequent URLs as HTTPS + approved source host and reject credentials in URL; allow at most 3 redirects. Read incoming body in bounded byte chunks using `ReadableStream.getReader` and `TextDecoder`, cancel once over the adapter's cap. Preserve the 8-second abort guard and existing parsed-candidate filtering. No change to trusted source seeds, D1 migrations, import policy, scheduler, IAM or publication workflow.
+- **QA:** new `CMS-NEWS-005` checks cross-host block / same-host relative hop / redirect loops; `CMS-NEWS-006` checks large chunked data cancellation and declared oversize. `RUN-CMS-20261103-06` until CI confirmed. Security verification uses injected deterministic HTTP fixtures, **not a real remote HTTP fetch or Access-authenticated browser**.
+- **Risk:** sources whose feed redirect genuinely points to an unapproved third-party host now fail closed and require an explicit source-host policy review (do not auto-allow). Verified current feed remains subject to actual staging/source E2E before rollout. No production/hosted data updates.
+- **SRS:** FROZEN/CHƯA_CHỐT; this bounded operational security patch is recorded separately here.
+
+**Observed verification of CHG-TIN-TUC-20261103-02:** At source SHA `043b270b68aa1290bdb52bb6e7a44259cddc59fb`, [Portal CI #41584604136](https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604136) **4/4 PASS, 594/594 Vitest including five new adapter tests, 38/38 local Chromium**. [Public staging #41584604067](https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604067) **24/24 Chromium + 24/24 HTTP PASS**, 0 observed 503/5xx/network errors against **old deployed Worker**. `RUN-CMS-20261103-07` captures this exact source verification, while `RUN-CMS-20261103-06` retains pre-test NOT_RUN. Final documentation SHA CI still required; external RSS network and authenticated CMS are NOT_RUN. SRS stays frozen.
 
 ## Các thay đổi tiếp theo
 

@@ -223,42 +223,100 @@ export function parseNewsSourcePayload(
     : parseHtmlNewsCandidates(sourceId, payload, definition);
 }
 
+const MAX_SOURCE_REDIRECTS = 3;
+const SOURCE_REDIRECT_CODES = new Set([301, 302, 303, 307, 308]);
+
+function checkAllowedFeedUrl(value: string, definition: NewsSourceAdapterDefinition) {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error("News source redirect target is not approved");
+  }
+  if (url.protocol !== "https:" || !definition.allowedHosts.includes(url.hostname.toLowerCase())
+    || url.username || url.password) {
+    throw new Error("News source redirect target is not approved");
+  }
+  url.hash = "";
+  return url.toString();
+}
+
+async function readBoundedFeed(response: Response, maxBytes: number) {
+  const lengthHeader = response.headers.get("content-length");
+  if (lengthHeader !== null && /^\d+$/.test(lengthHeader.trim()) && Number(lengthHeader) > maxBytes) {
+    throw new Error("Source response exceeds " + maxBytes + " bytes");
+  }
+  if (!response.body) return "";
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let byteCount = 0;
+  let text = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      byteCount += value.byteLength;
+      if (byteCount > maxBytes) {
+        await reader.cancel();
+        throw new Error("Source response exceeds " + maxBytes + " bytes");
+      }
+      text += decoder.decode(value, { stream: true });
+    }
+    return text + decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export async function fetchNewsSourceCandidates(
   source: Pick<NewsSourceDefinition, "id">,
   fetchImpl: typeof fetch = fetch,
 ): Promise<NewsSourceFetchResult> {
   const definition = getNewsSourceAdapter(source.id);
-  if (!definition) throw new Error(`No adapter configured for source ${source.id}`);
+  if (!definition) throw new Error("No adapter configured for source " + source.id);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), definition.timeoutMs);
 
   try {
-    const response = await fetchImpl(definition.entryUrl, {
-      method: "GET",
-      redirect: "follow",
-      cache: "no-store",
-      signal: controller.signal,
-      headers: {
-        Accept: definition.kind === "rss"
-          ? "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8"
-          : "text/html,application/xhtml+xml;q=0.9",
-        "User-Agent": USER_AGENT,
-      },
-    });
+    let url = checkAllowedFeedUrl(definition.entryUrl, definition);
+    let response: Response | undefined;
+    for (let hop = 0; hop <= MAX_SOURCE_REDIRECTS; hop++) {
+      const current = await fetchImpl(url, {
+        method: "GET",
+        // A trusted upstream can redirect to an unapproved or private origin.
+        redirect: "manual",
+        cache: "no-store",
+        signal: controller.signal,
+        headers: {
+          Accept: definition.kind === "rss"
+            ? "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8"
+            : "text/html,application/xhtml+xml;q=0.9",
+          "User-Agent": USER_AGENT,
+        },
+      });
 
-    if (!response.ok) throw new Error(`Source fetch failed with HTTP ${response.status}`);
-
-    const declaredLength = Number(response.headers.get("content-length") ?? "0");
-    if (declaredLength > definition.maxResponseBytes) {
-      throw new Error(`Source response exceeds ${definition.maxResponseBytes} bytes`);
+      if (!SOURCE_REDIRECT_CODES.has(current.status)) {
+        response = current;
+        break;
+      }
+      if (hop === MAX_SOURCE_REDIRECTS) throw new Error("News source exceeded redirect limit");
+      const location = current.headers.get("location");
+      if (!location) throw new Error("News source redirect missing Location");
+      try {
+        url = checkAllowedFeedUrl(new URL(location, url).toString(), definition);
+      } catch {
+        throw new Error("News source redirect target is not approved");
+      }
+      await current.body?.cancel();
     }
 
-    const payload = await response.text();
-    const actualBytes = new TextEncoder().encode(payload).byteLength;
-    if (actualBytes > definition.maxResponseBytes) {
-      throw new Error(`Source response exceeds ${definition.maxResponseBytes} bytes`);
-    }
+    if (!response) throw new Error("News source exceeded redirect limit");
+    if (!response.ok) throw new Error("Source fetch failed with HTTP " + response.status);
+
+    // response.text() allocates the whole stream before the max is checked.
+    const payload = await readBoundedFeed(response, definition.maxResponseBytes);
 
     return {
       sourceId: source.id,
