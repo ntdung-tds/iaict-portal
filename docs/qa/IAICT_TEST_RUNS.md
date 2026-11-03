@@ -713,3 +713,47 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Limitations | Public staging tests run **previously deployed Worker**, not PR #84 code. Real-origin RSS redirect/timeout behavior and authenticated Newsroom CMS browser E2E **NOT_RUN**. IAM Owner PAUSED; production/staging deployments and hosted D1/Access untouched. |
 | Earlier record | `RUN-CMS-20261103-08` recorded source-before-CI NOT_RUN; this append-only run reflects actual observed source SHA. |
 | Final documentation commit | **NOT_RUN at record capture**; exact final SHA CI and public staging must be rerun before merge. |
+
+## RUN-CMS-20261103-10 — Bounded iterative Newsroom HTML source review (pre-CI)
+
+| Field | Scope and current status |
+| --- | --- |
+| Reviewed baseline | Merged [PR #84](https://github.com/ntdung-tds/iaict-portal/pull/84) SHA `4714a72562f3d46755170248650cc7aac3806bd9`; [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) |
+| Loop rule | Find → reproduce on baseline → fix only the affected source/test → run full CI → independent re-review → repeat on any new reproducible defect. Stop when zero new reproducible issues **in scoped HTML source parser + Newsroom integration paths** and all exact-head gates pass; don't claim global zero defects. |
+| Iteration 1 — observed | Original HTML link expression matched `data-href` and `title` text containing `href`, sometimes overriding the actual link and causing unsupported article candidates. Pure expression reproduction confirmed; full CI **NOT_RUN yet**. |
+| Iteration 1 — change | Parse genuine quoted anchor attributes and require true `href`; keep source HTTPS/host/port credential validation. `CMS-NEWS-010/011`. |
+| Iteration 2 — observed | HTML comments, script, style and template regions containing synthetic `<a>` sequences were interpreted as actual source article links; local reproduction confirmed. |
+| Iteration 2 — change | Suppress non-visible/non-navigational HTML regions before extraction, including incomplete comments; retain legitimate visible anchors. `CMS-NEWS-012/013`. |
+| Local test boundaries | Real source `parseHtmlNewsCandidates` and `fetchNewsSourceCandidates` with synthetic HTML and injected HTTP, no external feed/network. Newsroom original-migration SQLite lifecycle regression continues to run with mocked actor/upstream. |
+| Catalog | **112 cases** (prior 108 + four new CMS-NEWS-010..013), no changes to historical IAM cases; IAM PAUSED. |
+| Current verdict | **NOT_RUN on final PR SHA**. Source and tests committed; no PASS inferred. Append actual test run evidence with immutable SHA after GitHub CI and public staging browser results. |
+| Hosted scope | Actual Worker staging with new source code, real source HTML over Internet and authenticated Newsroom CMS browser: **NOT_RUN**. Staging/production Worker versions and SRS baseline unchanged. |
+
+
+## RUN-CMS-20261103-11 — Iterative Newsroom review discovered failure and third-pass correction
+
+| Field | Observed outcome |
+| --- | --- |
+| First complete PR head | `7ca215f1da49912ffc22357228dbf84f2934ca06`, [PR #85](https://github.com/ntdung-tds/iaict-portal/pull/85) |
+| Initial portal CI | [#41614538770](https://github.com/ntdung-tds/iaict-portal/actions/runs/41614538770): **FAIL verify**, `[qa-registry] FAIL line 113: invalid layer`; test catalog case `CMS-NEWS-013` used unsupported layer `Regression`, so the primary verify job stopped before full Vitest. |
+| Initial public staging | [#41614538535](https://github.com/ntdung-tds/iaict-portal/actions/runs/41614538535) **workflow SUCCESS**. This checks an earlier deployed Worker, not new Newsroom HTML parser. |
+| Fix 1 | Changed `CMS-NEWS-013` from `Regression` to supported `Integration`. Test case ID and scope preserved; no application behavior change from this fix. |
+| Independent review 3 | The first `stripNonArticleHtml` pass used a single non-greedy regex for `<template>` sections. **Reproduced** that nested templates could leave a hidden outer-template `<a href>` exposed after the inner closing tag. |
+| Fix 2 | Replace template removal with linear tag-depth scanning; keep link filtering inside the entire outer template, including nested and unclosed templates. Add two direct parser regressions and extend `CMS-NEWS-012` definition (same case ID, no duplicate case records). |
+| Current result | **NOT_RUN on amended source/docs SHA**. Do not label the original 4/4 portal CI or 600+ Vitest PASS. Append separate actual outcome after complete retest. |
+| Boundaries | Original website staging public only; synthetic Newsroom source HTML and upstream HTTP. No live authenticated admin, hosted D1/Access or production deployment. IAM remains owner-paused, SRS frozen. |
+
+
+## RUN-CMS-20261103-12 — Review loop source gate PASS after QA-label fix and nested-template re-review
+
+| Field | Observed evidence |
+| --- | --- |
+| Verified source commit | `5116f6e79cb9a0257ef041cbad8cbe28f17a3ee6`; [PR #85](https://github.com/ntdung-tds/iaict-portal/pull/85), [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) |
+| Earlier failure preserved | `RUN-CMS-20261103-11` initial `verify` FAIL due unsupported QA layer `Regression`; corrected the case to `Integration`, preserving case ID `CMS-NEWS-013`. Separately fixed nested-template hidden-link leak and added two focused regression tests. |
+| Test scope | **PASS_LOCAL_SOURCE_FIXTURE**. Real `parseHtmlNewsCandidates` and `fetchNewsSourceCandidates` with synthetic HTML/HTTP. Cases `CMS-NEWS-010..013` assert genuine href and reject fake `data-href`/title, hidden comments/scripts/styles/templates, nested/unclosed templates. Original Core/V16/V17 SQLite Newsroom integration (mocked actor and RSS HTTP) also runs in global Vitest. |
+| Exact source CI | [portal-ci #41615306414](https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306414): **4/4 jobs PASS**, **609/609 Vitest**, **25/25 source-adapter tests**, **38/38 local Chromium**. QA validator **112 cases**, SRS freeze and PCS/checklist/requirements gates PASS. |
+| Real public staging | [staging #41615306400](https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306400): **24/24 Chromium PASS**, **24/24 repeated HTTP probes PASS**, observed 503=0, 5xx=0, networkErrors=0. |
+| Independent post-fix source re-review | Read back patched parser and 25 adapter tests at immutable SHA. No additional reproducible defect detected in explicitly scoped HTML source extraction cases after third iteration; no broader zero-bug claim or full DOM parser certification. |
+| Explicit exclusions | Public staging still tests **previous deployed Worker**, not this PR code. Real external-origin HTML fetch and authenticated Newsroom browser E2E remain **NOT_RUN**; IAM PAUSED; no staging/production deployment, hosted D1/Access, SRS sync or private screenshots. |
+| Final documentation HEAD and merge | **PENDING** at capture; rerun exact final-documentation SHA CI and public staging acceptance before merge, then verify postmerge SHA. |
+

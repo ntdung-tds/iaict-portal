@@ -181,7 +181,18 @@ export function parseRssNewsCandidates(
   return uniqueCandidates(candidates, definition.maxItems);
 }
 
-const HTML_LINK_RE = /<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+// Keep quoted attributes intact, including a literal ">" inside their value.
+const HTML_ANCHOR_RE = /<a\b((?:"[^"]*"|'[^']*'|[^'">])*)>([\s\S]*?)<\/a>/gi;
+// Only the actual `href` attribute counts, never data-href or title text.
+const HTML_ATTRIBUTE_RE = /([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+
+function getAnchorHref(attributes: string) {
+  for (const match of attributes.matchAll(HTML_ATTRIBUTE_RE)) {
+    if (match[1].toLowerCase() === "href") return match[2] ?? match[3];
+  }
+  return null;
+}
+
 const NON_ARTICLE_LABELS = new Set([
   "trang chủ",
   "xem thêm",
@@ -192,6 +203,32 @@ const NON_ARTICLE_LABELS = new Set([
   "english",
 ]);
 
+// Do not discover articles from comments, inline scripts, styles or hidden
+// template fragments; those anchor strings are not navigational page links.
+// This is a bounded source-page extractor, not a general HTML renderer.
+function stripNonArticleHtml(html: string) {
+  const withoutScriptsAndComments = html
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ");
+
+  // Templates may be nested. A single regex ending at the first closing tag
+  // can accidentally expose links still hidden inside an outer template.
+  const templateTagRe = /<\/?template\b[^>]*>/gi;
+  let visible = "";
+  let lastIndex = 0;
+  let depth = 0;
+  for (const match of withoutScriptsAndComments.matchAll(templateTagRe)) {
+    const index = match.index ?? 0;
+    if (depth === 0) visible += withoutScriptsAndComments.slice(lastIndex, index);
+    if (match[0].startsWith("</")) depth = Math.max(0, depth - 1);
+    else depth += 1;
+    lastIndex = index + match[0].length;
+  }
+  // Unclosed templates fail closed; no partially hidden source link escapes.
+  if (depth === 0) visible += withoutScriptsAndComments.slice(lastIndex);
+  return visible;
+}
+
 export function parseHtmlNewsCandidates(
   sourceId: string,
   html: string,
@@ -199,8 +236,10 @@ export function parseHtmlNewsCandidates(
 ) {
   const candidates: NewsDiscoveryCandidate[] = [];
 
-  for (const match of html.matchAll(HTML_LINK_RE)) {
-    const href = decodeEntities(match[1]).trim();
+  for (const match of stripNonArticleHtml(html).matchAll(HTML_ANCHOR_RE)) {
+    const rawHref = getAnchorHref(match[1]);
+    if (!rawHref) continue;
+    const href = decodeEntities(rawHref).trim();
     const title = stripMarkup(match[2]);
     if (title.length < 24 || NON_ARTICLE_LABELS.has(title.toLocaleLowerCase("vi"))) continue;
     if (!isAllowedUrl(href, definition)) continue;

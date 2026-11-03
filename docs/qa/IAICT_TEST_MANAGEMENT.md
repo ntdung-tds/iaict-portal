@@ -183,3 +183,9 @@ Current registry adds `CMS-NEWS-005` (validate approved HTTPS source redirects b
 ## 2026-11-03 — Additional two independent Newsroom adapter review passes
 
 Following merged PR #83, `CMS-NEWS-007/008/009` extend the canonical registry from 105 to **108 cases**. Two review passes identified (1) approved-host URLs on nonstandard HTTPS ports and malformed XML entities, and (2) stalled upstream cancellation and response-body cleanup gaps. New tests use injected deterministic HTTP streams and original RSS parser/fetch adapter only; not live RSS, hosted Access or deployed Worker. Change `CHG-TIN-TUC-20261103-03`, pre-test `RUN-CMS-20261103-08`. No separate tracker or IAM scope expansion. Google Master Test Plan requires guarded update/readback when results are available.
+
+## 2026-11-03 — Repeatable bounded Newsroom review loop
+
+Keep the existing `IAICT_TEST_CASES.csv` and append-only `IAICT_TEST_RUNS.md`; do **not** create a competing state tracker or an uncontrolled infinite CI schedule. On an Owner review request, read the active source SHA and existing test evidence; reproduce a concrete issue; patch on a branch; register targeted case ID; run exact-commit CI, local Chromium and live **public** staging checks; inspect the patch again. If a new issue is reproducible, repeat. Stop when **zero reproducible issues remain in the explicitly reviewed paths** after an independent pass and required tests PASS. Mark live authenticated CMS and Internet-origin tests NOT_RUN unless truly performed; no automatic staging/production deployment.
+
+Current review: `CMS-NEWS-010..013`, total **112** cases; `CHG-TIN-TUC-20261103-04`, `RUN-CMS-20261103-10`. Source HTTP/HTML fixtures only. IAM PAUSED, SRS frozen.
