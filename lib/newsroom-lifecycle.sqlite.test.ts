@@ -121,7 +121,7 @@ afterEach(() => {
 
 describe("Newsroom actual migration-schema SQLite lifecycle (mock actor, no remote fetch)", () => {
   it("ingests RSS, deduplicates, approves with CAS, publishes atomically and archives from the public site", async () => {
-    const fetched = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    const fetched = vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
       new Response(feed, { status: 200, headers: { "content-type": "application/rss+xml" } }),
     );
     const request = () => ingestionRequest(JSON.stringify({ sourceId: "mst-gov-vn" }));
