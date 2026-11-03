@@ -167,3 +167,7 @@ Approver / release decision:
 - ISO/IEC/IEEE 29119 series: https://committee.iso.org/sites/jtc1sc7/home/projects/flagship-standards/isoiecieee-29119-series.html
 - OWASP ASVS 5.0.0: https://asvs.owasp.org/
 - Quy trình CI thực tế: `.github/workflows/ci.yml` và `.github/workflows/staging-acceptance.yml` trong repo IAICT.
+
+## 2026-11-03 — Non-IAM CMS case namespace
+
+The historical IAM QA baseline has 97 cases. [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79) extends the **same** CSV and run ledger with `CMS-ART-001/002` (99 total at first CMS PR). The registry accepts explicit CMS suite namespaces (`CMS-ART/NEWS/MEDIA/TRAIN/CRM/UI/SEO/OPS`) while preserving all existing IAM constraints and immutable case IDs. No competing test tracker is created. Automated local SQLite CMS results do **not** imply genuine Cloudflare Access-authenticated browser acceptance. Google Master Test Plan needs explicit read-back synchronization after the final case set is verified; prior 78-case prose is historical.

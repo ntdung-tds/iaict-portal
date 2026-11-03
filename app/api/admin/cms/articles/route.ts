@@ -5,6 +5,7 @@ import { canMutatePublication } from "@/lib/cms-publication-permissions";
 import { NewsroomAuthError, requireNewsroomActor, type NewsroomActor } from "@/lib/newsroom-auth";
 
 export const dynamic = "force-dynamic";
+const noStore = { "Cache-Control": "no-store" };
 
 type Row = Record<string, unknown>;
 type CategoryVersion = { name: string; slug: string; sort_order: number };
@@ -17,16 +18,29 @@ function nextUpdatedAt(previous: unknown) {
   return new Date(Number.isFinite(last) ? Math.max(Date.now(), last + 1) : Date.now()).toISOString();
 }
 function invalid(message: string): never { throw new Error(`INVALID_ARTICLE_${message}`); }
+
+/** Malformed CMS mutations must return 400 before any D1 write. */
+async function readArticleRequest(request: Request): Promise<ArticleRequest> {
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) invalid("CONTENT_TYPE");
+  let value: unknown;
+  try { value = await request.json(); } catch { invalid("JSON"); }
+  if (!value || typeof value !== "object" || Array.isArray(value)) invalid("JSON");
+  const body = value as Record<string, unknown>;
+  if (body.id !== undefined && typeof body.id !== "string") invalid("ID");
+  if (body.action !== undefined && typeof body.action !== "string") invalid("ACTION");
+  if (body.type !== undefined && typeof body.type !== "string") invalid("TYPE");
+  return body as ArticleRequest;
+}
 function slugify(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "d").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 140);
 }
 function errorResponse(error: unknown) {
-  if (error instanceof NewsroomAuthError) return Response.json({ error: error.message }, { status: error.status });
+  if (error instanceof NewsroomAuthError) return Response.json({ error: error.message }, { status: error.status, headers: noStore });
   const message = error instanceof Error ? error.message : "Unknown article CMS error";
   const validation = message.startsWith("INVALID_ARTICLE_");
   const conflict = /UNIQUE constraint failed/i.test(message) || message === "INVALID_ARTICLE_CONFLICT";
-  return Response.json({ error: translateCmsError(message), code: cmsErrorCode(message) }, { status: conflict ? 409 : validation ? 400 : 500 });
+  return Response.json({ error: translateCmsError(message), code: cmsErrorCode(message) }, { status: conflict ? 409 : validation ? 400 : 500, headers: noStore });
 }
 function auditStatement(db: Database, actor: NewsroomActor, action: string, entityType: string, entityId: string, revisionId?: string): D1PreparedStatementLike {
   const id = crypto.randomUUID(), time = nowIso();
@@ -92,7 +106,7 @@ export async function GET(request: Request) {
     `).bind(...values).all<Row>();
     const categories = await db.prepare(`SELECT id, name, slug, sort_order FROM article_categories ORDER BY sort_order, name`).all<Row>();
     const media = await db.prepare(`SELECT id,filename,public_url,alt FROM media WHERE type='image' ORDER BY updated_at DESC LIMIT 200`).all<Row>();
-    return Response.json({ ok: true, actor, articles: articles.results, categories: categories.results, media: media.results });
+    return Response.json({ ok: true, actor, articles: articles.results, categories: categories.results, media: media.results }, { headers: noStore });
   } catch (error) { return errorResponse(error); }
 }
 
@@ -100,7 +114,7 @@ export async function POST(request: Request) {
   try {
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, CMS_EDIT_ROLES);
-    const body = await request.json() as ArticleRequest;
+    const body = await readArticleRequest(request);
     const action = body.action ?? "save-article";
     const data = body.data ?? {};
     if (!data || typeof data !== "object" || Array.isArray(data)) invalid("REQUIRED_FIELDS");
@@ -130,7 +144,7 @@ export async function POST(request: Request) {
           auditStatement(db, actor, "cms.article_category.create", "article_categories", id),
         ]);
       }
-      return Response.json({ ok: true, id });
+      return Response.json({ ok: true, id }, { headers: noStore });
     }
     if (action !== "save-article") invalid("STATUS");
 
@@ -203,7 +217,7 @@ export async function POST(request: Request) {
         auditStatement(db, actor, "cms.article.create", "articles", id),
       ]);
     }
-    return Response.json({ ok: true, id });
+    return Response.json({ ok: true, id }, { headers: noStore });
   } catch (error) { return errorResponse(error); }
 }
 
@@ -211,7 +225,7 @@ export async function DELETE(request: Request) {
   try {
     const db = getDatabaseBinding();
     const actor = await requireNewsroomActor(request, db, CMS_ADMIN_ROLES);
-    const body = await request.json() as ArticleRequest;
+    const body = await readArticleRequest(request);
     const id = body.id?.trim() ?? "";
     if (!id) invalid("ID");
     if (body.type === "category") {
@@ -245,6 +259,6 @@ export async function DELETE(request: Request) {
       ]);
       requireChanged(results, 1);
     }
-    return Response.json({ ok: true });
+    return Response.json({ ok: true }, { headers: noStore });
   } catch (error) { return errorResponse(error); }
 }

@@ -261,3 +261,45 @@ describe("CMS article categories — versionless snapshot compare-and-swap", () 
     expect(body.categories[0]?.name).toBe(category.name);
   });
 });
+
+describe("CMS article API — malformed mutation and private cache guards", () => {
+  it("returns no-store on article listing, successful writes and rejected writes", async () => {
+    const listing = await list(req("GET"));
+    const created = await save(req("POST", { action: "save-article", data: article }));
+    const rejected = await remove(req("DELETE", { type: "article", id: "unknown-id" }));
+    expect(listing.status).toBe(200);
+    expect(created.status).toBe(200);
+    expect(rejected.status).toBe(400);
+    for (const response of [listing, created, rejected]) {
+      expect(response.headers.get("cache-control")).toBe("no-store");
+    }
+  });
+  it("rejects malformed JSON, null, scalar and array payloads with 400 and no mutations", async () => {
+    const cases = ["{", "null", "[]", "true", "123", '"str"', '{"id":7}', '{"action":{}}'];
+    for (const raw of cases) {
+      const response = await save(new Request("https://cms.test/api/admin/cms/articles", {
+        method: "POST", headers: { "x-test-role": "admin", "content-type": "application/json" }, body: raw,
+      }));
+      expect(response.status, raw).toBe(400);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+    }
+    for (const raw of ["{", "null", "[]", '{"id":{}}']) {
+      const response = await remove(new Request("https://cms.test/api/admin/cms/articles", {
+        method: "DELETE", headers: { "x-test-role": "admin", "content-type": "application/json" }, body: raw,
+      }));
+      expect(response.status, raw).toBe(400);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+    }
+    expect(counts()).toEqual({ revisions: 0, audits: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM articles").get()?.n).toBe(0);
+  });
+  it("refuses non-JSON content type without database writes", async () => {
+    for (const method of ["POST", "DELETE"] as const) {
+      const response = await (method === "POST" ? save : remove)(new Request("https://cms.test/api/admin/cms/articles", {
+        method, headers: { "x-test-role": "admin", "content-type": "text/plain" }, body: '{"id":"cat-1"}',
+      }));
+      expect(response.status).toBe(400);
+    }
+    expect(counts()).toEqual({ revisions: 0, audits: 0 });
+  });
+});
