@@ -37,3 +37,19 @@
 - Không deploy production, không đổi IAM/Access, không cập nhật `docs/requirements/SRS.md` trước lệnh “chốt SRS”; không xuất source sang Drive khi chưa có lệnh “bàn giao”.
 
 **Tham chiếu:** OWASP [File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html), W3C [Compression Streams](https://www.w3.org/TR/compression/) và chính sách [Media R2 v1](./ADR-MEDIA-20261104-01.md).
+
+## B3.7 — Gộp và triển khai công cụ nén cục bộ (2026-11-04)
+
+**Nguồn:** Owner yêu cầu gộp task và hoàn thành phần nén ảnh, nén tệp. **Quyết định kỹ thuật:** không ràng buộc khả năng nén file cá nhân với Media upload backend còn thiếu scanner; hoàn thiện một **công cụ nén tại trình duyệt CMS** an toàn theo phạm vi rõ ràng. Phần backend Media R2 tiếp tục là một workstream riêng chưa nghiệm thu.
+
+| Thành phần | Hiện thực B3.7 | Điều kiện nghiệm thu |
+| --- | --- | --- |
+| Ảnh thực | `lib/media-local-image.ts` sử dụng browser `createImageBitmap` + canvas `toBlob` tạo **byte thật**, 2 phiên bản hiển thị/thumbnail, JPEG82/WebP80/PNG lossless; không upscale | Test Chromium thao tác file thực và đọc chữ ký PNG/JPEG/WebP đầu ra; không gọi đây là *trusted server decoding* |
+| ZIP nhiều tệp | `lib/media-local-zip.ts` tạo **ZIP32 hợp lệ**, header local/central, CRC32, filename UTF-8, DEFLATE-raw cho text khi tiết kiệm ≥5%, STORE cho file nén sẵn; 20 file, 10MiB/file, 30MiB đầu vào, 40MiB ZIP tối đa | Vitest dùng Node `inflateRawSync` kiểm tra roundtrip, trùng tên, traversal, mốc kích thước, proxy; test tải ZIP thực trong Chromium |
+| Gzip | Đưa `lib/media-text-compression.ts` có sẵn lên UI, encode gzip thật cho .txt/.csv/.json UTF-8 (5MiB, 5% min saving); không có lợi thì giữ nguyên | Chromium tạo và tải `.gz`, giải nén khớp byte gốc |
+| UI | `/admin/tools/compression` từ menu CMS, card rõ ràng, hỗ trợ mobile 320px, có thông báo lỗi và giới hạn | Trình duyệt cục bộ + test responsive. **Phiên đăng nhập CMS trong Playwright là MOCK**; byte dữ liệu nén/download là thật |
+| Server Media | **KHÔNG kích hoạt** upload, publish, scanner, reader R2, ZIP từ tài liệu CMS riêng tư | Chỉ công nhận hosted feature sau khi scanner, quyền scope, D1/R2, deployment và test đăng nhập thật đã PASS |
+
+**Quan trọng:** dữ liệu chỉ lấy từ `input type=file` của thiết bị, `Blob` download được tạo tại chỗ, không request upload. `MEDIA_POLICY.scan.serviceConfigured=false` và SRS FROZEN giữ nguyên. Tệp ZIP đã nén là tệp **từ máy người dùng**, không phải chức năng xuất file CMS/R2 có quyền. Bất kỳ tính năng ZIP từ thư viện CMS nào sau này bắt buộc soát quyền đọc từng tệp, trạng thái scanner và scope mới được phép truy xuất.
+
+**Mã thay đổi:** `CHG-MEDIA-R2-20261104-04`; **bằng chứng:** `RUN-MEDIA-20261104-06`; **PR:** [#98](https://github.com/ntdung-tds/iaict-portal/pull/98). Source/UI hoàn thành khi CI + Playwright local cuối PASS và merge vào nhánh phát triển; **hosted chưa được coi là đã triển khai**.
