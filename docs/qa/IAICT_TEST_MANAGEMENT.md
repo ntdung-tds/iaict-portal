@@ -171,3 +171,7 @@ Approver / release decision:
 ## 2026-11-03 — Non-IAM CMS case namespace
 
 The historical IAM QA baseline has 97 cases. [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79) extends the **same** CSV and run ledger with `CMS-ART-001/002` (99 total at first CMS PR). The registry accepts explicit CMS suite namespaces (`CMS-ART/NEWS/MEDIA/TRAIN/CRM/UI/SEO/OPS`) while preserving all existing IAM constraints and immutable case IDs. No competing test tracker is created. Automated local SQLite CMS results do **not** imply genuine Cloudflare Access-authenticated browser acceptance. Google Master Test Plan needs explicit read-back synchronization after the final case set is verified; prior 78-case prose is historical.
+
+## 2026-11-03 — Newsroom QA expansion
+
+Add CMS-NEWS-001..004 (103 total registered cases) for Newsroom route, original Core/Newsroom/CMS SQLite migrations, synthetic RSS, review CAS, publication and CMS archive. Mock actor and upstream HTTP only. Hosted authenticated E2E remains NOT_RUN. Update Google Master QA Doc after test evidence; IAM stays PAUSED.
