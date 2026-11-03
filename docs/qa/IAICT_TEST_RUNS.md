@@ -673,3 +673,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Evidence | Test source `lib/news-source-adapters.test.ts`; restricted Drive QA root https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp; no screenshot or private data required |
 | Previous baseline | [Portal CI #41576292919](https://github.com/ntdung-tds/iaict-portal/actions/runs/41576292919) 589/589 Vitest and [public staging #41576292871](https://github.com/ntdung-tds/iaict-portal/actions/runs/41576292871) 24/24 Chromium + 24/24 HTTP PASS; those outcomes **do not cover these new two edge cases** |
 
+
+## RUN-CMS-20261103-07 — Actual first green CI of independent Newsroom security fix
+
+| Field | Observed evidence |
+| --- | --- |
+| Reviewed source SHA | `043b270b68aa1290bdb52bb6e7a44259cddc59fb` (first complete source + QA/PCS checkpoint before this evidence entry) |
+| PR / issue | [PR #83](https://github.com/ntdung-tds/iaict-portal/pull/83), [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81), `CHG-TIN-TUC-20261103-02` |
+| Cases | `CMS-NEWS-005/006` **PASS_LOCAL_INJECTED_HTTP**. Real `fetchNewsSourceCandidates` logic checked with injected `fetch` returning controlled redirects, ReadableStream and RSS. Disallowed URL never fetched; valid same-host relative redirect parsed; redirect loop bounded; >1.5MB chunked response cancelled and declared excessive Content-Length rejected. |
+| Exact source CI | [portal-ci #41584604136](https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604136) **4/4 jobs PASS**, **594/594 Vitest**, **38/38 local Chromium**. QA registry **105 cases**, frozen SRS and Checklist Moment guard PASS. |
+| Actual public staging | [staging #41584604067](https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604067) **24/24 Chromium PASS**, **24/24 repeated HTTP probes PASS**, 503=0, 5xx=0, network errors=0 observed. |
+| Environmental boundaries | This staged **public** browser suite exercises the existing Cloudflare Worker version from 2026-10-31. It is **not** a hosted run of the new redirect/stream fix. HTTP source RSS, authorized CMS browser and access session still **NOT_RUN**. No live D1/Cloudflare Access change. |
+| QA media | No screenshot needed for deterministic HTTP adapter tests; no cookies, private user data or images committed. Restricted [Drive folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) retained. |
+| Final documentation-head CI | **NOT_RUN when record written**; must verify final PR-head SHA again, then merge and test postmerge. |
+
