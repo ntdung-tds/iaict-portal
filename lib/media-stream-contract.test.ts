@@ -74,7 +74,10 @@ describe("Media B3.4 source-only streaming budget; not hosted CMS-MEDIA-004 proo
       { maxBytes: 4, maxChunks: 0 }, { maxBytes: -1, maxChunks: 4 },
       { maxBytes: Infinity, maxChunks: 4 }, { maxBytes: 2.5, maxChunks: 4 },
       { maxBytes: 4, maxChunks: Number.MAX_SAFE_INTEGER + 1 }]) {
-      await fail(stream(png), "POLICY_NOT_CONFIGURED", p);
+      // Pass undefined explicitly: the generic fail fixture supplies a default
+      // policy when its optional argument is undefined.
+      expect(await inspectBoundedMediaStream(stream(png), p))
+        .toEqual({ ok: false, code: "POLICY_NOT_CONFIGURED" });
     }
   });
 
