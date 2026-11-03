@@ -35,6 +35,20 @@ describe("QA catalog contract",()=>{
     const result=validateCatalog([HEADER,item],{fileExists:()=>false});
     assert.ok(result.errors.some(x=>x.includes("unresolved automated test reference")));
   });
+  it("accepts a CMS-ART suite case and rejects unknown CMS suite codes",()=>{
+    const item = [
+      "CMS-ART-001","CMS articles","P0","Integration","AUTO","REQ-CMS-ARTICLE-INPUT-GUARD",
+      "CMS article API and disposable D1 are ready","Malformed JSON payload",
+      "POST invalid JSON and ensure zero D1 mutation",
+      "Returns 400 without recording article or audit",
+      "lib/cms-articles-atomic.test.ts",
+      "https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp","READY",
+    ];
+    const good=validateCatalog([HEADER,...Array.from({length:60},(_,i)=>[item[0].replace("001",String(i+1).padStart(3,"0")),...item.slice(1)])],{fileExists:()=>true});
+    assert.equal(good.errors.filter(x=>x.includes("invalid ID")).length,0);
+    const bad=validateCatalog([HEADER,...Array.from({length:60},(_,i)=>["CMS-UNKNOWN-"+String(i+1).padStart(3,"0"),...item.slice(1)])],{fileExists:()=>true});
+    assert.ok(bad.errors.some(x=>x.includes("invalid ID")));
+  });
   it("requires catalog/run updates in PRs changing protected auth files",()=>{
     assert.equal(checkPrImpact(["lib/native-auth.ts"]).ok,false);
     assert.equal(checkPrImpact(["lib/native-auth.ts","docs/qa/IAICT_TEST_CASES.csv"]).ok,true);
