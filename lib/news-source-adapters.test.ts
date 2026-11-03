@@ -60,6 +60,37 @@ describe("V16 news source adapters", () => {
     );
   });
 
+  it("ignores data-href and title text impersonating the actual HTML href attribute", () => {
+    const html = [
+      '<a data-href="https://baochinhphu.vn/fake-story">Đây là tin giả dạng dữ liệu không có href thật</a>',
+      '<a title="faked href=\'https://baochinhphu.vn/fake-title\'">Tên bài viết giả mạo đường dẫn trong tiêu đề</a>',
+      '<a href="https://untrusted.example/story" data-href="https://baochinhphu.vn/fake-swap">Bài viết không được phép nhập vào nguồn tin</a>',
+    ].join("");
+    expect(parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1])).toEqual([]);
+  });
+
+  it("preserves real allowed href when an untrusted data-href precedes or follows it", () => {
+    const html = [
+      '<a data-href="https://untrusted.example/bait" HREF=\'https://baochinhphu.vn/verified-real-article\'>Bài viết chính sách công nghệ hợp lệ cần nhập vào nguồn</a>',
+      '<a href="https://baochinhphu.vn/verified-real-article?utm_medium=feed" data-href="https://untrusted.example/other">Bài viết chính sách công nghệ hợp lệ cần nhập vào nguồn</a>',
+    ].join("");
+    const items = parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1]);
+    expect(items).toHaveLength(1);
+    expect(items[0].canonicalUrl).toBe("https://baochinhphu.vn/verified-real-article");
+  });
+
+  it("parses actual quoted href after an attribute containing > and an href-like string", () => {
+    const html = '<a title="review > faked href=\'https://baochinhphu.vn/spoof\'" href="https://baochinhphu.vn/verified-article">Một bài hợp lệ với thuộc tính tiêu đề có dấu lớn hơn</a>';
+    const items = parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1]);
+    expect(items).toHaveLength(1);
+    expect(items[0].sourceUrl).toBe("https://baochinhphu.vn/verified-article");
+  });
+
+  it("ignores a real off-allowlist href when title or data attributes contain approved URLs", () => {
+    const html = '<a title="https://baochinhphu.vn/title" data-href="https://baochinhphu.vn/swap" href="https://untrusted.example/actual">Bài có đường dẫn thực tế không an toàn và phải loại bỏ</a>';
+    expect(parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1])).toEqual([]);
+  });
+
   it("enforces fetch size and returns parsed candidates through an injected fetch", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () => new Response(
       `<rss><channel><item><title>Tin khoa học công nghệ mới nhất</title><link>https://mst.gov.vn/tin-moi</link></item></channel></rss>`,
