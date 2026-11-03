@@ -59,8 +59,11 @@ const COMMON_ENTITIES: Record<string, string> = {
 
 /** XML numeric references must resolve to valid Unicode scalar values. */
 function validXmlCodePoint(value: number) {
-  return Number.isInteger(value) && value >= 1 && value <= 0x10ffff
-    && (value < 0xd800 || value > 0xdfff);
+  // XML 1.0 Char production: TAB / LF / CR, valid BMP text, or supplementary scalar.
+  return Number.isInteger(value) && (value === 0x9 || value === 0xa || value === 0xd
+    || (value >= 0x20 && value <= 0xd7ff)
+    || (value >= 0xe000 && value <= 0xfffd)
+    || (value >= 0x10000 && value <= 0x10ffff));
 }
 
 function decodeEntities(value: string) {
@@ -251,6 +254,7 @@ function checkAllowedFeedUrl(value: string, definition: NewsSourceAdapterDefinit
 async function readBoundedFeed(response: Response, maxBytes: number) {
   const lengthHeader = response.headers.get("content-length");
   if (lengthHeader !== null && /^\d+$/.test(lengthHeader.trim()) && Number(lengthHeader) > maxBytes) {
+    void response.body?.cancel().catch(() => {});
     throw new Error("Source response exceeds " + maxBytes + " bytes");
   }
   if (!response.body) return "";
@@ -265,7 +269,8 @@ async function readBoundedFeed(response: Response, maxBytes: number) {
       if (done) break;
       byteCount += value.byteLength;
       if (byteCount > maxBytes) {
-        await reader.cancel();
+        // An untrusted stream's cancellation may never resolve; fail closed immediately.
+        void reader.cancel().catch(() => {});
         throw new Error("Source response exceeds " + maxBytes + " bytes");
       }
       text += decoder.decode(value, { stream: true });
@@ -308,6 +313,9 @@ export async function fetchNewsSourceCandidates(
         response = current;
         break;
       }
+      // Redirect bodies are unused; cancel even on invalid targets, without
+      // waiting for a potentially stalled remote stream's cancel promise.
+      void current.body?.cancel().catch(() => {});
       if (hop === MAX_SOURCE_REDIRECTS) throw new Error("News source exceeded redirect limit");
       const location = current.headers.get("location");
       if (!location) throw new Error("News source redirect missing Location");
@@ -316,7 +324,6 @@ export async function fetchNewsSourceCandidates(
       } catch {
         throw new Error("News source redirect target is not approved");
       }
-      await current.body?.cancel();
     }
 
     if (!response) throw new Error("News source exceeded redirect limit");
