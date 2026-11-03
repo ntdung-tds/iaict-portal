@@ -729,3 +729,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Current verdict | **NOT_RUN on final PR SHA**. Source and tests committed; no PASS inferred. Append actual test run evidence with immutable SHA after GitHub CI and public staging browser results. |
 | Hosted scope | Actual Worker staging with new source code, real source HTML over Internet and authenticated Newsroom CMS browser: **NOT_RUN**. Staging/production Worker versions and SRS baseline unchanged. |
 
+
+## RUN-CMS-20261103-11 — Iterative Newsroom review discovered failure and third-pass correction
+
+| Field | Observed outcome |
+| --- | --- |
+| First complete PR head | `7ca215f1da49912ffc22357228dbf84f2934ca06`, [PR #85](https://github.com/ntdung-tds/iaict-portal/pull/85) |
+| Initial portal CI | [#41614538770](https://github.com/ntdung-tds/iaict-portal/actions/runs/41614538770): **FAIL verify**, `[qa-registry] FAIL line 113: invalid layer`; test catalog case `CMS-NEWS-013` used unsupported layer `Regression`, so the primary verify job stopped before full Vitest. |
+| Initial public staging | [#41614538535](https://github.com/ntdung-tds/iaict-portal/actions/runs/41614538535) **workflow SUCCESS**. This checks an earlier deployed Worker, not new Newsroom HTML parser. |
+| Fix 1 | Changed `CMS-NEWS-013` from `Regression` to supported `Integration`. Test case ID and scope preserved; no application behavior change from this fix. |
+| Independent review 3 | The first `stripNonArticleHtml` pass used a single non-greedy regex for `<template>` sections. **Reproduced** that nested templates could leave a hidden outer-template `<a href>` exposed after the inner closing tag. |
+| Fix 2 | Replace template removal with linear tag-depth scanning; keep link filtering inside the entire outer template, including nested and unclosed templates. Add two direct parser regressions and extend `CMS-NEWS-012` definition (same case ID, no duplicate case records). |
+| Current result | **NOT_RUN on amended source/docs SHA**. Do not label the original 4/4 portal CI or 600+ Vitest PASS. Append separate actual outcome after complete retest. |
+| Boundaries | Original website staging public only; synthetic Newsroom source HTML and upstream HTTP. No live authenticated admin, hosted D1/Access or production deployment. IAM remains owner-paused, SRS frozen. |
+
