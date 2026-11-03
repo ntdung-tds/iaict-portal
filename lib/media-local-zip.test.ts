@@ -17,7 +17,7 @@ function inspectArchive(zip: Uint8Array): Array<{ name: string; bytes: Uint8Arra
     const name = new TextDecoder().decode(zip.subarray(cursor + 30, cursor + 30 + nameLength));
     const first = cursor + 30 + nameLength;
     const encoded = zip.subarray(first, first + compressed);
-    const decoded = method === 8 ? inflateRawSync(encoded) : new Uint8Array(encoded);
+    const decoded = method === 8 ? new Uint8Array(inflateRawSync(encoded)) : new Uint8Array(encoded);
     expect(decoded.byteLength).toBe(size);
     output.push({ name, bytes: decoded, method, crc });
     cursor = first + compressed;
@@ -105,6 +105,10 @@ describe("B3.7 local ZIP32: actual correct archive bytes", () => {
     const rev = Proxy.revocable({ name: "a.txt", bytes: bytes("a") }, {});
     rev.revoke();
     expect(await createLocalZipArchive([rev.proxy])).toEqual({ ok: false, code: "INVALID_INPUT" });
+    const revokedArray = Proxy.revocable([{ name: "a.txt", bytes: bytes("a") }], {});
+    revokedArray.revoke();
+    expect(await createLocalZipArchive(revokedArray.proxy))
+      .toEqual({ ok: false, code: "INVALID_INPUT" });
     const arr = Proxy.revocable(bytes("a"), {});
     arr.revoke();
     expect(await createLocalZipArchive([{ name: "a.txt", bytes: arr.proxy }]))
