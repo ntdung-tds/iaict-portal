@@ -46,3 +46,5 @@
 ## Các thay đổi tiếp theo
 
 Khi thêm/sửa tính năng, bổ sung `CHG-CMS-WORKFLOW-YYYYMMDD-NN` theo [mẫu và quy định](../README.md); **không sửa SRS**. Nếu hồi cứu thay đổi đã thực hiện trước đây, ghi `BACKFILLED` cùng nguồn commit/PR và kiểm thử; không tự đặt PASS.
+
+**Execution follow-up for CHG-CMS-WORKFLOW-20261103-01:** At reviewed source `979a1b41b53ba54ffc99e2586910a803592e3a1a`, [portal-ci 41568024341](https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024341) **4/4 PASS / 585/585 Vitest / 38/38 local Chromium** including new route regression; [live-public staging 41568024151](https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024151) **24/24 Chromium + 24/24 HTTP PASS** on the older deployed Worker. `RUN-CMS-20261103-02`, `CMS-ART-001/002`; CI on evidence-commit head remains pending. No hosted authenticated API E2E. SRS remains FROZEN/CHƯA_CHỐT.
