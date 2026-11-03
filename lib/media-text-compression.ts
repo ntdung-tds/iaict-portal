@@ -44,7 +44,7 @@ export type TextCompressionResult =
 const BYTE_LENGTH_GETTER =
   Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), "byteLength")?.get;
 
-function trustedCopy(input: unknown): Uint8Array | null {
+function trustedCopy(input: unknown): Uint8Array<ArrayBuffer> | null {
   try {
     if (!(input instanceof Uint8Array)) return null;
     const length = BYTE_LENGTH_GETTER?.call(input);
