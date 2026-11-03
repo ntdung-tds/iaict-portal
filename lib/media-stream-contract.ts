@@ -52,6 +52,8 @@ const BYTE_LENGTH_GETTER =
 
 function intrinsicByteLength(input: unknown): number | null {
   try {
+    // Intrinsic getter also accepts non-byte typed arrays: require Uint8Array.
+    if (!(input instanceof Uint8Array)) return null;
     const length = BYTE_LENGTH_GETTER?.call(input);
     return typeof length === "number" && Number.isSafeInteger(length) && length >= 0 ? length : null;
   } catch {
