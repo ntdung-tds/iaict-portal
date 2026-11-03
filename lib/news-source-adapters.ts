@@ -206,9 +206,26 @@ const NON_ARTICLE_LABELS = new Set([
 // template fragments; those anchor strings are not navigational page links.
 // This is a bounded source-page extractor, not a general HTML renderer.
 function stripNonArticleHtml(html: string) {
-  return html
+  const withoutScriptsAndComments = html
     .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
-    .replace(/<(script|style|template)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ");
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ");
+
+  // Templates may be nested. A single regex ending at the first closing tag
+  // can accidentally expose links still hidden inside an outer template.
+  const templateTagRe = /<\/?template\b[^>]*>/gi;
+  let visible = "";
+  let lastIndex = 0;
+  let depth = 0;
+  for (const match of withoutScriptsAndComments.matchAll(templateTagRe)) {
+    const index = match.index ?? 0;
+    if (depth === 0) visible += withoutScriptsAndComments.slice(lastIndex, index);
+    if (match[0].startsWith("</")) depth = Math.max(0, depth - 1);
+    else depth += 1;
+    lastIndex = index + match[0].length;
+  }
+  // Unclosed templates fail closed; no partially hidden source link escapes.
+  if (depth === 0) visible += withoutScriptsAndComments.slice(lastIndex);
+  return visible;
 }
 
 export function parseHtmlNewsCandidates(
