@@ -602,3 +602,18 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Screenshots | NOT_CAPTURED — isolated API assertions have no visual artifacts |
 | Evidence | [Private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp); update outcome with immutable SHA and run IDs only after actual workflow |
 
+
+## RUN-CMS-20261103-02 — Verified CMS API input/cache regression + deployed public staging smoke
+
+| Field | Observed evidence |
+| --- | --- |
+| Date / exact source | 2026-11-03 · `979a1b41b53ba54ffc99e2586910a803592e3a1a` (complete CMS code+QA+PCS source head before append-only evidence record) |
+| PR / issue | [PR #80](https://github.com/ntdung-tds/iaict-portal/pull/80), [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79) |
+| Cases and test layer | `CMS-ART-001`, `CMS-ART-002`: **PASS_LOCAL_SQLITE_MOCK_ACTOR** in real `app/api/admin/cms/articles/route.ts`; malformed input 400, zero audit/content writes, private response no-store |
+| Portal CI | [run 41568024341](https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024341): **4/4 jobs PASS**, 57 Vitest files / **585/585 tests PASS** (3 new CMS route assertions), **38/38 local Chromium PASS**. QA registry **99**; frozen SRS, requirements, checklist and release-safety validators PASS |
+| Real public staging acceptance | [run 41568024151](https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024151): **24/24 live Chromium PASS**, **24/24 HTTP PASS**, HTTP 503=0, 5xx=0, networkErrors=0 observed |
+| Scope limitation | Real public staging runs against previously deployed Worker `1b8cfe71-88ef-4e21-8937-4f8590daaba4`, **NOT the PR #80 code**. No Cloudflare Access authenticated CMS browser E2E; no production/staging deployment of new CMS code. |
+| Historical precursor | `RUN-CMS-20261103-01` was planning/NOT_RUN recorded before actual execution. This second immutable run captures real CI outcome, without rewriting the precursor |
+| Media evidence | NO_IMAGE_REQUIRED for local API; real public test screenshots/traces not stored to GitHub. [Private Drive folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) available for sanitized visual artifacts when applicable |
+| Evidence-commit status | **NOT_RUN** until exact final documentation head is retested in GitHub CI |
+
