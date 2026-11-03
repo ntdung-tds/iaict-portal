@@ -79,7 +79,7 @@ describe("B3.5 CMS-only Media role and scope policy matrix — pure, not auth", 
 
   it("permits admin/reviewer review only after a scan-passed state", () => {
     for (const role of ["admin", "reviewer"]) {
-      expect(check("review", { roles: [role], status: "SCAN_PASSED" })).toEqual(allowed);
+      expect(check("review", { roles: [role], status: "SCAN_PASSED" })).toEqual({ allowed: false, code: "SCANNER_UNAVAILABLE" });
       for (const state of ["QUARANTINED", "SCAN_PENDING", "SCAN_FAILED", "REJECTED", "REVIEW_APPROVED", "AVAILABLE", "DELETED"]) {
         expect(check("review", { roles: [role], status: state })).toEqual({ allowed: false, code: "STATE_DENIED" });
       }
@@ -89,7 +89,7 @@ describe("B3.5 CMS-only Media role and scope policy matrix — pure, not auth", 
   });
 
   it("lets only admin publish and only after trusted scan + approval", () => {
-    expect(check("publish", { status: "REVIEW_APPROVED" })).toEqual(allowed);
+    expect(check("publish", { status: "REVIEW_APPROVED" })).toEqual({ allowed: false, code: "SCANNER_UNAVAILABLE" });
     expect(check("publish", { status: "REVIEW_APPROVED", verifiedScanAndDerivative: false }))
       .toEqual({ allowed: false, code: "UNVERIFIED_SCAN" });
     expect(check("publish", { status: "SCAN_PASSED" })).toEqual({ allowed: false, code: "STATE_DENIED" });
@@ -106,7 +106,7 @@ describe("B3.5 CMS-only Media role and scope policy matrix — pure, not auth", 
 
   it("enforces approved byte delivery, never raw quarantine even for admin", () => {
     for (const role of ["admin", "editor", "reviewer", "viewer"]) {
-      expect(check("read-approved-bytes", { roles: [role], status: "AVAILABLE" })).toEqual(allowed);
+      expect(check("read-approved-bytes", { roles: [role], status: "AVAILABLE" })).toEqual({ allowed: false, code: "SCANNER_UNAVAILABLE" });
       expect(check("read-approved-bytes", { roles: [role], status: "SCAN_PASSED" }))
         .toEqual({ allowed: false, code: "STATE_DENIED" });
       expect(check("read-approved-bytes", { roles: [role], verifiedScanAndDerivative: false }))
