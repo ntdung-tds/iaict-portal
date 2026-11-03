@@ -125,6 +125,51 @@ describe("Media B3.4 source-only streaming budget; not hosted CMS-MEDIA-004 proo
     }
   });
 
+  it("reads each yielded chunk value exactly once despite a changing getter", async () => {
+    let reads = 0;
+    let cursor = 0;
+    const source = {
+      [Symbol.asyncIterator]: () => ({
+        next: async () => cursor++ === 0
+          ? { done: false, get value() { reads++; return reads === 1 ? Uint8Array.of(7) : Uint8Array.of(9); } }
+          : { done: true, value: undefined },
+      }),
+    };
+    expect(await inspectBoundedMediaStream(source, fixture)).toEqual({
+      ok: true, totalBytes: 1, chunkCount: 1, signaturePrefix: [7],
+    });
+    expect(reads).toBe(1);
+  });
+
+  it("reads a dynamic iterator.next getter once, never invokes a substituted method", async () => {
+    let getterReads = 0;
+    let cursor = 0;
+    const source = {
+      [Symbol.asyncIterator]: () => ({
+        get next() {
+          getterReads++;
+          if (getterReads > 1) return async () => ({ done: true, value: undefined });
+          return async () => cursor++ === 0
+            ? { done: false, value: Uint8Array.of(8) }
+            : { done: true, value: undefined };
+        },
+      }),
+    };
+    expect(await inspectBoundedMediaStream(source, fixture)).toEqual({
+      ok: true, totalBytes: 1, chunkCount: 1, signaturePrefix: [8],
+    });
+    expect(getterReads).toBe(1);
+  });
+
+  it("rejects a nonboolean done marker instead of trusting its truthiness", async () => {
+    const source = {
+      [Symbol.asyncIterator]: () => ({
+        next: async () => ({ done: "yes", value: Uint8Array.of(3) }),
+      }),
+    };
+    await fail(source, "INVALID_STREAM");
+  });
+
   it("fails closed if source.next or iterator.return throws during cancellation", async () => {
     const source = {
       [Symbol.asyncIterator]: () => ({
