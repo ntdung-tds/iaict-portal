@@ -1,5 +1,5 @@
 # IAICT Portal — CHECKLIST MOMENT (LIVE)
-**Moment ID:** `MOMENT-IAICT-202611032319-ICT` · **Captured:** `2026-11-03T23:19:00+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
+**Moment ID:** `MOMENT-IAICT-20261103-2319-ICT` · **Captured:** `2026-11-03T23:19:00+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
 **2026-11-03T23:19+07:00 CURRENT MEDIA B3.3 GROUPED TASKS — PR #91 DRAFT / SOURCE RETEST PENDING:** Owner requested grouping related work. [PR #91](https://github.com/ntdung-tds/iaict-portal/pull/91) combines (A) unapproved policy/retention/scanner/role proposals; (B) isolated `lib/media-lifecycle-contract.ts` transition graph and revision CAS proposal; (C) negative Vitest cases; (D) QA+PCS records. Initial [Portal CI #41672527992](https://github.com/ntdung-tds/iaict-portal/actions/runs/41672527992) failed 2/633 tests: revoked Proxy crash and wrong fixture default; fixes at `375fd429` and `12dd8c1c`, final CI **PENDING**. `RUN-MEDIA-20261103-08` retains failures. PCS **rev54 PROPOSED** until merge. All `CMS-MEDIA-001..012` hosted upload cases **NOT_RUN**; QA catalog stays 127; no scanner/R2/D1/Worker/auth E2E, IAM owner-PAUSED, SRS FROZEN, production HOLD.
 
 **Project:** IAICT Portal / CMS / CRM / IAM · **Status:** ACTIVE / NOT ACCEPTED · **Owner acceptance:** NOT GIVEN.
