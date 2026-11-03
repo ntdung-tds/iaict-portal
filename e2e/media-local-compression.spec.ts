@@ -11,7 +11,8 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
     }));
   });
   test("renders responsive three tools and creates real JPEG/PNG image bytes", async ({ page }) => {
-    await page.goto("/admin/tools/compression");
+    const response = await page.goto("/admin/tools/compression", { waitUntil: "domcontentloaded", timeout: 15_000 });
+    expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { name: "Trung tâm nén ảnh & tệp" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Nén và thu nhỏ ảnh" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Gộp và nén nhiều tệp" })).toBeVisible();
@@ -48,7 +49,8 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
   });
 
   test("creates a ZIP download with compressed local text and no server upload", async ({ page }) => {
-    await page.goto("/admin/tools/compression");
+    const response = await page.goto("/admin/tools/compression", { waitUntil: "domcontentloaded", timeout: 15_000 });
+    expect(response?.status()).toBe(200);
     await page.locator("#compress-zip-files").setInputFiles([
       { name: "ghi chú.txt", mimeType: "text/plain", buffer: Buffer.from("IAICT nguồn tin thử nghiệm\n".repeat(1500)) },
       { name: "avatar.jpg", mimeType: "image/jpeg", buffer: Buffer.from([255,216,255,0,1]) },
@@ -65,7 +67,8 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
   });
 
   test("downloads genuine gzip with round-trip content", async ({ page }) => {
-    await page.goto("/admin/tools/compression");
+    const response = await page.goto("/admin/tools/compression", { waitUntil: "domcontentloaded", timeout: 15_000 });
+    expect(response?.status()).toBe(200);
     const input = "Một đoạn văn bản có thể nén của IAICT\n".repeat(200);
     await page.locator("#compress-text-file").setInputFiles({
       name: "report.txt", mimeType: "text/plain",
