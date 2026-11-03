@@ -546,7 +546,7 @@
           "public_http": 24,
           "post_fix_reproducible_defects_in_reviewed_paths": 0,
           "real_external_html": "NOT_RUN",
-          "final_docs_ci": "PENDING",
+          "final_docs_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41616168711",
           "final_docs_sha": "bf301cf3eece274176a6448ba26e858fa78d31b9",
           "final_doc_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41616168711",
           "final_doc_public_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41616168612",
