@@ -15,6 +15,7 @@
 | CHG-MEDIA-R2-20261031-02 | 2026-10-31 | Hồi cứu bucket/binding R2 staging dành riêng; chưa có upload API | BACKFILLED / BINDING_ONLY / MEDIA_E2E_NOT_RUN | PR #36 · docs native-auth R2 | Test case media E2E: CHƯA_CÓ; kiểm tra binding trong release, chưa kiểm thử upload | CHƯA_CHỐT |
 | CHG-MEDIA-R2-20261103-01 | 2026-11-03 | Model hóa rủi ro upload và bổ sung 12 case CMS-MEDIA-001..012 ở trạng thái PLANNED; chưa phát triển API | DESIGN_ONLY / NO_RUNTIME_CHANGE | Issue #39 · Media threat model PR | RUN-MEDIA-20261103-01 NOT_RUN | CHƯA_CHỐT |
 | CHG-MEDIA-R2-20261103-02 | 2026-11-03 | Tạo lớp kiểm tra file thuần và test âm tính; không kết nối upload | LOCAL_HELPER_ONLY / NO_HOSTED_CHANGE | Issue #39, PR B3.2 | CMS-MEDIA-013..015, RUN-MEDIA-20261103-02 | CHƯA_CHỐT |
+| CHG-MEDIA-R2-20261103-03 | 2026-11-03 | Rà soát lặp lớp preflight: lỗi TOCTOU đọc lại getter policy và ngoại lệ getter | REVIEW_LOOP / TEST_FIRST | Issue #39, PR review-loop | CMS-MEDIA-015, RUN-MEDIA-20261103-05..06 | CHƯA_CHỐT |
 
 ## Thay đổi chi tiết
 
@@ -53,6 +54,13 @@
 - **Bằng chứng kiểm thử code:** exact source SHA `139ea0b1aee543fbe328dab7c4ebbded10ba905c`, [portal CI](https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737599) 4/4 PASS và [public staging](https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737613) PASS trên Worker cũ. `RUN-MEDIA-20261103-03` là PASS_LOCAL_CODE_CI, KHÔNG phải upload E2E; Master QA v2.14 127 case đã readback.
 - QA: 3 case mới `CMS-MEDIA-013..015` AUTO/READY; 12 case `CMS-MEDIA-001..012` vẫn PLANNED/MANUAL/NOT_RUN. `RUN-MEDIA-20261103-02` chỉ được coi PASS khi CI trên exact SHA thực sự thành công.
 - Drive QA: https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3 — NO_IMAGE_REQUIRED cho helper unit.
+
+
+### CHG-MEDIA-R2-20261103-03 — Lặp rà soát policy snapshot
+- **Phát hiện tái lập:** policy object có getter thay đổi `maxBytes` hoặc `allowedMimeTypes` theo lần đọc; helper ban đầu kiểm tra chính sách rồi truy xuất lại từng thuộc tính và có thể quyết định sai theo giá trị mới. Getter ném lỗi có thể làm helper thoát bằng exception thay vì trả mã từ chối. Phạm vi: preflight thuần, không phải API upload.
+- **Test-first:** mở rộng `CMS-MEDIA-015` với ba regression case dùng getter thay đổi theo lần đọc và getter ném lỗi; ghi lần FAIL gốc ở `RUN-MEDIA-20261103-05` khi kiểm thử thực thi thực tế.
+- **Hướng khắc phục:** chuẩn hóa `maxBytes` và `allowedMimeTypes` vào snapshot primitive/Set một lần; nếu đọc/duyệt chính sách thất bại, trả `POLICY_NOT_CONFIGURED`. Rà soát và chạy lại trên immutable SHA; ghi riêng `RUN-MEDIA-20261103-06`.
+- **Giới hạn:** không chốt định dạng MIME/dung lượng live; không nối API, IAM/Access, R2/D1, Worker, production; SRS CHƯA_CHỐT. 12 case live Media 001..012 vẫn NOT_RUN.
 
 ## Các thay đổi tiếp theo
 
