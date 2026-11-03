@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 41,
-  "updated_at": "2026-11-03T03:55:38.750Z",
+  "revision": 42,
+  "updated_at": "2026-11-03T04:03:32.316Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T03:55:38.750Z",
+    "updated_at": "2026-11-03T04:03:32.316Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -410,19 +410,29 @@
         "dependencies": [],
         "qa": {
           "required": true,
-          "status": "NOT_RUN",
+          "status": "PASS_LOCAL_ORIGINAL_MIGRATION_SQLITE",
           "case_ids": [
             "CMS-NEWS-001",
             "CMS-NEWS-002",
             "CMS-NEWS-003",
             "CMS-NEWS-004"
           ],
-          "run_id": "RUN-CMS-20261103-03",
+          "run_id": "RUN-CMS-20261103-05",
           "environment": "LOCAL_ORIGINAL_SCHEMA_SQLITE_ACTOR_AND_RSS_MOCKED",
           "hosted_authenticated": "NOT_RUN",
-          "ci": "PENDING"
+          "ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415530",
+          "source_sha": "32d849113d2953997ada4dc9bfa584741b0e8935",
+          "initial_failure_run": "RUN-CMS-20261103-04",
+          "initial_failure_source": "2a8c2576372ae41a54ca3e6fe3e38f495c720174",
+          "vitest_total": 589,
+          "vitest_passed": 589,
+          "local_chromium": 38,
+          "real_public_chromium": 24,
+          "real_public_http": 24,
+          "public_staging_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415524",
+          "final_head": "PENDING"
         },
-        "description": "Owner IAM PAUSED. Dedicated PR branch test/newsroom-real-sqlite-lifecycle-20261103 based on 183868349. Actual Newsroom ingest route with structured JSON 400/no-store and real original Core+News+CMS SQL integration via synthetic RSS fixture; publish/archival is real repository and CMS API code. No hosted D1/Access/Worker mutation, SRS unchanged."
+        "description": "Owner IAM PAUSED. Dedicated PR branch test/newsroom-real-sqlite-lifecycle-20261103 based on 183868349. Actual Newsroom ingest route with structured JSON 400/no-store and real original Core+News+CMS SQL integration via synthetic RSS fixture; publish/archival is real repository and CMS API code. No hosted D1/Access/Worker mutation, SRS unchanged. First fixture test FAILED 588/589 due reused fetch Response; fresh response per invocation fixed it. Code-source exact SHA now 4/4 CI PASS / 589 Vitest / 38 local Chromium; live public staging 24 Chromium+24 HTTP PASS on old Worker. Documentation-final CI and PR merge PENDING; IAM still paused."
       }
     ],
     "features": [],
