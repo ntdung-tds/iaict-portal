@@ -192,6 +192,7 @@ function getAnchorHref(attributes: string) {
   }
   return null;
 }
+
 const NON_ARTICLE_LABELS = new Set([
   "trang chủ",
   "xem thêm",
