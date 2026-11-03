@@ -91,6 +91,19 @@ describe("V16 news source adapters", () => {
     expect(parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1])).toEqual([]);
   });
 
+  it("the full HTML fetch adapter never imports data-href-only bait", async () => {
+    const html = [
+      '<a data-href="https://baochinhphu.vn/hidden-article">Bài viết không có liên kết thực sự để nhập vào hệ thống</a>',
+      '<a href="https://untrusted.example/actual" data-href="https://baochinhphu.vn/misleading">Đường dẫn thật không được phép và không nên vào hàng chờ</a>',
+      '<a href="https://baochinhphu.vn/verified-news">Chỉ bài thật thuộc nguồn tin Chính phủ được chấp nhận</a>',
+    ].join("");
+    const fetched = vi.fn<typeof fetch>(async () => new Response(html, { status: 200 }));
+    const result = await fetchNewsSourceCandidates({ id: "chinhphu-vn" }, fetched);
+    expect(result.candidates).toHaveLength(1);
+    expect(result.candidates[0].canonicalUrl).toBe("https://baochinhphu.vn/verified-news");
+    expect(fetched).toHaveBeenCalledOnce();
+  });
+
   it("enforces fetch size and returns parsed candidates through an injected fetch", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () => new Response(
       `<rss><channel><item><title>Tin khoa học công nghệ mới nhất</title><link>https://mst.gov.vn/tin-moi</link></item></channel></rss>`,
