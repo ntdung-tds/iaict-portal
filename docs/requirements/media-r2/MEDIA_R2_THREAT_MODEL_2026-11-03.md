@@ -63,3 +63,10 @@ Existing GitHub CSV is canonical. Added `CMS-MEDIA-001..012` with priorities P0/
 The isolated `lib/media-upload-contract.ts` adds preflight checks for filename safety, MIME/extension/file-signature matching for synthetic JPEG/PNG/WebP fixtures, declared and actual byte lengths, and UUIDv4-only private quarantine key generation. The caller **must** pass an explicit policy. No production/staging default MIME/size policy exists in this helper. The helper is not imported by any API, Worker or UI.
 
 Passing preflight proves only small local input invariants. It **does not** prove a fully decoded image, malware-free payload, sanitized metadata/EXIF, streamed memory cap, quotas, authorized upload, object lifecycle, scanner, signed download or public visibility. Existing external-URL media CMS remains unchanged. Exact CI and `CMS-MEDIA-013..015` check only this narrow scope; all real hosted cases `001..012` remain NOT_RUN.
+
+
+## 7. Scoped preflight review-loop hardening (2026-11-03)
+
+Three test-first reviews identified dynamic-policy accessor TOCTOU, mutable or throwing file-field accessors, and spoofed `Uint8Array` subclass byteLength/length. The isolated preflight helper now snapshots policy and candidate fields once, converts invalid property access into structured rejection, and checks the intrinsic typed-array byte length rather than an overrideable subclass getter. Run details `RUN-MEDIA-20261103-06` (three original RED Unit CI runs and three GREEN fixes); `CMS-MEDIA-015` was refined but the canonical catalog remains 127 cases. Google Master QA v2.15 was verified.
+
+**Boundaries remain unchanged:** passing these fixtures does not decode an image, scan malware, remove metadata, enforce HTTP streaming limits or prove any real CMS role/R2 upload behavior. Real MIME size/retention/scan policies are not approved; production, IAM, D1/R2 and Worker untouched. No hosted Media E2E is claimed.
