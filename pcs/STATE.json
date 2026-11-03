@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 43,
-  "updated_at": "2026-11-03T05:31:29.698Z",
+  "revision": 44,
+  "updated_at": "2026-11-03T05:37:35.491Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T05:31:29.698Z",
+    "updated_at": "2026-11-03T05:37:35.491Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -449,16 +449,26 @@
         "dependencies": [],
         "qa": {
           "required": true,
-          "status": "NOT_RUN",
+          "status": "PASS_LOCAL_INJECTED_HTTP",
           "case_ids": [
             "CMS-NEWS-005",
             "CMS-NEWS-006"
           ],
-          "run_id": "RUN-CMS-20261103-06",
+          "run_id": "RUN-CMS-20261103-07",
           "environment": "LOCAL_INJECTED_HTTP_STREAM",
-          "hosted_authenticated": "NOT_RUN"
+          "hosted_authenticated": "NOT_RUN",
+          "source_sha": "043b270b68aa1290bdb52bb6e7a44259cddc59fb",
+          "vitest_total": 594,
+          "local_chromium": 38,
+          "real_public_chromium": 24,
+          "real_public_http": 24,
+          "ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604136",
+          "public_staging_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604067",
+          "real_upstream": "NOT_RUN",
+          "deployed_new_worker": "NOT_RUN",
+          "final_doc_ci": "PENDING"
         },
-        "description": "Second audit after PR #82 merge found redirect follow without allowed destination check and body allocation via response.text before size guard. Bounded fix on fix/newsroom-source-boundaries-review-20261103; external source actual HTTP NOT_RUN and no production/staging/IAM mutation."
+        "description": "Second audit after PR #82 merge found redirect follow without allowed destination check and body allocation via response.text before size guard. Bounded fix on fix/newsroom-source-boundaries-review-20261103; external source actual HTTP NOT_RUN and no production/staging/IAM mutation. Exact source SHA 043b270b now 4/4 Portal CI PASS / 594 Vitest / 38 local Chromium; public Chromium+HTTP 24+24 PASS on old staged Worker. Final docs SHA CI and merge pending."
       }
     ],
     "features": [],
