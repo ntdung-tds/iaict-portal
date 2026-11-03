@@ -22,6 +22,8 @@
 
 | CHG-MEDIA-R2-20261104-02 | 2026-11-04 | Owner ủy quyền AI Technical Lead tự chốt chính sách Media R2 v1; mã hóa hằng số, ma trận RBAC/scope và phủ kiểm thử âm tính, không tự mở upload runtime | ACCEPTED_POLICY_FOR_STAGING / SOURCE_ONLY / NO_DEPLOY | ADR-MEDIA-20261104-01 · Issue #39 · PR B3.5 | RUN-MEDIA-20261104-03 — PENDING_CI | CHƯA_CHỐT_SRS |
 
+| CHG-MEDIA-R2-20261104-03 | 2026-11-04 | Chủ dự án yêu cầu nén ảnh và nén tệp: bổ sung kế hoạch image derivatives, gzip text có giới hạn/kiểm chứng roundtrip, ZIP nhiều tệp tương lai | ACCEPTED_FEATURE_REQUEST / SOURCE_PARTIAL / HOSTED_NOT_RUN | ADR-MEDIA-20261104-02-COMPRESSION · Issue #39 · PR B3.6 | RUN-MEDIA-20261104-05 — CI PENDING | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -103,6 +105,19 @@
 - **Kiểm thử:** `RUN-MEDIA-20261104-03` theo exact SHA CI; các test áp dụng policy source-only, không thay đổi 127 case catalog/15 Media, `CMS-MEDIA-001..012` hosted real upload/role/security E2E vẫn **NOT_RUN**; Google Master giữ nguyên.
 - **Rollback:** revert file policy/test/ADR/CHG qua PR; không có dữ liệu Cloudflare hay schema để khôi phục. Cần PR độc lập để kích hoạt khi scanner, quyền, quotas và D1/R2 được test đầy đủ.
 - **SRS:** CHƯA_CHỐT_SRS. Chỉ được hợp nhất vào baseline sau lệnh “chốt” riêng của chủ dự án; cập nhật mọi bổ sung trong nhật ký sống.
+
+
+### CHG-MEDIA-R2-20261104-03 — Nén ảnh và nén tệp (yêu cầu trực tiếp Owner)
+
+- **Nguồn ngày 2026-11-04:** Owner: “Nhớ thêm nén ảnh, nén tệp nhé”. Yêu cầu **được tiếp nhận** và thiết kế trong [ADR-MEDIA-20261104-02-COMPRESSION](../../adr/ADR-MEDIA-20261104-02-COMPRESSION.md); không tự hiểu là “chốt SRS”.
+- **Trước → sau:** trước chỉ có hạn mức upload, scan/quarantine và kế hoạch tạo derivative chưa xác định chất lượng/size. Sau có profile source-only `IAICT-IMAGE-OPT-V1`: display cạnh dài ≤1920, thumbnail ≤480, không upscale, JPEG quality 82%, WebP 80%, PNG lossless và phải xóa metadata/chuẩn orientation sau decode tin cậy. **Chưa tạo byte ảnh nén thực tế**.
+- **Tệp nén:** bổ sung helper nguồn `IAICT-TEXT-GZIP-V1` nén gzip thực cho fixture UTF-8 `text/plain`, `text/csv`, `application/json` đầu vào ≤5 MiB; yêu cầu tiết kiệm ≥5% hoặc trả nguyên bản, giới hạn output. Chỉ source-local; các loại tệp này **chưa được phép upload vào CMS Media** và helper không có route/DB/R2.
+- **ZIP nhiều tệp:** ghi nhận nhu cầu tải xuống dạng ZIP theo lựa chọn sau này, kiểm tra quyền từng tệp, hạn mức, tên an toàn; chưa có ZIP encoder hoặc archive upload. PDF/Office/ZIP/media nén sẵn sẽ không bị gzip tự động.
+- **Tác động:** thêm hai source helpers + hai test suites + ADR + QA/PCS. Không mở rộng allowlist `MEDIA_POLICY.file.mimeTypes`, không sửa Worker, IAM, API, Cloudflare D1/R2, Access, production hoặc SRS.
+- **Bảo mật:** scanner hiện `serviceConfigured=false`; không được publish/serve ảnh hoặc file do chỉ tính toán profile/nén gzip trong unit test. Không dùng mime/user-supplied decoded dims làm bằng chứng an toàn; kiểm thử tích hợp sẽ cần full decode, scan và private R2.
+- **Kiểm thử:** `RUN-MEDIA-20261104-05` tại SHA/CI thực tế; kiểm thử gzip roundtrip, payload sai format, proxy, kích thước, ảnh động, kích thước; không đổi 127 canonical QA case IDs/15 Media, Master Google Doc v2.15 không đổi, `CMS-MEDIA-001..012` hosted NOT_RUN.
+- **Rollback:** revert PR nguồn/ADR, không có dữ liệu thật/Worker cần rollback. Quyết định tích hợp non-image uploads và ZIP phải có CHG/ADR+negative QA riêng.
+- **Trạng thái:** Feature request ACCEPTED, source helper triển khai từng phần; live feature và SRS **CHƯA_CHỐT**.
 
 ## Các thay đổi tiếp theo
 
