@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 38,
-  "updated_at": "2026-11-03T00:01:45.774Z",
+  "revision": 39,
+  "updated_at": "2026-11-03T02:43:50.913Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T00:01:45.774Z",
+    "updated_at": "2026-11-03T02:43:50.913Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -23,7 +23,7 @@
       {
         "id": "T-IAM-KDF-S2",
         "title": "CMS-08/S2 — verify PBKDF2 compatibility in isolated Workers runtime",
-        "status": "IN_PROGRESS",
+        "status": "DEFERRED",
         "priority": "P0",
         "risk": "HIGH",
         "classification": "PUBLIC",
@@ -55,12 +55,12 @@
             "AUTHENTICATED_IAM_E2E"
           ]
         },
-        "description": "CMS-08/S2 local workerd (100000/100001) observed PASS on exact CI SHA; architecture/Owner decision and all other live IAM acceptance remain open. No deployed Worker, credential, D1 or Access changes."
+        "description": "OWNER_PAUSED_ON_2026-11-03: No further IAM implementation or live login test until explicit owner reactivation. Existing evidence and blockers retained. CMS-08/S2 local workerd (100000/100001) observed PASS on exact CI SHA; architecture/Owner decision and all other live IAM acceptance remain open. No deployed Worker, credential, D1 or Access changes."
       },
       {
         "id": "T-IAM-MFA-F2",
         "title": "CMS-08/S3 — isolated AES-GCM seed protection foundation",
-        "status": "IN_PROGRESS",
+        "status": "DEFERRED",
         "priority": "P0",
         "risk": "HIGH",
         "classification": "PUBLIC",
@@ -241,12 +241,12 @@
             "real_mfa_implemented": false
           }
         },
-        "description": "MFA foundation still IN_PROGRESS/QA PARTIAL. Actual lib/totp.ts generator/matcher now passed 27/27 groups when bundled into local synthetic atomic D1 harness (PR #59); 1/16 same challenge, 1/2 same factor step, 4 simulated sessions/audits. No real login/session/Factor schema/MFA enrollment/hosted D1/7-role E2E."
+        "description": "OWNER_PAUSED_ON_2026-11-03: No further IAM implementation or live login test until explicit owner reactivation. Existing evidence and blockers retained. MFA foundation still IN_PROGRESS/QA PARTIAL. Actual lib/totp.ts generator/matcher now passed 27/27 groups when bundled into local synthetic atomic D1 harness (PR #59); 1/16 same challenge, 1/2 same factor step, 4 simulated sessions/audits. No real login/session/Factor schema/MFA enrollment/hosted D1/7-role E2E."
       },
       {
         "id": "T-IAM-ONBOARDING",
         "title": "Secure native-account onboarding and recovery",
-        "status": "IN_PROGRESS",
+        "status": "DEFERRED",
         "priority": "P0",
         "risk": "HIGH",
         "classification": "PUBLIC",
@@ -345,7 +345,7 @@
             "hosted_role_browser": "BLOCKED_NOT_RUN"
           }
         },
-        "description": "Existing Issue #37 documents invitation, account activation, recovery and privileged MFA acceptance. Not completed or accepted; reconcile with current PR #36 and live QA before implementation. 2026-11-03: real-browser RBAC QA scaffold expanded; mocked local Chromium 8 role/anonymous cases PASS; real 8-identity staging acceptance remains NOT_RUN pending legitimate inbox/Access/vault. Owner staging-account creation preauthorized in PR66."
+        "description": "OWNER_PAUSED_ON_2026-11-03: No further IAM implementation or live login test until explicit owner reactivation. Existing evidence and blockers retained. Existing Issue #37 documents invitation, account activation, recovery and privileged MFA acceptance. Not completed or accepted; reconcile with current PR #36 and live QA before implementation. 2026-11-03: real-browser RBAC QA scaffold expanded; mocked local Chromium 8 role/anonymous cases PASS; real 8-identity staging acceptance remains NOT_RUN pending legitimate inbox/Access/vault. Owner staging-account creation preauthorized in PR66."
       },
       {
         "id": "T-MEDIA-R2",
@@ -363,6 +363,30 @@
           "status": "NOT_RUN"
         },
         "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records."
+      },
+      {
+        "id": "T-PORTAL-CMS-FIRST",
+        "title": "Portal phase 1 — 14-module gap audit and CMS article API privacy/input guards",
+        "status": "IN_PROGRESS",
+        "priority": "P0",
+        "risk": "MEDIUM",
+        "classification": "PUBLIC",
+        "security_sensitive": false,
+        "requires_owner_approval": false,
+        "github_issue": "https://github.com/ntdung-tds/iaict-portal/issues/79",
+        "dependencies": [],
+        "qa": {
+          "required": true,
+          "status": "NOT_RUN",
+          "case_ids": [
+            "CMS-ART-001",
+            "CMS-ART-002"
+          ],
+          "run_id": "RUN-CMS-20261103-01",
+          "environment": "LOCAL_NODE_SQLITE_MOCK_ACTOR",
+          "hosted_authenticated": "NOT_RUN"
+        },
+        "description": "First non-IAM increment on feat/portal-cms-audit-input-guards-20261103; 14-module inventory + fail-closed JSON mutation validation + no-store CMS private responses. Requires exact-SHA CI, issue/PR traceability and regression QA. User paused IAM. Production and SRS frozen."
       }
     ],
     "features": [],
