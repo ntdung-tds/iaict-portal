@@ -20,6 +20,8 @@
 
 | CHG-MEDIA-R2-20261104-01 | 2026-11-04 | B3.4 gộp hợp đồng kiểm tra stream có giới hạn byte/chunk, fixture test âm tính và tài liệu release gate (không nối runtime) | IN_PROGRESS / PURE_UNWIRED / NO_DEPLOY | Issue #39 · PR B3.4 | RUN-MEDIA-20261104-01 — PENDING_CI | CHƯA_CHỐT |
 
+| CHG-MEDIA-R2-20261104-02 | 2026-11-04 | Owner ủy quyền AI Technical Lead tự chốt chính sách Media R2 v1; mã hóa hằng số, ma trận RBAC/scope và phủ kiểm thử âm tính, không tự mở upload runtime | ACCEPTED_POLICY_FOR_STAGING / SOURCE_ONLY / NO_DEPLOY | ADR-MEDIA-20261104-01 · Issue #39 · PR B3.5 | RUN-MEDIA-20261104-03 — PENDING_CI | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -89,6 +91,18 @@
 - **Kiểm thử:** `RUN-MEDIA-20261104-01` chỉ source/unit và public Chromium trên Worker cũ nếu CI chạy. 127 case canonical (15 Media) không đổi; `CMS-MEDIA-004` hosted stream và `CMS-MEDIA-001..012` vẫn **PLANNED/NOT_RUN**. Bằng chứng ảnh: NO_IMAGE_REQUIRED; khi cần ảnh thực tế chỉ lưu tại Drive QA riêng.
 - **Rollback:** revert 2 tệp lib/test và tài liệu liên quan trên nhánh phát triển; không có D1/R2 hoặc deploy nào để rollback.
 - **SRS:** CHƯA_CHỐT, không tự sửa baseline.
+
+
+### CHG-MEDIA-R2-20261104-02 — Owner-delegated, approved staging-only media security policy
+
+- **Nguồn phê duyệt:** chủ dự án nêu trực tiếp ngày 2026-11-04: “Bạn tự đề xuất chính sách và hoàn thiện nhé, hợp lý là ok”. AI Technical Lead chọn phương án bảo mật hợp lý và chốt chính sách kỹ thuật **chỉ cho triển khai staging** trong [ADR-MEDIA-20261104-01](../../adr/ADR-MEDIA-20261104-01.md). Không phải lệnh “chốt SRS” hay cho phép deploy production.
+- **Trước → sau:** MED-DEC-01..07 trước đó PROPOSED, chưa có giá trị cố định; sau cập nhật tình trạng **ACCEPTED_FOR_STAGING_IMPLEMENTATION** theo ADR có phiên bản, các giá trị được mã hóa `MEDIA_POLICY` (10 MiB, 25MP, 8192 px, 4096 chunks, 30s; JPEG/PNG/WebP tĩnh; quyền/quota/retention; R2 private; bắt buộc quét sạch + decode/re-encode).
+- **Lựa chọn scanner:** hợp đồng ClamAV-compatible trong môi trường cô lập, chưa có service/key; policy `serviceConfigured=false`, kết quả không được tự giả lập. Chưa có scanner, bộ ảnh đã decode hoặc scan attestation: **không publish/serve**, dù mã policy unit PASS.
+- **Quyền:** admin/editor upload, reviewer/admin review, admin publish/revoke/delete; viewer read approved derivative only; newsroom-only role không cấp quyền CMS Media. Đọc danh tính và scope từ backend/D1 sau xác thực; không lấy từ form/request body.
+- **Nội dung tác động:** thêm `lib/media-policy.ts` và `lib/media-policy.test.ts` (hợp đồng source + test). Chưa sửa `worker.ts`, API, IAM, production, Cloudflare Access, D1 schema/row, R2 object, public serving hoặc scanner cấu hình.
+- **Kiểm thử:** `RUN-MEDIA-20261104-03` theo exact SHA CI; các test áp dụng policy source-only, không thay đổi 127 case catalog/15 Media, `CMS-MEDIA-001..012` hosted real upload/role/security E2E vẫn **NOT_RUN**; Google Master giữ nguyên.
+- **Rollback:** revert file policy/test/ADR/CHG qua PR; không có dữ liệu Cloudflare hay schema để khôi phục. Cần PR độc lập để kích hoạt khi scanner, quyền, quotas và D1/R2 được test đầy đủ.
+- **SRS:** CHƯA_CHỐT_SRS. Chỉ được hợp nhất vào baseline sau lệnh “chốt” riêng của chủ dự án; cập nhật mọi bổ sung trong nhật ký sống.
 
 ## Các thay đổi tiếp theo
 
