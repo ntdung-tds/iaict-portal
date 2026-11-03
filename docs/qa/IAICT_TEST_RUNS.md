@@ -847,3 +847,18 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Explicit exclusions | Live upload API, malware scanner, real R2/D1 read/write, CMS account browser, streaming body cap, IAM/Access and production changes remain **NOT_RUN/NOT_IMPLEMENTED**; `CMS-MEDIA-001..012` PLANNED |
 | Last documentation SHA | **PENDING exact CI** when recorded; rerun both workflows after final docs and PCS checkpoint, then postmerge |
 
+
+
+## RUN-MEDIA-20261103-07 — PR #89 postmerge CI, public staging and Worker deployment readback
+
+| Field | Observed evidence and boundary |
+| --- | --- |
+| Merge | [PR #89](https://github.com/ntdung-tds/iaict-portal/pull/89) MERGED on 2026-11-03, development SHA `9dc3bfc88c84d1548c3de907f9bdb8b28314aa2a`; source review fixes in `RUN-MEDIA-20261103-06` |
+| Postmerge Portal CI | [#41636778451](https://github.com/ntdung-tds/iaict-portal/actions/runs/41636778451): **PASS 4/4** jobs `verify`, `kdf-local-workerd`, `browser-visual`, `rc-ancestry` |
+| Public staging smoke | [#41636778629](https://github.com/ntdung-tds/iaict-portal/actions/runs/41636778629): **PASS 1/1** `live-acceptance` against *previously deployed* staging Worker; NOT Media upload E2E |
+| Cloudflare read-only deployments | staging `iaict-portal-staging`: deployment `754b0509-e754-410c-8dff-46015d162a89`, version `1b8cfe71-88ef-4e21-8937-4f8590daaba4` (100%, deployed 2026-10-31); production `iaict-portal` version `e7c703f7-fc4c-4313-b14c-0a2c94e0613d` (100%, deployed 2026-10-15). GET only, no deploy/modify |
+| Exact scope | B3.2 isolated preflight helper and regression + CI PASS after merge. Existing 127 QA case definitions (15 Media); 3 pure-helper cases `013..015` source CI PASS; `001..012` remain PLANNED / NOT_RUN |
+| Still NOT_RUN | Authorized CMS media browser, real API upload, hosted R2/D1 mutations, size/stream enforcement, scanning/quarantine, image decode, full RBAC/security acceptance. No new staging Worker deployment |
+| Next decision | B3.3 format/size, scanner/quarantine, private object ownership and lifecycle, approval before hosted implementation. IAM owner-PAUSED; SRS FROZEN; production HOLD |
+| QA media | NO_IMAGE_REQUIRED for this GitHub CI and Worker metadata check; future browser evidence ONLY in private [Drive QA folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
+
