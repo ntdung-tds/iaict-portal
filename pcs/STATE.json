@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 49,
-  "updated_at": "2026-11-03T10:39:21.779Z",
+  "revision": 50,
+  "updated_at": "2026-11-03T10:56:25.593Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T10:39:21.779Z",
+    "updated_at": "2026-11-03T10:56:25.593Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -350,7 +350,7 @@
       {
         "id": "T-MEDIA-R2",
         "title": "Secure CMS media upload on staging R2",
-        "status": "PLANNED",
+        "status": "IN_PROGRESS",
         "priority": "P1",
         "risk": "HIGH",
         "classification": "PUBLIC",
@@ -360,9 +360,52 @@
         "dependencies": [],
         "qa": {
           "required": true,
-          "status": "NOT_RUN"
+          "status": "PLANNED_NOT_RUN",
+          "case_ids": [
+            "CMS-MEDIA-001",
+            "CMS-MEDIA-002",
+            "CMS-MEDIA-003",
+            "CMS-MEDIA-004",
+            "CMS-MEDIA-005",
+            "CMS-MEDIA-006",
+            "CMS-MEDIA-007",
+            "CMS-MEDIA-008",
+            "CMS-MEDIA-009",
+            "CMS-MEDIA-010",
+            "CMS-MEDIA-011",
+            "CMS-MEDIA-012"
+          ],
+          "run_id": "RUN-MEDIA-20261103-01",
+          "catalog_case_count": 124,
+          "baseline_sha": "844f7ddf37d2314eed55f1fe3f766e6610684226",
+          "threat_model": "docs/requirements/media-r2/MEDIA_R2_THREAT_MODEL_2026-11-03.md",
+          "master_google_doc": "https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit",
+          "master_doc_sync": "VERIFIED_124_CASES_12_MEDIA_PLANNED",
+          "real_staging_upload": "NOT_RUN",
+          "hosted_r2_mutations": "NOT_RUN",
+          "owner_design_approval": false,
+          "master_doc_version": "2.13",
+          "master_doc_verified_at": "2026-11-03",
+          "master_doc_media_case_count": 12,
+          "master_doc_source": "https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit",
+          "master_doc_real_media_runs": 0,
+          "r2_read_only": {
+            "status": "PASS_READ_ONLY_BUCKET_METADATA",
+            "bucket": "iaict-portal-staging-media",
+            "region": "APAC",
+            "managed_r2_dev_enabled": false,
+            "custom_domain_count": 0,
+            "lifecycle_rule": "Default Multipart Abort Rule",
+            "app_retention_verified": false,
+            "cors": "UNVERIFIED",
+            "object_reads": "NOT_RUN",
+            "object_writes": "NOT_RUN",
+            "cloudflare_mutations": "NONE",
+            "verified_on": "2026-11-03",
+            "media_e2e": "NOT_RUN"
+          }
         },
-        "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records."
+        "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records.\n2026-11-03 DESIGN ONLY: documented staging R2 threat model, 12 planned manual QA cases with RUN-MEDIA-20261103-01 NOT_RUN and CHG-MEDIA-R2-20261103-01. Actual upload code, scanner, role browser, D1/R2 hosted E2E remain unimplemented/not run. Owner must approve security design before hosted behavior. IAM owner-paused; SRS frozen and production untouched."
       },
       {
         "id": "T-PORTAL-CMS-FIRST",

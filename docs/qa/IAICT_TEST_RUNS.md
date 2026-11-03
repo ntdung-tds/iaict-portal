@@ -771,3 +771,20 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Disposition | **PASS for scoped code/fixture CI plus public smoke only**; `T-NEWSROOM-REVIEW-LOOP` closed at source level. Previous FAIL `RUN-CMS-20261103-11` preserved; no global zero-bug claim |
 | NOT_RUN | External RSS/HTML, real signed-in Newsroom browser, new Worker deployment/hosted D1. IAM PAUSED. Production and SRS untouched |
 | Screenshots | NO_IMAGE_REQUIRED for fixture; private [Drive QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) only |
+
+
+## RUN-MEDIA-20261103-01 — First Media/R2 threat-model and QA-gap checkpoint (NOT_RUN)
+
+| Field | Observed state and explicit limit |
+| --- | --- |
+| Baseline development SHA | `844f7ddf37d2314eed55f1fe3f766e6610684226`; [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39) |
+| Scope | Source/config documentation audit + planned QA definitions, **no runtime upload implementation or execution** |
+| Existing configuration | `cloudflare.config.ts` staging-only `MEDIA_BUCKET` points to isolated `iaict-portal-staging-media`; `app/api/admin` does not expose a dedicated media upload path in inspected tree |
+| New test definitions | `CMS-MEDIA-001..012`, all **PLANNED**, `MANUAL`, **NOT_RUN**, not PASS |
+| Functional/API/R2/Browser E2E | **NOT_RUN / NOT_IMPLEMENTED** (scan, upload, metadata, private read, deletion); IAM still owner-PAUSED |
+| CI for this documentation PR | **NOT_RUN when recorded**; later SHA-specific automated repository CI is a documentation gate, not evidence of media API acceptance |
+| Change / plan | `CHG-MEDIA-R2-20261103-01`; [Media threat model](../requirements/media-r2/MEDIA_R2_THREAT_MODEL_2026-11-03.md) |
+| Screenshots and artifacts | NO_IMAGE_REQUIRED; future private [Drive media QA root](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
+| Controls | No Worker deploy, hosted R2/D1 mutation, Access/credential change, production change, or SRS approval implied |
+| Google Master readback | [v2.13](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) verified header **124** and all 12 distinct `CMS-MEDIA-001..012` PLANNED/MANUAL/NOT_RUN after document sync; no media execution PASS implied |
+| Live R2 metadata only | **PASS_READ_ONLY_BUCKET_METADATA** (Cloudflare GET only, 2026-11-03): bucket `iaict-portal-staging-media` exists APAC, `r2.dev` disabled, 0 custom domains, 1 enabled default multipart-abort lifecycle rule; no evidence of app object retention. CORS query unverified. **No object listing/read/write/delete**. Master Google QA v2.13 updated/read back; all media functional test cases remain **NOT_RUN**. |
