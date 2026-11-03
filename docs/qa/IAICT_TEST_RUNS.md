@@ -891,3 +891,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | QA/regressions | Original `RUN-MEDIA-20261103-08` preserves red→fix→green source CI (633/633). **127 canonical cases / 15 Media**, no new case IDs; `CMS-MEDIA-001..012` hosted scanner/API/D1/R2 and authorized browser remain **PLANNED/NOT_RUN** |
 | Operational changes | No new Worker deployment, D1 migration, hosted R2 object read/write/delete, IAM/Access, SRS, production or handover. All seven MED-DEC decisions remain PROPOSED. No screenshot required |
 
+
+
+## RUN-MEDIA-20261104-01 — B3.4 bounded async stream source-only RED → FIX → RETEST
+
+| Field | Actual evidence / strict boundary |
+| --- | --- |
+| Workstream | [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39), [PR #93](https://github.com/ntdung-tds/iaict-portal/pull/93), `CHG-MEDIA-R2-20261104-01`; pure unconnected `lib/media-stream-contract.ts` + `lib/media-stream-contract.test.ts` |
+| Initial RED | Source SHA `a61e668efdeeaa6493dc799f591633b325b51c52`, [Portal CI #41723161906](https://github.com/ntdung-tds/iaict-portal/actions/runs/41723161906) verify **FAIL**: **645 PASS / 2 FAIL** of 647 Vitest. Case 1: intrinsic `byteLength` also accepts `Uint16Array` but stream contract requires byte chunks. Case 2: local fixture helper's default parameter replaced an explicit undefined policy; test harness mismatch, not a live security bypass. |
+| First repairs | Source `c8d232ab4944558cf76f96b1b7474a73ec18fa6c` rejects all non-`Uint8Array` chunks before intrinsic length read. Fixture SHA `bc5bcad89c9c663bd32c627e49154ec3cfd977a4` passes explicit undefined directly to function under test. Original RED result preserved; **final exact-head retest pending** at initial checkpoint |
+| Actual source test coverage | 14 local synthetic Vitest assertions cover maxBytes/maxChunks, split/chunked over limit, zero chunk loops, invalid policy/input, Proxy/getters, native typed array length, async iterator cancellation. No HTTP/R2 service or scanner invoked |
+| Public browser | Real public staging Chromium workflow for PR #93 is a separate check against the **previously deployed** Worker. It does **not** demonstrate B3.4 behavior because the new helper is unwired |
+| Existing QA baseline | **127 cases** / **15 Media**; no new/edited canonical case. `CMS-MEDIA-001..012` (including `CMS-MEDIA-004` hosted stream enforcement) **PLANNED/NOT_RUN**; Google Master v2.15 remains unchanged |
+| Mutation / approvals | **NONE** to Worker, R2/D1, Access, IAM, production or SRS. All `MED-DEC-01..07` still PROPOSED; owner release/policy approval NOT_GIVEN. No screenshot required; future private QA evidence only in [Drive folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
+
