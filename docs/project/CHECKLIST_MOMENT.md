@@ -1,11 +1,11 @@
 # IAICT Portal — CHECKLIST MOMENT (LIVE)
-**Moment ID:** `MOMENT-IAICT-20261103-0944-ICT` · **Captured:** `2026-11-03T09:44:32+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
+**Moment ID:** `MOMENT-IAICT-20261103-0951-ICT` · **Captured:** `2026-11-03T09:51:08+07:00` · **Timezone:** Asia/Ho_Chi_Minh (UTC+07)
 **Project:** IAICT Portal / CMS / CRM / IAM · **Status:** ACTIVE / NOT ACCEPTED · **Owner acceptance:** NOT GIVEN.
 **Evidence scope:** code/runtime baseline audited at source HEAD `a6afff7ecb0ed27bc4bddeb4374e2fe333312745` at observation time; this is a baseline **before** checklist-only commits. PR [#36](https://github.com/ntdung-tds/iaict-portal/pull/36) DRAFT on `feat/staging-native-login-r2-20261030`.
 **Related records:** [PROJECT_PLAN](PROJECT_PLAN.md) · [PROJECT_PROGRESS](PROJECT_PROGRESS.md) · [append-only moment history](checklist-moments/) · [QA run ledger](../qa/IAICT_TEST_RUNS.md) · [82-case catalog](../qa/IAICT_TEST_CASES.csv) · [14 module change logs](../requirements/README.md).
 **Input document:** user-supplied `IAICT_IAM_v1_2_FRESH_DOWNLOAD.docx` (dated 2026-10-31, appendix C/G/H–K); research/architecture proposal reviewed at older SHA `5d29e28b14a2f9aaedcfc59da6acb0665391d443`, **not an approved SRS or proof of implementation**. Do not commit the user file, private personal data, secrets or screenshots to GitHub.
 
-**2026-11-03 OVERRIDE — OWNER IAM PAUSE:** IAM checklist items reflect historical implementation evidence only. No further IAM development, live identity onboarding or role browser authentication during this pause. Current action is [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79) (14-module Portal inventory and CMS article JSON/cache guard) on a separate feature branch; stage and production remain unchanged. QA catalog 99 after CMS-ART-001/002; current Run is NOT_RUN pending CI. See [workstream inventory](PORTAL_REMAINING_WORK_2026-11-03.md) and PCS rev39. Older below-described IAM next-action pointers are superseded by this owner instruction.
+**2026-11-03 OVERRIDE — OWNER IAM PAUSE:** IAM checklist items reflect historical implementation evidence only. No further IAM development, live identity onboarding or role browser authentication during this pause. Current action is [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79) (14-module Portal inventory and CMS article JSON/cache guard) on a separate feature branch; stage and production remain unchanged. QA catalog 99 after CMS-ART-001/002; local CMS tests now PASS on exact source SHA 979a1b41, 4/4 portal CI (585/585 Vitest, 38/38 local Chromium), and 24/24 real public staging Chromium / 24/24 HTTP PASS on previous deployment. Final evidence-commit CI remains PENDING; hosted authenticated CMS E2E NOT_RUN. See [workstream inventory](PORTAL_REMAINING_WORK_2026-11-03.md) and PCS rev39. Older below-described IAM next-action pointers are superseded by this owner instruction.
 
 ## How to interpret checkboxes (strict)
 - `[x] DONE`: only the **explicitly bounded deliverable** has evidence; e.g. "D1 fixture created" does **not** mean "role login passed".
@@ -93,7 +93,7 @@ Source: user-supplied IAM report v1.2, Appendix C (`IAM-01`–`IAM-10`) and Appe
 
 ## 2026-11-03 — Current portal phase 1 execution handoff
 - **Scope:** Owner pauses IAM. First non-IAM PR records 14-module gap inventory and adds fail-closed CMS article mutations and no-store private responses with SQLite regression tests.
-- **Cases:** CMS-ART-001/002; RUN-CMS-20261103-01 currently NOT_RUN on final head. Local route test uses mocked actor, not genuine Access login.
+- **Cases:** CMS-ART-001/002; initial RUN-CMS-20261103-01 NOT_RUN before execution; verified RUN-CMS-20261103-02 on source SHA 979a1b41 (585/585 Vitest, 24/24 live-public Chromium). Final docs-commit CI pending. Local route test uses mocked actor, not genuine Access login.
 - **Safety:** no IAM changes, no production deploy, no SRS sync, no source Drive handoff. Existing historical 8-role live acceptance remains NOT_RUN. 
 - **Next:** open and verify Portal CMS PR exact SHA CI; reconcile historic PRs; select Newsroom acceptance then Media R2.
 
