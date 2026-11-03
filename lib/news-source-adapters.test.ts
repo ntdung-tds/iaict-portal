@@ -104,6 +104,26 @@ describe("V16 news source adapters", () => {
     expect(fetched).toHaveBeenCalledOnce();
   });
 
+  it("does not discover article URLs inside HTML comments, script, style or template regions", () => {
+    const bait = (path: string) => `<a href="https://baochinhphu.vn/${path}">Một tin chứa trong vùng ẩn không được nhập vào CMS</a>`;
+    const html = [
+      `<!-- ${bait("comment-bait")} -->`,
+      `<script>const fake = ${JSON.stringify(bait("script-bait"))};</script>`,
+      `<style>${bait("style-bait")}</style>`,
+      `<template>${bait("template-bait")}</template>`,
+      '<a href="https://baochinhphu.vn/visible-real">Bài viết thật sự hiển thị trên trang nguồn tin</a>',
+    ].join("");
+    const items = parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1]);
+    expect(items.map(item => item.sourceUrl)).toEqual(["https://baochinhphu.vn/visible-real"]);
+  });
+
+  it("does not treat an unclosed HTML comment or script as a navigational article", () => {
+    const html = '<a href="https://baochinhphu.vn/genuine-visible">Bài viết thực sự nằm trước vùng HTML không hợp lệ</a>' +
+      '<!-- <a href="https://baochinhphu.vn/hidden">Bài viết giả nằm trong bình luận chưa đóng</a>';
+    const items = parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1]);
+    expect(items.map(item => item.sourceUrl)).toEqual(["https://baochinhphu.vn/genuine-visible"]);
+  });
+
   it("enforces fetch size and returns parsed candidates through an injected fetch", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () => new Response(
       `<rss><channel><item><title>Tin khoa học công nghệ mới nhất</title><link>https://mst.gov.vn/tin-moi</link></item></channel></rss>`,
