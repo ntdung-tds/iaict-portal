@@ -572,3 +572,19 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 
 - Code SHA `049346fe3f6528dd2b2fd0082619bfe18471fac9` is the **post-fix pre-report HEAD**; evidence/PCS changes require another exact-head CI and real public staging Chromium run before merge. [PR #77](https://github.com/ntdung-tds/iaict-portal/pull/77). Registered QA case `IAM-USER-021`, catalog **95**.
 - This is a real code+SQL Admin API test in local isolated Miniflare, with mocked vinext request dispatch ONLY. No actual hosted admin account, session, password, role, activation, Access policy, or production mutation. Test passwords generated only in process and never stored/logged. No screenshot required; [private IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+## RUN-IAM-20261103-08 — real CMS deactivate/re-enable and session revoke (isolated D1)
+
+| Check | Verification boundary / observed state |
+| --- | --- |
+| Scope | [PR #78](https://github.com/ntdung-tds/iaict-portal/pull/78), `IAM-USER-022` and `IAM-USER-023`; actual `worker.ts` ingress, `lib/native-auth.ts` session lookup, actual CMS Users DELETE/POST API, original migrations in temporary Miniflare D1. **Only vinext HTTP dispatch is mocked**. No hosted CMS endpoint or real Cloudflare Access login. |
+| Identity and data | 8 synthetic `example.test` roles + Admin2; randomly generated passwords remain in process; no staging/production D1 or Cloudflare Access changes. |
+| IAM-USER-022 | Admin deactivates News Editor via DELETE; old session invalid and password login denied. Admin reactivates by POST with fresh CAS version; old token stays invalid, fresh token receives News Editor role only; stale DELETE returns 409 and must not revoke new session. |
+| IAM-USER-023 | Editor must not revoke sessions, foreign-Origin Admin POST must fail, actual Admin `revokeSessions` must revoke Admin2 native token. Admin2 can obtain a **new** token with original role; old token stays invalid. |
+| Initial CI gate | [Portal CI #41549451897](https://github.com/ntdung-tds/iaict-portal/actions/runs/41549451897) initially FAILED `verify:qa` because code changed before the two case definitions were committed; **not yet evidence of a product failure or successful new integration tests**. Registered both QA cases before retry. |
+| Execution and exact-HEAD result | **PASS** for pre-evidence documentation HEAD `64851453512ead5871000299b6824e2b4a97e00f`: [Portal CI #41549847143](https://github.com/ntdung-tds/iaict-portal/actions/runs/41549847143) **4/4 jobs SUCCESS**, **582/582 Vitest** including **16/16** actual Worker/D1 integration tests and **38/38 local Chromium**. [Public staging #41549847028](https://github.com/ntdung-tds/iaict-portal/actions/runs/41549847028) **24/24 actual Chromium PASS** and **24/24 public HTTP PASS**, zero observed HTTP503/5xx/network errors. The new actual CMS DELETE/POST tests were **local** only; hosted role-positive acceptance NOT_RUN. This evidence commit requires new exact-HEAD gates before merge. |
+| Positive Access-authenticated 8-role browser | **BLOCKED / NOT_RUN** due missing controlled independent QA mailboxes, Access identities and recoverable vault. |
+| Screenshots and media | No local API screenshot needed. All future actual browser QA captures must go only in [restricted IAM QA Drive folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), never GitHub. |
+
+**Result boundary:** LOCAL_ACTUAL_ADMIN_ROUTE_REAL_D1 with MOCK_HTTP_DISPATCH; must not be counted as actual hosted Access/API browser acceptance. SRS **FROZEN**; production untouched.
+

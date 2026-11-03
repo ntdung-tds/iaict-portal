@@ -35,6 +35,7 @@ vi.mock("vinext/server/fetch-handler", () => ({
         const route = await import("../app/api/admin/cms/users/route");
         if (request.method === "GET") return route.GET(request);
         if (request.method === "POST") return route.POST(request);
+        if (request.method === "DELETE") return route.DELETE(request);
         return new Response("QA method unsupported", { status: 405 });
       }
       const allow = gates[path];
@@ -245,6 +246,85 @@ describe("real native ingress and RBAC against disposable original-schema D1; mo
     expect((await fetchGate(target, "cms-edit")).status).toBe(200);
     expect((await db.prepare("PRAGMA foreign_key_check").all()).results).toHaveLength(0);
   }, 40_000);
+
+
+  it("REAL CMS DELETE deactivation and reactivation never resurrect a previously issued native session", async () => {
+    const target: RoleName = "news_editor";
+    const oldToken = sessions.get(target)!;
+    const response = await fetchGate("admin", "cms-users");
+    const listing = await response.json() as {
+      users: Array<{ id:string; updated_at:string; display_name:string|null; roles:string[] }>;
+    };
+    const existing = listing.users.find(u => u.id === username(target))!;
+    expect(existing.roles).toEqual(["news_editor"]);
+
+    const deactivated = await fetchGate("admin", "cms-users", {
+      method:"DELETE", origin:root,
+      body:{id:username(target),updatedAt:existing.updated_at},
+    });
+    expect(deactivated.status, await deactivated.clone().text()).toBe(200);
+    const {updatedAt} = await deactivated.json() as {updatedAt:string};
+    expect(updatedAt).not.toBe(existing.updated_at);
+    expect((await fetchGate(target, "news-edit", {cookie:oldToken})).status).toBe(401);
+    expect(await authenticateNativePassword(db, email(target), passwords.get(target)!)).toBeNull();
+    expect((await db.prepare("SELECT COUNT(*) AS n FROM iaict_auth_sessions WHERE user_id=?")
+      .bind(username(target)).first<{n:number}>())?.n).toBe(0);
+
+    // A stale DELETE cannot invalidate a reactivated user's later session.
+    const restored = await fetchGate("admin", "cms-users", {
+      method:"POST", origin:root,
+      body:{id:username(target),email:email(target),
+        displayName:existing.display_name??"",isActive:true,
+        roles:["news_editor"],updatedAt},
+    });
+    expect(restored.status, await restored.clone().text()).toBe(200);
+    expect((await fetchGate(target, "news-edit", {cookie:oldToken})).status).toBe(401);
+    const newToken = await authenticateNativePassword(db, email(target), passwords.get(target)!);
+    expect(newToken).toMatch(/^[0-9a-f]{64}$/);
+    expect(newToken).not.toBe(oldToken);
+    sessions.set(target,newToken!);
+    expect((await fetchGate(target, "news-edit")).status).toBe(200);
+    expect((await fetchGate(target, "cms-edit")).status).toBe(403);
+
+    const stale = await fetchGate("admin", "cms-users", {
+      method:"DELETE", origin:root,
+      body:{id:username(target),updatedAt:existing.updated_at},
+    });
+    expect(stale.status).toBe(409);
+    expect((await fetchGate(target, "news-edit")).status).toBe(200);
+    expect((await db.prepare("PRAGMA foreign_key_check").all()).results).toHaveLength(0);
+  }, 45_000);
+
+  it("REAL CMS admin-only revokeSessions clears sessions without stripping roles or disabling users", async () => {
+    const target: RoleName = "admin2";
+    const oldToken = sessions.get(target)!;
+    const denied = await fetchGate("editor", "cms-users", {
+      method:"POST", origin:root,
+      body:{action:"revokeSessions",id:username(target)},
+    });
+    expect(denied.status).toBe(403);
+    const rejectedOrigin = await fetchGate("admin", "cms-users", {
+      method:"POST", origin:"https://untrusted.invalid",
+      body:{action:"revokeSessions",id:username(target)},
+    });
+    expect(rejectedOrigin.status).toBe(403);
+    expect((await fetchGate(target, "cms-admin", {cookie:oldToken})).status).toBe(200);
+
+    const result = await fetchGate("admin", "cms-users", {
+      method:"POST", origin:root,
+      body:{action:"revokeSessions",id:username(target)},
+    });
+    expect(result.status, await result.clone().text()).toBe(200);
+    expect((await result.json() as {revoked:boolean}).revoked).toBe(true);
+    expect((await fetchGate(target, "cms-admin", {cookie:oldToken})).status).toBe(401);
+    expect((await db.prepare("SELECT COUNT(*) AS n FROM iaict_auth_sessions WHERE user_id=?")
+      .bind(username(target)).first<{n:number}>())?.n).toBe(0);
+    const nextToken = await authenticateNativePassword(db,email(target),passwords.get(target)!);
+    expect(nextToken).toMatch(/^[0-9a-f]{64}$/);
+    sessions.set(target,nextToken!);
+    expect((await fetchGate(target,"cms-admin")).status).toBe(200);
+    expect((await fetchGate(target,"cms-admin",{cookie:oldToken})).status).toBe(401);
+  }, 35_000);
 
   it("rejects deleted role and deactivated user even if the old native cookie is retained", async () => {
     await db.prepare("DELETE FROM admin_user_roles WHERE user_id=?")
