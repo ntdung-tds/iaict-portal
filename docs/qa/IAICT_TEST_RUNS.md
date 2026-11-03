@@ -802,3 +802,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Product policy | Required explicit policy, test MIME and size are fixtures, **no Owner-approved runtime settings** |
 | SRS / production / secrets | Untouched; IAM PAUSED, no Worker deployed, no R2/D1 mutations, no screenshot generated |
 | Drive | https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3 |
+
+## RUN-MEDIA-20261103-03 — B3.2 exact source CI and public staging smoke PASS
+
+| Field | Actual observed result |
+| --- | --- |
+| Exact tested source SHA | `139ea0b1aee543fbe328dab7c4ebbded10ba905c`, [PR #88](https://github.com/ntdung-tds/iaict-portal/pull/88), Issue #39 |
+| Canonical Portal CI | [#41629737599](https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737599) **4/4 jobs PASS** (verify, browser-visual, rc-ancestry, local workerd KDF); new `lib/media-upload-contract.test.ts` belongs to full Vitest verification. 9 local test definitions; no independent count from CI logs claimed |
+| Public real staging | [#41629737613](https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737613) live-acceptance job **PASS**. Tests previously deployed public Worker; **not** newly written Media preflight or upload |
+| QA cases | `CMS-MEDIA-013/014/015` **PASS_LOCAL_CODE_CI** (pure function scope only); `CMS-MEDIA-001..012` **PLANNED/NOT_RUN** (backend, scan, RBAC, real R2) |
+| Master Doc sync | [QA v2.14](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) **readback VERIFIED** header 127 cases (97 IAM + 30 CMS); 15 unique CMS-MEDIA cases including 3 AUTO/READY, 12 PLANNED; title updated |
+| Not proved | No full image decoder or scanner, no stream memory cap, no D1/R2 objects, no real authenticated CMS browser, no MIME/size production approval, no Worker deployment |
+| Follow-up | Final **documentation HEAD CI/staging still PENDING** at capture; rerun on exact final PR SHA, merge only if green and independently verify postmerge |
+| QA media | NO_IMAGE_REQUIRED for unit suite; [private Drive evidence](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) only. IAM PAUSED; SRS/production unchanged |
+

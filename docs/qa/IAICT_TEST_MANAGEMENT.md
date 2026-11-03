@@ -200,3 +200,5 @@ After Issue #39 source audit, register `CMS-MEDIA-001..012` in the **existing** 
 ## 2026-11-03 — Media/R2 B3.2 isolated preflight helper
 
 The canonical QA catalog grows from 124 to **127** cases (97 IAM, 30 CMS including 15 Media). New `CMS-MEDIA-013..015` are AUTO/READY for the isolated `lib/media-upload-contract.test.ts` suite; exact source SHA CI and run evidence remain mandatory before a PASS claim. All `CMS-MEDIA-001..012` are **PLANNED/MANUAL/NOT_RUN** for hosted route/stream/scanner/role/R2 operations. Master [QA Doc v2.14](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) must mirror and read back these three additions. No SRS or actual upload policy approval.
+
+**B3.2 Google QA sync readback verified (03/11/2026):** [v2.14](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) has 127-case header (97 IAM, 30 CMS), 15 distinct CMS-MEDIA IDs including 12 PLANNED and 3 AUTO/READY. Exact source PR SHA `139ea0b1aee543fbe328dab7c4ebbded10ba905c` portal CI 4/4 PASS and public staging smoke PASS, documented as `RUN-MEDIA-20261103-03`. Real Media E2E remains NOT_RUN.

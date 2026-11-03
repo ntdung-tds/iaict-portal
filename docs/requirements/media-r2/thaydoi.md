@@ -50,6 +50,7 @@
 - Sau: `lib/media-upload-contract.ts` kiểm tra chính sách đầu vào bắt buộc, MIME/extension/chữ ký JPEG/PNG/WebP, kích cỡ mảng byte, tên file và khóa riêng `quarantine/v1/UUID4`. Thêm test âm tính `lib/media-upload-contract.test.ts`.
 - **Chưa chốt:** định dạng, dung lượng, loại file thật, quét virus, EXIF, quota, vai trò, retention, D1/R2 consistency. Kích cỡ và format trong test chỉ là **fixture**, không phải chính sách live.
 - **Không thực hiện:** không nối API, CMS media cũ, R2/Worker, D1, Access, IAM, production hay SRS. Kiểm thử stream upload và E2E vẫn NOT_RUN.
+- **Bằng chứng kiểm thử code:** exact source SHA `139ea0b1aee543fbe328dab7c4ebbded10ba905c`, [portal CI](https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737599) 4/4 PASS và [public staging](https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737613) PASS trên Worker cũ. `RUN-MEDIA-20261103-03` là PASS_LOCAL_CODE_CI, KHÔNG phải upload E2E; Master QA v2.14 127 case đã readback.
 - QA: 3 case mới `CMS-MEDIA-013..015` AUTO/READY; 12 case `CMS-MEDIA-001..012` vẫn PLANNED/MANUAL/NOT_RUN. `RUN-MEDIA-20261103-02` chỉ được coi PASS khi CI trên exact SHA thực sự thành công.
 - Drive QA: https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3 — NO_IMAGE_REQUIRED cho helper unit.
 
