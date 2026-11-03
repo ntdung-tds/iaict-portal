@@ -757,3 +757,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Explicit exclusions | Public staging still tests **previous deployed Worker**, not this PR code. Real external-origin HTML fetch and authenticated Newsroom browser E2E remain **NOT_RUN**; IAM PAUSED; no staging/production deployment, hosted D1/Access, SRS sync or private screenshots. |
 | Final documentation HEAD and merge | **PENDING** at capture; rerun exact final-documentation SHA CI and public staging acceptance before merge, then verify postmerge SHA. |
 
+
+
+## RUN-CMS-20261103-13 — PR #85 exact postmerge test evidence (observed)
+
+| Field | Evidence |
+| --- | --- |
+| SHA and PR | `bd2ee459fd7303a7c5e7366d89732717c922c693` after [PR #85](https://github.com/ntdung-tds/iaict-portal/pull/85) MERGED, [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) OPEN |
+| Final premerge gates | `bf301cf3eece274176a6448ba26e858fa78d31b9`: [portal CI #41616168711](https://github.com/ntdung-tds/iaict-portal/actions/runs/41616168711) PASS and [public staging #41616168612](https://github.com/ntdung-tds/iaict-portal/actions/runs/41616168612) PASS |
+| Postmerge portal CI | [#41616598225](https://github.com/ntdung-tds/iaict-portal/actions/runs/41616598225) **4/4 jobs PASS**: verify, kdf-local-workerd, browser-visual, rc-ancestry. Living Master QA reports 609/609 Vitest and 38/38 local Chromium |
+| Postmerge real public staging | [#41616598219](https://github.com/ntdung-tds/iaict-portal/actions/runs/41616598219): live-acceptance PASS, 24/24 public Chromium + 24/24 HTTP per QA Master; tests **previously deployed Worker**, not new parser code |
+| QA sync check | [Master QA v2.12](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) read and verified: 112-case snapshot, `CMS-NEWS-013`, postmerge SHA/CI. GitHub CSV 112 canonical case definitions, not 112 passed runs |
+| Disposition | **PASS for scoped code/fixture CI plus public smoke only**; `T-NEWSROOM-REVIEW-LOOP` closed at source level. Previous FAIL `RUN-CMS-20261103-11` preserved; no global zero-bug claim |
+| NOT_RUN | External RSS/HTML, real signed-in Newsroom browser, new Worker deployment/hosted D1. IAM PAUSED. Production and SRS untouched |
+| Screenshots | NO_IMAGE_REQUIRED for fixture; private [Drive QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) only |
