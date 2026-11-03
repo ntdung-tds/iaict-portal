@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 39,
-  "updated_at": "2026-11-03T02:43:50.913Z",
+  "revision": 40,
+  "updated_at": "2026-11-03T02:50:41.604Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T02:43:50.913Z",
+    "updated_at": "2026-11-03T02:50:41.604Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -377,16 +377,23 @@
         "dependencies": [],
         "qa": {
           "required": true,
-          "status": "NOT_RUN",
+          "status": "PASS_LOCAL_ONLY",
           "case_ids": [
             "CMS-ART-001",
             "CMS-ART-002"
           ],
-          "run_id": "RUN-CMS-20261103-01",
+          "run_id": "RUN-CMS-20261103-02",
           "environment": "LOCAL_NODE_SQLITE_MOCK_ACTOR",
-          "hosted_authenticated": "NOT_RUN"
+          "hosted_authenticated": "NOT_RUN",
+          "test_source_sha": "979a1b41b53ba54ffc99e2586910a803592e3a1a",
+          "vitest_total": 585,
+          "local_chromium": 38,
+          "real_public_chromium": 24,
+          "real_public_http": 24,
+          "ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024341",
+          "public_staging_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024151"
         },
-        "description": "First non-IAM increment on feat/portal-cms-audit-input-guards-20261103; 14-module inventory + fail-closed JSON mutation validation + no-store CMS private responses. Requires exact-SHA CI, issue/PR traceability and regression QA. User paused IAM. Production and SRS frozen."
+        "description": "First non-IAM increment on feat/portal-cms-audit-input-guards-20261103; 14-module inventory + fail-closed JSON mutation validation + no-store CMS private responses. Requires exact-SHA CI, issue/PR traceability and regression QA. User paused IAM. Production and SRS frozen. Exact-code-source CI green 4/4 on 979a1b41; still pending evidence-head CI and PR merge. No new staging Worker deploy."
       }
     ],
     "features": [],
