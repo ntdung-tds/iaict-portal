@@ -32,3 +32,8 @@ The Owner must explicitly approve `MED-DEC-01..07`: allowed formats, max bytes, 
 - The new fixture tests cover a *subset of the future goals* of `CMS-MEDIA-004`, but that case remains `PLANNED / MANUAL / NOT_RUN`. Actual `CMS-MEDIA-001..012` **NOT_RUN** until authenticated live staging and hosted R2/D1 checks.
 - Record local test evidence as `RUN-MEDIA-20261104-01` with exact SHA and workflow links; any failures must be retained in the append-only run. Screenshots/video only in [private QA Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) if real browser testing warrants an image.
 - This batch only adds **unwired** code/tests and documentation. Rollback is source reversion on the development branch, not a Cloudflare action. No new D1 migration, Worker, R2 object, Cloudflare Access, IAM login or production mutation. SRS remains frozen; no final source handover.
+
+
+## Resolution — 2026-11-04 (append-only)
+
+The B3.4 source-only test policy remains a **historical fixture**, not an operational stream handler. The Owner has now delegated and accepted an explicit staging policy in [ADR-MEDIA-20261104-01](../../adr/ADR-MEDIA-20261104-01.md): 10 MiB, 25 MP, max dimension 8192, 4096 chunks and a 30 s receive deadline. These values are **selected for future staging implementation** but still **NOT ENFORCED ON AN UPLOAD ROUTE**. Genuine hosted upload/decoder/scanner/quota/R2/D1 tests remain NOT_RUN, production and SRS unchanged.
