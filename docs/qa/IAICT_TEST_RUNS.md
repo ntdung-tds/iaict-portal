@@ -713,3 +713,19 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Limitations | Public staging tests run **previously deployed Worker**, not PR #84 code. Real-origin RSS redirect/timeout behavior and authenticated Newsroom CMS browser E2E **NOT_RUN**. IAM Owner PAUSED; production/staging deployments and hosted D1/Access untouched. |
 | Earlier record | `RUN-CMS-20261103-08` recorded source-before-CI NOT_RUN; this append-only run reflects actual observed source SHA. |
 | Final documentation commit | **NOT_RUN at record capture**; exact final SHA CI and public staging must be rerun before merge. |
+
+## RUN-CMS-20261103-10 — Bounded iterative Newsroom HTML source review (pre-CI)
+
+| Field | Scope and current status |
+| --- | --- |
+| Reviewed baseline | Merged [PR #84](https://github.com/ntdung-tds/iaict-portal/pull/84) SHA `4714a72562f3d46755170248650cc7aac3806bd9`; [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) |
+| Loop rule | Find → reproduce on baseline → fix only the affected source/test → run full CI → independent re-review → repeat on any new reproducible defect. Stop when zero new reproducible issues **in scoped HTML source parser + Newsroom integration paths** and all exact-head gates pass; don't claim global zero defects. |
+| Iteration 1 — observed | Original HTML link expression matched `data-href` and `title` text containing `href`, sometimes overriding the actual link and causing unsupported article candidates. Pure expression reproduction confirmed; full CI **NOT_RUN yet**. |
+| Iteration 1 — change | Parse genuine quoted anchor attributes and require true `href`; keep source HTTPS/host/port credential validation. `CMS-NEWS-010/011`. |
+| Iteration 2 — observed | HTML comments, script, style and template regions containing synthetic `<a>` sequences were interpreted as actual source article links; local reproduction confirmed. |
+| Iteration 2 — change | Suppress non-visible/non-navigational HTML regions before extraction, including incomplete comments; retain legitimate visible anchors. `CMS-NEWS-012/013`. |
+| Local test boundaries | Real source `parseHtmlNewsCandidates` and `fetchNewsSourceCandidates` with synthetic HTML and injected HTTP, no external feed/network. Newsroom original-migration SQLite lifecycle regression continues to run with mocked actor/upstream. |
+| Catalog | **112 cases** (prior 108 + four new CMS-NEWS-010..013), no changes to historical IAM cases; IAM PAUSED. |
+| Current verdict | **NOT_RUN on final PR SHA**. Source and tests committed; no PASS inferred. Append actual test run evidence with immutable SHA after GitHub CI and public staging browser results. |
+| Hosted scope | Actual Worker staging with new source code, real source HTML over Internet and authenticated Newsroom CMS browser: **NOT_RUN**. Staging/production Worker versions and SRS baseline unchanged. |
+
