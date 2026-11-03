@@ -16,6 +16,7 @@
 | CHG-MEDIA-R2-20261103-01 | 2026-11-03 | Model hóa rủi ro upload và bổ sung 12 case CMS-MEDIA-001..012 ở trạng thái PLANNED; chưa phát triển API | DESIGN_ONLY / NO_RUNTIME_CHANGE | Issue #39 · Media threat model PR | RUN-MEDIA-20261103-01 NOT_RUN | CHƯA_CHỐT |
 | CHG-MEDIA-R2-20261103-02 | 2026-11-03 | Tạo lớp kiểm tra file thuần và test âm tính; không kết nối upload | LOCAL_HELPER_ONLY / NO_HOSTED_CHANGE | Issue #39, PR B3.2 | CMS-MEDIA-013..015, RUN-MEDIA-20261103-02 | CHƯA_CHỐT |
 | CHG-MEDIA-R2-20261103-03 | 2026-11-03 | Rà soát lặp lớp preflight: lỗi TOCTOU đọc lại getter policy và ngoại lệ getter | REVIEW_LOOP / TEST_FIRST | Issue #39, PR review-loop | CMS-MEDIA-015, RUN-MEDIA-20261103-05..06 | CHƯA_CHỐT |
+| CHG-MEDIA-R2-20261103-04 | 2026-11-03 | Gộp B3.3: phương án quyết định về định dạng/size/scan/ownership, hợp đồng state transition thuần và fixture negative tests; không kết nối upload | PROPOSED / LOCAL_CODE_ONLY / NO_DEPLOYMENT | Issue #39 · PR B3.3 batch | RUN-MEDIA-20261103-08 — CI PENDING | CHƯA_CHỐT |
 
 ## Thay đổi chi tiết
 
@@ -62,6 +63,18 @@
 - **Hướng khắc phục:** chuẩn hóa `maxBytes` và `allowedMimeTypes` vào snapshot primitive/Set một lần; nếu đọc/duyệt chính sách thất bại, trả `POLICY_NOT_CONFIGURED`. Rà soát và chạy lại trên immutable SHA; ghi riêng `RUN-MEDIA-20261103-06`.
 - **Ba vòng CI tái lập / retest:** 3 source-test Unit FAIL từ getter policy, getter input, override byteLength; lần lượt test-first SHAs `ed0afd11`, `7dc4bc5e`, `9838c230`. Bản sửa lần 3 `7b85189d`: [Portal CI #41635067760](https://github.com/ntdung-tds/iaict-portal/actions/runs/41635067760) 4/4 PASS và [public staging #41635067742](https://github.com/ntdung-tds/iaict-portal/actions/runs/41635067742) PASS trên Worker cũ; chi tiết [RUN-MEDIA-20261103-06](../../qa/IAICT_TEST_RUNS.md). Google Master QA **v2.15** đã đồng bộ, đọc lại **127 cases / 15 Media**; không bổ sung case ID mới.
 - **Giới hạn:** không chốt định dạng MIME/dung lượng live; không nối API, IAM/Access, R2/D1, Worker, production; SRS CHƯA_CHỐT. 12 case live Media 001..012 vẫn NOT_RUN.
+
+
+### CHG-MEDIA-R2-20261103-04 — B3.3 gated lifecycle, recovery design and source-only planner
+
+- **Nguồn/đề cương:** Owner request 2026-11-03 gộp nhiều task phù hợp; [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39), §5.3, §8, §10, §13 của đề cương IAICT. **SRS chưa chốt**.
+- **Trước → sau:** Trước chỉ có preflight MIME/filename thuần chưa nối runtime và threat-model B3.1. Sau có [bảng đề xuất quyết định B3.3](./MEDIA_R2_B3_3_DESIGN_DECISIONS_2026-11-03.md) và `lib/media-lifecycle-contract.ts`/unit tests cho các cạnh chuyển trạng thái có thể/không thể, snapshot accessor và cặp revision để dùng **khi có CAS thực**.
+- **Thực thi:** Pure TypeScript module **không được import vào Worker/API/UI**, không thực hiện identity/role checks, scanner verification, database CAS, R2 reads/writes hoặc production changes. Việc có graph hợp lệ **không cho phép** tự động phục vụ file.
+- **Chưa chốt:** MAX_FILE_SIZE / MIME policy, scanner/provider, quota, dimensions, ownership role matrix, status expiry, retention, CDN/public policy, budget và các quyết định Owner; mọi số trong tài liệu là **đề xuất**, không phải cấu hình đã duyệt.
+- **Tác động:** API/UI/D1 migration/Cloudflare Access và IAM/production **NONE**; chỉ thêm thư viện/test thuần và tài liệu; không thay đổi file SRS.
+- **Bằng chứng:** `RUN-MEDIA-20261103-08` phân biệt local source CI với public staging (old deployed Worker). Các case `CMS-MEDIA-001..012` vẫn `PLANNED/NOT_RUN`; QA CSV vẫn 127 case và Google Master v2.15 không cần sửa.
+- **Rollback:** revert file/module/docs ở nhánh dev; không có hosted schema/runtime state để hoàn tác.
+- **SRS:** CHƯA_CHỐT; không tự đồng bộ vào baseline.
 
 ## Các thay đổi tiếp theo
 
