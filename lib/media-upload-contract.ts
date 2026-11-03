@@ -76,6 +76,27 @@ function validatedPolicySnapshot(value: unknown): ValidatedMediaPolicy | null {
   }
 }
 
+/**
+ * Take one consistent snapshot of the caller's fields.
+ * A JS accessor/Proxy must not change MIME, size or content between checks.
+ */
+function uploadCandidateSnapshot(value: unknown): MediaUploadCandidate | null {
+  if (value === null || typeof value !== "object") return null;
+  try {
+    if (Array.isArray(value)) return null;
+    const candidate = value as MediaUploadCandidate;
+    return {
+      filename: candidate.filename,
+      declaredMimeType: candidate.declaredMimeType,
+      bytes: candidate.bytes,
+      declaredSize: candidate.declaredSize,
+    };
+  } catch {
+    // Malformed/revoked Proxies and throwing getters are invalid uploads.
+    return null;
+  }
+}
+
 function safeDisplayFilename(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const filename = value.normalize("NFC");
@@ -101,8 +122,8 @@ function signatureMime(bytes: Uint8Array): MediaImageMime | null {
 export function validateMediaUploadPreflight(input: unknown, policy: unknown): MediaUploadPreflight {
   const approved = validatedPolicySnapshot(policy);
   if (!approved) return reject("POLICY_NOT_CONFIGURED");
-  if (input === null || typeof input !== "object" || Array.isArray(input)) return reject("INVALID_INPUT");
-  const candidate = input as MediaUploadCandidate;
+  const candidate = uploadCandidateSnapshot(input);
+  if (!candidate) return reject("INVALID_INPUT");
   const filename = safeDisplayFilename(candidate.filename);
   if (!filename) return reject("INVALID_FILENAME");
   const extension = filename.split(".").at(-1)?.toLowerCase();
