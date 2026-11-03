@@ -57,3 +57,8 @@ At each increment use small PRs, exact SHA CI and separate TEST RUNs; do not con
 ## 5. Rationale and rollback
 
 This proposal uses the smallest secure boundary: a **pure, unconnected state planner** supporting fail-closed graph checks without imposing an unapproved scanner/provider or numeric runtime policy. If policy changes, update the proposed design and new code through PR/CHG; removing this unused module requires no Worker rollback. When hosted integration eventually exists, rollback must be a pinned Worker and schema-safe forward-only migration/compensation plan. No release or production action is authorized here.
+
+
+## Resolution — 2026-11-04 (append-only)
+
+This is the **historical proposal** of MED-DEC-01..07. The Owner's 2026-11-04 direct delegation to the AI Technical Lead resulted in the selected [ADR-MEDIA-20261104-01](../../adr/ADR-MEDIA-20261104-01.md), with all seven technical policy choices **ACCEPTED FOR STAGING IMPLEMENTATION**. Do not treat the old table's `PROPOSED` label as the current decision. This acceptance **does not provision an actual scanner**, approve production, release a hosted R2 upload API, close CMS-MEDIA-001..012 QA, or alter the FROZEN SRS.
