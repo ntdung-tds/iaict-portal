@@ -202,6 +202,15 @@ const NON_ARTICLE_LABELS = new Set([
   "english",
 ]);
 
+// Do not discover articles from comments, inline scripts, styles or hidden
+// template fragments; those anchor strings are not navigational page links.
+// This is a bounded source-page extractor, not a general HTML renderer.
+function stripNonArticleHtml(html: string) {
+  return html
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
+    .replace(/<(script|style|template)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ");
+}
+
 export function parseHtmlNewsCandidates(
   sourceId: string,
   html: string,
@@ -209,7 +218,7 @@ export function parseHtmlNewsCandidates(
 ) {
   const candidates: NewsDiscoveryCandidate[] = [];
 
-  for (const match of html.matchAll(HTML_ANCHOR_RE)) {
+  for (const match of stripNonArticleHtml(html).matchAll(HTML_ANCHOR_RE)) {
     const rawHref = getAnchorHref(match[1]);
     if (!rawHref) continue;
     const href = decodeEntities(rawHref).trim();
