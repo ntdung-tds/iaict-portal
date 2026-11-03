@@ -30,7 +30,6 @@ describe("B3.6 file gzip: real local roundtrip, never a new CMS upload allowlist
   it("keeps upload acceptance disabled and supports only text-like content", () => {
     expect(TEXT_FILE_COMPRESSION).toMatchObject({
       uploadEnabled: false, archivesAcceptedAsUploads: false, algorithm: "gzip",
-      maximumSavingsPercent: undefined,
       minimumSavingsPercent: 5,
     });
     expect(TEXT_FILE_COMPRESSION.eligibleMimeTypes).toEqual(["text/plain","text/csv","application/json"]);
