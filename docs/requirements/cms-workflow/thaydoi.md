@@ -14,6 +14,8 @@
 
 | CHG-CMS-WORKFLOW-20261031-02 | 2026-10-31 | Ghi user/role/revision/audit nguyên tử | IMPLEMENTED/TESTED (đúng phạm vi) | PR #36 / docs gốc | Chi tiết bên dưới | CHƯA_CHỐT |
 
+| CHG-CMS-WORKFLOW-20261103-01 | 2026-11-03 | Bảo vệ API CMS articles trước JSON không hợp lệ và cache nội dung quản trị | PROPOSED / CODED / CI_PENDING | Issue #79 · PR PENDING | CMS-ART-001/002 · RUN-CMS-20261103-01 | CHƯA_CHỐT |
+
 ## Thay đổi chi tiết
 
 ### CHG-CMS-WORKFLOW-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -31,6 +33,15 @@
 - **Bằng chứng lịch sử:** [CI 316/316](https://github.com/ntdung-tds/iaict-portal/actions/runs/40920542386), browser Chromium thời điểm đó dùng mock API. Mã hiện hành và D1 remote cần xác minh trong run khác trước khi tuyên bố nghiệm thu đầy đủ.
 - **Test:** IAM-USER-005/011/012 (integration); IAM-USER-017/018 vẫn NOT_RUN cho live-role scenarios.
 - **Tác động:** người dùng CMS, phân quyền, audit, D1 transaction; SRS impact PENDING.
+
+### CHG-CMS-WORKFLOW-20261103-01 — Article API input shape and private cache boundary
+- **Nguồn:** owner request 03/11/2026 to move from IAM (PAUSED) to Portal/CMS source audit and small tested implementation; [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79).
+- **Trước:** article POST/DELETE called `request.json()` and assumed object shape. `null`, arrays, numeric `id` or syntactically invalid JSON could surface a server-side 500 rather than a client validation 4xx. Article private GET and mutation responses lacked an explicit `Cache-Control: no-store` header.
+- **Sau (source, CI pending):** shared JSON content-type/shape/field-type reader for POST/DELETE; expected invalid inputs return HTTP 400 before D1 write. All protected article GET/POST/DELETE success/error responses explicitly use `Cache-Control: no-store`.
+- **Boundary:** preserve existing role checks, article/category business rules, D1 batch/CAS, Content/Newsroom permissions and public caching; no IAM code, D1 migration, Cloudflare Access or production change.
+- **Test:** `CMS-ART-001`, `CMS-ART-002`; `lib/cms-articles-atomic.test.ts` Node SQLite original schema / mocked actor. [RUN-CMS-20261103-01](../../qa/IAICT_TEST_RUNS.md) must carry exact SHA after CI; live authenticated CMS E2E **NOT_RUN**.
+- **Risk/rollback:** reject previously permissive text/plain JSON clients (intentional API guard); rollback by reverting reviewed PR if a legitimate client depends on it; preserve old tests and UI behavior.
+- **SRS:** FROZEN / CHƯA_CHỐT; do not promote this engineering hardening into baseline without owner decision.
 
 ## Các thay đổi tiếp theo
 
