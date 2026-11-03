@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 48,
-  "updated_at": "2026-11-03T10:02:42.717Z",
+  "revision": 49,
+  "updated_at": "2026-11-03T10:39:21.779Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-03T10:02:42.717Z",
+    "updated_at": "2026-11-03T10:39:21.779Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -512,7 +512,7 @@
       {
         "id": "T-NEWSROOM-REVIEW-LOOP",
         "title": "Bounded repeat review of HTML source anchor correctness and invisible markup",
-        "status": "IN_PROGRESS",
+        "status": "DONE",
         "priority": "P0",
         "risk": "MEDIUM",
         "classification": "PUBLIC",
@@ -546,9 +546,21 @@
           "public_http": 24,
           "post_fix_reproducible_defects_in_reviewed_paths": 0,
           "real_external_html": "NOT_RUN",
-          "final_docs_ci": "PENDING"
+          "final_docs_ci": "PENDING",
+          "final_docs_sha": "bf301cf3eece274176a6448ba26e858fa78d31b9",
+          "final_doc_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41616168711",
+          "final_doc_public_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41616168612",
+          "merge_sha": "bd2ee459fd7303a7c5e7366d89732717c922c693",
+          "postmerge_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41616598225",
+          "postmerge_staging": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41616598219",
+          "postmerge_vitest": 609,
+          "postmerge_chromium_local": 38,
+          "postmerge_public_chromium": 24,
+          "postmerge_public_http": 24,
+          "catalog_case_count": 112,
+          "google_doc": "https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit"
         },
-        "description": "Owner asked for find→reproduce→fix→review loop. Pass1 reproduced fake data-href/title attribute being imported. Pass2 reproduced hidden comment/script/style/template anchors imported. Source patch and tests on fix/newsroom-review-loop-anchor-20261103. Full exact-SHA CI and public Chromium pending. Stop when zero new reproducible scoped issues after re-review and all gates green; no global zero-bug claim. IAM owner-paused, SRS frozen, production unchanged. Third iteration reproduced hidden nested outer-template anchor leak; fixed with depth-aware template tags and additional 2 tests. Initial PR verify failed QA label Regression, corrected to Integration. Exact source SHA 5116f6e7 passed portal CI 4/4, 609 Vitest, 25 adapter, 38 local Chromium; real public staging 24/24 Chromium and 24/24 HTTP on old Worker. Follow-up independent review of scoped HTML source paths found zero new reproducible issues. Final documentation-head CI and merge remain PENDING; no production/staging deploy or authenticated E2E."
+        "description": "Owner asked for find→reproduce→fix→review loop. Pass1 reproduced fake data-href/title attribute being imported. Pass2 reproduced hidden comment/script/style/template anchors imported. Source patch and tests on fix/newsroom-review-loop-anchor-20261103. Full exact-SHA CI and public Chromium pending. Stop when zero new reproducible scoped issues after re-review and all gates green; no global zero-bug claim. IAM owner-paused, SRS frozen, production unchanged. Third iteration reproduced hidden nested outer-template anchor leak; fixed with depth-aware template tags and additional 2 tests. Initial PR verify failed QA label Regression, corrected to Integration. Exact source SHA 5116f6e7 passed portal CI 4/4, 609 Vitest, 25 adapter, 38 local Chromium; real public staging 24/24 Chromium and 24/24 HTTP on old Worker. Follow-up independent review of scoped HTML source paths found zero new reproducible issues. Final documentation-head CI and merge remain PENDING; no production/staging deploy or authenticated E2E.\n2026-11-03 postmerge PR85: bounded source/fixture review CLOSED. Source SHA bd2ee459fd7303a7c5e7366d89732717c922c693 portal CI 4/4 PASS, 609 Vitest, 38 local Chromium; public smoke 24 Chromium+24 HTTP PASS on older Worker. QA Master Doc reconciled to 112 cases. External source fetch, hosted authenticated Newsroom browser, new staging deployment remain NOT_RUN. IAM PAUSED and production/SRS unchanged. RUN-CMS-20261103-13."
       }
     ],
     "features": [],
