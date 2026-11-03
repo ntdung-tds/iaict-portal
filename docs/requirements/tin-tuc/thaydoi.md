@@ -18,6 +18,8 @@
 
 | CHG-TIN-TUC-20261103-02 | 2026-11-03 | Rà soát lại Newsroom: chặn chuyển hướng không tin cậy và giới hạn dữ liệu RSS/HTML khi truyền theo luồng | CODED / LOCAL_PASS / DEPLOY_NOT_RUN | Issue #81 · PR #83 | CMS-NEWS-005/006 · RUN-CMS-20261103-06/07 | CHƯA_CHỐT |
 
+| CHG-TIN-TUC-20261103-03 | 2026-11-03 | Rà soát 2 vòng: giới hạn cổng HTTPS nguồn RSS, ký tự XML lỗi và hủy stream không chặn xử lý | CODED / CI_PENDING | Issue #81 · PR PENDING | CMS-NEWS-007..009 · RUN-CMS-20261103-08 | CHƯA_CHỐT |
+
 ## Thay đổi chi tiết
 
 ### CHG-TIN-TUC-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -59,6 +61,16 @@
 - **SRS:** FROZEN/CHƯA_CHỐT; this bounded operational security patch is recorded separately here.
 
 **Observed verification of CHG-TIN-TUC-20261103-02:** At source SHA `043b270b68aa1290bdb52bb6e7a44259cddc59fb`, [Portal CI #41584604136](https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604136) **4/4 PASS, 594/594 Vitest including five new adapter tests, 38/38 local Chromium**. [Public staging #41584604067](https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604067) **24/24 Chromium + 24/24 HTTP PASS**, 0 observed 503/5xx/network errors against **old deployed Worker**. `RUN-CMS-20261103-07` captures this exact source verification, while `RUN-CMS-20261103-06` retains pre-test NOT_RUN. Final documentation SHA CI still required; external RSS network and authenticated CMS are NOT_RUN. SRS stays frozen.
+
+### CHG-TIN-TUC-20261103-03 — Two-pass independent review after PR #83
+
+- **Baseline:** [merged PR #83](https://github.com/ntdung-tds/iaict-portal/pull/83) at `c86ff18adfef49b5454cc71b2649aa81ae840bd1`; user explicitly requested another two detailed review cycles on 03/11/2026. Previous security fixes for source host allowlist, redirect hop limit and streamed response size are preserved.
+- **Review pass 1 — HTTP/URL and RSS parser:** the approved-host check used `URL.hostname` but accepted nonstandard HTTPS ports (e.g. `https://mst.gov.vn:8443/`), including both redirected source feeds and discovered article links. Numeric XML entities outside Unicode range (`&#x110000;`, very large decimal values or surrogate code points) caused `String.fromCodePoint` to throw and could fail an entire otherwise usable feed.
+- **Remediation pass 1:** only HTTPS default port is accepted for source fetches and candidate links; credentials in link URLs are rejected; explicit `:443` remains allowed after URL normalization. Decode XML numeric references only if they satisfy XML 1.0 legal code point ranges, otherwise use replacement character U+FFFD without throwing.
+- **Review pass 2 — stream and cleanup:** awaiting source `ReadableStream.cancel()` could stall on a non-cooperating upstream, defeating timeout behavior; invalid redirects and oversized Content-Length also needed explicit unused-body cleanup. Cancel redirect bodies early and body/readers on oversize without awaiting the untrusted cancellation promise; catch rejected cancel promises.
+- **Test:** `CMS-NEWS-007` custom-port/credential URL and explicit default :443; `CMS-NEWS-008` malformed numeric RSS XML (out-of-range, surrogate, XML control); `CMS-NEWS-009` pending cancellation of redirect body and oversized streamed body. `RUN-CMS-20261103-08` awaits exact CI. Uses deterministic fake HTTP/streams; **not real upstream HTTP**.
+- **Scope/safety:** keep 8-second abort signal, original Newsroom ingest→review→publish→archive SQL pipeline, source seed list, scheduler, Access, D1 migrations and publication policy unchanged. IAM PAUSED by Owner; no hosted Cloudflare state or production deployment. SRS FROZEN/CHƯA_CHỐT.
+- **Risk:** stricter URL policy can reject feeds or article links served on custom HTTPS ports; this is intentional fail-closed behavior. Real upstream compatibility and authorized hosted CMS E2E still NOT_RUN.
 
 ## Các thay đổi tiếp theo
 
