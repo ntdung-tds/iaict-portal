@@ -124,6 +124,26 @@ describe("V16 news source adapters", () => {
     expect(items.map(item => item.sourceUrl)).toEqual(["https://baochinhphu.vn/genuine-visible"]);
   });
 
+  it("does not expose fake links in an outer template after an inner template closes", () => {
+    const html = [
+      '<a href="https://baochinhphu.vn/visible-before">Bài viết thật xuất hiện trước template lồng nhau</a>',
+      '<template><template><a href="https://baochinhphu.vn/hidden-inner">Bài viết ẩn trong template con</a></template>',
+      '<a href="https://baochinhphu.vn/hidden-outer">Bài viết ẩn trong template cha</a></template>',
+      '<a href="https://baochinhphu.vn/visible-after">Bài viết thật xuất hiện sau template lồng nhau</a>',
+    ].join("");
+    const items = parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1]);
+    expect(items.map(item => item.sourceUrl)).toEqual([
+      "https://baochinhphu.vn/visible-before", "https://baochinhphu.vn/visible-after",
+    ]);
+  });
+
+  it("does not import links after an unclosed template", () => {
+    const html = '<a href="https://baochinhphu.vn/pre-template">Bài viết có thể đọc được trước template</a>' +
+      '<template><a href="https://baochinhphu.vn/hidden-unclosed">Bài viết ẩn trong template chưa đóng</a>';
+    expect(parseHtmlNewsCandidates("chinhphu-vn", html, NEWS_SOURCE_ADAPTERS[1])
+      .map(item => item.sourceUrl)).toEqual(["https://baochinhphu.vn/pre-template"]);
+  });
+
   it("enforces fetch size and returns parsed candidates through an injected fetch", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () => new Response(
       `<rss><channel><item><title>Tin khoa học công nghệ mới nhất</title><link>https://mst.gov.vn/tin-moi</link></item></channel></rss>`,
