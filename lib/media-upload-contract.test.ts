@@ -154,3 +154,51 @@ describe("CMS-MEDIA-015: stable policy snapshot (review-loop regression)", () =>
       .toEqual({ ok: false, code: "POLICY_NOT_CONFIGURED" });
   });
 });
+
+
+describe("CMS-MEDIA-015: snapshot untrusted upload candidate (independent review)", () => {
+  it("returns INVALID_INPUT when reading a filename getter throws", () => {
+    const input = {
+      get filename(): string {
+        throw new Error("synthetic malicious accessor");
+      },
+      declaredMimeType: "image/png",
+      bytes: png,
+    };
+    expect(validateMediaUploadPreflight(input, fixturePolicy)).toEqual({ ok: false, code: "INVALID_INPUT" });
+  });
+
+  it("reads the declared MIME only once, even for a changing getter", () => {
+    let reads = 0;
+    const input = {
+      filename: "photo.png",
+      get declaredMimeType(): unknown {
+        reads++;
+        return reads === 1 ? "image/png" : undefined;
+      },
+      bytes: png,
+    };
+    expect(validateMediaUploadPreflight(input, fixturePolicy)).toMatchObject({ ok: true });
+    expect(reads).toBe(1);
+  });
+
+  it("reads actual bytes and claimed byte length once per preflight", () => {
+    let bytesReads = 0;
+    let sizeReads = 0;
+    const input = {
+      filename: "photo.png",
+      declaredMimeType: "image/png",
+      get bytes() {
+        bytesReads++;
+        return bytesReads === 1 ? png : new Uint8Array();
+      },
+      get declaredSize() {
+        sizeReads++;
+        return sizeReads === 1 ? png.byteLength : 1024;
+      },
+    };
+    expect(validateMediaUploadPreflight(input, fixturePolicy)).toMatchObject({ ok: true });
+    expect(bytesReads).toBe(1);
+    expect(sizeReads).toBe(1);
+  });
+});
