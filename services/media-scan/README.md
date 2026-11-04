@@ -16,3 +16,14 @@ PYTHONPATH=services/media-scan python -m unittest discover -s services/media-sca
 ```
 
 ClamAV INSTREAM framing: https://docs.clamav.net/manual/Usage/ClamdProtocol.html
+
+
+## B3.11 real malware-engine CI (not a hosted service)
+
+A **separate**, optional-cost GitHub Actions workflow [media-av-real-engine-ci.yml](../../.github/workflows/media-av-real-engine-ci.yml) runs `real_clamd_acceptance.py` against an actual ClamAV daemon and signature database. It uses the harmless EICAR antivirus test string and verifies the response includes both `Eicar` and `FOUND`, then proves the genuine `scan_clamd` function rejects it. It also checks that a clean PNG with metadata is scanned, decoded/re-encoded to WebP, rescanned and signed, and that a bad source SHA cannot produce a derivative.
+
+The ClamAV Docker process is a disposable **CI-only** environment (4–5 GiB RAM recommended) exposed solely on loopback `127.0.0.1`, relayed into a mode-0600 UNIX socket; no user media or secrets are used. A PASS means a real engine and the existing scanner function interact successfully in **CI**. It is NOT evidence of scanning actual hosted R2 objects or of a deployed secret/ClamAV service.
+
+The Cloudflare Containers API is currently **HTTP 401 / unauthorized** on the project connection, so the hosted scanner cannot be provisioned. Staging D1 media migrations 0025/0026 have been applied with a Time Travel bookmark, but no new staging Worker, scanner, job runner or upload gate was enabled. Consult [B3.11 operational gate](../../docs/requirements/media-r2/MEDIA_R2_B3_11_STAGING_RELEASE_GATE_2026-11-04.md).
+
+Do not copy the CI test signer secret into any runtime. A production-grade scanner needs independent secret management, an authenticated private job bridge, R2 delivery and a hosted EICAR scan before the Media upload flag can turn on.

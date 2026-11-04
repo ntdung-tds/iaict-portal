@@ -32,6 +32,8 @@
 
 | CHG-MEDIA-R2-20261104-07 | 2026-11-04 | B3.10 gộp isolated ClamAV/Pillow scan worker, HMAC receipt, migration 0026 evidence private, D1 CAS+R2 hash readback và dọn derivative | IN_REVIEW / SOURCE_ONLY / UNDEPLOYED | PR B3.10 · Issue #39 | RUN-MEDIA-20261104-13 PENDING CI | CHƯA_CHỐT_SRS |
 
+| CHG-MEDIA-R2-20261104-08 | 2026-11-04 | B3.11 applied staging-only D1 migrations 0025–0026 with recovery bookmark; added real ClamAV EICAR CI; Containers API 401 blocks hosted scanner | STAGING_D1_APPLIED / AV_CI_PENDING / HOSTED_BLOCKED | Issue #39 · PR B3.11 | RUN-MEDIA-20261104-16..17 | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -169,6 +171,16 @@
 - **QA:** RUN-MEDIA-20261104-13; unit+Miniflare D1/R2 + Python Pillow + mock local AV + CI 4 jobs và Chromium local/public old Worker (pending at creation).
 - **Ảnh hưởng:** thêm backend-scanner độc lập, D1 table riêng, R2 private evidence interface, không chạm SRS hoặc production, IAM PAUSED, Cloudflare Access giữ nguyên, QA Drive chỉ chứa hình ảnh khi có.
 - **Rollback:** không có hosted migration/Worker để rollback; tắt scanner/job runner và route gate vẫn false; D1 evidence table 0026 không tự xóa khi rollback code. [B3.10 design](MEDIA_R2_B3_10_SCANNER_EVIDENCE_2026-11-04.md); SRS **CHƯA_CHỐT**.
+
+### CHG-MEDIA-R2-20261104-08 — B3.11 real scanner acceptance and hosted D1 prerequisites
+
+- **Owner:** Đồng ý triển khai B3.11 theo 6 nhóm, staging trước và production HOLD; làm gộp theo đợt, không tự bật Media khi scanner chưa đủ.
+- **Before:** Staging D1 chỉ có đến 0024, bảng quarantine/evidence chưa tồn tại; scanner chỉ được kiểm thử với socket giả lập.
+- **After:** Đã thực thi và đọc lại migration 0025 (blob `c8320af6c2cc559a016858195ede064d3caa15b0`) và 0026 (blob `9688defdc38831f5caf7e88a07740bbe907ccf96`) trên **staging D1 only**. Kiểm tra thấy hai bảng, bốn index, journal đủ; 0 media records, FK check rỗng. Bookmark Time Travel **before** `0000088c-00000000-00005119-76aa9aed51901ec93f3e3c545bc7b1fd` (retention limited; **không** phải independent exported SQL backup). D1 API trả `SQLITE_AUTH` với `PRAGMA integrity_check` → NOT_RUN/UNSUPPORTED.
+- **Real AV tests:** thêm workflow riêng Docker ClamAV official + socket relay (không public), test EICAR FOUND và clean image roundtrip, HMAC SHA-bound; **chỉ khi CI thực chạy PASS mới được gọi là real engine CI PASS**. CI không tiếp xúc private R2 hoặc dữ liệu người dùng.
+- **Host blocker:** Cloudflare Containers application list `GET` trả HTTP 401 unauthorized, chưa có Container hosting/service identity/secrets/job runner. Worker upload flag và policy scannerConfigured false; **CMS-MEDIA-001..012 hosted real role E2E NOT_RUN**; production Worker/D1 và IAM không sửa.
+- **Impacts:** Cloudflare **staging D1 schema changed**, docs, dedicated CI AV job; no app API/public serving/schema baseline SRS changes. SRS CHƯA_CHỐT; QA [run ledger](../../qa/IAICT_TEST_RUNS.md) RUN-MEDIA-20261104-16..17; [technical readiness](MEDIA_R2_B3_11_STAGING_RELEASE_GATE_2026-11-04.md).
+- **Recovery:** Time Travel bookmark recorded. **Do not automatically restore**—would overwrite unrelated staging writes. Requires explicit rollback plan, validation, and backup retention. Scanner integration remains hard BLOCKED without Cloudflare Containers rights or alternate secured host.
 
 ## Các thay đổi tiếp theo
 
