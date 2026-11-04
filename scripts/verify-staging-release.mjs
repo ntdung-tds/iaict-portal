@@ -26,6 +26,10 @@ validateApprovedStagingCommit({
   approvedSha, checkedOutSha,
   workflowSha: process.env.GITHUB_SHA,
   ref: process.env.GITHUB_REF,
+  // Exact two supported operator release refs only; never accept a PR ref.
+  allowedRef: process.env.IAICT_STAGING_MEDIA_QUARANTINE_ENABLED === "true"
+    ? "refs/heads/release/staging-media-quarantine-20261104"
+    : "refs/heads/release/staging-v17-hardened-20261029",
 });
 console.log("[staging-preflight] Immutable approved release SHA matches workflow and checkout.");
 const token = process.env.CLOUDFLARE_API_TOKEN;
@@ -49,13 +53,14 @@ const local = readdirSync("cloudflare/migrations")
   .filter((name) => /^\d{4}_.+\.sql$/.test(name)).sort();
 // Forward-only native-auth schema 0022 is now applied to staging. Do not
 // weaken the original release migration identity or permit unreviewed DDL.
-assert(local.length === 25, `Expected 25 reviewed staging migrations, got ${local.length}.`);
+assert(local.length === 26, `Expected 26 reviewed staging migrations, got ${local.length}.`);
 assert(local[0] === "0001_core.sql" &&
        local[20] === "0021_v17_admin_role_normalization.sql" &&
        local[21] === "0022_iaict_native_auth.sql" &&
        local[22] === "0023_iaict_auth_pbkdf2_workers.sql" &&
        local[23] === "0024_iaict_activation_invites.sql" &&
-       local[24] === "0025_media_r2_quarantine.sql",
+       local[24] === "0025_media_r2_quarantine.sql" &&
+       local[25] === "0026_media_r2_scan_evidence.sql",
        "Unexpected migration identity after native-auth extension.");
 const reviewedNativeMigrationSha = "cf40971d0f1029adac0a2ea9a9e7545b998dc6e8";
 const nativeMigrationSha = execFileSync("git",
@@ -78,6 +83,11 @@ const mediaQuarantineMigrationSha = execFileSync("git",
   { encoding: "utf8" }).trim();
 assert(mediaQuarantineMigrationSha === "c8320af6c2cc559a016858195ede064d3caa15b0",
   "Quarantine migration 0025 differs from the reviewed immutable blob; no staging release.");
+const mediaEvidenceMigrationSha = execFileSync("git",
+  ["hash-object", "cloudflare/migrations/0026_media_r2_scan_evidence.sql"],
+  { encoding: "utf8" }).trim();
+assert(mediaEvidenceMigrationSha === "9688defdc38831f5caf7e88a07740bbe907ccf96",
+  "Private scan evidence 0026 differs from the reviewed immutable blob; no staging release.");
 
 async function cf(method, path, body) {
   const response = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
