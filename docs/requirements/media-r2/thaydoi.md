@@ -185,3 +185,5 @@
 ## Các thay đổi tiếp theo
 
 Khi thêm/sửa tính năng, bổ sung `CHG-MEDIA-R2-YYYYMMDD-NN` theo [mẫu và quy định](../README.md); **không sửa SRS**. Nếu hồi cứu thay đổi đã thực hiện trước đây, ghi `BACKFILLED` cùng nguồn commit/PR và kiểm thử; không tự đặt PASS.
+
+> **B3.11 evidence update, 2026-11-04:** [PR #106](https://github.com/ntdung-tds/iaict-portal/pull/106) source MERGED `c6c5d3e4`; [Real ClamAV #41775549025](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549025) **3/3 EICAR/Pillow PASS CI ONLY**; [Portal #41775549028](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549028) **4/4**; [public OLD Worker #41775549127](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549127) 24/24 Chromium and HTTP PASS. Staging D1 0025/0026 actually applied, no hosted Worker deploy; scanner Containers HTTP 401 still BLOCKED and true CMS role Media E2E NOT_RUN. See [RUN-MEDIA-20261104-18](../../qa/IAICT_TEST_RUNS.md). SRS CHƯA_CHỐT.
