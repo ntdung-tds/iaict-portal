@@ -104,7 +104,12 @@ describe("B3.8 real disposable D1 and synthetic private R2 quarantine — NOT de
   });
 
   it("writes and reads back a real disposable Miniflare R2 object (not hosted)", async () => {
-    const bucket = await mf.getR2Bucket("MEDIA_BUCKET");
+    const bucket = await mf.getR2Bucket("MEDIA_BUCKET") as unknown as MediaR2BucketLike & {
+      get(key: string): Promise<{
+        httpMetadata?: {contentType?: string};
+        arrayBuffer(): Promise<ArrayBuffer>;
+      } | null>;
+    };
     const result = await submitPrivateMediaQuarantine(
       upload(tinyPng),actor,db,bucket as unknown as MediaR2BucketLike,
     );
