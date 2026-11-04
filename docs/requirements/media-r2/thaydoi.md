@@ -36,6 +36,8 @@
 
 | CHG-MEDIA-R2-20261104-09 | 2026-11-04 | B3.12 gộp real ClamAV/Pillow Python HMAC sang verifier TS và R2/D1 CAS + purge với fixture tổng hợp CI | SOURCE_IN_REVIEW / HOSTED_BLOCKED | PR B3.12 · Issue #39 | RUN-MEDIA-20261104-20 PENDING CI | CHƯA_CHỐT_SRS |
 
+| CHG-MEDIA-R2-20261104-10 | 2026-11-04 | B3.13 upload ảnh vào quarantine-only staging dù chưa có scanner hosted; UI role-aware, GET capability, release manual 26 D1 migration, prod gate OFF | SOURCE_IN_REVIEW / HOSTED_NOT_ENABLED | PR B3.13 · Issue #39 | RUN-MEDIA-20261104-23 PENDING CI | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -190,6 +192,15 @@
 - **Thay đổi:** Python chỉ khi được cấu hình CI mới ghi fixture ảnh mẫu + WebP + receipt có chữ ký vào tệp tạm mode 0600; workflow ClamAV thật kiểm tra EICAR FOUND trước, chạy test Miniflare local cho dữ liệu thật đã quét: chữ ký Python hợp lệ, phát hiện derivative R2 sai SHA, chống replay, lưu bằng chứng **private only**, janitor xóa cả 2 tệp.
 - **Ranh giới:** chỉ là CI disposable Miniflare D1/R2, không hosted R2, không scanner container Cloudflare (API 401), không dùng dữ liệu thật, không deploy Worker, không bật Media gate. Chưa có hosted IAM/CMS role E2E; production HOLD. [Thiết kế B3.12](MEDIA_R2_B3_12_REAL_AV_PRIVATE_BRIDGE_2026-11-04.md).
 - **Test:** RUN-MEDIA-20261104-20, GH ClamAV dedicated CI pending, Portal CI pending. SRS không chỉnh, chỉ lưu thay đổi CHƯA_CHỐT.
+
+### CHG-MEDIA-R2-20261104-10 — B3.13 upload cách ly riêng tư, không phải xuất bản
+
+- **Owner:** yêu cầu tiếp tục cho đến khi chức năng upload Media mở. Phạm vi triển khai **staging**; production vẫn HOLD.
+- **Quyết định:** tách upload vào vùng cách ly `QUARANTINED` khỏi bước antivirus/chuyển ảnh/duyệt/xuất bản. Cho phép admin/editor tải JPEG/PNG/WebP tối đa 10 MiB vào **private R2** dù scanner hosted chưa hoạt động; response `requiresScan:true,publicUrl:null`, không cung cấp bytes/key hoặc public URL. Không thay đổi chính sách quét trước khi dùng ảnh; scanner `serviceConfigured=false` giữ nguyên.
+- **Thực hiện trong source:** UI `/admin/media/upload`, role-aware navigation, GET readiness endpoint đã xác thực không lộ private keys, POST bảo toàn quota/idempotency/Origin/D1 CAS; config chỉ mở staging khi cờ `IAICT_STAGING_MEDIA_QUARANTINE_ENABLED=true`; bổ sung quy trình manual deploy pin SHA/version, kiểm tra 26 migration + Access + admin + rollback bookmark; production flag false.
+- **Cloudflare account:** Containers API 401 thông báo `Deploying containers requires the Workers Paid plan`; không tự thay đổi billing hoặc bỏ qua scanner. D1 0025/0026, Access và R2 bucket staging đã tồn tại. Chưa deploy Worker staging khi lập bản ghi; không làm hosted E2E hoặc coi scanner đã hoạt động.
+- **Nghiệm thu cần:** source CI, mock Chromium, deploy staging đúng branch+SHA, GET readiness với user thật, POST synthetic file + R2/D1 byte readback, âm tính/quota/ownership, rollback; ảnh test chỉ Drive QA riêng.
+- **Ảnh hưởng:** thay đổi staging UI và release workflow/preflight source, không thay SRS baseline (CHƯA_CHỐT), không IAM, không production. [Runbook B3.13](MEDIA_R2_B3_13_QUARANTINE_ONLY_STAGING_RELEASE_2026-11-04.md).
 
 ## Các thay đổi tiếp theo
 
