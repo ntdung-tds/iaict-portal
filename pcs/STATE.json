@@ -729,7 +729,7 @@
             "public_attempt2": "PASS_24_OF_24_HTTP_AND_24_OF_24_CHROMIUM_OLD_WORKER",
             "postmerge_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441954",
             "postmerge_public": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441923",
-            "postmerge_verdict": "PENDING_AT_CHECKPOINT",
+            "postmerge_verdict": "PASS_PORTAL_4_OF_4_AND_PUBLIC_STAGING_OLD_WORKER_ONLY",
             "hosted_media_e2e": "NOT_RUN",
             "scanner_configured": false,
             "staging_0025_applied": false,
@@ -948,7 +948,7 @@
     "artifacts": [],
     "current": {
       "active_task": "T-MEDIA-R2",
-      "last_completed_step": "B3.9 source PR #102 MERGED at 074b49db; request-local D1/R2, quota failure/purge hardening. Exact PR-head portal CI #41766771294 4/4 PASS, 713/713 Vitest, 41/41 local Chromium. Public old Worker #41766771258 attempt1 FAILED 2/24 HTTP 503, attempt2 PASS 24/24, 24/24 Chromium both. Postmerge CI PENDING. No Worker deployment or hosted Media acceptance; IAM PAUSED, SRS FROZEN, production HOLD.",
+      "last_completed_step": "B3.9 source PR #102 MERGED at 074b49db; request-local D1/R2, quota failure/purge hardening. Exact PR-head portal CI #41766771294 4/4 PASS, 713/713 Vitest, 41/41 local Chromium. Public old Worker #41766771258 attempt1 FAILED 2/24 HTTP 503, attempt2 PASS 24/24, 24/24 Chromium both. Postmerge CI PENDING. No Worker deployment or hosted Media acceptance; IAM PAUSED, SRS FROZEN, production HOLD. Exact postmerge Portal CI #41767441954 PASS and old-Worker public #41767441923 PASS. Original premerge staging HTTP 503 FAIL remains documented.",
       "next_action": "B3.10 real isolated scanner/decoder, authenticated attestation and CAS scan-state validation; deploy staging only after migration backup, real CMS identities, clean browser QA and rollback gates. Media flags remain false; independently monitor existing staging intermittent HTTP 503 Issue #30 and Cloudflare preview #32. B4 training/lead CRM may progress independently.",
       "blockers": [
         "MEDIA: B3.9 source request context isolation and quota hardening MERGED PR102; scanner/decoder/attestation NOT_CONFIGURED, hosted 0025 NOT_APPLIED, real CMS role browser 001..012 NOT_RUN, R2 private source route gate FALSE. Public old staging Worker has intermittent 503 in Issue #30, original failed sweep retained; no production promotion.",
