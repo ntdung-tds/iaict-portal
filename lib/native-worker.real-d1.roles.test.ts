@@ -10,6 +10,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import type { D1DatabaseLike } from "./cloudflare-db";
+import type { MediaR2BucketLike } from "./media-r2-runtime";
 import { NATIVE_COOKIE, authenticateNativePassword, setNativePassword } from "./native-auth";
 
 // Real policy source, but the expected permitted-role sets below are
@@ -31,6 +32,10 @@ vi.mock("vinext/server/fetch-handler", () => ({
       const path = new URL(request.url).pathname;
       // Real production CMS user API, only the vinext dispatch is replaced.
       // No synthetic authorization response: the route runs its own checks/SQL.
+      if (path === "/api/admin/cms/media/quarantine" && request.method === "POST") {
+        const mediaRoute = await import("../app/api/admin/cms/media/quarantine/route");
+        return mediaRoute.POST(request);
+      }
       if (path === "/api/admin/cms/users") {
         const route = await import("../app/api/admin/cms/users/route");
         if (request.method === "GET") return route.GET(request);
@@ -104,20 +109,46 @@ describe("real native ingress and RBAC against disposable original-schema D1; mo
     }, ctx);
   }
 
+  async function fetchPrivateMedia(
+    role: RoleName | null,
+    options: { enabled?: boolean; origin?: string; spoofEmail?: string } = {},
+  ) {
+    const token = role ? sessions.get(role) : undefined;
+    const headers = new Headers({
+      "content-type": "image/png",
+      "x-media-filename": "synthetic-worker-test.png",
+      "idempotency-key": randomUUID(),
+      "origin": options.origin ?? root,
+    });
+    if (token) headers.set("Cookie", NATIVE_COOKIE + "=" + token);
+    if (options.spoofEmail) headers.set("X-IAICT-Verified-Email", options.spoofEmail);
+    const file = new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0]);
+    return worker.fetch(new Request(root + "/api/admin/cms/media/quarantine", {
+      method: "POST", headers, body: file,
+    }), {
+      DB: db, IAICT_NATIVE_AUTH_ENABLED: "true",
+      MEDIA_BUCKET: await mf.getR2Bucket("MEDIA_BUCKET") as unknown as MediaR2BucketLike,
+      MEDIA_R2_QUARANTINE_ENABLED: options.enabled === false ? "false" : "true",
+    }, ctx);
+  }
+
   beforeAll(async () => {
     mf = new Miniflare(convertV4MiniflareOptions({
       modules: true, script: "export default { fetch() { return new Response('isolated') } }",
       compatibilityDate: "2026-10-12", compatibilityFlags: ["nodejs_compat"],
       d1Databases: { DB: randomUUID() },
+      r2Buckets: { MEDIA_BUCKET: "qa-worker-media-r2" },
     }));
     db = await mf.getD1Database("DB") as unknown as D1DatabaseLike;
     for (const name of [
       "0001_core.sql", "0019_v17_full_cms.sql",
       "0022_iaict_native_auth.sql",
       "0023_iaict_auth_pbkdf2_workers.sql", "0024_iaict_activation_invites.sql",
+      "0025_media_r2_quarantine.sql",
     ]) {
       const sql = await readFile(new URL("../cloudflare/migrations/" + name, import.meta.url), "utf8");
-      for (const part of sql.split(/;\s*(?:\r?\n|$)/).map(x => x.trim()).filter(Boolean)) {
+      for (const part of sql.split(/;\s*(?:\r?\n|$)/).map(x => x.trim())
+        .filter(x => x.split(/\r?\n/).some(line => line.trim() && !line.trim().startsWith("--")))) {
         await db.prepare(part).run();
       }
     }
@@ -144,6 +175,33 @@ describe("real native ingress and RBAC against disposable original-schema D1; mo
       .__IAICT_NATIVE_AUTH_ENABLED__;
     if (mf) await mf.dispose();
   });
+
+  it("executes genuine native Worker ingress and D1 CMS-role checks for private Media quarantine using LOCAL R2", async () => {
+    // The browser/vinext dispatch is mocked, but Worker native sessions,
+    // CMS actor SQL, route body handling and Miniflare D1/R2 are REAL LOCAL.
+    const allowed = new Set(["admin","admin2","editor"]);
+    for (const role of roleNames) {
+      const response = await fetchPrivateMedia(role);
+      const expectCode = allowed.has(role) ? 201 : 403;
+      expect(response.status,role).toBe(expectCode);
+      const body = await response.json() as {ok?:boolean;state?:string;publicUrl?:unknown;code?:string};
+      if (allowed.has(role)) {
+        expect(body).toMatchObject({ok:true,state:"QUARANTINED",publicUrl:null});
+      } else {
+        expect(body.code).toBe("ROLE_DENIED");
+      }
+    }
+    expect((await fetchPrivateMedia(null)).status).toBe(401);
+    // A forged Worker-owned header cannot turn a viewer into an editor.
+    expect((await fetchPrivateMedia("viewer",{spoofEmail:email("admin")})).status).toBe(403);
+    expect((await fetchPrivateMedia("admin",{origin:"https://evil.invalid"})).status).toBe(403);
+    const disabled=await fetchPrivateMedia("admin",{enabled:false});
+    expect(disabled.status).toBe(503);
+    expect((await disabled.json() as {code?:string}).code).toBe("MEDIA_QUARANTINE_NOT_ENABLED");
+    const objectCount=await db.prepare("SELECT COUNT(*) AS n FROM media_r2_quarantine_uploads WHERE state='QUARANTINED'")
+      .first<{n:number}>();
+    expect(objectCount?.n).toBe(3);
+  }, 40_000);
 
   for (const role of roleNames) {
     it("enforces all seven native Worker/RBAC gates for " + role, async () => {

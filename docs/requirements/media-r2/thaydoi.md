@@ -26,6 +26,8 @@
 
 | CHG-MEDIA-R2-20261104-04 | 2026-11-04 | Gộp việc để hoàn tất bộ công cụ nén cục bộ: ảnh JPEG/PNG/WebP thực; ZIP đa tệp DEFLATE/STORE; gzip; UI CMS mobile; browser/negative tests | IN_PROGRESS / SOURCE_LOCAL_ONLY / NOT_HOSTED | ADR-MEDIA-20261104-02-COMPRESSION · Issue #39 · PR #98 | RUN-MEDIA-20261104-06 — PENDING | CHƯA_CHỐT_SRS |
 
+| CHG-MEDIA-R2-20261104-05 | 2026-11-04 | B3.8: tích hợp backend upload private quarantine D1/R2 có gate staging tắt mặc định, quota CAS, idempotency, retention và unit/Miniflare D1; scanner/hosted chưa sẵn | SOURCE_IMPLEMENTATION / HOSTED_BLOCKED | MEDIA_R2_B3_8_QUARANTINE_PIPELINE_2026-11-04.md · Issue #39 · PR #100 | RUN-MEDIA-20261104-08 — PENDING | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -133,6 +135,18 @@
 - **Kiểm thử:** `RUN-MEDIA-20261104-06` ghi CI và Playwright cục bộ trình duyệt: hình ảnh định dạng đúng, ZIP chính xác/giải nén bằng fixture, gzip nội dung bảo toàn, 320px responsive, byte/MIME/animation/ZIP traversal/proxy từ chối. Lượt public staging workflow chỉ đo Worker cũ; chưa thể coi là hosted local tool QA. Số lượng canonical test case 127 không tự cập nhật nếu không bổ sung case định danh.
 - **Rollback:** revert PR + route/sidebar; không có biến đổi dữ liệu Cloudflare. Điều kiện dùng trực tiếp trên staging: release/chấp thuận deployment riêng, sau đó browser kiểm thử thật trên SHA Worker mới.
 - **Quyết định:** nội dung yêu cầu Owner **ACCEPTED**, code/test vẫn phải qua CI rồi mới đánh dấu source DONE; SRS `CHƯA_CHỐT`.
+
+
+### CHG-MEDIA-R2-20261104-05 — B3.8 private quarantine D1/R2 source integration
+
+- **Nguồn:** Owner “Hoàn thành phần này” ngày 2026-11-04 sau PR #98/#99. Yêu cầu triển khai phần Media R2 hosted còn thiếu, giữ policy MED-DEC-01..07 và giới hạn staging/production trước đó.
+- **Trước/sau:** Trước chỉ có upload preflight, stream guard và kế hoạch admission riêng biệt, không được gọi bởi API. Sau có migration `0025_media_r2_quarantine.sql`, module `lib/media-r2-quarantine.ts`, `lib/media-r2-runtime.ts`, `lib/media-r2-cleanup.ts`, endpoint `/api/admin/cms/media/quarantine` (POST) và Worker staging binding **disabled by default**. Chỉ hướng ghi vào R2 quarantine private, không có GET file/public URL.
+- **Bảo mật:** role D1 admin/editor + Origin, UUID idempotency, MIME/extension/magic, bounded byte/chunk/deadline, SHA256, quota D1 conditional INSERT + batch audit, CAS khi chuyển RESERVE→QUARANTINED, xóa bù R2 và purge theo TTL.
+- **Dữ liệu & vận hành:** migration mới forward-only, không thay đổi D1 đã chạy; source không tự áp dụng migration, không ghi R2 hay deploy Cloudflare. Gate trong `cloudflare.config.ts` **false** cả staging và production, production không có R2 Media binding.
+- **Giới hạn không được che giấu:** scanner `serviceConfigured=false`, backend decoder/EXIF strip/re-encode chưa triển khai, chưa có scan attestation, không xuất bản/serve ảnh. Hosted `CMS-MEDIA-001..012` vẫn NOT_RUN, IAM owner-PAUSED, SRS FROZEN, production HOLD, real QA credentials blocked.
+- **Test/rollback:** `RUN-MEDIA-20261104-08` chạy Miniflare D1 thực trong runner + R2 memory fake, gồm idempotency, access/CSRF denial, MIME, bounded upload, D1 quota/reservation, compensation, TTL CAS purge; không coi là actual hosted test. Rollback của source là revert PR; nếu từng deploy sau này thì tắt feature gate và purge riêng có audit.
+- **Tài liệu:** [MEDIA_R2_B3_8_QUARANTINE_PIPELINE_2026-11-04](./MEDIA_R2_B3_8_QUARANTINE_PIPELINE_2026-11-04.md). Không tự động đồng bộ baseline SRS.
+
 
 ## Các thay đổi tiếp theo
 
