@@ -105,6 +105,14 @@ class IsolatedScannerTests(unittest.TestCase):
         with self.assertRaises(RejectedScan):
             decode_and_reencode(fixture(), "image/jpeg")
 
+    def test_animated_webp_is_rejected(self):
+        first=Image.new("RGB",(8,5),(5,15,25))
+        second=Image.new("RGB",(8,5),(25,15,5))
+        out=io.BytesIO()
+        first.save(out,"WEBP",save_all=True,append_images=[second],duration=70,loop=0)
+        with self.assertRaises(RejectedScan):
+            decode_and_reencode(out.getvalue(),"image/webp")
+
     def test_broken_image_and_oversize_fail_closed(self):
         for raw in (b"not an image", fixture()[:15], b"x" * (MAX_BYTES + 1)):
             with self.assertRaises(RejectedScan):
