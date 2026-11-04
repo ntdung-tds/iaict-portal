@@ -49,12 +49,13 @@ const local = readdirSync("cloudflare/migrations")
   .filter((name) => /^\d{4}_.+\.sql$/.test(name)).sort();
 // Forward-only native-auth schema 0022 is now applied to staging. Do not
 // weaken the original release migration identity or permit unreviewed DDL.
-assert(local.length === 24, `Expected 24 staging migrations, got ${local.length}.`);
+assert(local.length === 25, `Expected 25 reviewed staging migrations, got ${local.length}.`);
 assert(local[0] === "0001_core.sql" &&
        local[20] === "0021_v17_admin_role_normalization.sql" &&
        local[21] === "0022_iaict_native_auth.sql" &&
        local[22] === "0023_iaict_auth_pbkdf2_workers.sql" &&
-       local.at(-1) === "0024_iaict_activation_invites.sql",
+       local[23] === "0024_iaict_activation_invites.sql" &&
+       local[24] === "0025_media_r2_quarantine.sql",
        "Unexpected migration identity after native-auth extension.");
 const reviewedNativeMigrationSha = "cf40971d0f1029adac0a2ea9a9e7545b998dc6e8";
 const nativeMigrationSha = execFileSync("git",
@@ -72,6 +73,11 @@ const activationMigrationSha = execFileSync("git",
   { encoding: "utf8" }).trim();
 assert(activationMigrationSha === "8c85804c7e99688ada086dec44b120ccc9b71e96",
   "Activation migration 0024 differs from exact reviewed immutable blob.");
+const mediaQuarantineMigrationSha = execFileSync("git",
+  ["hash-object", "cloudflare/migrations/0025_media_r2_quarantine.sql"],
+  { encoding: "utf8" }).trim();
+assert(mediaQuarantineMigrationSha === "c8320af6c2cc559a016858195ede064d3caa15b0",
+  "Quarantine migration 0025 differs from the reviewed immutable blob; no staging release.");
 
 async function cf(method, path, body) {
   const response = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
