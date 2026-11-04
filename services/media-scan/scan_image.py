@@ -79,7 +79,7 @@ def decode_and_reencode(raw: bytes, mime: str) -> tuple[bytes, int, int]:
         with Image.open(io.BytesIO(raw)) as im:
             if im.format != MIME_FORMAT[mime]:
                 raise RejectedScan("MIME_MISMATCH")
-            if getattr(im, "n_frames", 1) != 1 or bool(im.info.get("loop")):
+            if getattr(im, "n_frames", 1) != 1 or bool(getattr(im, "is_animated", False)):
                 raise RejectedScan("ANIMATION_DENIED")
             width, height = im.size
             if not (0 < width <= MAX_DIM and 0 < height <= MAX_DIM and width * height <= MAX_PIXELS):
