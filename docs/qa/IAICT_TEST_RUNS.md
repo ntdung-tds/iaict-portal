@@ -1208,3 +1208,15 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Public staging OLD deployed Worker | [#41780626060](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780626060): **24/24 real public Chromium PASS, 24/24 HTTP PASS, 0 new 503**, not a new-Worker/Media acceptance |
 | Important distinction | Real ClamAV/Pillow and private D1/R2 integration is **PASS only inside disposable GitHub CI and Miniflare**. Hosted ClamAV service, private runner/HMAC/R2 connection and CMS-MEDIA-001..012 authorized real user browser remain **BLOCKED/NOT_RUN**; Cloudflare Containers API still 401 |
 | Host/data boundaries | No production, no staged Worker deployment, no hosted Media R2 mutations, upload/scanner flags OFF, no CI screenshot/artifact or user data; IAM owner-PAUSED, SRS FROZEN, production HOLD |
+
+
+## RUN-MEDIA-20261104-22 — B3.12 exact merged source postmerge CI, no hosted Media deploy
+
+| Field | Verified result |
+|---|---|
+| Exact merged source | PR #108 `b24682db20573fef2b8e5c46b75b31874cbdece2`. |
+| Portal CI | [#41781401748](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401748) **PASS 4/4 jobs**. Normal source CI and local Chromium only, no authenticated hosted upload. |
+| Genuine AV + full D1/R2 bridge | [#41781401775](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401775) **PASS**: 3/3 genuine ClamAV Python tests and 5/5 actual Python receipt→TypeScript verifier→disposable Miniflare private R2 SHA/D1 CAS/replay/purge integration cases on synthetic files. |
+| Public old Worker | [#41781401796](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401796) **PASS 24/24 real public Chromium + 24/24 repeated HTTP**, 0 new 503. Old deployed Worker does not include new Media code. |
+| Historical error | Initial bridge #41780387128 **FAIL test not discovered**, fixed and rerun #41780626240 PASS. Existing OPS staging intermittent 503 Issue #30 remains OPEN, new PASS does not erase past FAILs. |
+| Operational truth | Hosted ClamAV service **BLOCKED** Containers API HTTP 401. No production or staging Worker deployment, no hosted R2 scans/job runner/HMAC keys, true CMS-MEDIA-001..012 real role E2E NOT_RUN, scanner/upload flags remain OFF. IAM PAUSED, SRS FROZEN, production HOLD. |
