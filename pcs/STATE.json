@@ -786,7 +786,7 @@
             "merged_post_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911286",
             "merged_post_real_av": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911322",
             "merged_post_staging": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911292",
-            "postmerge_status": "PENDING_CI_AT_FIRST_CHECKPOINT",
+            "postmerge_status": "PASS_PORTAL_4_OF_4_REAL_CLAMAV_3_OF_3_PUBLIC_OLD_WORKER_24_CHROMIUM_24_HTTP",
             "staging_d1_db": "iaict-portal-staging-db",
             "staging_d1_migration_0025": "APPLIED_AND_READBACK",
             "staging_d1_migration_0026": "APPLIED_AND_READBACK",
@@ -1024,7 +1024,7 @@
     "artifacts": [],
     "current": {
       "active_task": "T-MEDIA-R2",
-      "last_completed_step": "B3.11 PR #106 MERGED SOURCE c6c5d3e4a0ada4d170c652334b75e8fb15c73cec. ACTUAL STAGING D1 media migrations 0025/0026 APPLIED and READBACK 2 tables/4 indexes/0 records/FK check clean with before Time Travel bookmark. Genuine ClamAV Docker CI EICAR 3/3 PASS and source CI 4/4, 724/724 unit, 7/7 Pillow fake socket, 41/41 local Chromium. Public old-Worker 24/24 Chromium and 24/24 HTTP PASS. Cloudflare Containers API 401 blocks hosted scanner; no hosted private job runner/secrets/R2 Media E2E, new Worker NOT DEPLOYED, gates OFF. SRS FROZEN, IAM PAUSED, production HOLD. Postmerge workflows pending at initial checkpoint.",
+      "last_completed_step": "B3.11 PR #106 MERGED SOURCE c6c5d3e4a0ada4d170c652334b75e8fb15c73cec. ACTUAL STAGING D1 media migrations 0025/0026 APPLIED and READBACK 2 tables/4 indexes/0 records/FK check clean with before Time Travel bookmark. Genuine ClamAV Docker CI EICAR 3/3 PASS and source CI 4/4, 724/724 unit, 7/7 Pillow fake socket, 41/41 local Chromium. Public old-Worker 24/24 Chromium and 24/24 HTTP PASS. Cloudflare Containers API 401 blocks hosted scanner; no hosted private job runner/secrets/R2 Media E2E, new Worker NOT DEPLOYED, gates OFF. SRS FROZEN, IAM PAUSED, production HOLD. Exact source postmerge Portal #41775911286 4/4 PASS, real ClamAV #41775911322 3/3 PASS, old public Worker #41775911292 24/24 Chromium+24/24 HTTP PASS. Genuine hosted scanner still BLOCKED.",
       "next_action": "B3.11 remainder: obtain Cloudflare Containers API authorization/entitlement or equivalently isolated private scanner host; deploy real clamd+signature updates and trusted job runner with R2 and HMAC scoped secret; verify hosted EICAR and rollback; then carefully release exact reviewed Worker to staging with gates guarded and real CMS upload role browser acceptance (CMS-MEDIA-001..012). Do not attempt production or resume IAM. Do not conflate true CI ClamAV with hosted scanner.",
       "blockers": [
         "MEDIA B3.11 PARTIAL: staging D1 0025/0026 APPLIED, real ClamAV engine EICAR 3/3 PASS **CI ONLY**. Cloudflare Containers API GET returns HTTP 401; scanner not HOSTED, private job runner/R2 bridge/HMAC keys NOT DEPLOYED. Actual CMS role browser E2E 001..012 NOT_RUN; policy scanConfigured=false and upload enabled=false. D1 Time Travel bookmark recorded; full exported SQL backup NOT_RUN. PR #106 code merged, staging Worker unchanged, production HOLD. OPS #30 intermittent 503 remains OPEN.",
