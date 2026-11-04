@@ -6,6 +6,7 @@ on:
   pull_request:
     paths:
       - "services/media-scan/**"
+      - "lib/media-r2-real-av-bridge.test.ts"
       - "lib/media-r2-scan-evidence.ts"
       - "lib/media-scan-attestation.ts"
       - "lib/media-r2-cleanup.ts"
@@ -79,7 +80,7 @@ jobs:
         run: |
           test -f "$IAICT_B312_REAL_AV_BRIDGE_FIXTURE"
           npm ci --no-audit --no-fund
-          npx vitest run services/media-scan/real-av-private-evidence.integration.test.ts
+          npx vitest run lib/media-r2-real-av-bridge.test.ts
       - name: Remove synthetic local image fixture (no GitHub artifact upload)
         if: always()
         run: rm -f /tmp/iaict-b312-real-av-fixture.json
