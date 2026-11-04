@@ -13,6 +13,7 @@ export interface MediaR2BucketLike {
   /** Private reads only, for scanner attestation byte-hash readback. */
   get?(key: string): Promise<{
     size: number;
+    httpMetadata?: {contentType?: string};
     arrayBuffer(): Promise<ArrayBuffer>;
   } | null>;
 }
