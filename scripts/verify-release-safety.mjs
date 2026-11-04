@@ -126,6 +126,30 @@ if (!read(join(workflowsDir, "ci.yml")).includes("npm run verify:staging-rollbac
   fail("Every PR must run approved-SHA and rollback regression tests independently");
 }
 
+
+// B3.13: quarantined bytes may be accepted by staging admin/editor before
+// an external scanner is available, but can never be read or published.
+// Production gate must stay OFF regardless of environment variables.
+const mediaConfig = read("cloudflare.config.ts");
+if (!mediaConfig.includes('isStaging && process.env.IAICT_STAGING_MEDIA_QUARANTINE_ENABLED === "true"') ||
+    !mediaConfig.includes("MEDIA_R2_QUARANTINE_ENABLED: bindings.text(")) {
+  fail("Private Media staging-only gate missing or production could turn ON");
+}
+const mediaReleaseWorkflow = read(join(workflowsDir, "deploy-staging.yml"));
+for (const required of [
+  "refs/heads/release/staging-media-quarantine-20261104",
+  "IAICT_STAGING_MEDIA_QUARANTINE_ENABLED",
+  "STAGING_MEDIA_BINDINGS_NOT_SAFE",
+]) {
+  if (!mediaReleaseWorkflow.includes(required)) fail("Media staging release guard missing: " + required);
+}
+const mediaPolicySource = read("lib/media-policy.ts");
+if (!mediaPolicySource.includes("serviceConfigured: false") ||
+    !mediaPolicySource.includes("directR2PublicAccess: false") ||
+    !mediaPolicySource.includes("serveOriginal: false")) {
+  fail("Media scanner/public byte gate must remain fail-closed until real hosted AV");
+}
+
 if (issues.length) {
   for (const issue of issues) console.error(`[release-safety] FAIL: ${issue}`);
   process.exitCode = 1;

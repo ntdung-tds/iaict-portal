@@ -23,7 +23,10 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.repository == 'ntdung-tds/iaict-portal' && github.ref == 'refs/heads/release/staging-v17-hardened-20261029'
+    if: >-
+      github.repository == 'ntdung-tds/iaict-portal' &&
+      (github.ref == 'refs/heads/release/staging-v17-hardened-20261029' ||
+       github.ref == 'refs/heads/release/staging-media-quarantine-20261104')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: staging
@@ -33,6 +36,9 @@ jobs:
       IAICT_EXPECTED_STAGING_WORKER_VERSION: ${{ inputs.expected_worker_version }}
       IAICT_APPROVED_STAGING_COMMIT: ${{ inputs.approved_release_sha }}
       IAICT_DEPLOY_TARGET: staging
+      # Explicit quarantine-only release. Production cannot inherit this flag.
+      # Scanner remains offline: NO review, no public GET, no use in articles.
+      IAICT_STAGING_MEDIA_QUARANTINE_ENABLED: ${{ github.ref == 'refs/heads/release/staging-media-quarantine-20261104' && 'true' || 'false' }}
       APP_ENV: staging
       APP_VERSION: ${{ github.sha }}
       STAGING_BASE_URL: https://iaict-portal-staging.iaict-platform.workers.dev
@@ -49,6 +55,13 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" || exit 1
           test "$CLOUDFLARE_ACCOUNT_ID" = "bad2f1dcbd36ca891c3e312d610a22cd"
           test "$IAICT_DEPLOY_TARGET" = "staging"
+          case "$GITHUB_REF" in
+            refs/heads/release/staging-v17-hardened-20261029)
+              test "$IAICT_STAGING_MEDIA_QUARANTINE_ENABLED" = "false" ;;
+            refs/heads/release/staging-media-quarantine-20261104)
+              test "$IAICT_STAGING_MEDIA_QUARANTINE_ENABLED" = "true" ;;
+            *) exit 1 ;;
+          esac
           test -n "$IAICT_EXPECTED_STAGING_WORKER_VERSION"
           test "$GITHUB_SHA" = "$IAICT_APPROVED_STAGING_COMMIT"
       - name: Install dependencies
@@ -65,6 +78,25 @@ jobs:
         run: npm run prepare:cf-output
       - name: Deploy staging Worker without D1 migrations
         run: IAICT_DEPLOY_TARGET=staging npx vinext-cloudflare deploy --env staging --skip-build
+      - name: Verify private-only Media Worker binding on authorized release
+        if: github.ref == 'refs/heads/release/staging-media-quarantine-20261104'
+        run: |
+          node --input-type=module <<'NODE'
+          const account=process.env.CLOUDFLARE_ACCOUNT_ID;
+          const url=`https://api.cloudflare.com/client/v4/accounts/${account}/workers/scripts/iaict-portal-staging/settings`;
+          const response=await fetch(url,{headers:{Authorization:`Bearer ${process.env.CLOUDFLARE_API_TOKEN}`},signal:AbortSignal.timeout(20000)});
+          const payload=await response.json();
+          if(!response.ok || payload.success!==true)throw Error("STAGING_MEDIA_SETTINGS_UNAVAILABLE");
+          const bindings=payload.result?.bindings??[];
+          const gate=bindings.find(b=>b.name==="MEDIA_R2_QUARANTINE_ENABLED");
+          const bucket=bindings.find(b=>b.name==="MEDIA_BUCKET");
+          const d1=bindings.find(b=>b.name==="DB");
+          if(gate?.type!=="plain_text"||gate.text!=="true"||
+             bucket?.type!=="r2_bucket"||bucket.bucket_name!=="iaict-portal-staging-media"||
+             d1?.type!=="d1"||d1.database_id!=="aa4a97e7-60c5-4da4-9f0b-d469ece811b4")
+            throw Error("STAGING_MEDIA_BINDINGS_NOT_SAFE");
+          console.log("STAGING_PRIVATE_QUARANTINE_GATE_ON; R2/D1_PINNED; SCANNER_AND_PUBLICATION_OFF");
+          NODE
       - name: Verify staging health
         run: |
           curl --retry 3 --retry-delay 2 --fail --silent --show-error --max-time 25 "$STAGING_BASE_URL/api/health" > /tmp/staging-health.json

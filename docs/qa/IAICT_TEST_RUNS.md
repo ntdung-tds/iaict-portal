@@ -1220,3 +1220,32 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Public old Worker | [#41781401796](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401796) **PASS 24/24 real public Chromium + 24/24 repeated HTTP**, 0 new 503. Old deployed Worker does not include new Media code. |
 | Historical error | Initial bridge #41780387128 **FAIL test not discovered**, fixed and rerun #41780626240 PASS. Existing OPS staging intermittent 503 Issue #30 remains OPEN, new PASS does not erase past FAILs. |
 | Operational truth | Hosted ClamAV service **BLOCKED** Containers API HTTP 401. No production or staging Worker deployment, no hosted R2 scans/job runner/HMAC keys, true CMS-MEDIA-001..012 real role E2E NOT_RUN, scanner/upload flags remain OFF. IAM PAUSED, SRS FROZEN, production HOLD. |
+
+
+## RUN-MEDIA-20261104-23 — B3.13 private quarantine upload staging release source
+
+| Field | Initial status / evidence |
+|---|---|
+| Owner goal | Mở chức năng **upload Media** trên staging mà không giả danh scanner hosted hoàn thành; private quarantine-only với admin/editor, no-public URL |
+| New UI | `/admin/media/upload`, responsive 320px, role-aware CMS navigation, restricted JPEG/PNG/WebP up to 10 MiB, retry with same idempotency UUID; status QUARANTINED requiresScan and no public usage. **PENDING CI** |
+| Server | Existing POST `/api/admin/cms/media/quarantine` with Origin check, magic byte, quota/idempotency, private R2 and D1/audit; added authenticated no-store GET capability (quarantine gate/scanner state, no keys/data). **PENDING CI** |
+| Staging release | Config requires explicit env `IAICT_STAGING_MEDIA_QUARANTINE_ENABLED=true` on **staging only**; manual `deploy-staging` exact reviewed commit SHA and live Worker version; preflight remote D1 **26 migrations** and rollback. Production hard OFF. **NOT_DEPLOYED at creation** |
+| Live Cloudflare preflight readback | 26 D1 migrations, 3 active staging admin users, Access app full 4 root+wildcard destinations, old staging Worker version `1b8cfe71-88ef-4e21-8937-4f8590daaba4` retrievable, Time Travel bookmark available, R2 bucket present. **PASS READ-ONLY** |
+| Cloudflare Containers | **BLOCKED HTTP 401**, provider response explicitly says Containers requires **Workers Paid plan**; no hosted antivirus service, no billing action. This does **not** preclude private quarantine uploads but forbids publication/use of unscanned media. |
+| True hosted browser upload | **NOT_RUN** until new staging Worker release and real admin/editor browser + R2/D1 readback |
+| Security invariant | NO GET file bytes or publication, scannerConfigured=false, no production, IAM PAUSED, SRS FROZEN. Original OPS 503 #30 and Preview #32 OPEN. |
+| Release guidance | [B3.13 staged runbook](../requirements/media-r2/MEDIA_R2_B3_13_QUARANTINE_ONLY_STAGING_RELEASE_2026-11-04.md), CHG-MEDIA-R2-20261104-10. QA visual evidence restricted Drive only. |
+
+
+## RUN-MEDIA-20261104-24 — B3.13 reviewed source/quarantine-only UI source CI and release guards
+
+| Field | Verified outcome |
+|---|---|
+| Source branch | `feat/media-b313-private-quarantine-upload-staging-20261104` [PR #110](https://github.com/ntdung-tds/iaict-portal/pull/110). Latest source head at capture `ebd9dfdacd40f3b6f01e6e8c7aadc2bb294564ef`. |
+| First RED (preserve) | [Portal CI #41791860597](https://github.com/ntdung-tds/iaict-portal/actions/runs/41791860597) **FAIL**: strict TS error in UI response union `result.code` after non-narrowed `!response.ok`; corrected by explicitly narrowing `result.ok===false`. Do not rewrite this history as PASS. |
+| Second source CI | [#41792054502](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792054502) **4/4 PASS**, 724/724 ordinary Vitest (+5 dedicated real-AV bridge SKIPPED without fixture), 41/41 old local Chromium; new 5 UI tests not yet included at that commit, so separately required. |
+| Final UI-included source CI | [Portal #41792348297](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792348297) **PASS 4/4**, **724/724 unit** + 5 special real-AV fixture cases SKIPPED as designed, **46/46 local Chromium** (41 prior plus **5/5 quarantine upload UI**). Tests exercise role-limited menu, disabled gate no POST, editor receives QUARANTINED/NULL public URL, viewer denied, safe retry idempotency, 320px UI and oversize rejection. CMS/API are MOCKED in Chromium, **not hosted upload**. |
+| Public staging OLD Worker | [#41792348182](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792348182) **PASS 24/24 Chromium and 24/24 HTTP** (zero new 503), but tested previous deployed staging Worker; not new quarantine upload. |
+| Live Cloudflare prerequisites | Staging D1 has **26 migrations** including 0025–0026, **3 active admins**, Access protects four roots/wildcards, R2 private staging bucket, exact existing Worker rollback version and Time Travel bookmark available. Read-only preflight PASS. |
+| Actual release | **NOT_RUN / NOT_DEPLOYED** until manual pinned release branch and `deploy-staging` workflow with expected old Worker version + reviewed release SHA and environment secrets. Initial source branch CI PASS is not hosted upload acceptance. |
+| Scanner/production | Containers API HTTP 401 explicitly requires **Workers Paid plan**; hosted scanner/publish **BLOCKED**, source policy scanConfigured=false; production upload gate always OFF. IAM owner-PAUSED, SRS FROZEN, production HOLD. |
