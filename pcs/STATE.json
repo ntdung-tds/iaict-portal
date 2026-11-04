@@ -753,7 +753,7 @@
             "public_http": "PASS_24_OF_24_OLD_WORKER",
             "postmerge_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522866",
             "postmerge_staging": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522878",
-            "postmerge_verdict": "PENDING_AT_INITIAL_CHECKPOINT",
+            "postmerge_verdict": "PASS_SOURCE_PORTAL_4_4_PUBLIC_OLD_WORKER_24_CHROMIUM_24_HTTP_NO_MEDIA_DEPLOY",
             "forward_only_migration_0026": "SOURCE_COMMITTED_HOSTED_NOT_APPLIED",
             "actual_clamav_provisioned": false,
             "trusted_private_job_runner": false,
@@ -979,7 +979,7 @@
     "artifacts": [],
     "current": {
       "active_task": "T-MEDIA-R2",
-      "last_completed_step": "B3.10 grouped source PR #104 MERGED at 76bed3eecab94cf1c3f5bf4174d132291d5e96b4. Final PR head Portal #41771159409 4/4 PASS, 724/724 Vitest, 7/7 Python Pillow with MOCK AV, 41/41 local Chromium. Public old staging Worker #41771159404 24/24 Chromium + 24/24 HTTP PASS. Postmerge Portal #41771522866 & old-Worker staging #41771522878 PENDING initial checkpoint. Source AV+HMAC+0026+D1/R2 CAS done, real clamd service/job runner/HMAC secret and hosted D1 0025/0026, real CMS Media role browser NOT_RUN. IAM PAUSED, SRS FROZEN, production HOLD.",
+      "last_completed_step": "B3.10 grouped source PR #104 MERGED at 76bed3eecab94cf1c3f5bf4174d132291d5e96b4. Final PR head Portal #41771159409 4/4 PASS, 724/724 Vitest, 7/7 Python Pillow with MOCK AV, 41/41 local Chromium. Public old staging Worker #41771159404 24/24 Chromium + 24/24 HTTP PASS. Postmerge Portal #41771522866 & old-Worker staging #41771522878 PENDING initial checkpoint. Source AV+HMAC+0026+D1/R2 CAS done, real clamd service/job runner/HMAC secret and hosted D1 0025/0026, real CMS Media role browser NOT_RUN. IAM PAUSED, SRS FROZEN, production HOLD. Exact source postmerge Portal #41771522866 4/4 PASS, public staging old Worker #41771522878 24/24 Chromium and 24/24 HTTP PASS.",
       "next_action": "B3.11 deploy isolated real ClamAV service, private job runner and HMAC secret manager, verify genuine malware engine tests and source/derivative bytes. Then controlled staging D1 backup + apply 0025/0026 + exact SHA Worker with rollback, real CMS admin/editor/reviewer/viewer browser acceptance and guarded no-public serving. Do NOT enable flags or production before independent acceptance; consider B4 independent business work.",
       "blockers": [
         "MEDIA B3.10 scanner runner and HMAC receipt + D1 private evidence source merged, NOT DEPLOYED. Real isolated clamd scanning service, trusted private R2 runner, HMAC secret, hosted D1 0025/0026 and actual CMS multi-role browser E2E NOT_RUN; Policy scanner serviceConfigured=false and quarantine flag false. Source-only 724 unit/7 Python MOCK-AV tests do not prove actual malware scanning. OPS staging transient 503 Issue #30 remains OPEN, production HOLD.",
