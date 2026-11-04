@@ -24,6 +24,8 @@
 
 | CHG-MEDIA-R2-20261104-03 | 2026-11-04 | Chủ dự án yêu cầu nén ảnh và nén tệp: bổ sung kế hoạch image derivatives, gzip text có giới hạn/kiểm chứng roundtrip, ZIP nhiều tệp tương lai | ACCEPTED_FEATURE_REQUEST / SOURCE_PARTIAL / HOSTED_NOT_RUN | ADR-MEDIA-20261104-02-COMPRESSION · Issue #39 · PR B3.6 | RUN-MEDIA-20261104-05 — CI PENDING | CHƯA_CHỐT_SRS |
 
+| CHG-MEDIA-R2-20261104-04 | 2026-11-04 | Gộp việc để hoàn tất bộ công cụ nén cục bộ: ảnh JPEG/PNG/WebP thực; ZIP đa tệp DEFLATE/STORE; gzip; UI CMS mobile; browser/negative tests | IN_PROGRESS / SOURCE_LOCAL_ONLY / NOT_HOSTED | ADR-MEDIA-20261104-02-COMPRESSION · Issue #39 · PR #98 | RUN-MEDIA-20261104-06 — PENDING | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -118,6 +120,19 @@
 - **Kiểm thử:** `RUN-MEDIA-20261104-05` tại SHA/CI thực tế; kiểm thử gzip roundtrip, payload sai format, proxy, kích thước, ảnh động, kích thước; không đổi 127 canonical QA case IDs/15 Media, Master Google Doc v2.15 không đổi, `CMS-MEDIA-001..012` hosted NOT_RUN.
 - **Rollback:** revert PR nguồn/ADR, không có dữ liệu thật/Worker cần rollback. Quyết định tích hợp non-image uploads và ZIP phải có CHG/ADR+negative QA riêng.
 - **Trạng thái:** Feature request ACCEPTED, source helper triển khai từng phần; live feature và SRS **CHƯA_CHỐT**.
+
+
+### CHG-MEDIA-R2-20261104-04 — Hoàn thiện bộ nén cục bộ (gộp 4 nhóm chức năng)
+
+- **Yêu cầu người dùng:** 2026-11-04 “Hãy gộp các task trong phần này lại và hoàn thành nó”, tiếp nối “Nhớ thêm nén ảnh, nén tệp nhé”. Không tự xem đây là lệnh “chốt SRS” hay cho phép deploy production.
+- **Trước → sau:** trước `lib/media-image-optimization.ts` chỉ trả về kế hoạch hình học, ZIP chưa có mã, gzip đã có nhưng không có UI. Sau có **bộ mã hóa ảnh thực trong trình duyệt** `lib/media-local-image.ts`, **ZIP32 DEFLATE/STORE thực** `lib/media-local-zip.ts`, giao diện **`/admin/tools/compression`** (3 thẻ ảnh / ZIP / gzip), điều hướng CMS responsive, các test nguồn và trình duyệt cục bộ.
+- **Giới hạn nén ảnh:** JPEG/PNG/WebP tĩnh trong trình duyệt, byte gốc ≤10MiB, pixel ≤25M và cạnh ≤8192 được kiểm tra sau browser decode; display cạnh dài ≤1920px, thumbnail ≤480px, JPEG82%, WebP80%, PNG lossless, không upscale. Ảnh mới có byte thật; tuyệt đối KHÔNG phải backend decoder/scanner đạt chuẩn an toàn.
+- **Giới hạn ZIP:** tối đa 20 file, 10MiB/file, 30MiB tổng, 40MiB archive; tên UTF-8 không chứa đường dẫn, chữ điều khiển, tên trùng hoặc traversal. Văn bản nén DEFLATE nếu tiết kiệm ≥5%; các loại khác STORE, **không giải nén** tệp ZIP tải vào. Đọc file từ input người dùng, không lấy tệp CMS/R2, không tạo công khai.
+- **Gzip:** giữ helper trước đó (`lib/media-text-compression.ts`); UI tải .gz thực từ tệp text/csv/json UTF-8 cục bộ, quay về identity nếu nén không lợi.
+- **Tác động:** bổ sung CMS route/UI (dưới Cloudflare Access cũ), không xây dựng API upload mới, không cấp quyền non-image Media upload, không thêm binding Worker/D1/R2, không thay IAM/production. Các thao tác nén hoàn toàn trên trình duyệt và chỉ xuất file bằng link download tạm; không tự đẩy lên R2. **D1/R2/quarantine/scanner/back-end image E2E vẫn chờ B3.6 tích hợp sau**.
+- **Kiểm thử:** `RUN-MEDIA-20261104-06` ghi CI và Playwright cục bộ trình duyệt: hình ảnh định dạng đúng, ZIP chính xác/giải nén bằng fixture, gzip nội dung bảo toàn, 320px responsive, byte/MIME/animation/ZIP traversal/proxy từ chối. Lượt public staging workflow chỉ đo Worker cũ; chưa thể coi là hosted local tool QA. Số lượng canonical test case 127 không tự cập nhật nếu không bổ sung case định danh.
+- **Rollback:** revert PR + route/sidebar; không có biến đổi dữ liệu Cloudflare. Điều kiện dùng trực tiếp trên staging: release/chấp thuận deployment riêng, sau đó browser kiểm thử thật trên SHA Worker mới.
+- **Quyết định:** nội dung yêu cầu Owner **ACCEPTED**, code/test vẫn phải qua CI rồi mới đánh dấu source DONE; SRS `CHƯA_CHỐT`.
 
 ## Các thay đổi tiếp theo
 
