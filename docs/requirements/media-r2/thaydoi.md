@@ -30,6 +30,8 @@
 
 | CHG-MEDIA-R2-20261104-06 | 2026-11-04 | B3.9: D1/R2 request-scoped isolation; quota tính cả FAILED và PURGE_PENDING; giữ scanner/upload production fail-closed | SOURCE_IN_REVIEW / NO_DEPLOY | Issue #39 · PR B3.9 | RUN-MEDIA-20261104-10 — CI PENDING | CHƯA_CHỐT_SRS |
 
+| CHG-MEDIA-R2-20261104-07 | 2026-11-04 | B3.10 gộp isolated ClamAV/Pillow scan worker, HMAC receipt, migration 0026 evidence private, D1 CAS+R2 hash readback và dọn derivative | IN_REVIEW / SOURCE_ONLY / UNDEPLOYED | PR B3.10 · Issue #39 | RUN-MEDIA-20261104-13 PENDING CI | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -157,6 +159,16 @@
 - **Sau:** dùng `AsyncLocalStorage` gắn D1/R2 riêng theo từng request; Media không fallback về bucket global. SQL atomic quota đếm cả attempted reservation trong khoảng giờ/ngày; trạng thái PURGE_PENDING còn chiếm quota lưu trữ.
 - **Test & hạn chế:** `lib/media-r2-request-scope.test.ts` chứng minh cách ly luồng đồng thời và fail-closed; `lib/media-r2-quarantine.test.ts` bổ sung negative D1 quota. `RUN-MEDIA-20261104-10` ghi CI sau khi chạy thật. Không sửa 0025, không phát hành Worker, không cấu hình scanner, không sửa baseline SRS, không bật upload. Production HOLD, IAM PAUSED.
 - **Tham chiếu:** [Tài liệu B3.9](MEDIA_R2_B3_9_ISOLATION_QUOTAS_2026-11-04.md).
+
+### CHG-MEDIA-R2-20261104-07 — B3.10 gộp source scanner và attestation
+
+- **Nguồn:** Owner yêu cầu gộp các task bước tiếp theo sau khi PCS rev64 và PR #102/#103.
+- **Trước:** B3.9 chỉ có private quarantine, không có image full decoder, ClamAV, scanner proof hoặc D1 evidence; policy gate vẫn false.
+- **Sau:** scanner Python one-shot cô lập (ClamAV INSTREAM, Pillow 13 decode+metadata-free WebP, scan original/derivative), signed HMAC receipt; verifier TS 15-min TTL/hash/revision/policy; thêm D1 migration **0026 forward-only** chứa private SCAN_PASSED_PRIVATE receipts; adapter kiểm tra bytes R2 thật và D1 CAS+audit; janitor xóa derivative theo cùng source.
+- **Giới hạn:** chưa kết nối/triển khai service ClamAV, job runner, HMAC secrets, hosted R2, Worker hoặc D1 0025/0026; không bật Media flag và không có public GET, không chuyển REVIEW_APPROVED/AVAILABLE. Python ClamAV test chỉ dùng mock local socket, không chứng minh scan malware thật. Mọi authenticated hosted CMS-MEDIA-001..012 **NOT_RUN**.
+- **QA:** RUN-MEDIA-20261104-13; unit+Miniflare D1/R2 + Python Pillow + mock local AV + CI 4 jobs và Chromium local/public old Worker (pending at creation).
+- **Ảnh hưởng:** thêm backend-scanner độc lập, D1 table riêng, R2 private evidence interface, không chạm SRS hoặc production, IAM PAUSED, Cloudflare Access giữ nguyên, QA Drive chỉ chứa hình ảnh khi có.
+- **Rollback:** không có hosted migration/Worker để rollback; tắt scanner/job runner và route gate vẫn false; D1 evidence table 0026 không tự xóa khi rollback code. [B3.10 design](MEDIA_R2_B3_10_SCANNER_EVIDENCE_2026-11-04.md); SRS **CHƯA_CHỐT**.
 
 ## Các thay đổi tiếp theo
 
