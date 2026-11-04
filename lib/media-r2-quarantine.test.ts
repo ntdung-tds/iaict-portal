@@ -112,7 +112,7 @@ describe("B3.8 real disposable D1 and synthetic private R2 quarantine — NOT de
     if (!result.ok) return;
     const row = await db.prepare("SELECT storage_key,content_sha256 FROM media_r2_quarantine_uploads WHERE id=?")
       .bind(result.id).first<{storage_key:string;content_sha256:string}>();
-    expect(row?.storage_key).toMatch(/^quarantine\\/v2\\/cms-main\\//);
+    expect(row?.storage_key).toMatch(/^quarantine\/v2\/cms-main\//);
     const object = await bucket.get(row!.storage_key);
     expect(object).not.toBeNull();
     expect(object!.httpMetadata?.contentType).toBe("image/png");
