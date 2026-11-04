@@ -59,6 +59,7 @@ describe("B3.8 real disposable D1 and synthetic private R2 quarantine — NOT de
       script: "export default {fetch(){return new Response('synthetic only')}}",
       compatibilityDate: "2026-10-12", compatibilityFlags: ["nodejs_compat"],
       d1Databases: { DB: randomUUID() },
+      r2Buckets: { MEDIA_BUCKET: "qa-media-private" },
     }));
     db = await mf.getD1Database("DB") as unknown as D1DatabaseLike;
     for (const name of ["0001_core.sql","0025_media_r2_quarantine.sql"]) {
@@ -100,6 +101,39 @@ describe("B3.8 real disposable D1 and synthetic private R2 quarantine — NOT de
     const audits=await db.prepare("SELECT action FROM audit_logs WHERE entity_id=? ORDER BY created_at")
       .bind(result.id).all<{action:string}>();
     expect(audits.results.map(x=>x.action).sort()).toEqual(["media.quarantine.reserve","media.quarantine.write"]);
+  });
+
+  it("writes and reads back a real disposable Miniflare R2 object (not hosted)", async () => {
+    const bucket = await mf.getR2Bucket("MEDIA_BUCKET");
+    const result = await submitPrivateMediaQuarantine(
+      upload(tinyPng),actor,db,bucket as unknown as MediaR2BucketLike,
+    );
+    expect(result).toMatchObject({ ok: true, status: 201, state: "QUARANTINED", publicUrl: null });
+    if (!result.ok) return;
+    const row = await db.prepare("SELECT storage_key,content_sha256 FROM media_r2_quarantine_uploads WHERE id=?")
+      .bind(result.id).first<{storage_key:string;content_sha256:string}>();
+    expect(row?.storage_key).toMatch(/^quarantine\\/v2\\/cms-main\\//);
+    const object = await bucket.get(row!.storage_key);
+    expect(object).not.toBeNull();
+    expect(object!.httpMetadata?.contentType).toBe("image/png");
+    expect(new Uint8Array(await object!.arrayBuffer())).toEqual(tinyPng);
+    expect(row?.content_sha256).toMatch(/^[a-f0-9]{64}$/);
+    await bucket.delete(row!.storage_key);
+  });
+
+  it("enforces two-in-flight actor reservations with a single atomic conditional INSERT", async () => {
+    // Seed only synthetic state into disposable D1. Rows never reach hosted R2.
+    const ids=[randomUUID(),randomUUID()];
+    for(const id of ids) {
+      await db.prepare(`INSERT INTO media_r2_quarantine_uploads
+        (id,scope_id,actor_user_id,idempotency_key,storage_key,mime_type,
+         display_filename,byte_length,state)
+        VALUES (?,?,?,?,?,'image/png','qa.png',16,'RESERVED')`)
+        .bind(id,MEDIA_STAGING_SCOPE_ID,actor.id,randomUUID(),"quarantine/v2/cms-main/"+id).run();
+    }
+    const denied=await submitPrivateMediaQuarantine(upload(tinyPng),actor,db,memoryBucket());
+    expect(denied).toEqual({ok:false,status:429,code:"MEDIA_QUOTA_OR_RESERVATION_CONFLICT"});
+    for(const id of ids) await db.prepare("DELETE FROM media_r2_quarantine_uploads WHERE id=?").bind(id).run();
   });
 
   it("retries same idempotency and payload without repeating R2 write, conflicts changed content", async () => {
