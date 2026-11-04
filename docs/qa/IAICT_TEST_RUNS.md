@@ -1187,7 +1187,7 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Field | Evidence |
 |---|---|
 | Scope | Full synthetic clean PNG → REAL ClamAV original scan → Pillow metadata-free WebP → REAL ClamAV derivative scan → Python HMAC receipt → TS independently verifies HMAC and R2 byte hashes → disposable Miniflare D1 scan CAS/audit → purge both private objects. |
-| Source | `services/media-scan/real_clamd_acceptance.py` fixture emitter, `services/media-scan/real-av-private-evidence.integration.test.ts`, dedicated `.github/workflows/media-av-real-engine-ci.yml`. |
+| Source | `services/media-scan/real_clamd_acceptance.py` fixture emitter, `lib/media-r2-real-av-bridge.test.ts`, dedicated `.github/workflows/media-av-real-engine-ci.yml`. |
 | Acceptance | **PENDING dedicated real AV CI at initial record**. Do not call a complete pass until the exact source SHA job outputs 3/3 Python REAL AV plus integration cases PASS, including negative tampered derivative/replay. |
 | Negative cases | EICAR harmless FOUND, source SHA invalid, derivative R2 byte tamper without D1 proof, reused receipt/revision replay rejected, private retention purge both bytes. |
 | Default Portal Vitest | Specialized integration tests are **SKIPPED** without the mandatory CI fixture; SKIPPED is not PASS. Existing 724 tests baseline must continue passing. |
