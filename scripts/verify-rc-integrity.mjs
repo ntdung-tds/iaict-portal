@@ -58,20 +58,25 @@ const nativeAuthMigrations = [
   ["cloudflare/migrations/0023_iaict_auth_pbkdf2_workers.sql", "18c4908ac3bc3d49b5a703fd2d6b4fa1d921d804"],
   ["cloudflare/migrations/0024_iaict_activation_invites.sql", "8c85804c7e99688ada086dec44b120ccc9b71e96"],
 ];
-assert(migrations.length === 24, `Expected 24 migrations with exact pinned 0022, 0023 and 0024; got ${migrations.length}`);
+assert(migrations.length === 25, `Expected 25 migrations with pinned 0022–0025; got ${migrations.length}`);
 assert(migrations[0] === "0001_core.sql" &&
        migrations[20] === "0021_v17_admin_role_normalization.sql" &&
        migrations[21] === "0022_iaict_native_auth.sql" &&
        migrations[22] === "0023_iaict_auth_pbkdf2_workers.sql" &&
-       migrations[23] === "0024_iaict_activation_invites.sql",
+       migrations[23] === "0024_iaict_activation_invites.sql" &&
+       migrations[24] === "0025_media_r2_quarantine.sql",
        "D1 migration identity changed unexpectedly");
-for (const [path, sha] of nativeAuthMigrations) {
+const reviewedMediaMigration = [
+  "cloudflare/migrations/0025_media_r2_quarantine.sql",
+  "c8320af6c2cc559a016858195ede064d3caa15b0",
+];
+for (const [path, sha] of [...nativeAuthMigrations, reviewedMediaMigration]) {
   assert(git("hash-object", path) === sha, `Migration drift: ${path} differs from reviewed immutable blob`);
 }
 try {
   const changed = git("diff", "--name-only", releaseRef, "HEAD").split("\n").filter(Boolean);
   const canonical = changed.filter(p => /^cloudflare\/migrations\/\d{4}_/.test(p));
-  const authorizedAdditions = nativeAuthMigrations.map(([file]) => file);
+  const authorizedAdditions = [...nativeAuthMigrations.map(([file]) => file), reviewedMediaMigration[0]];
   assert(canonical.length === authorizedAdditions.length &&
     canonical.every((file, i) => file === authorizedAdditions[i]),
     `Unauthorized D1 migration delta from release baseline: ${canonical.join(", ")}`);
@@ -92,7 +97,7 @@ try {
   ]) {
     assert(changed.includes(required), `Expected security/QA delta missing from RC: ${required}`);
   }
-  console.log(`[rc-graph] release branch delta: ${changed.length} files; 21 canonical migrations unchanged; pinned 0022, 0023 and 0024`);
+  console.log(`[rc-graph] release branch delta: ${changed.length} files; 21 canonical migrations unchanged; pinned 0022–0025`);
 } catch (e) {
   errors.push(`Cannot independently compare RC tree to release: ${String(e).slice(0,200)}`);
 }
@@ -113,5 +118,5 @@ if (errors.length) {
   for (const error of errors) console.error(`[rc-graph] FAIL: ${error}`);
   process.exitCode = 1;
 } else {
-  console.log(`[rc-graph] PASS: ${reviewed.length} reviewed PR SHA ancestors, 21 immutable migrations and pinned forward-only 0022 and 0023, required security contracts`);
+  console.log(`[rc-graph] PASS: ${reviewed.length} reviewed PR SHA ancestors, 21 immutable migrations and pinned forward-only 0022–0025, required security contracts`);
 }
