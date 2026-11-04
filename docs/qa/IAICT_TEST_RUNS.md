@@ -1264,3 +1264,18 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Actual Worker state | Staging Worker deployment `754b0509-e754-410c-8dff-46015d162a89`, version `1b8cfe71-88ef-4e21-8937-4f8590daaba4` unchanged at initial checkpoint. Production Worker unchanged. |
 | Full image usage | Cloudflare Containers HTTP401 explicitly requires Workers Paid plan; actual hosted AV/derivative approval/public Media **BLOCKED** and no auto billing action. Media scanner policy false, production gate OFF, IAM PAUSED, SRS FROZEN. |
 | Final verdict | **SOURCE_READY + RELEASE_BRANCH_CREATED / STAGING_PRIVATE_UPLOAD_NOT_DEPLOYED / HOSTED_UPLOAD_E2E_NOT_RUN / PUBLICATION_NO_GO**. Images/screenshots Drive-only, GitHub no media evidence uploaded. |
+
+## RUN-MEDIA-20261104-26 — Hosted PRIVATE quarantine upload staging DEPLOYED; real CMS authenticated E2E NOT_RUN
+
+| Field | Observed result |
+|---|---|
+| Exact release source | `release/staging-media-quarantine-20261104` immutable SHA `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81` from PR #110. |
+| Deployment workflow | [deploy-staging #41815504208 attempt4](https://github.com/ntdung-tds/iaict-portal/actions/runs/41815504208) **PASS** all necessary steps: credentials/pinned release, npm verify, D1/Access/rollback preflight, build, deploy, binding readback, health, 24/24 public Chromium. 724/724 ordinary units PASS + 5 real AV bridge tests intentionally skipped without dedicated fixture. |
+| Historical RED preserved | Same workflow attempt1 **FAIL** GitHub environment secrets blank; attempt3 **FAIL** Access app GET HTTP403 due insufficient token permission; owner corrected and retried successfully. Do not overwrite failed attempts. |
+| Cloudflare LIVE readback | STAGING deployment `c43e105c-f978-426f-b42c-f515238c2252`, version `4ab3ecef-9ebd-485e-afb0-eac55136751d`, 100%, `DB=aa4a97e7-60c5-4da4-9f0b-d469ece811b4`, `MEDIA_BUCKET=iaict-portal-staging-media`, `MEDIA_R2_QUARANTINE_ENABLED=true`, `IAICT_NATIVE_AUTH_ENABLED=true`. |
+| Public staged browser | **24/24 PASS** against newly deployed staging Worker in manual workflow (not authenticated Media). Health PASS. |
+| LIVE D1 independent counts | `SELECT state,COUNT(*) ... GROUP BY state` returned no rows, `media_r2_scan_evidence` count 0 at readback. **Not proof a hosted upload occurred**. |
+| Authenticated Admin/Editor upload | **NOT_RUN**: no controlled QA Access+CMS login/session available. Requires browser POST image/png synthetic fixture, expected `201 QUARANTINED`, `requiresScan:true`, `publicUrl:null`, independent private R2 SHA & D1 CAS/audit readback. |
+| Viewer/CSRF/oversize/mime/idempotency | **NOT_RUN HOSTED**. Local tests may exist; do not substitute for real authorized hosted user. |
+| Antivirus/publish | **BLOCKED**: Cloudflare Containers Workers Paid requirement, no hosted AV service nor signed private R2 derivative. Public media serving OFF; no publication acceptance. |
+| Production and IAM | Production Worker unchanged deployment `a01a3743-ac78-4a19-a990-581fe9235751`. IAM PAUSED, SRS FROZEN, production HOLD. No customer media, credentials or screenshots placed on GitHub. |

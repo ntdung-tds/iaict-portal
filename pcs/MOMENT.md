@@ -1,5 +1,19 @@
 # PCS Moment — IAICT Portal
 
+**PCS Universal 3.2.0 · Solo · Revision 69 · B3.13 PRIVATE STAGING QUARANTINE UPLOAD GATE ON · Hosted upload E2E NOT_RUN · Scanner BLOCKED · IAM PAUSED · production HOLD**
+
+**2026-11-04 19:12 ICT:** [manual deploy-staging #41815504208](https://github.com/ntdung-tds/iaict-portal/actions/runs/41815504208), attempt **4 SUCCESS** after earlier RED failures (missing GitHub secrets; then Cloudflare Access app token HTTP403, both fixed by owner). Release branch `release/staging-media-quarantine-20261104` at reviewed SHA `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81`. **Cloudflare actual staging Worker** deployment `c43e105c-f978-426f-b42c-f515238c2252`, version `4ab3ecef-9ebd-485e-afb0-eac55136751d`, **100%**, verified private R2 binding `iaict-portal-staging-media`, D1 `aa4a97e7-60c5-4da4-9f0b-d469ece811b4`, `MEDIA_R2_QUARANTINE_ENABLED=true`. GitHub workflow preflight Access routes/AUD, D1 26 migrations, 3 active admins, version rollback, build/deploy/readback/health and **24/24 PUBLIC Chromium PASS**, 724/724 standard unit +5 dedicated tests skipped without fixture. **Production Worker unchanged** `a01a3743-ac78-4a19-a990-581fe9235751`.
+
+- **Important incomplete validation:** live D1 `media_r2_quarantine_uploads` **0 rows**, `media_r2_scan_evidence` **0 rows** when checked. No authenticated admin/editor POST with private hosted R2 source SHA readback has been executed. REAL hosted CMS-MEDIA-001..012 and role/CSRF/negative browser **NOT_RUN**, not PASS. The feature is *deployed/gate ON*, but usage is not yet independently E2E accepted.
+- **Policy:** raw files are **private `QUARANTINED` and require scanning**, no public image serving. Cloudflare Containers scanner still **BLOCKED (Workers Paid plan required)**. No privileged test identity invented or bypassed. IAM PAUSED, SRS FROZEN, production HOLD, OPS #30 historical 503 issue OPEN.
+- **Next:** B3.14 controlled browser-admin/editor upload and D1/R2 byte evidence + negative roles; then separate hosted isolated ClamAV runtime and signed derivative/publication testing. Evidence [RUN-MEDIA-20261104-26](docs/qa/IAICT_TEST_RUNS.md); [issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39).
+
+**Continuity:** rev69 canonical only after docs PR merge/readback; rev68 history retained below.
+
+---
+
+## Historical PCS Moment (Revision 68)
+
 **PCS Universal 3.2.0 · Solo · Revision 68 checkpoint · B3.13 staging QUARANTINE UPLOAD RELEASE READY, NOT DEPLOYED · Scanner hosted BLOCKED · IAM PAUSED · production HOLD**
 
 - **2026-11-04 14:40 ICT:** [PR #110](https://github.com/ntdung-tds/iaict-portal/pull/110) merged source `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81`. New responsive CMS `/admin/media/upload` for admin/editor only; private POST `QUARANTINED`/requiresScan/null public URL, authenticated GET readiness, quota/idempotent retry, 10 MiB preflight, 7-day private cleanup. Production quarantine gate hard OFF; scanner/public serving still OFF. No publication of raw bytes.
