@@ -207,3 +207,10 @@
 Khi thêm/sửa tính năng, bổ sung `CHG-MEDIA-R2-YYYYMMDD-NN` theo [mẫu và quy định](../README.md); **không sửa SRS**. Nếu hồi cứu thay đổi đã thực hiện trước đây, ghi `BACKFILLED` cùng nguồn commit/PR và kiểm thử; không tự đặt PASS.
 
 > **B3.11 evidence update, 2026-11-04:** [PR #106](https://github.com/ntdung-tds/iaict-portal/pull/106) source MERGED `c6c5d3e4`; [Real ClamAV #41775549025](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549025) **3/3 EICAR/Pillow PASS CI ONLY**; [Portal #41775549028](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549028) **4/4**; [public OLD Worker #41775549127](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549127) 24/24 Chromium and HTTP PASS. Staging D1 0025/0026 actually applied, no hosted Worker deploy; scanner Containers HTTP 401 still BLOCKED and true CMS role Media E2E NOT_RUN. See [RUN-MEDIA-20261104-18](../../qa/IAICT_TEST_RUNS.md). SRS CHƯA_CHỐT.
+
+### CHG-MEDIA-R2-20261104-11 — B3.13 staged rollout executed, private quarantine only
+
+- [GitHub Actions #41815504208, attempt 4](https://github.com/ntdung-tds/iaict-portal/actions/runs/41815504208) **successful actual staging deploy** of source `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81` after owner fixed missing CI secrets then Access apps API token HTTP403. Failed attempts retained in same run history.
+- Cloudflare live independent readback: staging Worker version `4ab3ecef-9ebd-485e-afb0-eac55136751d` 100%, private R2 bucket, existing D1, `MEDIA_R2_QUARANTINE_ENABLED=true`; production unchanged. NO production promotion or SRS baseline synchronization.
+- **Separation of outcomes:** staging feature flag and interface DEPLOYED; authorized real CMS image upload POST/hosted R2 SHA and role-negative E2E still **NOT_RUN**. D1 source row count and scan evidence count zero at check. Hosted scanner requires Workers Paid or alternative isolated runtime; never mark raw media public.
+- **QA**: RUN-MEDIA-20261104-26. **SRS decision** CHƯA_CHỐT. **Follow-up** B3.14 genuine controlled Admin/Editor browser and private R2/D1 byte proof; Issue #39 remains OPEN.
