@@ -1304,3 +1304,14 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Live Cloudflare after tests | **Staging Worker unchanged** deployment `c43e105c-f978-426f-b42c-f515238c2252`, version `4ab3ecef-9ebd-485e-afb0-eac55136751d`, gate still true. Live D1 `media_r2_quarantine_uploads` still **zero rows** at independent readback, so no anonymous test created a private upload. |
 | Still NOT_RUN | Authorized real Admin/Editor session GET capability, clean synthetic real POST 201, hosted R2 byte and SHA readback, authenticated viewer/CSRF/oversize/invalid MIME/idempotency; all remain **NOT_RUN**, not implicit PASS. |
 | Independent scanner/publication | Hosted isolated ClamAV **BLOCKED (Workers Paid Containers)**; all raw media private, publishing OFF, production Worker unchanged, IAM PAUSED and SRS FROZEN. |
+
+## RUN-MEDIA-20261104-29 — B3.14 source PR merged; PCS rev70 checkpoint (postmerge CI not yet included)
+
+| Field | Evidence |
+|---|---|
+| Source | [PR #113](https://github.com/ntdung-tds/iaict-portal/pull/113) **MERGED** dev `34ee2bc5c9fac6704e0747d432d540a0f6247e31` from exact reviewed head `0656bff79a50f62aba36cdb3355049ed0d554d7e`. |
+| Last reviewed source CI | [Portal #41848546547](https://github.com/ntdung-tds/iaict-portal/actions/runs/41848546547) **4/4 PASS**, [hosted public/edge #41848546687](https://github.com/ntdung-tds/iaict-portal/actions/runs/41848546687) **28/28 Chromium and 24/24 HTTP PASS**, 0 HTTP503, four B3.14 Access denied cases explicitly logged. |
+| Original RED→FIX | Initial TypeScript malformed regex failure #41847513261 + Playwright parse fail #41847513210; fixed source hash `24fea7f`, final reviewed head passed. |
+| Live Cloudflare independent checks | Staging Worker `4ab3ecef-9ebd-485e-afb0-eac55136751d`, deployment `c43e105c-f978-426f-b42c-f515238c2252`; production `e7c703f7-fc4c-4313-b14c-0a2c94e0613d`, deployment `a01a3743-ac78-4a19-a990-581fe9235751`, both unchanged; staging D1 Media upload rows zero after four anonymous negatives. |
+| Identity and E2E | **NO AUTHENTICATED UPLOAD TEST**: 201 PNG POST, D1 metadata+audit, R2 byte SHA, Editor/Viewer role + authenticated CSRF + quota/idempotency negatives remain NOT_RUN; CMS-MEDIA-001..012 not fully closed. |
+| Next / decisions | B3.15 genuine controlled QA login before privileged staged upload; isolated ClamAV hosted runner blocked Workers Paid plan, publication disabled, IAM PAUSED, SRS FROZEN, production HOLD. No QA images or login secrets in GitHub. |
