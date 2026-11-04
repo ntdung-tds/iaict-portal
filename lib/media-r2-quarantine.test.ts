@@ -62,7 +62,7 @@ describe("B3.8 real disposable D1 and synthetic private R2 quarantine — NOT de
       r2Buckets: { MEDIA_BUCKET: "qa-media-private" },
     }));
     db = await mf.getD1Database("DB") as unknown as D1DatabaseLike;
-    for (const name of ["0001_core.sql","0025_media_r2_quarantine.sql"]) {
+    for (const name of ["0001_core.sql","0025_media_r2_quarantine.sql","0026_media_r2_scan_evidence.sql"]) {
       const source = await readFile(new URL("../cloudflare/migrations/" + name,import.meta.url),"utf8");
       for (const statement of source.split(/;\s*(?:\r?\n|$)/).map(s=>s.trim())
         .filter(s => s.split(/\r?\n/).some(line => line.trim() && !line.trim().startsWith("--")))) {

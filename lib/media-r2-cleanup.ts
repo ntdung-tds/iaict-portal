@@ -61,7 +61,19 @@ export async function cleanupExpiredPrivateMedia(
     if (!gotClaim) { failed++; continue; }
     claimed++;
     try {
+      // A source cannot be tombstoned while a separately staged private
+      // derivative remains; if 0026 is absent or query fails, retry later.
+      const evidence=await db.prepare(`SELECT derivative_key
+        FROM media_r2_scan_evidence WHERE source_upload_id=? LIMIT 1`)
+        .bind(row.id).first<{derivative_key:string}>();
+      if (evidence && evidence.derivative_key !== undefined) {
+        const expected=new RegExp("^derivative/staged/v1/cms-main/" +
+          row.id + "/[0-9a-f]{64}\\.webp$");
+        if (!expected.test(evidence.derivative_key))
+          throw Error("INVALID_PRIVATE_DERIVATIVE_KEY");
+      }
       await bucket.delete(row.storage_key);
+      if(evidence)await bucket.delete(evidence.derivative_key);
       const completed=await db.batch([
         db.prepare(`UPDATE media_r2_quarantine_uploads
           SET state='PURGED', revision=revision+1, updated_at=datetime('now')

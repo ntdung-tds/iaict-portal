@@ -1078,3 +1078,19 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Historic FAILURE | Premerge [#41766771258 attempt 1](https://github.com/ntdung-tds/iaict-portal/actions/runs/41766771258): 2 intermittent HTTP 503 **FAIL**; attempt 2 PASS. Both remain in [OPS #30](https://github.com/ntdung-tds/iaict-portal/issues/30), no claim root cause fixed |
 | Scope | No upload Worker deployment, no hosted 0025/R2 write, scanner/decoder absent, no authenticated CMS Media browser; CMS-MEDIA-001..012 NOT_RUN |
 | Decision | **SOURCE MERGED ACCEPTED**; **hosted Media + production HOLD**, IAM PAUSED, SRS FROZEN. No screenshot/test credentials attached. |
+
+
+## RUN-MEDIA-20261104-13 — B3.10 grouped scanner/attestation source acceptance
+
+| Field | Status and evidence |
+|---|---|
+| Scope | Isolated one-shot ClamAV/Pillow decoder and signed receipt, strict 0026 private D1 schema, R2 hash readback/CAS and derivative cleanup, **no hosted Media deployment** |
+| Exact HEAD / PR | **PENDING** at initial record; see forthcoming B3.10 PR |
+| Source unit | B3.10 HMAC forged/expired/mismatch negative cases; Miniflare D1+R2 actual synthetic byte readback, replay/cleanup; **PENDING CI** |
+| Real image processing | Python Pillow 13.0.0 on real fixture PNG/JPEG/WebP, full decode + metadata removal; ClamAV `zINSTREAM` protocol tested with **synthetic local AV socket only**, no actual malware verdict. **PENDING CI** |
+| Local Chromium | **PENDING CI**, CMS session mock; no hosted CMS login |
+| Public staging | **PENDING CI** on **old deployed Worker**, not B3.10 |
+| Actual external scanner | **NOT_CONFIGURED / NOT_RUN** (no deployed ClamAV, trusted job runner or HMAC secret). `MEDIA_POLICY.scan.serviceConfigured=false` |
+| Hosted D1/R2/browser | Migrations 0025/0026 **NOT_APPLIED**, no hosted R2 writes/readbacks, CMS-MEDIA-001..012 genuine authenticated **NOT_RUN**. Production HOLD, IAM PAUSED, SRS FROZEN |
+| Decision | SOURCE_IN_REVIEW; old staging 503 [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) retains past FAIL history; current run must not mask defects |
+| Drive | No screenshots produced, GitHub no images/secrets, future visuals private QA Drive only |
