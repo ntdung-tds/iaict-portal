@@ -12,6 +12,7 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
   });
   test("renders responsive three tools and creates real JPEG/PNG image bytes", async ({ page }) => {
     const response = await page.goto("/admin/tools/compression", { waitUntil: "domcontentloaded", timeout: 15_000 });
+    console.log("[media-tool-e2e] navigated", response?.status(), page.url());
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { name: "Trung tâm nén ảnh & tệp" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Nén và thu nhỏ ảnh" })).toBeVisible();
@@ -33,9 +34,10 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
     });
     await page.getByRole("button", { name: "Nén ảnh" }).click();
     await expect(page.getByRole("status")).toContainText("Đã tạo hai ảnh mới");
+    console.log("[media-tool-e2e] image result ready");
 
     const [download] = await Promise.all([
-      page.waitForEvent("download"),
+      page.waitForEvent("download", { timeout: 7_000 }),
       page.getByRole("button", { name: "Tải ảnh hiển thị" }).click(),
     ]);
     expect(download.suggestedFilename()).toBe("iaict-display.png");
@@ -50,6 +52,7 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
 
   test("creates a ZIP download with compressed local text and no server upload", async ({ page }) => {
     const response = await page.goto("/admin/tools/compression", { waitUntil: "domcontentloaded", timeout: 15_000 });
+    console.log("[media-tool-e2e] navigated", response?.status(), page.url());
     expect(response?.status()).toBe(200);
     await page.locator("#compress-zip-files").setInputFiles([
       { name: "ghi chú.txt", mimeType: "text/plain", buffer: Buffer.from("IAICT nguồn tin thử nghiệm\n".repeat(1500)) },
@@ -57,8 +60,9 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
     ]);
     await page.getByRole("button", { name: "Tạo tệp ZIP" }).click();
     await expect(page.getByRole("status")).toContainText("ZIP hợp lệ — 2 tệp");
+    console.log("[media-tool-e2e] zip result ready");
     const [d] = await Promise.all([
-      page.waitForEvent("download"),
+      page.waitForEvent("download", { timeout: 7_000 }),
       page.getByRole("button", { name: "Tải ZIP" }).click(),
     ]);
     expect(d.suggestedFilename()).toBe("iaict-files.zip");
@@ -68,6 +72,7 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
 
   test("downloads genuine gzip with round-trip content", async ({ page }) => {
     const response = await page.goto("/admin/tools/compression", { waitUntil: "domcontentloaded", timeout: 15_000 });
+    console.log("[media-tool-e2e] navigated", response?.status(), page.url());
     expect(response?.status()).toBe(200);
     const input = "Một đoạn văn bản có thể nén của IAICT\n".repeat(200);
     await page.locator("#compress-text-file").setInputFiles({
@@ -76,8 +81,9 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
     });
     await page.getByRole("button", { name: "Nén Gzip" }).click();
     await expect(page.getByRole("status")).toContainText("Đã nén tệp");
+    console.log("[media-tool-e2e] gzip result ready");
     const [d] = await Promise.all([
-      page.waitForEvent("download"),
+      page.waitForEvent("download", { timeout: 7_000 }),
       page.getByRole("button", { name: "Tải Gzip" }).click(),
     ]);
     expect(d.suggestedFilename()).toBe("report.txt.gz");
