@@ -5,6 +5,7 @@ import {Miniflare,convertV4MiniflareOptions} from "miniflare";
 import type {D1DatabaseLike} from "./cloudflare-db";
 import type {MediaR2BucketLike} from "./media-r2-runtime";
 import {storePrivateMediaScanEvidence} from "./media-r2-scan-evidence";
+import {cleanupExpiredPrivateMedia} from "./media-r2-cleanup";
 import {scanClaimBytes,type ScanClaim} from "./media-scan-attestation";
 import {MEDIA_POLICY} from "./media-policy";
 
@@ -91,4 +92,16 @@ describe("B3.10 D1 CAS with real disposable Miniflare D1/R2 (NO hosted scanner)"
   expect(count?.n).toBe(1);
   expect((await db.prepare("PRAGMA foreign_key_check").all()).results).toHaveLength(0);
  });
+ it("purges both source and staged derivative after source retention expires",async()=>{
+  await db.prepare("UPDATE media_r2_quarantine_uploads SET created_at=datetime('now','-8 days') WHERE id=?")
+    .bind(id).run();
+  const cleaned=await cleanupExpiredPrivateMedia(db,bucket);
+  expect(cleaned.deleted).toBeGreaterThanOrEqual(1);
+  const row=await db.prepare("SELECT state FROM media_r2_quarantine_uploads WHERE id=?")
+    .bind(id).first<{state:string}>();
+  expect(row?.state).toBe("PURGED");
+  expect(await bucket.get?.("quarantine/v2/cms-main/"+id)).toBeNull();
+  expect(await bucket.get?.(claim.derivativeKey)).toBeNull();
+ });
+
 });
