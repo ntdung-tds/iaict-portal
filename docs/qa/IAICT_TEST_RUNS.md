@@ -1020,3 +1020,19 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Final PR docs-head/public | Exact final PR head CI and public staging acceptance (old Worker) **PENDING**. No hosted 0025 migration, no scanner attestation, no trusted decoder, no actual logged-in staging roles. All earlier RED attempts remain recorded and are NOT retroactively PASS. |
 | Security / release gates | Scanning service **NOT CONFIGURED** (`MEDIA_POLICY.scan.serviceConfigured=false`), service attestation and trusted image decoding are absent; D1 migration **NOT APPLIED on hosted staging**, no R2 writes/deploy; genuine Access/CMS account E2E blocked. `CMS-MEDIA-001..012` hosted **NOT_RUN**, 127 canonical QA case IDs unchanged, Google QA Master unchanged, production HOLD and IAM owner-PAUSED, SRS FROZEN |
 | Evidence | No screenshots for local source tests. Hosted browser and R2/D1 audit proof later to restricted QA Drive only; [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39) stays OPEN |
+
+
+## RUN-MEDIA-20261104-09 — B3.8 exact final-head and postmerge source acceptance
+
+| Field | Actual observed result |
+|---|---|
+| Timezone / scope | 2026-11-04, ICT; documentation after source-only [PR #100](https://github.com/ntdung-tds/iaict-portal/pull/100) merge. NO hosted release |
+| Final PR HEAD | `b94b04e5c133abba655f8c15151b7fc22b76af91`; [Portal CI #41752365334](https://github.com/ntdung-tds/iaict-portal/actions/runs/41752365334) **PASS 4/4 jobs**; [staging-acceptance #41752365211](https://github.com/ntdung-tds/iaict-portal/actions/runs/41752365211) **PASS old deployed Worker only** |
+| Exact merged development SHA | `ef3d095661342546b2ed8d144315e8ed807f6cee`; [Portal CI #41762720634](https://github.com/ntdung-tds/iaict-portal/actions/runs/41762720634) **PASS 4/4 jobs**; [staging-acceptance #41762720839](https://github.com/ntdung-tds/iaict-portal/actions/runs/41762720839) **PASS old deployed Worker only** |
+| Local D1/R2/roles | `RUN-MEDIA-20261104-08` and CI contain real disposable Miniflare D1/R2, synthetic memory R2 fault injection, native Worker/D1 role matrix with mocked vinext dispatch. This is NOT Cloudflare-hosted upload and NOT genuine Access browser session |
+| Security observation | New source gate `MEDIA_R2_QUARANTINE_ENABLED=false`; scanner `serviceConfigured=false`, no image trust scan/decoder/metadata strip, public byte GET or promotion; 0025 migration NOT applied to staging D1; 0 new confirmed hosted R2 writes |
+| Cloudflare Worker readback | Staging deployment `754b0509-e754-410c-8dff-46015d162a89`; production `a01a3743-ac78-4a19-a990-581fe9235751`; both unchanged at inspection. No deploy from merge |
+| Separate Preview discrepancy | Cloudflare Preview build `9d5802a1-88f1-4f21-8198-09230bf4cbdd` FAIL at `npx wrangler preview` vs `.cloudflare/output`; Cloudflare recommends `cf previews deploy`. Existing [Issue #32](https://github.com/ntdung-tds/iaict-portal/issues/32), not silently green and not changed while production HOLD |
+| Hosted case verdict | `CMS-MEDIA-001..012` **NOT_RUN/BLOCKED**; scanner/decoder/hosted migration/R2/real-role browser **NOT_RUN**. 127 canonical QA test definitions, Google Master v2.15 unchanged |
+| Evidence | GitHub CI URLs for safe text logs; no screenshot or credentials on GitHub, no new Drive visual proof. QA Drive restricted folder remains the sole allowed future visual destination |
+| Release disposition | **PASS only for source/isolated local + old-Worker public smoke**; staged Media API + production **NO-GO**; IAM PAUSED, SRS FROZEN, Owner production approval NOT GIVEN; Issue #39 OPEN |
