@@ -74,3 +74,17 @@ test("does not accept non-UUID Worker versions", () => {
   assert.throws(() => validateRollbackReadiness({ ...release, expectedVersion: "staging-latest" }),
     /ROLLBACK_VERSION_REQUIRED/);
 });
+
+test("permits the exact one-time PRIVATE staging Media release only with explicit reviewed SHA", () => {
+  const mediaRef = "refs/heads/release/staging-media-quarantine-20261104";
+  assert.equal(validateApprovedStagingCommit({...commit, ref: mediaRef, allowedRef: mediaRef}),true);
+  for(const options of [
+    {...commit,ref:mediaRef},
+    {...commit,ref:"refs/heads/main",allowedRef:mediaRef},
+    {...commit,ref:mediaRef,allowedRef:"refs/heads/feature/media"},
+    {...commit,ref:mediaRef,approvedSha:"b".repeat(40),allowedRef:mediaRef},
+    {...commit,ref:mediaRef,workflowSha:"b".repeat(40),allowedRef:mediaRef},
+  ]) {
+    assert.throws(()=>validateApprovedStagingCommit(options),/RELEASE_BRANCH_MISMATCH|RELEASE_COMMIT_NOT_APPROVED/);
+  }
+});
