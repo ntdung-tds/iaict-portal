@@ -5,7 +5,9 @@ so default unit CI can never silently replace actual ClamAV with a fake socket.
 Requires IAICT_REAL_CLAMD_SOCKET to be set by the dedicated CI job.
 No production/R2/Cloudflare credentials, public endpoint or real user data.
 """
+import base64
 import hashlib
+import json
 import hmac
 import io
 import os
@@ -88,6 +90,23 @@ class RealClamdAcceptance(unittest.TestCase):
             # Production token is not created in this fixture. Actual receipt signer key
             # is tested separately in Worker TS and deployed service provisioning remains BLOCKED.
             self.assertEqual(len(bytes.fromhex(receipt["signature"])), 32)
+            # B3.12: optional CI-only handoff to TypeScript/Miniflare D1/R2.
+            # The source and derivative are synthetic fixture bytes, never user uploads.
+            # Write exclusively to a local ephemeral file; no workflow artifact upload.
+            fixture = os.environ.get("IAICT_B312_REAL_AV_BRIDGE_FIXTURE")
+            if fixture:
+                flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+                if hasattr(os, "O_NOFOLLOW"):
+                    flags |= os.O_NOFOLLOW
+                fd = os.open(fixture, flags, 0o600)
+                with os.fdopen(fd, "w", encoding="utf8") as writer:
+                    json.dump({
+                        "version": 1,
+                        "source_b64": base64.b64encode(raw).decode("ascii"),
+                        "derivative_b64": base64.b64encode(clean).decode("ascii"),
+                        "receipt": receipt,
+                    }, writer, separators=(",", ":"), ensure_ascii=True)
+
 
     def test_03_bad_source_hash_denied_before_scan_or_derivative(self):
         raw = image_fixture()

@@ -1180,3 +1180,31 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Actual staging D1 | `0025`/`0026` **APPLIED and read back**; see [RUN-MEDIA-20261104-16](#run-media-20261104-16--actual-cloudflare-staging-d1-00250026-rollout-no-worker-deploy), with retained Time Travel bookmark and integrity pragma UNSUPPORTED. |
 | External blockers | Cloudflare Containers API **HTTP 401**, hosted scanner not deployed; trusted runner, HMAC secret, real R2 object scan and CMS-MEDIA-001..012 real authorized browser NOT_RUN. SRS FROZEN, IAM PAUSED, production HOLD. |
 | Prior failures | Historical CI RED attempts from B3.10 and intermittent OPS 503 [#30](https://github.com/ntdung-tds/iaict-portal/issues/30) remain documented and OPEN; new PASS does not delete them. |
+
+
+## RUN-MEDIA-20261104-20 — B3.12 real ClamAV to private R2/D1 integration, pending at creation
+
+| Field | Evidence |
+|---|---|
+| Scope | Full synthetic clean PNG → REAL ClamAV original scan → Pillow metadata-free WebP → REAL ClamAV derivative scan → Python HMAC receipt → TS independently verifies HMAC and R2 byte hashes → disposable Miniflare D1 scan CAS/audit → purge both private objects. |
+| Source | `services/media-scan/real_clamd_acceptance.py` fixture emitter, `lib/media-r2-real-av-bridge.test.ts`, dedicated `.github/workflows/media-av-real-engine-ci.yml`. |
+| Acceptance | **PENDING dedicated real AV CI at initial record**. Do not call a complete pass until the exact source SHA job outputs 3/3 Python REAL AV plus integration cases PASS, including negative tampered derivative/replay. |
+| Negative cases | EICAR harmless FOUND, source SHA invalid, derivative R2 byte tamper without D1 proof, reused receipt/revision replay rejected, private retention purge both bytes. |
+| Default Portal Vitest | Specialized integration tests are **SKIPPED** without the mandatory CI fixture; SKIPPED is not PASS. Existing 724 tests baseline must continue passing. |
+| Hosted scope | **NOT_RUN**: actual ClamAV service on Cloudflare, trusted private runner, HMAC secrets, hosted R2 source/derivative writes, Worker staging media upload, CMS-MEDIA-001..012 authenticated role browser. Containers HTTP 401. |
+| Safety | Source-only PR/CI with **synthetic fixtures**, local /tmp exclusive 0600, never CI-upload artifacts or real user bytes. No staging/production Worker release, IAM PAUSED, SRS FROZEN, production HOLD. |
+| Defect history | Preserve any RED test attempts and fixes in append-only run ledger. |
+
+
+## RUN-MEDIA-20261104-21 — B3.12 REAL engine→Python HMAC→private D1/R2 CI, PASS after test discovery fix
+
+| Field | Verified outcome |
+|---|---|
+| Exact source PR | [PR #108](https://github.com/ntdung-tds/iaict-portal/pull/108) corrected head at log creation (see final PR SHA); no Worker deploy |
+| REAL antivirus | [media-av-real-engine-ci #41780626240](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780626240) **PASS: 3/3 genuine ClamAV daemon acceptance Python tests + 5/5 TypeScript full-bridge Miniflare D1/R2 tests** against the same synthetic PNG/WebP bytes, independently signed Python HMAC |
+| Integrated negative tests | Deliberately tampered derivative R2 bytes → **no D1 proof**; repair → private `SCAN_PASSED_PRIVATE` and audit; replay → rejected without revision mutation; retention → original and derivative both deleted; EICAR harmless sample → FOUND by real ClamAV |
+| Initial RED, retained | [CI #41780387128](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780387128) **FAIL**: new Vitest integration file initially under `services/`, excluded from canonical Vitest `lib/**/*.test.ts` discovery. Actual real ClamAV 3/3 Python PASS, but integration **NOT_RUN**; fixed by moving file to `lib/media-r2-real-av-bridge.test.ts` and aligning workflow. Do not erase RED |
+| Portal source CI | [#41780626319](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780626319) **4/4 jobs PASS**, **724/724 unit tests PASS** (71 files), plus **5 intentionally SKIPPED** (1 file) that require an actual real-AV fixture; **7/7 Python Pillow mock-AV tests PASS**, **41/41 local Chromium** |
+| Public staging OLD deployed Worker | [#41780626060](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780626060): **24/24 real public Chromium PASS, 24/24 HTTP PASS, 0 new 503**, not a new-Worker/Media acceptance |
+| Important distinction | Real ClamAV/Pillow and private D1/R2 integration is **PASS only inside disposable GitHub CI and Miniflare**. Hosted ClamAV service, private runner/HMAC/R2 connection and CMS-MEDIA-001..012 authorized real user browser remain **BLOCKED/NOT_RUN**; Cloudflare Containers API still 401 |
+| Host/data boundaries | No production, no staged Worker deployment, no hosted Media R2 mutations, upload/scanner flags OFF, no CI screenshot/artifact or user data; IAM owner-PAUSED, SRS FROZEN, production HOLD |

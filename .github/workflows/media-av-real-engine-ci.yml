@@ -6,6 +6,12 @@ on:
   pull_request:
     paths:
       - "services/media-scan/**"
+      - "lib/media-r2-real-av-bridge.test.ts"
+      - "lib/media-r2-scan-evidence.ts"
+      - "lib/media-scan-attestation.ts"
+      - "lib/media-r2-cleanup.ts"
+      - "cloudflare/migrations/0025_media_r2_quarantine.sql"
+      - "cloudflare/migrations/0026_media_r2_scan_evidence.sql"
       - ".github/workflows/media-av-real-engine-ci.yml"
   workflow_dispatch:
 
@@ -58,11 +64,26 @@ jobs:
             sleep 1
           done
           test -S /tmp/iaict-ci-av.sock
+      - name: Set up Node for isolated D1/R2 signed bridge
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
       - name: REAL AV acceptance — clean PNG/WebP and EICAR FOUND verdict
         env:
           IAICT_REAL_CLAMD_SOCKET: /tmp/iaict-ci-av.sock
           PYTHONPATH: services/media-scan
+          IAICT_B312_REAL_AV_BRIDGE_FIXTURE: /tmp/iaict-b312-real-av-fixture.json
         run: python services/media-scan/real_clamd_acceptance.py
+      - name: Verify REAL scanner's original and derivative in isolated Miniflare D1/R2
+        env:
+          IAICT_B312_REAL_AV_BRIDGE_FIXTURE: /tmp/iaict-b312-real-av-fixture.json
+        run: |
+          test -f "$IAICT_B312_REAL_AV_BRIDGE_FIXTURE"
+          npm ci --no-audit --no-fund
+          npx vitest run lib/media-r2-real-av-bridge.test.ts
+      - name: Remove synthetic local image fixture (no GitHub artifact upload)
+        if: always()
+        run: rm -f /tmp/iaict-b312-real-av-fixture.json
       - name: Clean ephemeral AV container (no artifact, no uploaded images)
         if: always()
         run: docker rm --force iaict-clamd-ci || true
