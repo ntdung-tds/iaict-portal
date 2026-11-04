@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS media_r2_quarantine_uploads (
   byte_length INTEGER NOT NULL CHECK (byte_length > 0 AND byte_length <= 10485760),
   content_sha256 TEXT,
   state TEXT NOT NULL DEFAULT 'RESERVED'
-    CHECK (state IN ('RESERVED','QUARANTINED','FAILED','ORPHAN_PENDING_PURGE','REVOKED')),
+    CHECK (state IN ('RESERVED','QUARANTINED','FAILED','ORPHAN_PENDING_PURGE','REVOKED','PURGE_PENDING','PURGED')),
   revision INTEGER NOT NULL DEFAULT 0 CHECK (revision >= 0),
   scanner_attestation TEXT,
   derivative_key TEXT,
