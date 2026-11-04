@@ -1249,3 +1249,18 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Live Cloudflare prerequisites | Staging D1 has **26 migrations** including 0025–0026, **3 active admins**, Access protects four roots/wildcards, R2 private staging bucket, exact existing Worker rollback version and Time Travel bookmark available. Read-only preflight PASS. |
 | Actual release | **NOT_RUN / NOT_DEPLOYED** until manual pinned release branch and `deploy-staging` workflow with expected old Worker version + reviewed release SHA and environment secrets. Initial source branch CI PASS is not hosted upload acceptance. |
 | Scanner/production | Containers API HTTP 401 explicitly requires **Workers Paid plan**; hosted scanner/publish **BLOCKED**, source policy scanConfigured=false; production upload gate always OFF. IAM owner-PAUSED, SRS FROZEN, production HOLD. |
+
+
+## RUN-MEDIA-20261104-25 — B3.13 postmerge source CI and exact release candidate (NOT deployed)
+
+| Field | Observed evidence |
+|---|---|
+| Actual reviewed source | [PR #110](https://github.com/ntdung-tds/iaict-portal/pull/110) MERGED `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81` into development; `release/staging-media-quarantine-20261104` created at **exactly same SHA**. Branch creation does not deploy a Worker. |
+| Source premerge QA | [Portal #41792842622](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792842622) **4/4 PASS**, **724/724 ordinary unit**, **46/46 local Chromium** (includes 5 MEDIA upload UI cases with MOCK CMS session/API), [OLD staging #41792842621](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792842621) **24/24 real public Chromium +24/24 HTTP PASS**, 0 new 503. |
+| Source exact postmerge | [Portal #41793305764](https://github.com/ntdung-tds/iaict-portal/actions/runs/41793305764) **PASS 4/4**, [real ClamAV #41793306193](https://github.com/ntdung-tds/iaict-portal/actions/runs/41793306193) **PASS CI-only**, [OLD staging #41793305878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41793305878) **24/24 Chromium +24/24 HTTP PASS**. No new Worker deployment. |
+| RED preserved | Initial [#41791860597](https://github.com/ntdung-tds/iaict-portal/actions/runs/41791860597) TS union type FAIL, fixed. First source browser 41 tests omitted 5 new UI tests, then source CI selected all and 46 PASS. Historical staging intermittent 503 #30 OPEN. |
+| Cloudflare staging readback | 26 D1 migrations, 3 active admins (no identities), Access 4 required roots/wildcards, private R2 bucket, previous Worker version recoverable and D1 Time Travel bookmark accessible. **PASS read-only prerequisites**. |
+| Upload hosted | **NOT_RUN**, manual `deploy-staging` workflow_dispatch not available through current connected GitHub tool; staging GitHub secrets not verified, release branch READY. No hosted R2/D1 Media upload or browser session success claim. |
+| Actual Worker state | Staging Worker deployment `754b0509-e754-410c-8dff-46015d162a89`, version `1b8cfe71-88ef-4e21-8937-4f8590daaba4` unchanged at initial checkpoint. Production Worker unchanged. |
+| Full image usage | Cloudflare Containers HTTP401 explicitly requires Workers Paid plan; actual hosted AV/derivative approval/public Media **BLOCKED** and no auto billing action. Media scanner policy false, production gate OFF, IAM PAUSED, SRS FROZEN. |
+| Final verdict | **SOURCE_READY + RELEASE_BRANCH_CREATED / STAGING_PRIVATE_UPLOAD_NOT_DEPLOYED / HOSTED_UPLOAD_E2E_NOT_RUN / PUBLICATION_NO_GO**. Images/screenshots Drive-only, GitHub no media evidence uploaded. |
