@@ -4,6 +4,7 @@ import { isProtectedAdminPath, verifyCloudflareAccessRequest } from "./lib/cloud
 import handler from "vinext/server/fetch-handler";
 import { setDatabaseBinding, type D1DatabaseLike } from "./lib/cloudflare-db";
 import { setPrivateMediaR2Runtime, type MediaR2BucketLike } from "./lib/media-r2-runtime";
+import { cleanupExpiredPrivateMedia } from "./lib/media-r2-cleanup";
 import { runScheduledNewsIngestion } from "./lib/news-scheduler";
 import { resolvePublicRedirect } from "./lib/public-redirects";
 
@@ -85,6 +86,13 @@ export default {
     ctx: ExecutionContextLike,
   ) {
     setDatabaseBinding(env.DB);
+    if (env.MEDIA_BUCKET && env.MEDIA_R2_QUARANTINE_ENABLED === "true") {
+      // Independently bounded Media janitor; never purge if the staging
+      // feature gate is off. Production is permanently unbound by config.
+      ctx.waitUntil(cleanupExpiredPrivateMedia(env.DB, env.MEDIA_BUCKET)
+        .then(result => console.log("IAICT Media quarantine cleanup", result))
+        .catch(() => console.error("IAICT Media quarantine cleanup failed")));
+    }
     ctx.waitUntil(
       runScheduledNewsIngestion(env.DB, {
         cronExpression: controller.cron,
