@@ -1114,3 +1114,15 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Operational / SRS | No staging/production Worker deploy, no cloud D1/R2 write, no public media GET, no final Drive source handoff; IAM PAUSED, SRS FROZEN, production HOLD. Original staging 503 Issue #30 OPEN, preview #32 OPEN |
 | Evidence | CI logs are text only; no QA photos/videos or credentials on GitHub. Any later visual QA evidence goes private QA Drive |
 | Disposition | **SOURCE MERGED PASS ONLY**; genuine external scanner & Media hosted acceptance **NOT_RUN**, production **NO-GO** |
+
+
+## RUN-MEDIA-20261104-15 — B3.10 exact merged SHA postmerge verification
+
+| Field | Observed result |
+|---|---|
+| Source commit | PR #104 MERGED `76bed3eecab94cf1c3f5bf4174d132291d5e96b4` |
+| GitHub Portal CI | [#41771522866](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522866) **PASS 4/4** at exact source merge SHA |
+| Real PUBLIC staging | [#41771522878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522878) **PASS 24/24 Chromium and 24/24 repeated HTTP (0 503)**. Tested **OLD deployed Worker**, not B3.10 Media backend |
+| Prior failures | Source premerge failures #41770544134 (typecheck), #41770664892 (WebP), and existing unrelated OPS staging intermittent 503 [#30](https://github.com/ntdung-tds/iaict-portal/issues/30) remain recorded; successful reruns do not delete history |
+| Hosted media | No real isolated ClamAV, private runner, HMAC provisioning, D1 0025/0026 hosted migration or CMS-MEDIA-001..012 authenticated browser. **NOT_RUN / BLOCKED**, not PASS. Production HOLD, IAM PAUSED, SRS FROZEN |
+| Evidence & release | CI textual evidence only. No screenshots in GitHub, production Worker untouched, source-only merge acceptance |
