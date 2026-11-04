@@ -1279,3 +1279,28 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Viewer/CSRF/oversize/mime/idempotency | **NOT_RUN HOSTED**. Local tests may exist; do not substitute for real authorized hosted user. |
 | Antivirus/publish | **BLOCKED**: Cloudflare Containers Workers Paid requirement, no hosted AV service nor signed private R2 derivative. Public media serving OFF; no publication acceptance. |
 | Production and IAM | Production Worker unchanged deployment `a01a3743-ac78-4a19-a990-581fe9235751`. IAM PAUSED, SRS FROZEN, production HOLD. No customer media, credentials or screenshots placed on GitHub. |
+
+## RUN-MEDIA-20261104-27 — B3.14 live anonymous Media edge regression, initial pending source CI
+
+| Field | Evidence / test semantics |
+|---|---|
+| Date / environment | 2026-11-04 UTC+7; actual deployed staging Worker `4ab3ecef-9ebd-485e-afb0-eac55136751d`. Only anonymous unauthenticated staging Media paths. |
+| Cases | CMS-MEDIA-016 (UI edge GET), CMS-MEDIA-017 (capability GET + synthetic PNG POST), CMS-MEDIA-018 (forged headers POST). |
+| Source automation | `e2e/staging-acceptance.spec.ts` (+4 live Playwright cases), CI auto-runs `staging-acceptance` on PR, no QA image or session artifacts in GitHub. |
+| Before PR run | **NOT_RUN / PENDING CI**; do not claim PASS before checked jobs and observed source head run logs. |
+| Authenticated Admin/Editor POST 201 and R2 bytes | **NOT_RUN**: no controlled authenticated session; no acceptance for CMS-MEDIA-001..012. D1 media count zero in read-only inspection before writing these cases. |
+| Security scope | These edge tests check ONLY Cloudflare Access no-login denial, *not* authenticated CSRF checks, viewer roles, upload validation/size after login, HMAC scan, nor R2 object readback. |
+| Production | No Worker deployment, no secrets or credentials in repo, production remains HOLD; IAM PAUSED, SRS FROZEN. |
+
+## RUN-MEDIA-20261104-28 — B3.14 real staging anonymous edge gate negatives PASS, exact corrected source
+
+| Field | Verified evidence |
+|---|---|
+| Source head | `24fea7f307faddbc808b474e2f3c6aee485ec938` on `test/media-b314-live-edge-negative-20261104` after fixing syntax in Access redirect assertion. |
+| Portal source CI | [#41847866827](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847866827) **4/4 jobs PASS**; QA catalog now **130 cases**, 51 suites, impact guard PASS. |
+| Actual live staging browser | [#41847866607](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847866607) **28/28 Chromium PASS** (24 existing + 4 new B3.14 Media anonymous Access negative cases) and **24/24 repeated public HTTP PASS**, 0 HTTP503, 0 HTTP5xx. |
+| Specific proof | `UI ANON_ACCESS_CHALLENGE_PASS`; `CAPABILITY_GET_ANON_ACCESS_CHALLENGE_PASS`; `POST_ANON_ACCESS_CHALLENGE_PASS`; `POST_FORGED_IDENTITY_DENIED`. Edge accepts neither anonymous image POST nor spoofed verified identity; these requests must not be counted as authenticated role testing. |
+| Historical RED (unmodified) | Initial [Portal CI #41847513261](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847513261) **FAIL** TypeScript TS1127/1134 due malformed regex literal in new test, and initial [public acceptance #41847513210](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847513210) **FAIL** at Playwright parse (no tests discovered); corrected in SHA `24fea7f`, retested all 28/28. The historical attempts remain FAIL. |
+| Live Cloudflare after tests | **Staging Worker unchanged** deployment `c43e105c-f978-426f-b42c-f515238c2252`, version `4ab3ecef-9ebd-485e-afb0-eac55136751d`, gate still true. Live D1 `media_r2_quarantine_uploads` still **zero rows** at independent readback, so no anonymous test created a private upload. |
+| Still NOT_RUN | Authorized real Admin/Editor session GET capability, clean synthetic real POST 201, hosted R2 byte and SHA readback, authenticated viewer/CSRF/oversize/invalid MIME/idempotency; all remain **NOT_RUN**, not implicit PASS. |
+| Independent scanner/publication | Hosted isolated ClamAV **BLOCKED (Workers Paid Containers)**; all raw media private, publishing OFF, production Worker unchanged, IAM PAUSED and SRS FROZEN. |

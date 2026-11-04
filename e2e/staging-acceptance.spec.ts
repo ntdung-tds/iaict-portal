@@ -472,3 +472,70 @@ test("actual staging Access refuses forged client identity on all protected admi
     expect(response.headers()["set-cookie"] ?? "").not.toContain("__Host-iaict_session");
   }
 });
+
+// B3.14 REAL STAGING EDGE TESTS: These cases are intentionally ANONYMOUS.
+// They prove Cloudflare Access protects the deployed Media surface and blocks
+// untrusted uploads/identity headers. They are NOT authenticated Admin/Editor
+// uploads, not R2 byte readbacks, and not CSRF/role-negative proof after login.
+// Never add authentication secrets, Media fixtures, screenshots or trace uploads.
+const mediaQuarantineApi = "/api/admin/cms/media/quarantine";
+const mediaUploadUi = "/admin/media/upload";
+const accessChallenge = (status: number, location: string): boolean =>
+  [302, 303, 307, 308].includes(status) &&
+  (location.includes("cloudflareaccess.com") || location.includes("/cdn-cgi/access/login"));
+
+const safeSyntheticPng = Buffer.from([
+  137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82,
+  0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0, 144, 119, 83, 222,
+]);
+
+test("B3.14 anonymous GET Media upload UI redirects to real Cloudflare Access", async ({ request }) => {
+  const response = await request.get(mediaUploadUi, { maxRedirects: 0 });
+  expect(accessChallenge(response.status(), response.headers()["location"] ?? ""),
+    "Anonymous CMS upload page must be protected at the edge, never 200 or 404").toBe(true);
+  console.log("[media-staging-edge] UI ANON_ACCESS_CHALLENGE_PASS; AUTH_MEDIA_UPLOAD_NOT_RUN");
+});
+
+test("B3.14 anonymous GET Media capability is protected, not a publicly readable feature flag", async ({ request }) => {
+  const response = await request.get(mediaQuarantineApi, { maxRedirects: 0 });
+  expect(accessChallenge(response.status(), response.headers()["location"] ?? ""),
+    "Anonymous Media capability GET must be Access-protected, not 200 or 404").toBe(true);
+  console.log("[media-staging-edge] CAPABILITY_GET_ANON_ACCESS_CHALLENGE_PASS; AUTH_ROLE_NOT_RUN");
+});
+
+test("B3.14 anonymous POST synthetic PNG cannot create a Media quarantine upload", async ({ request }) => {
+  const response = await request.post(mediaQuarantineApi, {
+    maxRedirects: 0,
+    headers: {
+      "content-type": "image/png",
+      "origin": "https://iaict-portal-staging.iaict-platform.workers.dev",
+      "x-media-filename": "qa-anonymous.png",
+      "idempotency-key": randomUUID(),
+    },
+    data: safeSyntheticPng,
+  });
+  expect(accessChallenge(response.status(), response.headers()["location"] ?? ""),
+    "Anonymous Media upload POST must challenge at Access; no 201, 404, or fail-open").toBe(true);
+  console.log("[media-staging-edge] POST_ANON_ACCESS_CHALLENGE_PASS; NO_SERVER_STORAGE_READBACK_CLAIM");
+});
+
+test("B3.14 forged CMS/Access identity headers cannot bypass Media upload authentication", async ({ request }) => {
+  const response = await request.post(mediaQuarantineApi, {
+    maxRedirects: 0,
+    headers: {
+      "content-type": "image/png",
+      "origin": "https://iaict-portal-staging.iaict-platform.workers.dev",
+      "x-media-filename": "qa-forged.png",
+      "idempotency-key": randomUUID(),
+      "Cf-Access-Authenticated-User-Email": "qa-forged@example.test",
+      "Cf-Access-Jwt-Assertion": "invalid-unsigned-untrusted-token",
+      "x-iaict-native-verified-email": "qa-forged@example.test",
+    },
+    data: safeSyntheticPng,
+  });
+  const status = response.status();
+  const protectedAtEdge = accessChallenge(status, response.headers()["location"] ?? "");
+  expect(protectedAtEdge || status === 401 || status === 403,
+    "Forged incoming identity must not be accepted by Access or Worker for Media POST").toBe(true);
+  console.log("[media-staging-edge] POST_FORGED_IDENTITY_DENIED; AUTH_ROLE_AND_R2_NOT_RUN");
+});
