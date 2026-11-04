@@ -10,6 +10,11 @@ export interface MediaR2BucketLike {
     customMetadata?: Record<string,string>;
   }): Promise<unknown>;
   delete(key: string): Promise<void>;
+  /** Private reads only, for scanner attestation byte-hash readback. */
+  get?(key: string): Promise<{
+    size: number;
+    arrayBuffer(): Promise<ArrayBuffer>;
+  } | null>;
 }
 
 type MediaContext = Readonly<{ bucket?: MediaR2BucketLike; enabled: boolean }>;
