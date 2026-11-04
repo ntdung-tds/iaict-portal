@@ -1,5 +1,20 @@
 # PCS Moment — IAICT Portal
 
+**PCS Universal 3.2.0 · Solo · Revision 67 checkpoint PR · B3.12 real ClamAV→private D1/R2 integration SOURCE MERGED · HOSTED Scanner BLOCKED · IAM PAUSED · production HOLD**
+
+- **2026-11-04 12:50 ICT:** [PR #108](https://github.com/ntdung-tds/iaict-portal/pull/108) B3.12 source-only MERGED to dev at `b24682db20573fef2b8e5c46b75b31874cbdece2`. Real ClamAV Docker EICAR+clean double-scan → Pillow source/derivative bytes → **independent Python-signed HMAC** → TypeScript verifier → actual disposable Miniflare private R2 original+derivative SHA readback → D1 CAS/audit → replay protection → purge both objects.
+- **Exact reviewed source head `a114fdd4a1bb9019da13a8bdc1791902d14a8432`:** [real AV #41781000006](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781000006) **3/3 genuine ClamAV Python + 5/5 Miniflare D1/R2 integration PASS** on same harmless synthetic fixture. [Portal #41781000026](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781000026) **4/4 PASS**, **724/724 standard unit PASS + 5 dedicated tests SKIPPED without real AV fixture**, 7/7 Python mock AV, 41/41 local Chromium. [Public OLD Worker #41781000014](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781000014) **24/24 real Chromium + 24/24 repeated HTTP PASS**; does NOT test hosted Media.
+- **Preserved RED→fix:** [original #41780387128](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780387128) **FAIL** because Vitest file under `services/` excluded from discovery; moved to `lib/media-r2-real-av-bridge.test.ts` and retested [#41780626240](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780626240) **3/3 real AV + 5/5 bridge PASS**, then rechecked final source head. OPS staging #30 intermittent 503 historical FAIL still OPEN.
+- **Exact source postmerge jobs:** [Portal #41781401748](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401748), [real AV #41781401775](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401775), [public OLD Worker #41781401796](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401796): **PENDING at first rev67 checkpoint**.
+- **Still BLOCKED:** Cloudflare Containers applications API returns **HTTP 401**; real ClamAV not deployed on staging; no remote R2 private runner/HMAC service secret, no real CMS role browser E2E CMS-MEDIA-001..012. Only staging D1 0025/0026 applied in B3.11; no new Worker deployment, `MEDIA_POLICY.scan.serviceConfigured=false` and `MEDIA_R2_QUARANTINE_ENABLED=false`. IAM PAUSED, SRS FROZEN, production HOLD. No source or sensitive media uploaded to GitHub.
+- **Next:** B3.13 provision authorized isolated ClamAV host/secret, connect live R2/D1 private service and verify hosted EICAR + authorized role E2E before releasing staging gate. Do not label Media ready from CI alone.
+
+**Continuity:** rev67 becomes canonical only after docs PR merge/readback; previous Moment below retained.
+
+---
+
+## Historical PCS Moment (Revision 66)
+
 **PCS Universal 3.2.0 · Solo · Revision 66 checkpoint · B3.11 STAGING D1 0025/0026 APPLIED · REAL ClamAV CI PASS · Hosted Scanner BLOCKED · IAM PAUSED · production HOLD**
 
 - **2026-11-04 11:55 ICT:** [PR #106](https://github.com/ntdung-tds/iaict-portal/pull/106) grouped B3.11 source MERGED to development at `c6c5d3e4a0ada4d170c652334b75e8fb15c73cec`.
