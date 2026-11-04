@@ -16,7 +16,6 @@ export const MEDIA_STAGING_SCOPE_ID = "cms-main";
 const IDEMPOTENCY = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const BYTE_LENGTH_GETTER =
   Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), "byteLength")?.get;
-const QUOTA_STATES = "('RESERVED','QUARANTINED','ORPHAN_PENDING_PURGE','REVOKED')";
 const SHA_PATTERN = /^[a-f0-9]{64}$/;
 
 type UploadRow = { id: string; state: string; byte_length: number; mime_type: string; content_sha256: string | null };
@@ -110,16 +109,13 @@ const reserveSql = `
   SELECT ?, ?, ?, ?, ?, ?, ?, ?, 'RESERVED'
   WHERE
     (SELECT COUNT(*) FROM media_r2_quarantine_uploads
-       WHERE actor_user_id=? AND created_at>=datetime('now','-1 hour')
-       AND state IN ('RESERVED','QUARANTINED')) < ?
+       WHERE actor_user_id=? AND created_at>=datetime('now','-1 hour')) < ?
     AND (SELECT COUNT(*) FROM media_r2_quarantine_uploads
-       WHERE scope_id=? AND created_at>=datetime('now','start of day')
-       AND state IN ('RESERVED','QUARANTINED')) < ?
+       WHERE scope_id=? AND created_at>=datetime('now','start of day')) < ?
     AND COALESCE((SELECT SUM(byte_length) FROM media_r2_quarantine_uploads
-       WHERE scope_id=? AND created_at>=datetime('now','start of day')
-       AND state IN ('RESERVED','QUARANTINED')),0) + ? <= ?
+       WHERE scope_id=? AND created_at>=datetime('now','start of day')),0) + ? <= ?
     AND COALESCE((SELECT SUM(byte_length) FROM media_r2_quarantine_uploads
-       WHERE scope_id=? AND state IN ('RESERVED','QUARANTINED','ORPHAN_PENDING_PURGE','REVOKED')),0) + ? <= ?
+       WHERE scope_id=? AND state IN ('RESERVED','QUARANTINED','ORPHAN_PENDING_PURGE','REVOKED','PURGE_PENDING')),0) + ? <= ?
     AND (SELECT COUNT(*) FROM media_r2_quarantine_uploads
        WHERE actor_user_id=? AND state='RESERVED') < ?
 `;
