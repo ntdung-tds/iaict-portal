@@ -99,8 +99,9 @@ export function MediaQuarantineUpload() {
         body:file,
       });
       const result=await response.json() as UploadResponse;
-      if(!response.ok || !result.ok) {
-        setError(messages[result.code]??"Upload chưa thành công ("+result.code+").");
+      if(!response.ok || result.ok===false) {
+        const code = result.ok===false ? result.code : "MEDIA_UNAVAILABLE";
+        setError(messages[code]??"Upload chưa thành công ("+code+").");
         return;
       }
       if(result.state!=="QUARANTINED"||result.publicUrl!==null||result.requiresScan!==true){
