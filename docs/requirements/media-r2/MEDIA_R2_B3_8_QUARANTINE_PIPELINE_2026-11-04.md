@@ -10,7 +10,7 @@
 - **D1 quota:** single-statement conditional INSERT, tối đa 20 uploads/actor/h, 200 uploads/scope/ngày, 1GiB bytes/scope/ngày, 5GiB stored/scope, 2 in-flight/actor. Atomic D1 batch reservation+audit. Idempotent retry cùng byte trả cùng upload ID, payload khác bị xung đột.
 - **R2 storage & compensation:** ghi private key + content type/cache private; CAS cập nhật `QUARANTINED` + audit. Nếu PUT/commit lỗi, xóa R2 best-effort và đánh dấu `FAILED` hoặc `ORPHAN_PENDING_PURGE` để tác vụ phục hồi sau này. Không trả filename, storage key hoặc URL trong API.
 - **Retention:** `cleanupExpiredPrivateMedia` gọi từ scheduled Worker **chỉ khi gate bật**, claim D1 bằng CAS trước khi R2.delete. RESERVED hết 1h, QUARANTINED hết 7 ngày, FAILED/ORPHAN sau 2 ngày, REVOKED sau 24h, PURGE_PENDING thử lại sau 15 phút, PURGED tombstone sau 90 ngày. Không tự động đọc/tải nội dung.
-- **Kiểm thử:** Miniflare D1 tùy ý được tạo trong bộ test và R2 memory adapter giả lập; các bài test quota, ký hiệu file, role, origin, idempotency, R2 PUT failure, CAS purge và retry. Chạy `RUN-MEDIA-20261104-08` trong CI, **không phải** Cloudflare hosted E2E.
+- **Kiểm thử:** Miniflare D1 + **R2 thật trong môi trường disposable local**, đồng thời adapter R2 memory giả lập lỗi để kiểm tra compensation; các bài test quota, ký hiệu file, role, origin, idempotency, CAS purge và retry. Một test đi qua Worker native D1 session và 8 tài khoản tổng hợp, với `vinext` dispatch mocked; test upload qua route và D1/R2 thực cục bộ. `RUN-MEDIA-20261104-08`, **không phải** Cloudflare hosted E2E.
 
 ## 2. Thiết kế cố ý chưa mở cho public
 
