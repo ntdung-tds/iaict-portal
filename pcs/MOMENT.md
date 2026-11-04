@@ -1,5 +1,19 @@
 # PCS Moment — IAICT Portal
 
+**PCS Universal 3.2.0 · Solo · Revision 70 · B3.14 Live anonymous Media Access edge PASS · Private staging upload gate ON · Authenticated upload E2E NOT_RUN · ClamAV hosted BLOCKED · IAM PAUSED · production HOLD**
+
+**2026-11-04 21:36 ICT:** [PR #113](https://github.com/ntdung-tds/iaict-portal/pull/113) merged B3.14 hosted ANONYMOUS Media access tests at dev merge `34ee2bc5c9fac6704e0747d432d540a0f6247e31`. [Final source Portal CI #41848546547](https://github.com/ntdung-tds/iaict-portal/actions/runs/41848546547) **4/4 PASS**, [real staging browser #41848546687](https://github.com/ntdung-tds/iaict-portal/actions/runs/41848546687) **28/28 Chromium PASS** (24 previous + **4 new Media access negatives**), **24/24 repeated HTTP PASS**, zero 503/5xx; explicit private Media GET/POST and forged identity denial at Cloudflare Access. QA catalog now **130 total cases**, new `CMS-MEDIA-016..018` strictly anonymous, not authenticated role tests. Initial RED source [#41847513261](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847513261) TS malformed regex and [#41847513210](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847513210) Playwright parse failure preserved; fixed at `24fea7f` and rerun.
+
+- **ACTUAL hosted state:** Cloudflare staging Worker deployment `c43e105c-f978-426f-b42c-f515238c2252`, version `4ab3ecef-9ebd-485e-afb0-eac55136751d` **unchanged**, private Media quarantine gate stays ON, D1 `media_r2_quarantine_uploads` still **0 rows** after anonymous tests. Production deployment `a01a3743-ac78-4a19-a990-581fe9235751` unchanged. No new deployment or migration.
+- **NOT_RUN:** authenticated Admin/Editor CMS upload `201 QUARANTINED`, independent private hosted R2 bytes/SHA, viewer denial, authenticated CSRF, MIME/size, idempotency full CMS-MEDIA-001..012 E2E. A pass for anonymous edge protection is not proof of successful authorized upload. No controlled QA identity/session available; do not forge.
+- **BLOCKED:** isolated hosted ClamAV scanner requires Workers Paid Containers or other approved host; source images remain private only, public media serving OFF. IAM PAUSED, SRS FROZEN, production HOLD. QA [RUN-MEDIA-20261104-28](../qa/IAICT_TEST_RUNS.md) and rev70 appended RUN-29; [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39) OPEN. **Next B3.15** genuinely authenticated staging browser POST/R2-D1 SHA proof when QA identity available.
+
+**Continuity:** rev70 canonical only after docs PR merge/readback. Prior historical PCS moments retained below.
+
+---
+
+## Historical PCS Moment (Revision 69)
+
 **PCS Universal 3.2.0 · Solo · Revision 69 · B3.13 PRIVATE STAGING QUARANTINE UPLOAD GATE ON · Hosted upload E2E NOT_RUN · Scanner BLOCKED · IAM PAUSED · production HOLD**
 
 **2026-11-04 19:12 ICT:** [manual deploy-staging #41815504208](https://github.com/ntdung-tds/iaict-portal/actions/runs/41815504208), attempt **4 SUCCESS** after earlier RED failures (missing GitHub secrets; then Cloudflare Access app token HTTP403, both fixed by owner). Release branch `release/staging-media-quarantine-20261104` at reviewed SHA `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81`. **Cloudflare actual staging Worker** deployment `c43e105c-f978-426f-b42c-f515238c2252`, version `4ab3ecef-9ebd-485e-afb0-eac55136751d`, **100%**, verified private R2 binding `iaict-portal-staging-media`, D1 `aa4a97e7-60c5-4da4-9f0b-d469ece811b4`, `MEDIA_R2_QUARANTINE_ENABLED=true`. GitHub workflow preflight Access routes/AUD, D1 26 migrations, 3 active admins, version rollback, build/deploy/readback/health and **24/24 PUBLIC Chromium PASS**, 724/724 standard unit +5 dedicated tests skipped without fixture. **Production Worker unchanged** `a01a3743-ac78-4a19-a990-581fe9235751`.
