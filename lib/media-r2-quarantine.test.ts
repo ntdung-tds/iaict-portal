@@ -7,6 +7,7 @@ import type { NewsroomActor } from "./newsroom-auth";
 import type { MediaR2BucketLike } from "./media-r2-runtime";
 import { MEDIA_POLICY } from "./media-policy";
 import { readBoundedMediaRequest, submitPrivateMediaQuarantine, MEDIA_STAGING_SCOPE_ID } from "./media-r2-quarantine";
+import { cleanupExpiredPrivateMedia } from "./media-r2-cleanup";
 
 const origin = "https://iaict-portal-staging.iaict-platform.workers.dev";
 const tinyPng = Uint8Array.from([137,80,78,71,13,10,26,10,0,0,0,0,0,0,0,0]);
@@ -144,6 +145,40 @@ describe("B3.8 real disposable D1 and synthetic private R2 quarantine — NOT de
       .toEqual({ok:false,code:"TOO_MANY_CHUNKS"});
     expect(await readBoundedMediaRequest(upload(new Uint8Array(0))))
       .toEqual({ok:false,code:"EMPTY_BODY"});
+  });
+
+  it("purges expired private quarantine with exact D1 CAS state and no public read", async () => {
+    const bucket=memoryBucket();
+    const result=await submitPrivateMediaQuarantine(upload(tinyPng),actor,db,bucket);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(bucket.objects.size).toBe(1);
+    // Aging happens only in random local D1; no real staging data or clock.
+    await db.prepare("UPDATE media_r2_quarantine_uploads SET created_at=datetime('now','-8 days') WHERE id=?")
+      .bind(result.id).run();
+    const cleaned=await cleanupExpiredPrivateMedia(db,bucket);
+    expect(cleaned.deleted).toBeGreaterThanOrEqual(1);
+    const row=await db.prepare("SELECT state,revision,scanner_attestation FROM media_r2_quarantine_uploads WHERE id=?")
+      .bind(result.id).first<{state:string;revision:number;scanner_attestation:string|null}>();
+    expect(row?.state).toBe("PURGED");
+    expect(row?.revision).toBe(3);
+    expect(row?.scanner_attestation).toBeNull();
+    expect(bucket.objects.size).toBe(0);
+  });
+
+  it("leaves a retryable PURGE_PENDING tombstone when R2 deletion fails", async () => {
+    const bucket=memoryBucket({deleteFails:true});
+    const result=await submitPrivateMediaQuarantine(upload(tinyPng),actor,db,bucket);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    await db.prepare("UPDATE media_r2_quarantine_uploads SET created_at=datetime('now','-8 days') WHERE id=?")
+      .bind(result.id).run();
+    const c=await cleanupExpiredPrivateMedia(db,bucket);
+    expect(c.failed).toBeGreaterThanOrEqual(1);
+    const row=await db.prepare("SELECT state FROM media_r2_quarantine_uploads WHERE id=?")
+      .bind(result.id).first<{state:string}>();
+    expect(row?.state).toBe("PURGE_PENDING");
+    expect(bucket.objects.size).toBe(1);
   });
 
   it("compensates failed R2 PUT without exposing public URLs or scanning status", async () => {
