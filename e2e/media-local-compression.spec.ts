@@ -19,6 +19,11 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
     const response = await page.goto("/admin/tools/compression", { waitUntil: "domcontentloaded", timeout: 15_000 });
     console.log("[media-tool-e2e] navigated", response?.status(), page.url());
     expect(response?.status()).toBe(200);
+    // SSR headings can render before React client handlers attach. The
+    // role-scoped navigation appears only after CmsShell useEffect runs,
+    // proving hydration before triggering any synthetic file-selection event.
+    await expect(page.locator('aside[aria-label="Điều hướng CMS"] a[href="/admin/tools/compression"]'))
+      .toBeVisible({ timeout: 12_000 });
     await expect(page.getByRole("heading", { name: "Trung tâm nén ảnh & tệp" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Nén và thu nhỏ ảnh" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Gộp và nén nhiều tệp" })).toBeVisible();
@@ -62,6 +67,11 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
     const response = await page.goto("/admin/tools/compression", { waitUntil: "domcontentloaded", timeout: 15_000 });
     console.log("[media-tool-e2e] navigated", response?.status(), page.url());
     expect(response?.status()).toBe(200);
+    // SSR headings can render before React client handlers attach. The
+    // role-scoped navigation appears only after CmsShell useEffect runs,
+    // proving hydration before triggering any synthetic file-selection event.
+    await expect(page.locator('aside[aria-label="Điều hướng CMS"] a[href="/admin/tools/compression"]'))
+      .toBeVisible({ timeout: 12_000 });
     await page.locator("#compress-zip-files").setInputFiles([
       { name: "ghi chú.txt", mimeType: "text/plain", buffer: Buffer.from("IAICT nguồn tin thử nghiệm\n".repeat(1500)) },
       { name: "avatar.jpg", mimeType: "image/jpeg", buffer: Buffer.from([255,216,255,0,1]) },
@@ -85,6 +95,11 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
     const response = await page.goto("/admin/tools/compression", { waitUntil: "domcontentloaded", timeout: 15_000 });
     console.log("[media-tool-e2e] navigated", response?.status(), page.url());
     expect(response?.status()).toBe(200);
+    // SSR headings can render before React client handlers attach. The
+    // role-scoped navigation appears only after CmsShell useEffect runs,
+    // proving hydration before triggering any synthetic file-selection event.
+    await expect(page.locator('aside[aria-label="Điều hướng CMS"] a[href="/admin/tools/compression"]'))
+      .toBeVisible({ timeout: 12_000 });
     const input = "Một đoạn văn bản có thể nén của IAICT\n".repeat(200);
     await page.locator("#compress-text-file").setInputFiles({
       name: "report.txt", mimeType: "text/plain",
