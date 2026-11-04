@@ -1,5 +1,22 @@
 # PCS Moment — IAICT Portal
 
+**PCS Universal 3.2.0 · Solo · Revision 68 checkpoint · B3.13 staging QUARANTINE UPLOAD RELEASE READY, NOT DEPLOYED · Scanner hosted BLOCKED · IAM PAUSED · production HOLD**
+
+- **2026-11-04 14:40 ICT:** [PR #110](https://github.com/ntdung-tds/iaict-portal/pull/110) merged source `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81`. New responsive CMS `/admin/media/upload` for admin/editor only; private POST `QUARANTINED`/requiresScan/null public URL, authenticated GET readiness, quota/idempotent retry, 10 MiB preflight, 7-day private cleanup. Production quarantine gate hard OFF; scanner/public serving still OFF. No publication of raw bytes.
+- **Source QA:** [Portal CI #41792842622](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792842622) **4/4 PASS**, **724/724 unit** (+5 dedicated genuine AV cases skipped without fixture), **46/46 local Chromium** (5 new MOCK CMS upload browser tests); [PUBLIC old staging Worker #41792842621](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792842621) **24/24 Chromium +24/24 repeated HTTP PASS**. Exact source postmerge [Portal #41793305764](https://github.com/ntdung-tds/iaict-portal/actions/runs/41793305764) 4/4 PASS, [real ClamAV CI #41793306193](https://github.com/ntdung-tds/iaict-portal/actions/runs/41793306193) PASS, [public OLD Worker #41793305878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41793305878) 24/24 Chromium+24/24 HTTP PASS.
+- **RED preserved:** [CI #41791860597](https://github.com/ntdung-tds/iaict-portal/actions/runs/41791860597) strict TypeScript discriminated union failure, fixed, rerun source PASS. Additional 5 UI tests initially absent from Chromium selection; added mandatory and proved 46/46 PASS. Original staging intermittent HTTP 503 [issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) still OPEN.
+- **ACTUAL staging preflight (READ-ONLY):** Cloudflare D1 **26 migrations** including 0025/0026, **3 active admins** (identities not accessed), protected Access roots/wildcards and audience, R2 `iaict-portal-staging-media`, retrievable Worker version `1b8cfe71-88ef-4e21-8937-4f8590daaba4` and Time Travel bookmark available. **Release branch created** `release/staging-media-quarantine-20261104` exactly at source merge SHA; this alone does **NOT** deploy Worker. Current staging Worker deployment `754b0509-e754-410c-8dff-46015d162a89`, production `a01a3743-ac78-4a19-a990-581fe9235751` unchanged.
+- **Manual release required:** GitHub Actions [deploy-staging](https://github.com/ntdung-tds/iaict-portal/actions/workflows/deploy-staging.yml), branch `release/staging-media-quarantine-20261104`, input approved SHA `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81`, expected Worker version `1b8cfe71-88ef-4e21-8937-4f8590daaba4` *only if still live*. GitHub connector has no workflow_dispatch action; staging environment secrets unverified. No hidden deployment. After manual release, require actual admin/editor GET readiness and POST R2/D1 byte readback and viewer/CSRF/oversize negatives before hosted acceptance.
+- **Full Media BLOCKED:** Cloudflare Containers API HTTP401 explicitly states **Workers Paid plan required**, no real hosted scanner. `MEDIA_POLICY.scan.serviceConfigured=false`, no approved derivative, no public image serving, IAM owner-PAUSED, SRS FROZEN, production HOLD. No QA images or credentials in GitHub.
+
+**Next:** trigger approved manual staging-only private quarantine deployment; run genuine hosted CMS upload E2E; separately provision Workers Paid/isolated scanner before publication.
+
+**Continuity:** rev68 becomes canonical only after docs PR merge/readback; historical Moment below retained.
+
+---
+
+## Historical PCS Moment (Revision 67)
+
 **PCS Universal 3.2.0 · Solo · Revision 67 checkpoint PR · B3.12 real ClamAV→private D1/R2 integration SOURCE MERGED · HOSTED Scanner BLOCKED · IAM PAUSED · production HOLD**
 
 - **2026-11-04 12:50 ICT:** [PR #108](https://github.com/ntdung-tds/iaict-portal/pull/108) B3.12 source-only MERGED to dev at `b24682db20573fef2b8e5c46b75b31874cbdece2`. Real ClamAV Docker EICAR+clean double-scan → Pillow source/derivative bytes → **independent Python-signed HMAC** → TypeScript verifier → actual disposable Miniflare private R2 original+derivative SHA readback → D1 CAS/audit → replay protection → purge both objects.
