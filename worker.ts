@@ -3,11 +3,14 @@ import { NATIVE_VERIFIED_EMAIL_HEADER, nativeActorEmail, nativeAuthEnabled, same
 import { isProtectedAdminPath, verifyCloudflareAccessRequest } from "./lib/cloudflare-access-jwt";
 import handler from "vinext/server/fetch-handler";
 import { setDatabaseBinding, type D1DatabaseLike } from "./lib/cloudflare-db";
+import { setPrivateMediaR2Runtime, type MediaR2BucketLike } from "./lib/media-r2-runtime";
 import { runScheduledNewsIngestion } from "./lib/news-scheduler";
 import { resolvePublicRedirect } from "./lib/public-redirects";
 
 type WorkerEnv = {
   DB: D1DatabaseLike;
+  MEDIA_BUCKET?: MediaR2BucketLike;
+  MEDIA_R2_QUARANTINE_ENABLED?: string;
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_POLICY_AUD?: string;
   IAICT_NATIVE_AUTH_ENABLED?: string;
@@ -68,6 +71,9 @@ export default {
     }
     request = new Request(request, { headers });
     setDatabaseBinding(env.DB);
+    // Staging-only quarantined R2: disabled by default. Missing bindings clear
+    // prior state and can never turn production into a file-serving endpoint.
+    setPrivateMediaR2Runtime(env.MEDIA_BUCKET, env.MEDIA_R2_QUARANTINE_ENABLED === "true");
     const redirect = await resolvePublicRedirect(request, env.DB);
     if (redirect) return redirect;
     return withPublicPreviewCors(request, await handler.fetch(request, env, ctx));
