@@ -28,6 +28,8 @@
 
 | CHG-MEDIA-R2-20261104-05 | 2026-11-04 | B3.8: tích hợp backend upload private quarantine D1/R2 có gate staging tắt mặc định, quota CAS, idempotency, retention và unit/Miniflare D1; scanner/hosted chưa sẵn | SOURCE_IMPLEMENTATION / HOSTED_BLOCKED | MEDIA_R2_B3_8_QUARANTINE_PIPELINE_2026-11-04.md · Issue #39 · PR #100 | RUN-MEDIA-20261104-08 — PENDING | CHƯA_CHỐT_SRS |
 
+| CHG-MEDIA-R2-20261104-06 | 2026-11-04 | B3.9: D1/R2 request-scoped isolation; quota tính cả FAILED và PURGE_PENDING; giữ scanner/upload production fail-closed | SOURCE_IN_REVIEW / NO_DEPLOY | Issue #39 · PR B3.9 | RUN-MEDIA-20261104-10 — CI PENDING | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -147,6 +149,14 @@
 - **Test/rollback:** `RUN-MEDIA-20261104-08` chạy Miniflare D1 thực trong runner + R2 memory fake, gồm idempotency, access/CSRF denial, MIME, bounded upload, D1 quota/reservation, compensation, TTL CAS purge; không coi là actual hosted test. Rollback của source là revert PR; nếu từng deploy sau này thì tắt feature gate và purge riêng có audit.
 - **Tài liệu:** [MEDIA_R2_B3_8_QUARANTINE_PIPELINE_2026-11-04](./MEDIA_R2_B3_8_QUARANTINE_PIPELINE_2026-11-04.md). Không tự động đồng bộ baseline SRS.
 
+
+### CHG-MEDIA-R2-20261104-06 — B3.9 request-context safety và quota abuse hardening
+
+- **Nguồn:** tiếp tục PR #100 sau vòng rà soát Media R2; chính sách staging MED-DEC-01..07 không đổi.
+- **Trước:** Worker dùng isolate-global mutable D1/R2 bindings, có nguy cơ cross-request khi xử lý await song song; quota theo giờ/ngày không tính FAILED, storage không tính PURGE_PENDING.
+- **Sau:** dùng `AsyncLocalStorage` gắn D1/R2 riêng theo từng request; Media không fallback về bucket global. SQL atomic quota đếm cả attempted reservation trong khoảng giờ/ngày; trạng thái PURGE_PENDING còn chiếm quota lưu trữ.
+- **Test & hạn chế:** `lib/media-r2-request-scope.test.ts` chứng minh cách ly luồng đồng thời và fail-closed; `lib/media-r2-quarantine.test.ts` bổ sung negative D1 quota. `RUN-MEDIA-20261104-10` ghi CI sau khi chạy thật. Không sửa 0025, không phát hành Worker, không cấu hình scanner, không sửa baseline SRS, không bật upload. Production HOLD, IAM PAUSED.
+- **Tham chiếu:** [Tài liệu B3.9](MEDIA_R2_B3_9_ISOLATION_QUOTAS_2026-11-04.md).
 
 ## Các thay đổi tiếp theo
 
