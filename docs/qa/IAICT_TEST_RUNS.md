@@ -1180,3 +1180,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Actual staging D1 | `0025`/`0026` **APPLIED and read back**; see [RUN-MEDIA-20261104-16](#run-media-20261104-16--actual-cloudflare-staging-d1-00250026-rollout-no-worker-deploy), with retained Time Travel bookmark and integrity pragma UNSUPPORTED. |
 | External blockers | Cloudflare Containers API **HTTP 401**, hosted scanner not deployed; trusted runner, HMAC secret, real R2 object scan and CMS-MEDIA-001..012 real authorized browser NOT_RUN. SRS FROZEN, IAM PAUSED, production HOLD. |
 | Prior failures | Historical CI RED attempts from B3.10 and intermittent OPS 503 [#30](https://github.com/ntdung-tds/iaict-portal/issues/30) remain documented and OPEN; new PASS does not delete them. |
+
+
+## RUN-MEDIA-20261104-20 — B3.12 real ClamAV to private R2/D1 integration, pending at creation
+
+| Field | Evidence |
+|---|---|
+| Scope | Full synthetic clean PNG → REAL ClamAV original scan → Pillow metadata-free WebP → REAL ClamAV derivative scan → Python HMAC receipt → TS independently verifies HMAC and R2 byte hashes → disposable Miniflare D1 scan CAS/audit → purge both private objects. |
+| Source | `services/media-scan/real_clamd_acceptance.py` fixture emitter, `services/media-scan/real-av-private-evidence.integration.test.ts`, dedicated `.github/workflows/media-av-real-engine-ci.yml`. |
+| Acceptance | **PENDING dedicated real AV CI at initial record**. Do not call a complete pass until the exact source SHA job outputs 3/3 Python REAL AV plus integration cases PASS, including negative tampered derivative/replay. |
+| Negative cases | EICAR harmless FOUND, source SHA invalid, derivative R2 byte tamper without D1 proof, reused receipt/revision replay rejected, private retention purge both bytes. |
+| Default Portal Vitest | Specialized integration tests are **SKIPPED** without the mandatory CI fixture; SKIPPED is not PASS. Existing 724 tests baseline must continue passing. |
+| Hosted scope | **NOT_RUN**: actual ClamAV service on Cloudflare, trusted private runner, HMAC secrets, hosted R2 source/derivative writes, Worker staging media upload, CMS-MEDIA-001..012 authenticated role browser. Containers HTTP 401. |
+| Safety | Source-only PR/CI with **synthetic fixtures**, local /tmp exclusive 0600, never CI-upload artifacts or real user bytes. No staging/production Worker release, IAM PAUSED, SRS FROZEN, production HOLD. |
+| Defect history | Preserve any RED test attempts and fixes in append-only run ledger. |
