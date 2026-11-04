@@ -27,6 +27,13 @@ describe("B3.10 scanner attestation verified locally only",()=>{
    const r=await verifyMediaScanClaim(await sign(claim()),secret,expected,now);
    expect(r.ok).toBe(true);
  });
+ it("accepts a Python stdlib HMAC-SHA256 canonical receipt fixture cross-runtime",async()=>{
+   // Generated independently with Python json.dumps(list,separators=(',',':'))
+   // and hmac.new(bytes([11])*32, canonical, hashlib.sha256).hexdigest().
+   const signature="3c3784c23794539348ea920657ede59ef000477e14fef23834b68450dabc3c38";
+   const result=await verifyMediaScanClaim({claim:claim(),signature},secret,expected,now);
+   expect(result.ok).toBe(true);
+ });
  it("fails closed when signer secret is absent",async()=>{
    expect((await verifyMediaScanClaim(await sign(claim()),undefined,expected,now)).ok).toBe(false);
  });
