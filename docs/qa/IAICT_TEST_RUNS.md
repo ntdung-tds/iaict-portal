@@ -1153,3 +1153,30 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Evidence | **PENDING CI** (only report PASS once dedicated real ClamAV job completes); B3.10's simulated UNIX socket 7/7 Python was not a genuine engine. |
 | Hosted blocker | Cloudflare Containers API **401 unauthorized**, no provisioned private scanner/job runner/HMAC binding, no real CMS access roles upload; **HOSTED BLOCKED / NOT_RUN**. |
 | Releases | No staging Worker upload flag enabled, no production modifications, SRS FROZEN and IAM PAUSED. |
+
+
+## RUN-MEDIA-20261104-18 — Real ClamAV premerge acceptance and source postmerge readback
+
+| Field | Exact evidence |
+|---|---|
+| B3.11 source | [PR #106](https://github.com/ntdung-tds/iaict-portal/pull/106) exact reviewed head `50e1928dcb69e16d1876338d839213ee06f72dfd`, merged `c6c5d3e4a0ada4d170c652334b75e8fb15c73cec`. |
+| Real engine | [media-av-real-engine-ci #41775549025](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549025) **PASS 1/1 job, 3/3 actual ClamAV engine tests** (official Docker: EICAR harmless test pattern **FOUND**, `scan_clamd` rejection, original+metadata-free WebP scanned, signed clean receipt, bad SHA rejects); NO real user bytes. Not a live Container service. |
+| Portal PR CI | [#41775549028](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549028) **PASS 4/4**, **724/724 TS tests** (71 files), **7/7 Python Pillow mock-socket**, **41/41 local Chromium** with mocked CMS. |
+| Staging OLD Worker public | [#41775549127](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549127): **PASS 24/24 real public Chromium and 24/24 repeated HTTP, zero new 503**; this does NOT validate staged scanner or backend Media. |
+| Exact source postmerge | [Portal CI #41775911286](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911286) **4/4 PASS**, [real ClamAV #41775911322](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911322) **PASS**. [Old-Worker staging #41775911292](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911292) **IN_PROGRESS at initial capture**, follow-up evidence append-only. |
+| Actual Cloudflare staging D1 | See [RUN-MEDIA-20261104-16](#run-media-20261104-16--actual-cloudflare-staging-d1-00250026-rollout-no-worker-deploy): 0025+0026 applied, both tables & 4 indexes present, no data/foreign-key violations, PITR pre-migration marker; D1 integrity pragma unsupported. |
+| Host unavailable | Cloudflare Containers applications API **HTTP 401**; no real hosted AV service, private job runner, R2 bridge or HMAC secrets. **CMS-MEDIA-001..012 real authorized hosted E2E NOT_RUN**. Neither staging nor production Worker changed. |
+| Decision | **SOURCE CI + D1 SCHEMA ACCEPTED**, **HOSTED MEDIA NOT ACCEPTED**; upload scanner gates remain OFF, production HOLD, IAM PAUSED, SRS FROZEN. No QA images or secrets in GitHub. |
+
+
+## RUN-MEDIA-20261104-19 — B3.11 exact merged SHA postmerge CI and old Worker public staging
+
+| Field | Verified evidence |
+|---|---|
+| Exact source merge | [PR #106](https://github.com/ntdung-tds/iaict-portal/pull/106) `c6c5d3e4a0ada4d170c652334b75e8fb15c73cec`. |
+| Postmerge Portal CI | [#41775911286](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911286) **PASS 4/4 jobs** (source verification / test / local Chromium / release guards). |
+| Postmerge genuine antivirus | [#41775911322](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911322) **PASS 3/3 real ClamAV engine tests**, including EICAR harmless signature and clean image decoder pipeline in disposable Docker CI. |
+| Public OLD staging Worker | [#41775911292](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911292): **PASS 24/24 real public Chromium and 24/24 repeated HTTP; 0 new HTTP 503**. The Worker has NOT been redeployed and Media upload is OFF; no hosted Media functionality acceptance. |
+| Actual staging D1 | `0025`/`0026` **APPLIED and read back**; see [RUN-MEDIA-20261104-16](#run-media-20261104-16--actual-cloudflare-staging-d1-00250026-rollout-no-worker-deploy), with retained Time Travel bookmark and integrity pragma UNSUPPORTED. |
+| External blockers | Cloudflare Containers API **HTTP 401**, hosted scanner not deployed; trusted runner, HMAC secret, real R2 object scan and CMS-MEDIA-001..012 real authorized browser NOT_RUN. SRS FROZEN, IAM PAUSED, production HOLD. |
+| Prior failures | Historical CI RED attempts from B3.10 and intermittent OPS 503 [#30](https://github.com/ntdung-tds/iaict-portal/issues/30) remain documented and OPEN; new PASS does not delete them. |
