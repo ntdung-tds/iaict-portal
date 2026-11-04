@@ -251,20 +251,22 @@ describe("B3.8 real disposable D1 and synthetic private R2 quarantine — NOT de
   });
 
   it("keeps PURGE_PENDING byte reservations charged to stored quota", async () => {
+    // An isolated scope rules out unrelated QUARANTINED fixtures as the cause.
+    const scope="qa-purge-isolation";
     const id=randomUUID();
     await db.prepare(`INSERT INTO media_r2_quarantine_uploads
       (id,scope_id,actor_user_id,idempotency_key,storage_key,mime_type,
        display_filename,byte_length,state,created_at)
       VALUES (?,?,?,?,?,'image/png','old.png',16,'PURGE_PENDING',datetime('now','-3 days'))`)
-      .bind(id,MEDIA_STAGING_SCOPE_ID,actor.id,randomUUID(),"quarantine/v2/cms-main/"+id).run();
+      .bind(id,scope,actor.id,randomUUID(),"quarantine/v2/cms-main/"+id).run();
     const { MEDIA_R2_RESERVE_SQL } = await import("./media-r2-quarantine");
     const newId=randomUUID();
     const result=await db.prepare(MEDIA_R2_RESERVE_SQL).bind(
-      newId,MEDIA_STAGING_SCOPE_ID,actor.id,randomUUID(),"quarantine/v2/cms-main/"+newId,
+      newId,scope,actor.id,randomUUID(),"quarantine/v2/cms-main/"+newId,
       "image/png","new.png",16,
-      actor.id,1000,MEDIA_STAGING_SCOPE_ID,1000,
-      MEDIA_STAGING_SCOPE_ID,16,1000000,
-      MEDIA_STAGING_SCOPE_ID,16,31,
+      actor.id,1000,scope,1000,
+      scope,16,1000000,
+      scope,16,31,
       actor.id,1000,
     ).run();
     expect(result.meta?.changes).toBe(0);
