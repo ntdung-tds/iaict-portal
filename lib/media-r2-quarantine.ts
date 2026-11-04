@@ -52,9 +52,9 @@ type BoundedRead =
 
 /** Read bounded bytes without request.arrayBuffer() and without buffering beyond 10 MiB. */
 export async function readBoundedMediaRequest(
-  request: Request, maxBytes = MEDIA_POLICY.file.maxBytes,
-  maxChunks = MEDIA_POLICY.file.maxChunks,
-  deadlineMs = MEDIA_POLICY.file.receiveDeadlineMs,
+  request: Request, maxBytes: number = MEDIA_POLICY.file.maxBytes,
+  maxChunks: number = MEDIA_POLICY.file.maxChunks,
+  deadlineMs: number = MEDIA_POLICY.file.receiveDeadlineMs,
 ): Promise<BoundedRead> {
   if (!request.body || !Number.isSafeInteger(maxBytes) || maxBytes <= 0 ||
       !Number.isSafeInteger(maxChunks) || maxChunks <= 0 ||
