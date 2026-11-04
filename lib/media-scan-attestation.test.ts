@@ -18,7 +18,7 @@ function claim(patch: Partial<ScanClaim> = {}): ScanClaim {
 async function sign(c: ScanClaim) {
  const bytes=scanClaimBytes(c); if(!bytes) throw Error("invalid fixture");
  const key=await crypto.subtle.importKey("raw",secret,{name:"HMAC",hash:"SHA-256"},false,["sign"]);
- const sig=new Uint8Array(await crypto.subtle.sign("HMAC",key,bytes));
+ const sig=new Uint8Array(await crypto.subtle.sign("HMAC",key,new Uint8Array(bytes)));
  return {claim:c,signature:[...sig].map(n=>n.toString(16).padStart(2,"0")).join("")};
 }
 const expected={uploadId:uuid,scopeId:"cms-main",sourceRevision:1,sourceSha256:sha,sourceMime:"image/png"};
