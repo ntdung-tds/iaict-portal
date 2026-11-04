@@ -34,6 +34,8 @@
 
 | CHG-MEDIA-R2-20261104-08 | 2026-11-04 | B3.11 applied staging-only D1 migrations 0025–0026 with recovery bookmark; added real ClamAV EICAR CI; Containers API 401 blocks hosted scanner | STAGING_D1_APPLIED / AV_CI_PENDING / HOSTED_BLOCKED | Issue #39 · PR B3.11 | RUN-MEDIA-20261104-16..17 | CHƯA_CHỐT_SRS |
 
+| CHG-MEDIA-R2-20261104-09 | 2026-11-04 | B3.12 gộp real ClamAV/Pillow Python HMAC sang verifier TS và R2/D1 CAS + purge với fixture tổng hợp CI | SOURCE_IN_REVIEW / HOSTED_BLOCKED | PR B3.12 · Issue #39 | RUN-MEDIA-20261104-20 PENDING CI | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -181,6 +183,13 @@
 - **Host blocker:** Cloudflare Containers application list `GET` trả HTTP 401 unauthorized, chưa có Container hosting/service identity/secrets/job runner. Worker upload flag và policy scannerConfigured false; **CMS-MEDIA-001..012 hosted real role E2E NOT_RUN**; production Worker/D1 và IAM không sửa.
 - **Impacts:** Cloudflare **staging D1 schema changed**, docs, dedicated CI AV job; no app API/public serving/schema baseline SRS changes. SRS CHƯA_CHỐT; QA [run ledger](../../qa/IAICT_TEST_RUNS.md) RUN-MEDIA-20261104-16..17; [technical readiness](MEDIA_R2_B3_11_STAGING_RELEASE_GATE_2026-11-04.md).
 - **Recovery:** Time Travel bookmark recorded. **Do not automatically restore**—would overwrite unrelated staging writes. Requires explicit rollback plan, validation, and backup retention. Scanner integration remains hard BLOCKED without Cloudflare Containers rights or alternate secured host.
+
+### CHG-MEDIA-R2-20261104-09 — B3.12 kiểm thử thông luồng real AV/private ledger
+
+- **Mục tiêu:** chứng minh B3.11 ClamAV thật → Pillow xử lý ảnh/receipt HMAC → TS verifier → private R2/D1 readback/CAS/cleanup hoạt động xuyên suốt trên cùng mẫu tổng hợp, khác kiểm thử tách đôi trước đây.
+- **Thay đổi:** Python chỉ khi được cấu hình CI mới ghi fixture ảnh mẫu + WebP + receipt có chữ ký vào tệp tạm mode 0600; workflow ClamAV thật kiểm tra EICAR FOUND trước, chạy test Miniflare local cho dữ liệu thật đã quét: chữ ký Python hợp lệ, phát hiện derivative R2 sai SHA, chống replay, lưu bằng chứng **private only**, janitor xóa cả 2 tệp.
+- **Ranh giới:** chỉ là CI disposable Miniflare D1/R2, không hosted R2, không scanner container Cloudflare (API 401), không dùng dữ liệu thật, không deploy Worker, không bật Media gate. Chưa có hosted IAM/CMS role E2E; production HOLD. [Thiết kế B3.12](MEDIA_R2_B3_12_REAL_AV_PRIVATE_BRIDGE_2026-11-04.md).
+- **Test:** RUN-MEDIA-20261104-20, GH ClamAV dedicated CI pending, Portal CI pending. SRS không chỉnh, chỉ lưu thay đổi CHƯA_CHỐT.
 
 ## Các thay đổi tiếp theo
 
