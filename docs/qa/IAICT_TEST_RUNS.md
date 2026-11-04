@@ -1279,3 +1279,15 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Viewer/CSRF/oversize/mime/idempotency | **NOT_RUN HOSTED**. Local tests may exist; do not substitute for real authorized hosted user. |
 | Antivirus/publish | **BLOCKED**: Cloudflare Containers Workers Paid requirement, no hosted AV service nor signed private R2 derivative. Public media serving OFF; no publication acceptance. |
 | Production and IAM | Production Worker unchanged deployment `a01a3743-ac78-4a19-a990-581fe9235751`. IAM PAUSED, SRS FROZEN, production HOLD. No customer media, credentials or screenshots placed on GitHub. |
+
+## RUN-MEDIA-20261104-27 — B3.14 live anonymous Media edge regression, initial pending source CI
+
+| Field | Evidence / test semantics |
+|---|---|
+| Date / environment | 2026-11-04 UTC+7; actual deployed staging Worker `4ab3ecef-9ebd-485e-afb0-eac55136751d`. Only anonymous unauthenticated staging Media paths. |
+| Cases | CMS-MEDIA-016 (UI edge GET), CMS-MEDIA-017 (capability GET + synthetic PNG POST), CMS-MEDIA-018 (forged headers POST). |
+| Source automation | `e2e/staging-acceptance.spec.ts` (+4 live Playwright cases), CI auto-runs `staging-acceptance` on PR, no QA image or session artifacts in GitHub. |
+| Before PR run | **NOT_RUN / PENDING CI**; do not claim PASS before checked jobs and observed source head run logs. |
+| Authenticated Admin/Editor POST 201 and R2 bytes | **NOT_RUN**: no controlled authenticated session; no acceptance for CMS-MEDIA-001..012. D1 media count zero in read-only inspection before writing these cases. |
+| Security scope | These edge tests check ONLY Cloudflare Access no-login denial, *not* authenticated CSRF checks, viewer roles, upload validation/size after login, HMAC scan, nor R2 object readback. |
+| Production | No Worker deployment, no secrets or credentials in repo, production remains HOLD; IAM PAUSED, SRS FROZEN. |

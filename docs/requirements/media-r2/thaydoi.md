@@ -214,3 +214,10 @@ Khi thêm/sửa tính năng, bổ sung `CHG-MEDIA-R2-YYYYMMDD-NN` theo [mẫu v�
 - Cloudflare live independent readback: staging Worker version `4ab3ecef-9ebd-485e-afb0-eac55136751d` 100%, private R2 bucket, existing D1, `MEDIA_R2_QUARANTINE_ENABLED=true`; production unchanged. NO production promotion or SRS baseline synchronization.
 - **Separation of outcomes:** staging feature flag and interface DEPLOYED; authorized real CMS image upload POST/hosted R2 SHA and role-negative E2E still **NOT_RUN**. D1 source row count and scan evidence count zero at check. Hosted scanner requires Workers Paid or alternative isolated runtime; never mark raw media public.
 - **QA**: RUN-MEDIA-20261104-26. **SRS decision** CHƯA_CHỐT. **Follow-up** B3.14 genuine controlled Admin/Editor browser and private R2/D1 byte proof; Issue #39 remains OPEN.
+
+### CHG-MEDIA-R2-20261104-12 — B3.14 live anonymous Access edge guard automation (source QA only)
+
+- Added **three narrow automated QA cases CMS-MEDIA-016..018**, exercised as **four actual anonymous staging Chromium/API requests**: Media upload UI GET, Media readiness GET, synthetic PNG POST with no login, forged incoming Access/native header POST.
+- No privileged login, no R2 object probe, no staged Worker deploy, no production change, no new publicly available bytes. Results remain **PENDING CI** until exact reviewed SHA returns green; do not reclassify CMS-MEDIA-001..012 or authenticated CSRF/roles as PASS.
+- Existing user authorization to create QA accounts does not waive Cloudflare Access authentication or justify printing passwords/secrets. Full B3.14 hosted E2E remains blocked until controlled Admin/Editor session and private D1/R2 readback.
+- Linked to QA RUN-MEDIA-20261104-27 and PCS checkpoint continuation; **SRS sync CHƯA_CHỐT**.
