@@ -34,3 +34,36 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ ok: false, code: "MEDIA_UNAVAILABLE" }, { status: 503, headers: noStore });
   }
 }
+
+/**
+ * Authenticated, no-store capability discovery for the CMS upload UI.
+ * A disabled scanner only prohibits use/publication, not storing raw bytes
+ * privately in quarantine. A disabled Worker/bucket gate prohibits uploads.
+ * Never expose D1 IDs, R2 keys or the list of private assets via GET.
+ */
+export async function GET(request: Request): Promise<Response> {
+  try {
+    const db = getDatabaseBinding();
+    const actor = await requireNewsroomActor(request, db, CMS_EDIT_ROLES);
+    const roleAllowed = actor.roles.some(role => role === "admin" || role === "editor");
+    const media = getPrivateMediaR2Runtime();
+    return Response.json({
+      ok: true,
+      quarantineEnabled: Boolean(media && roleAllowed),
+      roleAllowed,
+      scannerConfigured: false,
+      publicationEnabled: false,
+      policyId: "IAICT-MEDIA-20261104-V1",
+      maxBytes: 10 * 1024 * 1024,
+    }, { status: 200, headers: noStore });
+  } catch (error) {
+    if (error instanceof NewsroomAuthError) return Response.json({
+      ok: false, code: error.status === 401 ? "AUTH_REQUIRED" : "ROLE_DENIED",
+      quarantineEnabled: false, publicationEnabled: false,
+    }, { status: error.status, headers: noStore });
+    return Response.json({
+      ok: false, code: "MEDIA_UNAVAILABLE", quarantineEnabled: false,
+      publicationEnabled: false,
+    }, { status: 503, headers: noStore });
+  }
+}
