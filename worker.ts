@@ -2,8 +2,8 @@ import { withPublicPreviewCors } from "./lib/cms-public-cors";
 import { NATIVE_VERIFIED_EMAIL_HEADER, nativeActorEmail, nativeAuthEnabled, sameOriginPost } from "./lib/native-auth";
 import { isProtectedAdminPath, verifyCloudflareAccessRequest } from "./lib/cloudflare-access-jwt";
 import handler from "vinext/server/fetch-handler";
-import { setDatabaseBinding, type D1DatabaseLike } from "./lib/cloudflare-db";
-import { setPrivateMediaR2Runtime, type MediaR2BucketLike } from "./lib/media-r2-runtime";
+import { setDatabaseBinding, withDatabaseBinding, type D1DatabaseLike } from "./lib/cloudflare-db";
+import { withPrivateMediaR2Runtime, type MediaR2BucketLike } from "./lib/media-r2-runtime";
 import { cleanupExpiredPrivateMedia } from "./lib/media-r2-cleanup";
 import { runScheduledNewsIngestion } from "./lib/news-scheduler";
 import { resolvePublicRedirect } from "./lib/public-redirects";
@@ -71,13 +71,17 @@ export default {
       }
     }
     request = new Request(request, { headers });
-    setDatabaseBinding(env.DB);
-    // Staging-only quarantined R2: disabled by default. Missing bindings clear
-    // prior state and can never turn production into a file-serving endpoint.
-    setPrivateMediaR2Runtime(env.MEDIA_BUCKET, env.MEDIA_R2_QUARANTINE_ENABLED === "true");
-    const redirect = await resolvePublicRedirect(request, env.DB);
-    if (redirect) return redirect;
-    return withPublicPreviewCors(request, await handler.fetch(request, env, ctx));
+    // Isolate D1/R2 by request to prevent concurrent await-context mixups.
+    return withDatabaseBinding(env.DB, () =>
+      withPrivateMediaR2Runtime(
+        env.MEDIA_BUCKET, env.MEDIA_R2_QUARANTINE_ENABLED === "true",
+        async () => {
+          const redirect = await resolvePublicRedirect(request, env.DB);
+          if (redirect) return redirect;
+          return withPublicPreviewCors(request, await handler.fetch(request, env, ctx));
+        },
+      ),
+    );
   },
 
   async scheduled(
