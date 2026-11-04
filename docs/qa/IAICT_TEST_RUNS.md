@@ -1094,3 +1094,23 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Hosted D1/R2/browser | Migrations 0025/0026 **NOT_APPLIED**, no hosted R2 writes/readbacks, CMS-MEDIA-001..012 genuine authenticated **NOT_RUN**. Production HOLD, IAM PAUSED, SRS FROZEN |
 | Decision | SOURCE_IN_REVIEW; old staging 503 [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) retains past FAIL history; current run must not mask defects |
 | Drive | No screenshots produced, GitHub no images/secrets, future visuals private QA Drive only |
+
+
+## RUN-MEDIA-20261104-14 — B3.10 grouped final-head source PASS, real scanner hosted BLOCKED
+
+| Field | Observed outcome |
+|---|---|
+| Scope/date | 2026-11-04 ICT · B3.10 isolated ClamAV/Pillow signer, TS receipt verifier, forward-only 0026 private evidence, real disposable R2 readback + D1 CAS/audit/derivative purge |
+| Exact PR/final head | [PR #104](https://github.com/ntdung-tds/iaict-portal/pull/104) reviewed `4696ab9a89836991a7ff2551a16b5cf75047af01`, MERGED source `76bed3eecab94cf1c3f5bf4174d132291d5e96b4` |
+| Source CI | [Portal CI #41771159409](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771159409) **4/4 PASS**, **724/724 Vitest** (71 files), typecheck/build/migration digest graph PASS |
+| Image + ClamAV proof | **7/7 Python tests PASS** using real Pillow 13.0.0 JPEG/PNG/WebP decoder and metadata stripping; ClamAV zINSTREAM protocol confirmed against **FAKE LOCAL AV UNIX socket**, not a real ClamAV malware scan; WebP static vs animated regression included |
+| Cross-runtime receipt | Independently Python-generated HMAC signature verified by TypeScript PASS, replay/expiry/policy/hash/nonce/source revision negatives PASS |
+| D1/R2 local | Real disposable Miniflare D1 + R2 byte readback for source/derivative, private SCAN_PASSED_PRIVATE CAS/audit and eventual purge both objects PASS. No hosted D1/R2 mutation |
+| Local Chromium | **41/41 PASS** via GitHub CI, CMS identity mocked; not hosted role E2E |
+| Hosted public old Worker | [staging #41771159404](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771159404) **24/24 Chromium PASS, 24/24 repeated HTTP PASS**, no new 503 in this run. This validates OLD deployed Worker only |
+| RED→fix→retest history | [Source #41770544134](https://github.com/ntdung-tds/iaict-portal/actions/runs/41770544134) **FAIL** (3 TS typing errors); [#41770664892](https://github.com/ntdung-tds/iaict-portal/actions/runs/41770664892) **FAIL** (Pillow WebP loop/animation misclassification). Both fixes then 724/724 & 7/7 PASS on reviewed head. RED history retained |
+| Source postmerge | [Portal #41771522866](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522866) **PASS 4/4**. [old-Worker staging #41771522878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522878) **IN_PROGRESS at initial record** |
+| Hosted scanner / Media acceptance | **BLOCKED / NOT_RUN:** real isolated ClamAV daemon, job runner/auth/HMAC secret, staged D1 0025/0026, true CMS roles/Access 001..012, R2 remote bytes, scanner failover and malware fixture acceptance. Media scan flag FALSE, quarantine Worker gate FALSE |
+| Operational / SRS | No staging/production Worker deploy, no cloud D1/R2 write, no public media GET, no final Drive source handoff; IAM PAUSED, SRS FROZEN, production HOLD. Original staging 503 Issue #30 OPEN, preview #32 OPEN |
+| Evidence | CI logs are text only; no QA photos/videos or credentials on GitHub. Any later visual QA evidence goes private QA Drive |
+| Disposition | **SOURCE MERGED PASS ONLY**; genuine external scanner & Media hosted acceptance **NOT_RUN**, production **NO-GO** |
