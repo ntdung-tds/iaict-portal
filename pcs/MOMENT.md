@@ -1,5 +1,20 @@
 # PCS Moment — IAICT Portal
 
+**PCS Universal 3.2.0 · Solo · Revision 65 checkpoint PR · B3.10 isolated Media scanner source MERGED · IAM PAUSED · production HOLD**
+
+- **2026-11-04 11:12 ICT:** [PR #104](https://github.com/ntdung-tds/iaict-portal/pull/104) grouped source MERGED dev SHA `76bed3eecab94cf1c3f5bf4174d132291d5e96b4`. Isolated Pillow 13 full decoder, ClamAV zINSTREAM runner, cross-runtime HMAC receipt, forward-only 0026 private D1 evidence, original+derivative R2 SHA readback, revision CAS and private derivative cleanup. Existing 0025 migration unchanged.
+- **Final reviewed head `4696ab9a`:** [Portal CI #41771159409](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771159409) **4/4 PASS**, **724/724 Vitest**, **7/7 Pillow Python with FAKE AV socket**, **41/41 local Chromium** (CMS session mocked). [Real PUBLIC old-Worker #41771159404](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771159404): 24/24 Chromium + 24/24 HTTP **PASS**; does not exercise new Media source.
+- **Prior RED runs retained:** typecheck failure [#41770544134](https://github.com/ntdung-tds/iaict-portal/actions/runs/41770544134); Pillow WebP static/animation classification failure [#41770664892](https://github.com/ntdung-tds/iaict-portal/actions/runs/41770664892), both fixed and retested. OPS original intermittent 503 [#30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains OPEN.
+- **Exact postmerge SOURCE jobs:** [Portal #41771522866](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522866), [old-Worker staging #41771522878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522878) **PENDING at first checkpoint**; verify later before claiming PASS.
+- **Blocked external tasks:** real ClamAV isolated service, trusted R2 job runner, secret provision/recovery, hosted D1 0025/0026, true CMS Access/native role browser and CMS-MEDIA-001..012; no AV vendor signature test yet. `MEDIA_POLICY.scan.serviceConfigured=false`, quarantine Worker gate FALSE; no publication or public read. No staging/production deploy. IAM PAUSED, SRS FROZEN, owner production HOLD and final-source Drive handoff deferred until explicit bàn giao.
+- **Next:** B3.11 real service and hosted acceptance gates or independent B4 work. Keep lightweight and track source-vs-hosted results separately.
+
+**Continuity:** PCS rev65 is canonical only after documentation PR merge/readback. Older moment below retained.
+
+---
+
+## Historical PCS Moment (Revision 64)
+
 **PCS Universal 3.2.0 · Solo · Revision 64 PROPOSED on documentation PR · B3.9 security source MERGED · IAM PAUSED · production HOLD**
 
 - **2026-11-04 10:30 ICT:** [PR #102](https://github.com/ntdung-tds/iaict-portal/pull/102) source-only MERGED at `074b49dbe6d930dfd28c0c83c5506fff8a39d631`. D1/R2 binding now isolated by request; hourly/daily failed reservations and PURGE_PENDING storage bytes count against quotas. No Worker rollout or migration.
