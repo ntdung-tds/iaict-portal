@@ -835,7 +835,7 @@
               "portal_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401748",
               "real_av": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401775",
               "public_old_worker": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401796",
-              "status": "PENDING_AT_FIRST_CHECKPOINT"
+              "status": "PASS_PORTAL_4_4_REAL_AV_3_3_PLUS_BRIDGE_5_5_PUBLIC_OLD_WORKER_24_CHROMIUM_24_HTTP"
             },
             "public_media_routes_enabled": false,
             "hosted_clamav": "BLOCKED_CLOUDFLARE_CONTAINERS_HTTP_401",
@@ -1066,7 +1066,7 @@
     "artifacts": [],
     "current": {
       "active_task": "T-MEDIA-R2",
-      "last_completed_step": "B3.12 PR #108 MERGED SOURCE at b24682db20573fef2b8e5c46b75b31874cbdece2. REAL ClamAV EICAR + clean dual scan 3/3 PASS and same Python signed WebP bytes verified in TS plus disposable Miniflare private D1/R2 CAS/hashes/replay/purge 5/5 PASS (dedicated CI #41781000006). Portal CI 4/4, 724/724 ordinary unit PASS and 5 specialized integration tests SKIPPED only in ordinary run, 41/41 local Chromium PASS. Public old Worker 24/24 Chromium +24/24 HTTP PASS; initial RED discovery #41780387128 fixed and preserved. Staging D1 0025/0026 applied in B3.11; hosted ClamAV Containers API HTTP401, private job runner/secret/R2 real E2E NOT_RUN. Worker gates OFF, staging and production Worker unchanged; IAM PAUSED, SRS FROZEN, production HOLD. Postmerge jobs pending initial checkpoint.",
+      "last_completed_step": "B3.12 PR #108 MERGED SOURCE at b24682db20573fef2b8e5c46b75b31874cbdece2. REAL ClamAV EICAR + clean dual scan 3/3 PASS and same Python signed WebP bytes verified in TS plus disposable Miniflare private D1/R2 CAS/hashes/replay/purge 5/5 PASS (dedicated CI #41781000006). Portal CI 4/4, 724/724 ordinary unit PASS and 5 specialized integration tests SKIPPED only in ordinary run, 41/41 local Chromium PASS. Public old Worker 24/24 Chromium +24/24 HTTP PASS; initial RED discovery #41780387128 fixed and preserved. Staging D1 0025/0026 applied in B3.11; hosted ClamAV Containers API HTTP401, private job runner/secret/R2 real E2E NOT_RUN. Worker gates OFF, staging and production Worker unchanged; IAM PAUSED, SRS FROZEN, production HOLD. Source exact postmerge Portal #41781401748 4/4 PASS, real ClamAV #41781401775 3/3 genuine Python +5/5 TS bridge PASS, public old Worker #41781401796 24/24 Chromium and 24/24 HTTP PASS.",
       "next_action": "B3.13 hosted service readiness: secure Containers-enabled Cloudflare permissions (HTTP 401) or alternative isolated hosting; provision real ClamAV with signature refresh and trusted source/derivative R2 bridge, HMAC secret and D1 private evidence CAS, verify hosted EICAR and 8 real CMS role browser E2E before staged upload enable. Do not re-implement scanner contract or deploy production while blocked; optional independent CMS/CRM tasks can proceed.",
       "blockers": [
         "B3.12 source REAL ClamAV 3/3 and Python→TS→Miniflare D1/R2 5/5 PASS, but this is NOT hosted Media. Cloudflare Containers API HTTP401 blocks real scanner deployment; private R2 job runner, runtime HMAC service identity, authorized hosted CMS-MEDIA-001..012 E2E NOT_RUN. Media gates OFF; staging D1 0025/0026 already applied, Workers unchanged. Historical OPS #30 503 OPEN, production HOLD.",
