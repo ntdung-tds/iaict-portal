@@ -482,7 +482,7 @@ const mediaQuarantineApi = "/api/admin/cms/media/quarantine";
 const mediaUploadUi = "/admin/media/upload";
 const accessChallenge = (status: number, location: string): boolean =>
   [302, 303, 307, 308].includes(status) &&
-  /cloudflareaccess\\.com|\\/cdn-cgi\\/access\\/login/i.test(location);
+  (location.includes("cloudflareaccess.com") || location.includes("/cdn-cgi/access/login"));
 
 const safeSyntheticPng = Buffer.from([
   137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82,
