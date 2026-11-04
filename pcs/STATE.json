@@ -1,14 +1,14 @@
 {
   "schema": "pcs3.simple.v1",
-  "revision": 66,
-  "updated_at": "2026-11-04T04:55:00.000Z",
+  "revision": 67,
+  "updated_at": "2026-11-04T05:48:00.000Z",
   "state": {
     "schema": "pcs3.project-state.v1",
     "slug": "iaict-portal",
     "name": "IAICT Portal",
     "version": "3.2.0",
     "created_at": "2026-11-02T01:34:29.718Z",
-    "updated_at": "2026-11-04T04:55:00.000Z",
+    "updated_at": "2026-11-04T05:48:00.000Z",
     "phase": "IMPLEMENTATION",
     "source_refs": [],
     "product_map": {
@@ -378,7 +378,7 @@
             "CMS-MEDIA-014",
             "CMS-MEDIA-015"
           ],
-          "run_id": "RUN-MEDIA-20261104-18",
+          "run_id": "RUN-MEDIA-20261104-21",
           "catalog_case_count": 127,
           "baseline_sha": "844f7ddf37d2314eed55f1fe3f766e6610684226",
           "threat_model": "docs/requirements/media-r2/MEDIA_R2_THREAT_MODEL_2026-11-03.md",
@@ -812,6 +812,48 @@
               "RUN-MEDIA-20261104-18"
             ],
             "release_gate_doc": "docs/requirements/media-r2/MEDIA_R2_B3_11_STAGING_RELEASE_GATE_2026-11-04.md"
+          },
+          "b312_real_av_private_bridge": {
+            "status": "SOURCE_MERGED_DEV_REAL_AV_CI_D1_R2_BRIDGE_PASS_HOSTED_BLOCKED",
+            "source_pr": "https://github.com/ntdung-tds/iaict-portal/pull/108",
+            "reviewed_head": "a114fdd4a1bb9019da13a8bdc1791902d14a8432",
+            "merged_sha": "b24682db20573fef2b8e5c46b75b31874cbdece2",
+            "real_clamav_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41781000006",
+            "real_engine_tests": "PASS_3_OF_3_EICAR_AND_CLEAN_DOUBLE_SCAN",
+            "private_bridge": "PASS_5_OF_5_PYTHON_SIGNED_BYTES_MINIFLARE_D1_R2_CAS_REPLAY_PURGE",
+            "portal_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41781000026",
+            "portal_jobs": "PASS_4_OF_4",
+            "ordinary_unit_tests": "PASS_724_OF_724_AND_5_REAL_AV_INTEGRATION_SKIPPED_ONLY_WITHOUT_FIXTURE",
+            "local_chromium": "PASS_41_OF_41_MOCK_CMS",
+            "public_old_worker_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41781000014",
+            "public_chromium": "PASS_24_OF_24_OLD_WORKER",
+            "public_http": "PASS_24_OF_24_OLD_WORKER_ZERO_NEW_503",
+            "initial_red_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41780387128",
+            "initial_red_reason": "VITEST_TEST_FILE_IN_SERVICES_NOT_DISCOVERED",
+            "fixed_red_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41780626240",
+            "source_postmerge": {
+              "portal_ci": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401748",
+              "real_av": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401775",
+              "public_old_worker": "https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401796",
+              "status": "PASS_PORTAL_4_4_REAL_AV_3_3_PLUS_BRIDGE_5_5_PUBLIC_OLD_WORKER_24_CHROMIUM_24_HTTP"
+            },
+            "public_media_routes_enabled": false,
+            "hosted_clamav": "BLOCKED_CLOUDFLARE_CONTAINERS_HTTP_401",
+            "hosted_job_runner": "NOT_DEPLOYED",
+            "hosted_hmac_secret": "NOT_PROVISIONED",
+            "hosted_media_r2_write": "NOT_RUN",
+            "hosted_cms_role_e2e": "NOT_RUN",
+            "staging_media_d1_0025_0026": "APPLIED_IN_B311_UNCHANGED",
+            "staging_worker_deployed": false,
+            "production_worker_deployed": false,
+            "scanner_policy_gate": false,
+            "quarantine_gate": false,
+            "qa_run_ids": [
+              "RUN-MEDIA-20261104-20",
+              "RUN-MEDIA-20261104-21"
+            ],
+            "design_doc": "docs/requirements/media-r2/MEDIA_R2_B3_12_REAL_AV_PRIVATE_BRIDGE_2026-11-04.md",
+            "change_id": "CHG-MEDIA-R2-20261104-09"
           }
         },
         "description": "Existing Issue #39 documents R2 media upload gaps; bucket binding is not upload E2E acceptance. Reconcile with current PR #36 and relevant QA case records.\n2026-11-03 DESIGN ONLY: documented staging R2 threat model, 12 planned manual QA cases with RUN-MEDIA-20261103-01 NOT_RUN and CHG-MEDIA-R2-20261103-01. Actual upload code, scanner, role browser, D1/R2 hosted E2E remain unimplemented/not run. Owner must approve security design before hosted behavior. IAM owner-paused; SRS frozen and production untouched.\nB3.2 isolated pure preflight implemented on test branch; 3 AUTO READY local test cases (013..015) pending exact-SHA CI and Master QA sync. Old 12 hosted/API Media cases still PLANNED/NOT_RUN. No live file type/size approved and no Worker/R2/D1/IAM/production/SRS mutation.\nB3.2 3-pass code review: reproduced getter policy TOCTOU, changing/throwing candidate getters and typed-array size spoof in unit CI, fixed each and retested; no additional scoped issue detected. Upload/API/hosted R2 still NOT_RUN. Master QA v2.15 synced, case catalog 127.\nPostmerge PR89 at 9dc3bfc88c84 verified Portal CI 4/4 and live public staging 1/1; staged Worker version unchanged since 2026-10-31. Scoped B3.2 helper done; hosted upload not implemented or tested. RUN-MEDIA-20261103-07. No security policy approved.\nB3.3 batched PROPOSED design policy + pure unwired lifecycle/revision planner/tests on PR91, RUN-MEDIA-20261103-08 pending exact code CI; all real hosted cases 001..012 remain PLANNED/NOT_RUN. No policy values approved, IAM paused, production HOLD.\n2026-11-04 B3.4: grouped bounded async source inspection, adversarial fixtures, design/readiness, QA and PCS in PR #93. First CI red 645/647 (non-byte Uint16Array accepted, test default undefined policy), corrected locally and exact SHA CI pending. No runtime wiring, scanner, D1/R2, IAM, SRS or production change.\nB3.4 source-only PR #93 merged at 3ad07ef3; 17 adversarial stream fixtures and source CI 650/650 PASS, full final and postmerge portal CI 4/4 and public Chromium PASS on old staging Worker. Original source and staging 503 RED runs retained; Issue #30 OPEN. Hosted upload/D1/R2/scanner/role E2E NOT_RUN. All MED-DEC decisions unapproved.\nOwner-delegated 2026-11-04 Media R2 MED-DEC-01..07 selected staging policy in ADR-MEDIA-20261104-01, source-only private quarantine admission and fail-closed role/read/publish denial until isolated scanner actually exists. PR95, RUN-MEDIA-20261104-03. No hosted upload/scanner/D1/R2 or production acceptance.\nOwner requested image optimization and file compression 2026-11-04; B3.6 PR97 includes image derivative encoding PLAN, actual local UTF-8 gzip helper and negative tests. ZIP batch download future backlog. 685 Vitest PASS at source CI; no Image byte encoder, R2 route, scanner, live file upload or role E2E.\nB3.7 grouped image/ZIP/gzip local compression: actual client-side image derivatives, ZIP32 deflate/store, gzip UI, CMS /admin/tools/compression responsive page, Playwright real bytes with mock CMS shell. Source 696/696 Vitest PASS, browser initial timeouts under review. No R2/API/scanner/production.\n2026-11-04 B3.8: B3.8 private D1/R2 quarantine SOURCE MERGED via PR #100 at ef3d095661342546b2ed8d144315e8ed807f6cee. Final PR exact-head portal CI #41752365334 4/4 PASS and public old-Worker #41752365211 PASS; postmerge exact-SHA Portal CI #41762720634 4/4 PASS and staging #41762720839 PASS (old Worker). Real Miniflare D1/R2 and 8 synthetic native role paths tested, but hosted D1 migration, trusted scanner/image decoder, hosted R2 bytes, authenticated 8-role browser and CMS-MEDIA-001..012 remain NOT_RUN. MEDIA_R2_QUARANTINE_ENABLED=false, IAM PAUSED, SRS FROZEN, production HOLD. Cloudflare Preview error is documented in Issue #32; no production Worker changed.\n2026-11-04 B3.9 source PR #102 merged: D1/R2 request-bound AsyncLocalStorage and failed/purge_pending quota hardening. 713/713 Vitest, 41 local Chromium PASS. Old staging Worker HTTP sweep 2/24 FAIL 503 first, 24/24 PASS rerun; Issue #30 remains OPEN. RUN-MEDIA-20261104-11; source only, hosted Media E2E NOT_RUN.\n2026-11-04 B3.10 grouped PR104 SOURCE MERGED: ClamAV UNIX INSTREAM + real Pillow decode/strip local one-shot, HMAC receipts, 0026 private scan evidence, R2 SHA readback, D1 CAS, derivative cleanup. 724 unit and 7 Pillow/mock-AV tests + 41 local Chromium PASS; real service/migration/staging Media E2E NOT_RUN."
@@ -1024,10 +1066,10 @@
     "artifacts": [],
     "current": {
       "active_task": "T-MEDIA-R2",
-      "last_completed_step": "B3.11 PR #106 MERGED SOURCE c6c5d3e4a0ada4d170c652334b75e8fb15c73cec. ACTUAL STAGING D1 media migrations 0025/0026 APPLIED and READBACK 2 tables/4 indexes/0 records/FK check clean with before Time Travel bookmark. Genuine ClamAV Docker CI EICAR 3/3 PASS and source CI 4/4, 724/724 unit, 7/7 Pillow fake socket, 41/41 local Chromium. Public old-Worker 24/24 Chromium and 24/24 HTTP PASS. Cloudflare Containers API 401 blocks hosted scanner; no hosted private job runner/secrets/R2 Media E2E, new Worker NOT DEPLOYED, gates OFF. SRS FROZEN, IAM PAUSED, production HOLD. Exact source postmerge Portal #41775911286 4/4 PASS, real ClamAV #41775911322 3/3 PASS, old public Worker #41775911292 24/24 Chromium+24/24 HTTP PASS. Genuine hosted scanner still BLOCKED.",
-      "next_action": "B3.11 remainder: obtain Cloudflare Containers API authorization/entitlement or equivalently isolated private scanner host; deploy real clamd+signature updates and trusted job runner with R2 and HMAC scoped secret; verify hosted EICAR and rollback; then carefully release exact reviewed Worker to staging with gates guarded and real CMS upload role browser acceptance (CMS-MEDIA-001..012). Do not attempt production or resume IAM. Do not conflate true CI ClamAV with hosted scanner.",
+      "last_completed_step": "B3.12 PR #108 MERGED SOURCE at b24682db20573fef2b8e5c46b75b31874cbdece2. REAL ClamAV EICAR + clean dual scan 3/3 PASS and same Python signed WebP bytes verified in TS plus disposable Miniflare private D1/R2 CAS/hashes/replay/purge 5/5 PASS (dedicated CI #41781000006). Portal CI 4/4, 724/724 ordinary unit PASS and 5 specialized integration tests SKIPPED only in ordinary run, 41/41 local Chromium PASS. Public old Worker 24/24 Chromium +24/24 HTTP PASS; initial RED discovery #41780387128 fixed and preserved. Staging D1 0025/0026 applied in B3.11; hosted ClamAV Containers API HTTP401, private job runner/secret/R2 real E2E NOT_RUN. Worker gates OFF, staging and production Worker unchanged; IAM PAUSED, SRS FROZEN, production HOLD. Source exact postmerge Portal #41781401748 4/4 PASS, real ClamAV #41781401775 3/3 genuine Python +5/5 TS bridge PASS, public old Worker #41781401796 24/24 Chromium and 24/24 HTTP PASS.",
+      "next_action": "B3.13 hosted service readiness: secure Containers-enabled Cloudflare permissions (HTTP 401) or alternative isolated hosting; provision real ClamAV with signature refresh and trusted source/derivative R2 bridge, HMAC secret and D1 private evidence CAS, verify hosted EICAR and 8 real CMS role browser E2E before staged upload enable. Do not re-implement scanner contract or deploy production while blocked; optional independent CMS/CRM tasks can proceed.",
       "blockers": [
-        "MEDIA B3.11 PARTIAL: staging D1 0025/0026 APPLIED, real ClamAV engine EICAR 3/3 PASS **CI ONLY**. Cloudflare Containers API GET returns HTTP 401; scanner not HOSTED, private job runner/R2 bridge/HMAC keys NOT DEPLOYED. Actual CMS role browser E2E 001..012 NOT_RUN; policy scanConfigured=false and upload enabled=false. D1 Time Travel bookmark recorded; full exported SQL backup NOT_RUN. PR #106 code merged, staging Worker unchanged, production HOLD. OPS #30 intermittent 503 remains OPEN.",
+        "B3.12 source REAL ClamAV 3/3 and Python→TS→Miniflare D1/R2 5/5 PASS, but this is NOT hosted Media. Cloudflare Containers API HTTP401 blocks real scanner deployment; private R2 job runner, runtime HMAC service identity, authorized hosted CMS-MEDIA-001..012 E2E NOT_RUN. Media gates OFF; staging D1 0025/0026 already applied, Workers unchanged. Historical OPS #30 503 OPEN, production HOLD.",
         "Actual lib/totp.ts now exercised only in Node local synthetic D1 proof; hosted D1 integration, real encrypted factor/key binding, real IAM session and recovery still NOT_IMPLEMENTED/NOT_RUN.",
         "User/factor security epoch and encrypted MFA keys remain unprovisioned for real IAM. Hosted D1 migration, Access cutover, policy and recovery need explicit Owner approval; ADR PROPOSED, SRS FROZEN.",
         "Current login mints full native session after password; future enforcement needs split first-factor challenge, verified session assurance on all server readers and old-session invalidation.",
