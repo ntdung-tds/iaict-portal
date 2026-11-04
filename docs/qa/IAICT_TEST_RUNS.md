@@ -1050,3 +1050,31 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Gate | Scanner false, trusted server decode absent, 0025 hosted NOT_APPLIED, no hosted R2 write, production HOLD, IAM PAUSED, frozen SRS |
 | Evidence | CI text links after execution. No screenshot or secret in GitHub. Private QA Drive only for future authenticated visual evidence |
 | Disposition | SOURCE_IN_REVIEW / no hosted Media release |
+
+
+## RUN-MEDIA-20261104-11 — B3.9 source review, staging 503 recurrence and actual merge
+
+| Field | Actual observed evidence |
+|---|---|
+| Scope/date | 2026-11-04 ICT; B3.9 request-scoped Media R2/DB and failure/pending quotas, SOURCE ONLY |
+| Exact PR final head | `ed40a02f279c316101c0743ae77efcf84fe16bb2` · [PR #102](https://github.com/ntdung-tds/iaict-portal/pull/102) |
+| GitHub Portal CI | [#41766771294](https://github.com/ntdung-tds/iaict-portal/actions/runs/41766771294) **PASS 4/4**, **713/713 Vitest** (69 test files), **41/41 real LOCAL Chromium** (CMS session MOCK) |
+| Actual public staging attempt 1 | [#41766771258, attempt 1](https://github.com/ntdung-tds/iaict-portal/actions/runs/41766771258) **FAIL**: 24/24 hosted public Chromium PASS, 22/24 repeated GET HTTP PASS; 2 real 503 on /tin-tuc, / (CF-Ray `a55082d889e9b6cc-ORD`, `a55082e25b10a3db-ORD`) |
+| Public attempt 2 | Same run, attempt 2 **PASS**: 24/24 public Chromium and 24/24 HTTP probe, zero 503. Earlier FAIL is NOT erased or recategorized; [OPS #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains OPEN |
+| Source integration | PR #102 **MERGED** at `074b49dbe6d930dfd28c0c83c5506fff8a39d631`. Exact postmerge [Portal #41767441954](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441954) and [public old Worker #41767441923](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441923) were PENDING at record creation |
+| Scope of tests | Actual isolated Miniflare D1 quotas, concurrent Node AsyncLocalStorage contexts, real LOCAL browser rendering and actual public OLD staging Worker. No genuine hosted CMS authenticated Media upload. |
+| Deployment & acceptance | NO Worker/D1 0025/Media R2/Access/production change. Scanner false, backend decoder absent, CMS-MEDIA-001..012 NOT_RUN, 127 QA cases unchanged. Production HOLD, IAM PAUSED, SRS FROZEN |
+| Drive evidence | No screenshot captured; no GitHub photo/video/credentials. Use private QA Drive if future live authenticated screenshot evidence is generated |
+| Verdict | **PASS source/CI/LOCAL browser**; **FAIL first staging HTTP sweep / PASS rerun**, old Worker only; hosted Media E2E **BLOCKED/NOT_RUN**, production **NO-GO** |
+
+
+## RUN-MEDIA-20261104-12 — B3.9 exact merged SHA postmerge gates
+
+| Field | Actual evidence |
+|---|---|
+| Merge | PR #102 `074b49dbe6d930dfd28c0c83c5506fff8a39d631` |
+| Source CI | [Portal #41767441954](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441954) **PASS** all required jobs, same merged source code |
+| Public staging | [staging-acceptance #41767441923](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441923) **PASS on deployed OLD Worker**; not postdeployment Media testing |
+| Historic FAILURE | Premerge [#41766771258 attempt 1](https://github.com/ntdung-tds/iaict-portal/actions/runs/41766771258): 2 intermittent HTTP 503 **FAIL**; attempt 2 PASS. Both remain in [OPS #30](https://github.com/ntdung-tds/iaict-portal/issues/30), no claim root cause fixed |
+| Scope | No upload Worker deployment, no hosted 0025/R2 write, scanner/decoder absent, no authenticated CMS Media browser; CMS-MEDIA-001..012 NOT_RUN |
+| Decision | **SOURCE MERGED ACCEPTED**; **hosted Media + production HOLD**, IAM PAUSED, SRS FROZEN. No screenshot/test credentials attached. |

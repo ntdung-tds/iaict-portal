@@ -1,5 +1,19 @@
 # PCS Moment — IAICT Portal
 
+**PCS Universal 3.2.0 · Solo · Revision 64 PROPOSED on documentation PR · B3.9 security source MERGED · IAM PAUSED · production HOLD**
+
+- **2026-11-04 10:30 ICT:** [PR #102](https://github.com/ntdung-tds/iaict-portal/pull/102) source-only MERGED at `074b49dbe6d930dfd28c0c83c5506fff8a39d631`. D1/R2 binding now isolated by request; hourly/daily failed reservations and PURGE_PENDING storage bytes count against quotas. No Worker rollout or migration.
+- **Exact PR-head:** `ed40a02f279c316101c0743ae77efcf84fe16bb2`, [Portal CI #41766771294](https://github.com/ntdung-tds/iaict-portal/actions/runs/41766771294) **4/4 PASS**, **713/713 Vitest**, **41/41 real local Chromium** (CMS identity mocked). [Public staging #41766771258](https://github.com/ntdung-tds/iaict-portal/actions/runs/41766771258) attempt 1 Chromium 24/24 PASS but HTTP sweep **FAIL 22/24, two 503**; attempt 2 24/24 Chromium and HTTP **PASS**. Both use old deployed Worker; original failures retained in [OPS #30](https://github.com/ntdung-tds/iaict-portal/issues/30).
+- **Postmerge workflows:** [Portal #41767441954](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441954) and [old-Worker staging #41767441923](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441923) **PASS on exact merge SHA**: Portal CI 4/4 PASS, public acceptance PASS **against old deployed Worker only**; hosted Media E2E remains NOT_RUN.
+- **Still BLOCKED:** scanner `serviceConfigured=false`, image decoder/re-encode + attestation, hosted D1 0025, real authorized CMS role browser and CMS-MEDIA-001..012 NOT_RUN. Upload gate FALSE, no public serving, 127 QA case definitions unchanged, no source Drive handoff. IAM PAUSED, SRS FROZEN, production HOLD; Cloudflare Preview mismatch [#32](https://github.com/ntdung-tds/iaict-portal/issues/32) unresolved.
+- **Next:** B3.10 isolated AV scanner + trusted image decoder + attested CAS, then controlled staging release, rollback and authenticated E2E. Never infer hosted acceptance from local/source CI.
+
+**Continuity:** Rev64 PROPOSED until docs PR merge and readback. Rev63 was merged in PR #101; historical observations follow.
+
+---
+
+## Historical PCS Moment (Revision 63)
+
 **PCS Universal 3.2.0 · Solo · Revision 63 PROPOSED on documentation checkpoint PR · B3.8 private D1/R2 quarantine SOURCE MERGED · IAM PAUSED · production HOLD**
 
 - **2026-11-04 09:48 ICT:** [PR #100](https://github.com/ntdung-tds/iaict-portal/pull/100) merged exact `ef3d095661342546b2ed8d144315e8ed807f6cee`; dev branch only, NO staging/production release. [B3.8 design](../docs/requirements/media-r2/MEDIA_R2_B3_8_QUARANTINE_PIPELINE_2026-11-04.md), [RUN-MEDIA-20261104-08 and 09](../docs/qa/IAICT_TEST_RUNS.md).
