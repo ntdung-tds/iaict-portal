@@ -229,4 +229,45 @@ describe("B3.8 real disposable D1 and synthetic private R2 quarantine — NOT de
     expect(rows.results.length).toBeGreaterThan(0);
     expect(bucket.objects.size).toBe(0);
   });
+  it("counts failed reservations in hourly quota even after an R2 failure", async () => {
+    const rateActor: NewsroomActor = {
+      id: "synthetic-rate-quota", email: "synthetic-rate-quota@example.test",
+      displayName: null, roles: ["editor"],
+    };
+    await db.prepare("INSERT INTO admin_users(id,email,is_active,created_at,updated_at) VALUES (?,?,1,'qa','qa')")
+      .bind(rateActor.id,rateActor.email).run();
+    for(let i=0;i<MEDIA_POLICY.limits.uploadsPerActorHour;i++) {
+      const id=randomUUID();
+      await db.prepare(`INSERT INTO media_r2_quarantine_uploads
+        (id,scope_id,actor_user_id,idempotency_key,storage_key,mime_type,
+         display_filename,byte_length,state)
+        VALUES (?,?,?,?,?,'image/png','qa.png',16,'FAILED')`)
+        .bind(id,MEDIA_STAGING_SCOPE_ID,rateActor.id,randomUUID(),"quarantine/v2/cms-main/"+id).run();
+    }
+    const sink=memoryBucket();
+    expect(await submitPrivateMediaQuarantine(upload(tinyPng),rateActor,db,sink))
+      .toEqual({ok:false,status:429,code:"MEDIA_QUOTA_OR_RESERVATION_CONFLICT"});
+    expect(sink.objects.size).toBe(0);
+  });
+
+  it("keeps PURGE_PENDING byte reservations charged to stored quota", async () => {
+    const id=randomUUID();
+    await db.prepare(`INSERT INTO media_r2_quarantine_uploads
+      (id,scope_id,actor_user_id,idempotency_key,storage_key,mime_type,
+       display_filename,byte_length,state,created_at)
+      VALUES (?,?,?,?,?,'image/png','old.png',16,'PURGE_PENDING',datetime('now','-3 days'))`)
+      .bind(id,MEDIA_STAGING_SCOPE_ID,actor.id,randomUUID(),"quarantine/v2/cms-main/"+id).run();
+    const { MEDIA_R2_RESERVE_SQL } = await import("./media-r2-quarantine");
+    const newId=randomUUID();
+    const result=await db.prepare(MEDIA_R2_RESERVE_SQL).bind(
+      newId,MEDIA_STAGING_SCOPE_ID,actor.id,randomUUID(),"quarantine/v2/cms-main/"+newId,
+      "image/png","new.png",16,
+      actor.id,1000,MEDIA_STAGING_SCOPE_ID,1000,
+      MEDIA_STAGING_SCOPE_ID,16,1000000,
+      MEDIA_STAGING_SCOPE_ID,16,31,
+      actor.id,1000,
+    ).run();
+    expect(result.meta?.changes).toBe(0);
+  });
+
 });
