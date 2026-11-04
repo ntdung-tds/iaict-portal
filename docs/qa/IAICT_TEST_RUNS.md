@@ -1036,3 +1036,17 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Hosted case verdict | `CMS-MEDIA-001..012` **NOT_RUN/BLOCKED**; scanner/decoder/hosted migration/R2/real-role browser **NOT_RUN**. 127 canonical QA test definitions, Google Master v2.15 unchanged |
 | Evidence | GitHub CI URLs for safe text logs; no screenshot or credentials on GitHub, no new Drive visual proof. QA Drive restricted folder remains the sole allowed future visual destination |
 | Release disposition | **PASS only for source/isolated local + old-Worker public smoke**; staged Media API + production **NO-GO**; IAM PAUSED, SRS FROZEN, Owner production approval NOT GIVEN; Issue #39 OPEN |
+
+
+## RUN-MEDIA-20261104-10 — B3.9 request-scoped D1/R2 and quota abuse remediation
+
+| Field | Actual / status |
+|---|---|
+| Scope | B3.9 source-only security hardening; 2026-11-04 ICT, PR (in review) against `feat/staging-native-login-r2-20261030` |
+| Code | `lib/cloudflare-db.ts`, `lib/media-r2-runtime.ts`, `worker.ts`, `lib/media-r2-quarantine.ts` |
+| Tests | `lib/media-r2-request-scope.test.ts` (concurrent contexts); `lib/media-r2-quarantine.test.ts` (failed hourly reservation and PURGE_PENDING stored bytes, actual disposable local Miniflare D1) |
+| First source test / CI | **NOT_RUN / PENDING** at record creation; append exact reviewed SHA and observed PASS/FAIL later, never assume green |
+| Browser | Local Chromium/public staging regression **PENDING**; new backend route not deployed. Authenticated hosted CMS-MEDIA-001..012 **NOT_RUN** |
+| Gate | Scanner false, trusted server decode absent, 0025 hosted NOT_APPLIED, no hosted R2 write, production HOLD, IAM PAUSED, frozen SRS |
+| Evidence | CI text links after execution. No screenshot or secret in GitHub. Private QA Drive only for future authenticated visual evidence |
+| Disposition | SOURCE_IN_REVIEW / no hosted Media release |

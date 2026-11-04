@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 export type D1BindValue = string | number | null | ArrayBuffer | ArrayBufferView;
 
 export type D1RunResult = {
@@ -18,6 +20,13 @@ export interface D1DatabaseLike {
   batch(statements: D1PreparedStatementLike[]): Promise<D1RunResult[]>;
 }
 
+/** Each Worker request owns a DB binding across asynchronous awaits. */
+const requestDatabase = new AsyncLocalStorage<D1DatabaseLike>();
+
+export function withDatabaseBinding<T>(db: D1DatabaseLike, fn: () => T): T {
+  return requestDatabase.run(db, fn);
+}
+
 type IaictRuntimeGlobal = typeof globalThis & {
   __IAICT_D1_DB__?: D1DatabaseLike;
 };
@@ -28,7 +37,7 @@ export function setDatabaseBinding(db: D1DatabaseLike | undefined) {
 }
 
 export function getDatabaseBinding(): D1DatabaseLike {
-  const db = (globalThis as IaictRuntimeGlobal).__IAICT_D1_DB__;
+  const db = requestDatabase.getStore() ?? (globalThis as IaictRuntimeGlobal).__IAICT_D1_DB__;
   if (!db) {
     throw new Error("D1 binding DB is not configured in this runtime");
   }
