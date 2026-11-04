@@ -4,6 +4,11 @@ import { gunzipSync } from "node:zlib";
 
 test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL bytes]", () => {
   test.beforeEach(async ({ page }) => {
+    // Synthetic-only diagnostics: avoid logging file bytes, paths or secrets.
+    page.on("pageerror", error => console.log("[media-tool-pageerror]", error.message.slice(0, 500)));
+    page.on("console", message => {
+      if (message.type() === "error") console.log("[media-tool-console]", message.text().slice(0, 500));
+    });
     // Only the CMS shell session is mocked. Canvas, ZIP, gzip and downloads
     // are executed by real Chromium, not stubbed.
     await page.route("**/api/admin/cms/session", route => route.fulfill({
@@ -32,6 +37,9 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
       name: "demo.png", mimeType: "image/png",
       buffer: Buffer.from(image, "base64"),
     });
+    console.log("[media-tool-e2e] image input", await page.locator("#compress-image-file").evaluate((el: HTMLInputElement) => el.files?.length),
+      "button enabled", await page.getByRole("button", { name: "Nén ảnh" }).isEnabled());
+    await expect(page.getByRole("button", { name: "Nén ảnh" })).toBeEnabled({ timeout: 4_000 });
     await page.getByRole("button", { name: "Nén ảnh" }).click();
     await expect(page.getByRole("status")).toContainText("Đã tạo hai ảnh mới");
     console.log("[media-tool-e2e] image result ready");
@@ -58,6 +66,9 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
       { name: "ghi chú.txt", mimeType: "text/plain", buffer: Buffer.from("IAICT nguồn tin thử nghiệm\n".repeat(1500)) },
       { name: "avatar.jpg", mimeType: "image/jpeg", buffer: Buffer.from([255,216,255,0,1]) },
     ]);
+    console.log("[media-tool-e2e] zip input", await page.locator("#compress-zip-files").evaluate((el: HTMLInputElement) => el.files?.length),
+      "button enabled", await page.getByRole("button", { name: "Tạo tệp ZIP" }).isEnabled());
+    await expect(page.getByRole("button", { name: "Tạo tệp ZIP" })).toBeEnabled({ timeout: 4_000 });
     await page.getByRole("button", { name: "Tạo tệp ZIP" }).click();
     await expect(page.getByRole("status")).toContainText("ZIP hợp lệ — 2 tệp");
     console.log("[media-tool-e2e] zip result ready");
@@ -79,6 +90,9 @@ test.describe("B3.7 local Chromium compression workbench [MOCK CMS session; REAL
       name: "report.txt", mimeType: "text/plain",
       buffer: Buffer.from(input, "utf8"),
     });
+    console.log("[media-tool-e2e] gzip input", await page.locator("#compress-text-file").evaluate((el: HTMLInputElement) => el.files?.length),
+      "button enabled", await page.getByRole("button", { name: "Nén Gzip" }).isEnabled());
+    await expect(page.getByRole("button", { name: "Nén Gzip" })).toBeEnabled({ timeout: 4_000 });
     await page.getByRole("button", { name: "Nén Gzip" }).click();
     await expect(page.getByRole("status")).toContainText("Đã nén tệp");
     console.log("[media-tool-e2e] gzip result ready");
