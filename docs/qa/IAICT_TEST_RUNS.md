@@ -1126,3 +1126,30 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Prior failures | Source premerge failures #41770544134 (typecheck), #41770664892 (WebP), and existing unrelated OPS staging intermittent 503 [#30](https://github.com/ntdung-tds/iaict-portal/issues/30) remain recorded; successful reruns do not delete history |
 | Hosted media | No real isolated ClamAV, private runner, HMAC provisioning, D1 0025/0026 hosted migration or CMS-MEDIA-001..012 authenticated browser. **NOT_RUN / BLOCKED**, not PASS. Production HOLD, IAM PAUSED, SRS FROZEN |
 | Evidence & release | CI textual evidence only. No screenshots in GitHub, production Worker untouched, source-only merge acceptance |
+
+
+## RUN-MEDIA-20261104-16 — Actual Cloudflare staging D1 0025–0026 rollout, no Worker deploy
+
+| Field | Actual evidence |
+|---|---|
+| Target | `iaict-portal-staging-db` only, **not production**; owner-approved B3.11. No hosted Media user tests, images or object writes. |
+| Preflight | `d1_migrations` latest `0024_iaict_activation_invites.sql`, no `media_r2_quarantine_uploads` or `media_r2_scan_evidence`, `admin_users` existed. |
+| Recovery marker | Cloudflare D1 Time Travel **before** `0000088c-00000000-00005119-76aa9aed51901ec93f3e3c545bc7b1fd`. Retention-limited point-in-time recovery, **not an independent SQL export**, no automatic restore. |
+| Forward-only migration 0025 | **PASS/APPLIED** exact Git blob `c8320af6c2cc559a016858195ede064d3caa15b0`. Created private quarantine table + 3 indexes, recorded `d1_migrations` only after table readback. |
+| Forward-only migration 0026 | **PASS/APPLIED** exact Git blob `9688defdc38831f5caf7e88a07740bbe907ccf96`. Created private scan evidence table + 1 index, recorded migration only after table readback. |
+| Actual hosted readback | **PASS** both journal rows, both tables, four indexes, `COUNT(*)=0` in each Media table, `PRAGMA foreign_key_check` zero rows. |
+| Integrity check | `PRAGMA integrity_check` **NOT_RUN/UNSUPPORTED**: Cloudflare D1 API returned `SQLITE_AUTH`; not falsely marked PASS. |
+| After bookmark | `0000088c-00000012-00005119-41470e9c6ac51928d3c27fcb5c2ecbe8`. |
+| Media functionality | **BLOCKED/NOT_RUN**: no real hosted ClamAV, container API HTTP 401, job runner, HMAC secret, hosted R2 object scan or CMS-MEDIA-001..012 real role E2E. Upload policy false; Worker unchanged; production HOLD, IAM PAUSED, SRS FROZEN. |
+| Recovery limitation | Cloudflare Time Travel may overwrite unrelated newer staging writes on restore, and may expire. Do not claim full independently exported database backup. |
+| Source requirements | [B3.11 staging gate](../requirements/media-r2/MEDIA_R2_B3_11_STAGING_RELEASE_GATE_2026-11-04.md), CHG-MEDIA-R2-20261104-08; no QA images persisted to GitHub. |
+
+## RUN-MEDIA-20261104-17 — Genuine ClamAV engine CI acceptance (pending result at initial record)
+
+| Field | Status |
+|---|---|
+| Intent | REAL ClamAV signature daemon in disposable Docker with EICAR harmless signature FOUND, actual `scan_clamd` reject, safe PNG→WebP and double-scanned source/derivative, source SHA reject. No hosted staging user data. |
+| Source | `services/media-scan/real_clamd_acceptance.py`, [dedicated workflow](../../.github/workflows/media-av-real-engine-ci.yml) with loopback-bound 33199 + protected UNIX socket relay. |
+| Evidence | **PENDING CI** (only report PASS once dedicated real ClamAV job completes); B3.10's simulated UNIX socket 7/7 Python was not a genuine engine. |
+| Hosted blocker | Cloudflare Containers API **401 unauthorized**, no provisioned private scanner/job runner/HMAC binding, no real CMS access roles upload; **HOSTED BLOCKED / NOT_RUN**. |
+| Releases | No staging Worker upload flag enabled, no production modifications, SRS FROZEN and IAM PAUSED. |
