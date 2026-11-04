@@ -18,7 +18,7 @@ async function signed(c:ScanClaim) {
  const msg=scanClaimBytes(c);
  if(!msg)throw Error("invalid synthetic fixture");
  const key=await crypto.subtle.importKey("raw",secret,{name:"HMAC",hash:"SHA-256"},false,["sign"]);
- const sig=new Uint8Array(await crypto.subtle.sign("HMAC",key,msg));
+ const sig=new Uint8Array(await crypto.subtle.sign("HMAC",key,new Uint8Array(msg)));
  return {claim:c,signature:[...sig].map(n=>n.toString(16).padStart(2,"0")).join("")};
 }
 describe("B3.10 D1 CAS with real disposable Miniflare D1/R2 (NO hosted scanner)",()=>{
