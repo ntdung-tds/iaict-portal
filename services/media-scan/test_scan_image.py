@@ -38,7 +38,7 @@ class FakeClamd:
                 continue
             with conn:
                 conn.settimeout(2)
-                prefix = conn.recv(10)
+                prefix = self.read_exact(conn, 10)
                 if prefix != b"zINSTREAM\x00":
                     conn.sendall(b"stream: INVALID ERROR\x00")
                     continue
