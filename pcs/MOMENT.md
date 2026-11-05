@@ -1,5 +1,21 @@
 # PCS Moment — IAICT Portal
 
+**PCS Universal 3.2.0 · Solo · Revision 74 · ACTUAL STAGING CMS PASSWORD WORKER DEPLOY SUCCESS · Native /admin→/login real Chrome PASS · Anonymous CMS/API 401 PASS · Media private quarantine ON · Real Admin sign-in NOT_RUN · B3.15 Media authenticated E2E NOT_RUN · IAM other work PAUSED · SRS FROZEN · production HOLD**
+
+**2026-11-05 22:03 ICT:** With explicit owner go-ahead, the staging CMS native password-login UX changes merged in [PR #118](https://github.com/ntdung-tds/iaict-portal/pull/118) were **actually deployed** using the Cloudflare Workers Builds manual endpoint. The source commit was pinned to `b00f7e56fd3d161d958920a51a105be1afdba89c` (previous portal CI, live staging public tests and real AV isolated CI PASS). Cloudflare build `40d6fc87-6dd6-43ac-b62b-addaaef895ce` completed **SUCCESS**, including staging-only compile, dry-run and deploy.
+
+- **Deployed artifact:** new staging deployment `a1d2e8a1-791a-4c26-9885-476f71c58267`, Worker version `d8dbc8d2-1d3a-4c25-9421-a905aae88bda`, live **100%**. Previous version `4ab3ecef-9ebd-485e-afb0-eac55136751d` was verified retrievable as rollback. The build trigger was returned to its original HOLD/no-deploy command immediately after manual request. Production remains version `e7c703f7-fc4c-4313-b14c-0a2c94e0613d` untouched.
+- **Actual independent cloud Chromium acceptance:** navigate `/admin` as an anonymous mobile browser and end at staging `/login` HTTP200 with Email/Mật khẩu form and **enabled** Đăng nhập button after JS hydration. At 390px viewport there is no horizontal overflow. No Cloudflare Access OTP prompt. Health endpoint 200; login GET405; native session and eight anonymous CMS screens/APIs all HTTP401. These results are independently verified against the **new** deployed Worker, not merely CI on source. [RUN-CMS-AUTH-20261105-02](../docs/qa/IAICT_TEST_RUNS.md).
+- **Safety:** live bindings `IAICT_NATIVE_AUTH_ENABLED=true`, staging D1 `aa4a97e7-60c5-4da4-9f0b-d469ece811b4`, private R2 bucket `iaict-portal-staging-media` and `MEDIA_R2_QUARANTINE_ENABLED=true` retained. R2 public r2.dev OFF / custom domains zero. D1 Media quarantine rows zero; scanner and original bytes remain private, not publishable. No D1 migration, password reset, customer data, production deployment, or Cloudflare Access policy change in this Worker release. Staging Access Bypass from preceding approved change remains restricted to staging and can be removed by exact policy ID to restore OTP if any unsafe 2xx is observed.
+- **Pending acceptance:** the owner’s genuine Admin email/password session and an authenticated CMS Dashboard remain **NOT_RUN** in agent browser (no password/session in tools); user should use [the CMS login URL](https://iaict-portal-staging.iaict-platform.workers.dev/login) with existing personal CMS credential. Media B3.15 uploaded bytes, independent D1/R2 SHA, Editor/Viewer role E2E **NOT_RUN**. IAM further feature development PAUSED; SRS baseline FROZEN, change recorded in the module `iam-access/thaydoi.md`; production HOLD.
+- **Next:** merge new live postdeploy Playwright regression (HTML 302, mobile 320/390, API 401) only when exact-head portal-ci and staging-acceptance PASS. Later finish signed-in Admin and Media B3.15 tests using a legitimate protected QA session, then append a distinct test run. Do not overstate success.
+
+**Continuity:** Revision 74 is canonical after the documentation PR merges and GitHub readback. Previous revision 73 is retained below.
+
+---
+
+## Historical PCS Moment (Revision 73)
+
 **PCS Universal 3.2.0 · Solo · Revision 73 · STAGING CMS NATIVE PASSWORD LOGIN (NO CLOUDFLARE OTP) POLICY APPLIED · LIVE CHROME ANONYMOUS ROUTE GATE PASS · POSITIVE ADMIN LOGIN NOT_RUN · UX REDIRECT SOURCE READY NOT_DEPLOYED · Media B3.15 AUTH E2E NOT_RUN · IAM OTHER FEATURES PAUSED · SRS FROZEN · PRODUCTION HOLD**
 
 **2026-11-05 21:03 ICT:** Owner requested to stop Cloudflare Access “Send code” for regular CMS sign-in and use the already implemented native IAICT email/password. On staging, native auth runtime flag `IAICT_NATIVE_AUTH_ENABLED=true` is verified, active Admin has an existing v2 password-credential row (no secret read, password never reset), and the Worker supports D1-backed cookie/session verification and role checks.

@@ -1395,3 +1395,28 @@ See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [M
 **Source/CI follow-up:** new staging tests require anonymous 401 instead of historical Cloudflare Access redirects, and source UI improvements send unauthenticated human navigation to /login and successful password login directly to /admin. These source changes require their own reviewed staging Worker deploy before claiming live UI redirect. The historical B3.14 Access-edge test run remains immutable, valid only for the old configuration. **Actual positive login + Media E2E remain NOT_RUN.**
 
 **No secrets:** No password, OTP, cookie, personal media or screenshot stored in this QA run or public repository.
+
+
+---
+
+## RUN-CMS-AUTH-20261105-02 — Actual staging Worker deployment and native-password Chrome QA
+
+**2026-11-05 ICT. Scope:** User-approved staging-only deployment. **Pinned release commit:** b00f7e56fd3d161d958920a51a105be1afdba89c (PR #118 merged, all postmerge CI PASS). **Cloudflare manual build ID:** 40d6fc87-6dd6-43ac-b62b-addaaef895ce, completed with SUCCESS. GitHub build trigger returned to original HOLD immediately after submitting the one-off pinned build (no automatic production/staging follow-on).
+
+| Check | Actual observation | Result |
+|---|---|---|
+| Worker release | Deployed staging version d8dbc8d2-1d3a-4c25-9421-a905aae88bda at 100%; deployment a1d2e8a1-791a-4c26-9885-476f71c58267; previous version 4ab3ecef-9ebd-485e-afb0-eac55136751d retrievable for rollback | **PASS** |
+| Actual Chrome /admin mobile navigation | Cloud Chromium navigated /admin to final /login HTTP 200 HTML, rather than Cloudflare Access OTP | **PASS** |
+| Native form/hydration | Email, Mật khẩu, Đăng nhập controls appeared; after JS hydration Đăng nhập button enabled; 390px viewport and scrollWidth 390px | **PASS** |
+| Public health and login GET | /api/health 200; /api/auth/login GET 405 | **PASS** |
+| Anonymous /api/auth/session | HTTP 401, no-store/private | **PASS** |
+| Anonymous /admin, /admin/news, /admin/media/upload, /api/admin, /api/admin/cms/overview, /api/admin/cms/media/quarantine, /api/admin/news/settings with JSON Accept | All HTTP 401, no-store, no Access OTP redirect | **PASS** |
+| Native Worker environment | IAICT_NATIVE_AUTH_ENABLED=true; DB bound to staging D1 aa4a97e7-60c5-4da4-9f0b-d469ece811b4 | **PASS** |
+| Private R2 quarantine | MEDIA_R2_QUARANTINE_ENABLED=true, bucket iaict-portal-staging-media, managed r2.dev OFF, custom domains 0, D1 quarantine rows 0 | **PASS configuration, not upload E2E** |
+| Production Worker | Production version e7c703f7-fc4c-4313-b14c-0a2c94e0613d unchanged | **PASS** |
+| Real Admin password login, authorized Dashboard and Media upload/R2 SHA | Real secret/session unavailable to agent; no impersonation, no password reset or customer file used | **NOT_RUN** |
+| New full live Playwright post-deploy regression | Explicit HTML302 redirect, native form hydration, mobile 320/390 and API401 test added to separate documentation+QA PR; exact-head workflow pending | **PENDING** |
+
+**Security note:** One staging-specific Access Bypass policy is active; Access-level logging and OTP are removed only on staging, while Worker D1 cookie verification must continue to reject unauthorized requests. Rollback Access bypass only by deleting policy 897f8a7a-cf1a-474a-aa16-ccffa6d9f13f. Old Worker version remains available. No production deployment, no D1 migration, no R2 public access, no change to Admin password. Media scanner/publish remains unavailable. IAM other features PAUSED; SRS FROZEN.
+
+**Evidence:** Cloudflare Builds success, deployments readback, actual Chrome DevTools checks; screenshots, cookies, passwords, OTP and media samples were not saved.
