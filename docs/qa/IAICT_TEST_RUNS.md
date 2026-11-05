@@ -1315,3 +1315,29 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Live Cloudflare independent checks | Staging Worker `4ab3ecef-9ebd-485e-afb0-eac55136751d`, deployment `c43e105c-f978-426f-b42c-f515238c2252`; production `e7c703f7-fc4c-4313-b14c-0a2c94e0613d`, deployment `a01a3743-ac78-4a19-a990-581fe9235751`, both unchanged; staging D1 Media upload rows zero after four anonymous negatives. |
 | Identity and E2E | **NO AUTHENTICATED UPLOAD TEST**: 201 PNG POST, D1 metadata+audit, R2 byte SHA, Editor/Viewer role + authenticated CSRF + quota/idempotency negatives remain NOT_RUN; CMS-MEDIA-001..012 not fully closed. |
 | Next / decisions | B3.15 genuine controlled QA login before privileged staged upload; isolated ClamAV hosted runner blocked Workers Paid plan, publication disabled, IAM PAUSED, SRS FROZEN, production HOLD. No QA images or login secrets in GitHub. |
+
+
+---
+
+## RUN-MEDIA-20261105-01 — B3.15 setup and independent D1 baseline (NO authenticated POST)
+
+| Field | Actual observation |
+|---|---|
+| Date/timezone | 2026-11-05, ICT |
+| Scope | B3.15 private authenticated Media E2E runner and read-only Cloudflare verification, not hosted upload acceptance |
+| Repository/branch | ntdung-tds/iaict-portal / test/media-b315-hosted-qa-harness-20261105 (proposal branch) |
+| Canonical PCS at start | revision 70, development branch feat/staging-native-login-r2-20261030 |
+| Staging deployment | c43e105c-f978-426f-b42c-f515238c2252, Worker version 4ab3ecef-9ebd-485e-afb0-eac55136751d (Cloudflare read-only GET) |
+| Production deployment | a01a3743-ac78-4a19-a990-581fe9235751 unchanged (read-only GET) |
+| D1 read-only proof | Staging DB aa4a97e7-60c5-4da4-9f0b-d469ece811b4, SELECT COUNT(*) AS n FROM media_r2_quarantine_uploads -> **0** |
+| Test changes | Isolated Playwright config + spec and CI static safety verification; QA runbook; no Worker code or real D1/R2 mutation |
+| Source CI / browser | **NOT_RUN at this checkpoint**; check exact PR head after opening PR, record future result in a **new** run (never rewrite this result) |
+| Live Admin/Editor/Viewer session | **BLOCKED/NOT_RUN**: no valid controlled QA Access + native CMS storageState / retrievable vault |
+| Real Media POST / D1-R2 byte-SHA proof | **NOT_RUN**. No image uploaded, scanned, published or downloaded in this run |
+| ClamAV hosted | **BLOCKED**: Workers Paid Containers or a separately authorized isolated scanner host is required |
+| Test cases | CMS-MEDIA-001/002/003/004/008/012 **NOT_RUN** live; any future passing subcheck is not an automatic full-case PASS |
+| IAM / SRS / production | IAM implementation PAUSED; SRS FROZEN; production HOLD; no deployment, policy or credentials changed |
+| QA evidence | No screenshots, session or customer data captured; [Drive private QA folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) reserved for eventual redacted evidence only |
+| Verdict | **PASS — verified read-only D1/Worker baseline only; SOURCE_PREPARATION proposed; authenticated upload E2E NOT_RUN/BLOCKED** |
+
+See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [Media Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39).
