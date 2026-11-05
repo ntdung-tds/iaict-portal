@@ -150,7 +150,7 @@ test("native password login leads straight to CMS dashboard without Access OTP",
   await page.getByRole("button", { name:"Đăng nhập", exact:true }).click();
   expect((await loginPost).status()).toBe(200);
   expect(submittedLogin).toEqual({email:"qa-admin@example.test",password:"S3cure!!8"});
-  await expect(page).toHaveURL(/\\/admin$/);
+  await expect(page).toHaveURL(new RegExp("/admin$"));
   await expect(page.getByRole("link", { name: "IAICT CMS Dashboard" })).toBeVisible();
 });
 
