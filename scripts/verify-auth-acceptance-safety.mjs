@@ -37,6 +37,33 @@ if (/\brequest\.(post|put|patch|delete)\s*\(/i.test(spec) ||
 if (/\bgithub\.com\b|iaict-portal\.iaict-platform\.workers\.dev/.test(config)) {
   failures.push("Authenticated browser configuration contains prohibited production/GitHub destinations");
 }
+
+// B3.15 is deliberately isolated from the public/default E2E suites.
+// No live Access cookie may be exported into CI, logs or repository files.
+const mediaConfig = readFileSync("playwright.staging-media-authenticated.config.ts", "utf8");
+const mediaSpec = readFileSync("e2e-private/media-b315.spec.ts", "utf8");
+requireSource(mediaConfig, "if (process.env.CI)", "B3.15 must reject CI");
+requireSource(mediaConfig, "IAICT_MEDIA_E2E_APPROVED", "B3.15 needs staging-only approval");
+requireSource(mediaConfig, 'testDir: "./e2e-private"', "B3.15 must not be discovered by default E2E");
+requireSource(mediaConfig, "isAbsolute(state)", "B3.15 session must use an absolute external path");
+requireSource(mediaConfig, "MEDIA_B315_STATE_OUTSIDE_REPOSITORY_REQUIRED", "B3.15 session cannot be inside repo");
+requireSource(mediaConfig, "MEDIA_B315_STATE_PRIVATE_FILE_REQUIRED", "B3.15 session must be chmod 600");
+requireSource(mediaConfig, '"https://iaict-portal-staging.iaict-platform.workers.dev"', "B3.15 only on exact staging host");
+requireSource(mediaConfig, 'screenshot: "off"', "B3.15 screenshots must be disabled");
+requireSource(mediaConfig, 'trace: "off"', "B3.15 traces must be disabled");
+requireSource(mediaConfig, 'video: "off"', "B3.15 videos must be disabled");
+requireSource(mediaConfig, 'retries: 0', "B3.15 real writes cannot be retried automatically");
+requireSource(mediaConfig, 'reporter: "list"', "B3.15 must use text-only reporter");
+requireSource(mediaSpec, "MEDIA_B315_PRIVATE_STAGING_CONFIG_REQUIRED", "B3.15 spec must guard against wrong config");
+requireSource(mediaSpec, "CMS-MEDIA-012 partial", "B3.15 cannot claim complete E2E from browser-only upload");
+if (/\b(page\.)?(screenshot|video|tracing)\s*\(/i.test(mediaSpec) ||
+    /\bconsole\.(log|warn|error)\s*\(/i.test(mediaSpec)) {
+  failures.push("B3.15 cannot capture or log private authenticated material");
+}
+if (/\biaict-portal\.iaict-platform\.workers\.dev\b/.test(mediaConfig + mediaSpec)) {
+  failures.push("B3.15 cannot name the production Worker hostname");
+}
+
 if (failures.length) {
   for (const problem of failures) console.error(`[auth-qa-safety] FAIL: ${problem}`);
   process.exitCode = 1;
