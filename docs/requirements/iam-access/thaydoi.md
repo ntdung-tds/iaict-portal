@@ -249,3 +249,13 @@ Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu 
 - **Mã nguồn chuẩn bị (chưa deploy):** điều hướng `/admin` chưa đăng nhập đến `/login` khi duyệt trang HTML, đăng nhập thành công vào CMS trực tiếp, có link tài khoản/đăng xuất; test/CI kiểm tra denial 401 và chống giả mạo header/cookie; preflight khớp ID policy Bypass và cờ native thực tế. Staging Worker hiện tại vẫn trả JSON 401 khi mở /admin trực tiếp mà chưa đăng nhập; phải dùng `/login` cho đến lúc triển khai mã mới.
 - **Khôi phục:** xóa **duy nhất** policy Bypass này để kích hoạt lại OTP, không xóa các chính sách cũ. Nếu xuất hiện một truy cập 2xx không xác thực, phải khôi phục ngay. Không tác động tài khoản, mật khẩu, D1 dữ liệu nghiệp vụ hay production.
 - **Trạng thái:** STAGING POLICY APPLIED / ANONYMOUS GATE PASS / POSITIVE LOGIN NOT_RUN / CODE PENDING REVIEW + STAGING DEPLOY / **CHƯA_CHỐT SRS**, IAM khác PAUSED.
+
+
+### CHG-IAM-ACCESS-20261105-02 — Staging native password Worker deployed, actual Chrome regression
+
+- **Owner approval:** deploy changes recorded in CHG-IAM-ACCESS-20261105-01 on staging immediately, not production.
+- **Reviewed source:** PR #118 / commit b00f7e56fd3d161d958920a51a105be1afdba89c; predeployment CI Portal, staging public acceptance and isolated AV all PASS.
+- **Real Cloudflare action:** one-off manual Workers Builds invocation, run 40d6fc87-6dd6-43ac-b62b-addaaef895ce, exact pinned commit, staging target with private Media quarantine flag retained. Build/deploy SUCCESS. New staging Worker version d8dbc8d2-1d3a-4c25-9421-a905aae88bda, deployment a1d2e8a1-791a-4c26-9885-476f71c58267 100%. Build trigger restored to HOLD directly after submission. Old Worker version remains available; no D1 migration or production change.
+- **Live browser acceptance:** anonymous mobile /admin now navigates to /login HTTP 200 without Cloudflare code, native login controls display and button enables after hydration; no overflow at 390px. Eight anonymous CMS/API paths still 401, native session absent 401 and health 200. D1/R2 settings unchanged: staging native=true, Media private quarantine=true, R2 domain disabled, zero public custom domains. See RUN-CMS-AUTH-20261105-02.
+- **Regression source-only:** add Playwright assertion of human HTML302 to /login, API JSON401 and hydrated form at 320/390px in staging acceptance suite; do not add any OTP, password or cookie to public automation.
+- **Not claimed:** live successful Admin sign-in and Media authenticated upload SHA remain NOT_RUN without real owner session. No production approval, no SRS baseline edit. **CHƯA_CHỐT**, IAM otherwise PAUSED.
