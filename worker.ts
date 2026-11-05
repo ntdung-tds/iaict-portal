@@ -64,7 +64,7 @@ export default {
           // login page. JSON/API clients continue to get a strict HTTP 401.
           // This runs only AFTER the D1-backed native session check fails.
           const htmlNavigation = request.method === "GET" &&
-            /^\\/admin(?:\\/|$)/i.test(path) &&
+            new RegExp("^/admin(?:/|$)", "i").test(path) &&
             request.headers.get("Accept")?.toLowerCase().includes("text/html");
           if (htmlNavigation) {
             return new Response(null, {
