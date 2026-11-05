@@ -91,3 +91,17 @@ The Cloudflare Secrets Store create API defines `value` as **write-only** and st
 [RUN-IAM-20261103-05](./IAICT_TEST_RUNS.md) and [PR #75](https://github.com/ntdung-tds/iaict-portal/pull/75) provide actual deployed-staging Chromium evidence: one **randomly generated nonexistent** `example.test` email was rejected with HTTP **401**, no session cookie; forged cross-Origin login rejected **403**, malformed activation rejected **400**, and client-forged Access headers across five protected routes were rejected through the edge. These are **REAL_STAGING_NEGATIVE** tests, not genuine signed-in CMS roles.
 
 Afterward, staging D1 `quick_check` was `ok`, FK errors **0**, all 8 fixtures still **inactive**, **0** QA password credentials and Access subjects, 0 active native sessions. The one existing non-QA credential was not touched. No QA account was created/activated and no password/recovery token was stored. Only a failed-login attempt counter may have been recorded for the random absent account. **Real 7-role + second Admin acceptance remains BLOCKED / NOT_RUN** until separate project-controlled inboxes, authorized Access identities and a recoverable credential vault / private QA browser host are available; Cloudflare Secrets Store write-only values are unsuitable for fetching browser passwords.
+
+
+## 10. 2026-11-05 B3.15 live browser/identity preflight
+
+This section supersedes earlier statements that **all** QA identities remain inactive, but does not retroactively alter earlier test runs:
+
+- The original **eight example.test fixture rows remain disabled** and do not have real passwords/Access sessions.
+- A **separate cohort of eight role-specific plus-alias accounts** exists in staging D1, all ACTIVE, one per desired QA role including the second Admin. Cloudflare Access staging has an **exact-eight-email allow policy** requiring the One-Time PIN IdP. Staging account-members-only policy remains separately in place. The email aliases themselves are restricted PII and must not be copied into this public repository.
+- Live D1 metadata: each of these eight ACTIVE accounts has the expected assigned role, **0** native credential records and **0** bound Access Subject values. No authenticated CMS-role E2E has passed.
+- Controlled Outlook QA alias mail-delivery smoke **PASS** for one role: a nonsensitive test message arrived. This does **not** establish Cloudflare-issued OTP acceptance.
+- Cloudflare Browser Rendering actually rendered staging /login at mobile 390x844, HTTP200 and no page overflow; a protected Media URL reached the legitimate Cloudflare Access login screen. Browser step to submit email/login was blocked by connected tool safety controls. No OTP or account login was completed; no credential, Access cookie or screenshot recorded. Refer to RUN-MEDIA-20261105-02.
+- Future real Admin/Editor/Viewer browser QA needs an isolated operator-controlled browser supporting legitimate OTP completion and protected private storageState, followed by a genuine CMS session and independent upload R2/D1 byte proof. Do not bypass Access or conflate Access OTP policy existence with a usable CMS session.
+
+**Security gates:** R2 bucket still has no public custom domain and managed r2.dev disabled. Hosted ClamAV/publication blocked; production untouched. QA setup permission does not restart owner-paused IAM feature development. Keep live upload statuses BLOCKED/NOT_RUN until actually executed.
