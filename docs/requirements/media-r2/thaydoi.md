@@ -38,6 +38,8 @@
 
 | CHG-MEDIA-R2-20261104-10 | 2026-11-04 | B3.13 upload ảnh vào quarantine-only staging dù chưa có scanner hosted; UI role-aware, GET capability, release manual 26 D1 migration, prod gate OFF | SOURCE_IN_REVIEW / HOSTED_NOT_ENABLED | PR B3.13 · Issue #39 | RUN-MEDIA-20261104-23 PENDING CI | CHƯA_CHỐT_SRS |
 
+| CHG-MEDIA-R2-20261105-01 | 2026-11-05 | B3.15: bộ test Media E2E có xác thực staging-only, chặn CI/cookies, QA checklist R2-D1 SHA; chưa có phiên QA hợp lệ, chưa chạy POST thật | TEST_HARNESS_PREPARED / LIVE_AUTH_BLOCKED | B3.15 PR · Issue #39 | RUN-MEDIA-20261105-01; read-only D1 PASS, authenticated E2E NOT_RUN | CHƯA_CHỐT_SRS |
+
 ## Thay đổi chi tiết
 
 ### CHG-MEDIA-R2-20261031-01 — Khởi tạo sổ theo dõi phân hệ
@@ -227,3 +229,12 @@ Khi thêm/sửa tính năng, bổ sung `CHG-MEDIA-R2-YYYYMMDD-NN` theo [mẫu v�
 - Source regression fixed RED→GREEN: [original CI #41847513261](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847513261) malformed regexp TypeScript FAIL; fixed `24fea7f`, [source CI #41847866827](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847866827) 4/4 PASS. [real staging Chromium #41847866607](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847866607) 28/28 PASS, public HTTP 24/24 PASS. Four new Media requests prove anonymous/forged identities Access-denied.
 - Independent live Cloudflare D1 media records **still 0** and staging Worker remains unchanged after tests. This is exactly an **anonymous edge-only negative test**; real authorized upload, R2 byte readback and role/CSRF E2E are **NOT_RUN**.
 - See RUN-MEDIA-20261104-28; source PR #113; SRS sync CHƯA_CHỐT; scanner still requires isolated paid/alternative host, production HOLD.
+
+
+### CHG-MEDIA-R2-20261105-01 — B3.15 protected real-session Media acceptance harness
+- **Nguồn:** Owner đồng ý thực hiện đợt B3.15 ngày 05/11/2026, Issue #39, PCS rev70.
+- **Trước:** staging Media quarantine gate ON, anonymous Access negative PASS nhưng không có live Admin/Editor upload, private R2/D1 SHA proof hoặc viewer role E2E.
+- **Sau (source):** tạo Playwright manual-only isolated runner + mobile UI/API post/replay/CSRF/MIME/viewer/overlimit subcases, gắn mã CMS-MEDIA chính xác và kế hoạch độc lập D1/R2 SHA (docs/qa/IAICT_MEDIA_B315_HOSTED_QA.md). CI static safety guard ngăn truyền session thật vào CI. **Không thay đổi Worker, D1, Access, R2, IAM, SRS hay production.**
+- **Quan sát thực 05/11:** read-only Cloudflare staging deployment không đổi, production không đổi, D1 media quarantine COUNT=0. Không có real QA credential/Access session; POST và R2 SHA **NOT_RUN/BLOCKED**, scanner hosted **BLOCKED**.
+- **Tính chất thay đổi:** tests/runbook only; ảnh fixture tổng hợp 1×1, không dữ liệu khách hàng. Exact CI SHA và test PASS chỉ được ghi sau khi workflow hoàn tất. Không suy diễn feature hoàn tất.
+- **SRS:** FROZEN / CHƯA_CHỐT. Chờ Owner nói “chốt SRS”.
