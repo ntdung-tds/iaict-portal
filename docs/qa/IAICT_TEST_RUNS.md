@@ -1446,3 +1446,32 @@ See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [M
 **Scope/rollback:** Only CMS navigation source/CSS plus corresponding local UI and QA cases were changed. No changes to user roles, CMS routes, login, Media upload, R2 data, Access bypass, D1 migrations, scanner or production. Rollback by deploying prior known-good staging Worker version d8dbc8d2-1d3a-4c25-9421-a905aae88bda through authorized pinned-release controls. Source and deployed artifact correspond to PR #120. SRS FROZEN, production HOLD.
 
 **Evidence policy:** no QA screenshots/videos/traces saved to GitHub; user-provided screenshot remains conversation input. Real owner session credentials not accessed.
+
+
+---
+
+## RUN-MEDIA-20261106-01 — Private R2/D1 integrity after owner upload + CMS auth/RBAC hardening
+
+**Date:** 2026-11-06 ICT. **Environment:** Cloudflare staging only. **User statement:** Admin CMS login successful and previous Media upload succeeded on their own browser. The test operator did not receive their browser session, password, OTP, or cookie. **Method:** authorized Cloudflare read-only D1 SQL + private R2 GET inside tool execution; compute SHA-256 inside trusted runtime; output only aggregate metadata and boolean comparisons; review repository source and add local/browser regression tests. No production activity, no private object mutations, no customer file bytes exposed.
+
+| Test | Verified result | Status |
+|---|---|---|
+| Owner login | Owner says their existing Admin CMS account successfully logged in. Agent did not independently reproduce authenticated browser session. | **OWNER_CONFIRMED / AGENT_AUTH_E2E_NOT_RUN** |
+| D1 quarantine row baseline | Exactly **1** staging Media upload, state QUARANTINED, MIME image/png, byte_length **463656**, revision 1, valid 64-char content_sha256, private storage prefix. | **PASS — LIVE D1** |
+| R2 actual bytes readback | Private R2 object GET returned **463656 bytes**. Independent SHA-256 over those bytes **matched D1 content_sha256**; lengths also match. Internal object key, user filename and digest are not logged or exposed. | **PASS — LIVE PRIVATE R2** |
+| Quarantine audit chain | media.quarantine.reserve = **1**, media.quarantine.write = **1** in D1 audit_logs for the quarantine object. | **PASS — LIVE D1** |
+| Scanner/derivative/publication boundary | scanner_attestation NULL, derivative_key NULL, R2 managed r2.dev public access OFF, zero custom public domains. Publication not authorized. | **PASS — PRIVATE-ONLY SAFETY; SCANNER BLOCKED** |
+| Staging role assignment metadata | Active user count **10**; active assigned roles: admin 3, editor 1, reviewer 1, viewer 2, news_admin 1, news_editor 1, news_reviewer 1. Counts do not prove actual sign-in or role-effective permissions. | **PASS — D1 METADATA ONLY** |
+| Actual Chrome hosted login/role test | User's legitimate authenticated session is not available to tool browser. Cloudflare Browser Rendering returned HTTP429 during attempt to start a new anonymous session, without a completed new Chrome audit. | **NOT_RUN THIS ROUND — RATE-LIMIT / AUTH SESSION** |
+| Source review: private CMS session GET | The route returned actor email/roles without explicit no-store headers on success and could reveal raw unexpected database error messages on failure. | **FAIL FOUND IN SOURCE; FIX COMMITTED TO REVIEW BRANCH, NOT LIVE YET** |
+| Remediation: no-store and generic session 503 | Source now sets Cache-Control private/no-store, nosniff on 200/401/403/503; internal errors use stable CMS_SESSION_UNAVAILABLE without SQL details. | **SOURCE IMPLEMENTED — CI / DEPLOY PENDING** |
+| CMS seven-role authorization | Added local verified-identity-boundary matrix for 7 roles × CMS/Newsroom read/edit/admin/review = **42 decisions**. | **TESTS ADDED — CI PENDING; REAL HOSTED ROLE E2E NOT_RUN** |
+| Staging no-session API matrix | Added CI Playwright test for six CMS/News/Media GET routes and four synthetic POST/DELETE admin mutations; each must return 401/no-store with no session issuance, before route writes. | **TESTS ADDED — CI PENDING** |
+| Media authenticated multi-role B3.15 suite | Real signed-in Admin/Editor/Viewer role requests, CSRF rejection, 201/200 idempotency retry and synthetic 69-byte PNG are still not independently exercised. | **NOT_RUN** |
+| Production | No production deploy or modification. | **HOLD** |
+
+**Case linkage:** CMS-MEDIA-019 partial readback **PASS**; CMS-MEDIA-012 full release/role/cleanup **NOT_RUN/PARTIAL**; CMS-MEDIA-016/017/018 expectations updated from old Access OTP redirect to native Worker HTTP401; CMS-UI-003/004 newly added tests pending CI.
+
+**Important:** A positive D1/R2 SHA match establishes private byte integrity only; it does NOT establish clean antivirus verdict, permitted publication, actual Admin/Viewer authorization on the hosted CMS, or customer acceptance of every module. No R2 key, file contents, digest from the user's image, password or session stored in evidence.
+
+**Source branch:** fix/cms-session-privacy-media-r2-qa-20261106; reviewed CI and staging deploy must be verified before upgrading SOURCE_IMPLEMENTED to PASS_DEPLOYED. Rollback to existing staging Worker version b8da158b-3673-46f1-befa-8f6917e74abb if needed. PCS next revision must record verified final state and remaining blockers.
