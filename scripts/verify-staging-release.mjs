@@ -152,6 +152,23 @@ const access = auditAccessApplication({
 assert(access.ok,
   `Access staging app has incomplete destinations/policy: ${access.problems.join(", ")}; missing ${access.missing.join(", ")}. No deployment.`);
 console.log("[staging-preflight] Cloudflare Access staging roots, descendants and AUD verified.");
+// Owner-authorized staging-only password login transition: Bypass runs before
+// Allow, so Access no longer issues an OTP. The Worker must instead enforce
+// its revocable, role-scoped D1 native session. Never allow an unknown Bypass.
+const nativeBypassId = "897f8a7a-cf1a-474a-aa16-ccffa6d9f13f";
+const accessPolicies = await cf("GET", `${root}/access/apps/${stagingAccessAppId}/policies`);
+const bypass = accessPolicies.filter(policy => policy.decision === "bypass");
+assert(bypass.length === 1 && bypass[0].id === nativeBypassId &&
+       bypass[0].include?.some(rule => rule?.everyone && typeof rule.everyone === "object"),
+       "ACCESS_NATIVE_BYPASS_POLICY_MISMATCH: refuse unexpected Access bypass on staging.");
+assert(workerConfig.includes('IAICT_NATIVE_AUTH_ENABLED: bindings.text(isStaging ? "true" : "false")'),
+  "Staging-only native auth setting missing from Worker source.");
+const liveSettings = await cf("GET", `${root}/workers/scripts/${worker}/settings`);
+assert(liveSettings.bindings?.some(b => b.name === "IAICT_NATIVE_AUTH_ENABLED" &&
+       b.type === "plain_text" && b.text === "true"),
+       "ACCESS_NATIVE_GATE_NOT_ENABLED: staging Worker must enforce D1 sessions before cutover.");
+console.log("[staging-preflight] Staging bypass is exact and native D1 session gate is ON; no OTP dependency.");
+
 
 console.log(`[staging-preflight] PASS: account, pinned staging Worker, D1 ID, ${remote.length} matching migrations.`);
 

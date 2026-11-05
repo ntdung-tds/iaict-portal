@@ -1368,3 +1368,30 @@ See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [M
 **Next:** complete OTP on an authorized isolated browser with private session storage; then run [B3.15 manual suite](IAICT_MEDIA_B315_HOSTED_QA.md), verify 201 QUARANTINED and D1/R2 independent bytes digest; append a NEW immutable run with actual results. Never spoof JWT/Access headers or expose real sessions in GitHub/Drive/CI.
 
 **Evidence:** [restricted QA Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3); no new screenshot uploaded.
+
+
+---
+
+## RUN-CMS-AUTH-20261105-01 — Owner-requested staging native password sign-in, no OTP for CMS
+
+**Date:** 2026-11-05 (ICT). **Environment:** staging only. **Method:** live Cloudflare account Access/Worker/D1 readback, actual Cloudflare Browser Rendering Chrome DevTools browser with unauthenticated HTTP requests (same origin), independent existing-source review. **User request:** ordinary email/password login without repeated Cloudflare Access email codes. **Production:** unchanged.
+
+| Test / control | Actual observation | Status |
+|---|---|---|
+| Existing Admin row | Active CMS administrator and a native password v2 credential are present. **Password was neither read nor replaced.** | **PASS — D1 metadata only** |
+| Current staging auth feature gate | Worker setting IAICT_NATIVE_AUTH_ENABLED=true; entry Worker validates D1-backed native session and strips incoming client-identity header. | **PASS — live config + source review** |
+| Why OTP appeared | Staging Access app covered exact /admin, /api/admin roots and wildcard children. Its normal Allow policies used Cloudflare Account Login / OTP. | **PASS — root-cause configuration** |
+| Staging-only Access cutover | One reversible **Bypass Everyone** policy created in the existing staging Access app, ID 897f8a7a-cf1a-474a-aa16-ccffa6d9f13f, preserving old policies for rollback. Access no longer prompts email code on CMS routes; **this disables Access-layer controls/logs for that app and relies on the Worker native gate**. | **APPLIED — authorized staging policy change** |
+| Public login GET via real Chromium | /login HTTP 200, original CMS password form rendered; /api/auth/session HTTP 401 without native cookie. | **PASS** |
+| Anonymous GET /admin, /admin/news, /admin/media/upload | All HTTP 401 from staging host, not Cloudflare Access login, before application content. | **PASS — anonymous denial** |
+| Anonymous GET /api/admin, /api/admin/cms/overview, /api/admin/cms/media/quarantine, /api/admin/news/settings | All HTTP 401 from staging Worker. | **PASS — anonymous API denial** |
+| User password login, session mint, authorized Admin dashboard | Current legitimate Admin password was not available to the test operator. No password submission/OTP challenge or session impersonation performed. | **NOT_RUN — owner to verify in own browser** |
+| Signed-in Viewer/Editor authorization and Media upload bytes/SHA | No real authenticated Media mutation performed. | **NOT_RUN — not inferred from anonymous checks** |
+| Direct /admin browser auto-redirect to /login | Current Worker returns 401 JSON for anonymous /admin; improved navigation and direct dashboard landing are **committed to source but not deployed**. Use /login as entry until staging Worker is separately deployed and tested. | **PENDING STAGING DEPLOY** |
+| Cloudflare production Access, D1, Worker | No production configuration, deployment or credentials changed by this cutover. | **HOLD** |
+
+**Security/rollback:** No Access OTP is required by staging CMS after this change, but the application is **not public**: the Worker must enforce the D1-backed session on every admin route. Revocation/invalid cookie must return 401 and CSRF/role checks remain mandatory. Cloudflare Access Bypass removes its own access controls and request logging; this is a **staging-only tradeoff**, not approval for production. On any 2xx unauthorized or unexpected identity exposure, immediately DELETE only staging Access app policy `897f8a7a-cf1a-474a-aa16-ccffa6d9f13f`, restoring the prior Allow/OTP behavior. Do not delete other staging Access policies. Do not deploy production.
+
+**Source/CI follow-up:** new staging tests require anonymous 401 instead of historical Cloudflare Access redirects, and source UI improvements send unauthenticated human navigation to /login and successful password login directly to /admin. These source changes require their own reviewed staging Worker deploy before claiming live UI redirect. The historical B3.14 Access-edge test run remains immutable, valid only for the old configuration. **Actual positive login + Media E2E remain NOT_RUN.**
+
+**No secrets:** No password, OTP, cookie, personal media or screenshot stored in this QA run or public repository.

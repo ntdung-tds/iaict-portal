@@ -107,6 +107,16 @@ if (!pathAudit.includes("application.destinations") ||
   fail("Access audit must inspect current destinations and reject public bypass overrides");
 }
 
+// Staging-only native password cutover must remain explicitly pinned to the
+// one reviewed bypass policy and the live D1-backed native session gate.
+for (const guard of ["ACCESS_NATIVE_BYPASS_POLICY_MISMATCH", "ACCESS_NATIVE_GATE_NOT_ENABLED"]) {
+  if (!preflight.includes(guard)) fail("Staging release must reject unknown Access bypass or missing native gate: " + guard);
+}
+if (!read("worker.ts").includes("nativeActorEmail(request, env.DB)") ||
+    !read("worker.ts").includes("isProtectedAdminPath(path)")) {
+  fail("Worker must deny anonymous CMS/API paths using D1 session before any admin handler");
+}
+
 // The CMS release must never rely only on synthetic JWTs: public key
 // readiness, active D1 administrators and the exact Access roots are gates.
 if (!preflight.includes("active_admins") ||

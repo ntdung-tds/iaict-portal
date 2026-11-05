@@ -126,7 +126,7 @@ test("shows native password readiness and lets admin revoke user sessions", asyn
 });
 
 
-test("native login checks a separate private session page instead of redirecting to Cloudflare Access", async ({ page }) => {
+test("mocked successful native password login navigates to the protected CMS URL", async ({ page }) => {
   let submittedLogin: {email:string;password:string} | null = null;
   await page.route("**/api/auth/login", async route => {
     if (route.request().method() === "POST") {
@@ -150,11 +150,8 @@ test("native login checks a separate private session page instead of redirecting
   await page.getByRole("button", { name:"Đăng nhập", exact:true }).click();
   expect((await loginPost).status()).toBe(200);
   expect(submittedLogin).toEqual({email:"qa-admin@example.test",password:"S3cure!!8"});
-  await expect(page).toHaveURL(/\/account$/);
-  await expect(page.getByText("Phiên đăng nhập IAICT đã được xác minh.")).toBeVisible();
-  await expect(page.getByText("qa-admin@example.test")).toBeVisible();
-  await expect(page.getByText("admin", { exact:true })).toBeVisible();
-  await expect(page.getByRole("link",{name:/Mở CMS/})).toHaveAttribute("href","/admin");
+  await expect(page).toHaveURL(new RegExp("/admin$"));
+  // Only navigation is asserted; the mock does not create a real D1 session.
 });
 
 test("native session account page is usable while signed out without leaking identities", async ({ page }) => {

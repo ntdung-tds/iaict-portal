@@ -23,7 +23,7 @@ export default function LoginPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         credentials: "same-origin", cache: "no-store", body: JSON.stringify({ email, password }),
       });
-      if (response.ok) { if (passwordRef.current) passwordRef.current.value = ""; window.location.assign("/account"); return; }
+      if (response.ok) { if (passwordRef.current) passwordRef.current.value = ""; window.location.assign("/admin"); return; }
       const data = await response.json() as {error?:string};
       setMessage(data.error || "Không thể đăng nhập.");
     } catch { setMessage("Không thể kết nối tới máy chủ."); }
@@ -34,7 +34,7 @@ export default function LoginPage() {
     <form ref={formRef} method="post" onSubmit={event => { event.preventDefault(); void authenticate(); }} onKeyDown={event => { if (event.key === "Enter" && (event.target as HTMLElement).tagName === "INPUT") { event.preventDefault(); void authenticate(); } }} style={{ width:"100%", maxWidth:420, background:"#fff", borderRadius:16, padding:32, boxShadow:"0 8px 40px #0f234014" }}>
       <p style={{ color:"#3360a1", fontWeight:700, letterSpacing:2 }}>IAICT PORTAL</p>
       <h1 style={{ fontSize:28, marginBottom:10 }}>Đăng nhập quản trị</h1>
-      <p style={{ color:"#64748b", lineHeight:1.6 }}>Sử dụng đúng email của tài khoản CMS đã thiết lập mật khẩu IAICT. Email này có thể khác email cá nhân của bạn. Không hỗ trợ đăng ký công khai.</p>
+      <p style={{ color:"#64748b", lineHeight:1.6 }}>Đăng nhập bằng email và mật khẩu IAICT. Tài khoản phải được quản trị viên cấp quyền; không hỗ trợ đăng ký công khai.</p>
       <label htmlFor="iaict-email" style={{ display:"block", marginTop:24 }}>Email</label>
       <input ref={emailRef} id="iaict-email" type="email" autoComplete="username" required style={fieldStyle}/>
       <label htmlFor="iaict-password" style={{ display:"block", marginTop:18 }}>Mật khẩu</label>
