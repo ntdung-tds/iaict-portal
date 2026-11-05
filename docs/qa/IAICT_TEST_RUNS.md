@@ -1475,3 +1475,27 @@ See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [M
 **Important:** A positive D1/R2 SHA match establishes private byte integrity only; it does NOT establish clean antivirus verdict, permitted publication, actual Admin/Viewer authorization on the hosted CMS, or customer acceptance of every module. No R2 key, file contents, digest from the user's image, password or session stored in evidence.
 
 **Source branch:** fix/cms-session-privacy-media-r2-qa-20261106; reviewed CI and staging deploy must be verified before upgrading SOURCE_IMPLEMENTED to PASS_DEPLOYED. Rollback to existing staging Worker version b8da158b-3673-46f1-befa-8f6917e74abb if needed. PCS next revision must record verified final state and remaining blockers.
+
+
+---
+
+## RUN-CMS-20261106-02 — CMS session privacy staged release and R2 integrity preservation
+
+**Date:** 2026-11-06 ICT. **Source:** PR #122 merged to development branch at `89cda7dfb3351905cb9db4bc27b282892d2ffe79`. **Staging-only Cloudflare Build:** `11014ed8-766d-402c-8ea3-c89f8a08796e` — stopped / SUCCESS; exact-source SHA pinned, no D1 migration, Worker deployment `d517a11a-f48b-4db7-a930-538278063ce5`, version `9b5c0202-8362-459e-8b0b-1495bb94d2ef` receiving 100% of staging traffic. Previous version `b8da158b-3673-46f1-befa-8f6917e74abb` available as rollback. Build trigger returned to exact manual HOLD immediately after dispatch.
+
+| Gate | Actual evidence | Status |
+|---|---|---|
+| Source review / security fix | GET /api/admin/cms/session now sends private/no-store/max-age=0 and nosniff for 200/401/403/503; unexpected D1 exception becomes CMS_SESSION_UNAVAILABLE rather than raw internal error. Auth semantics, role data, UI, database, media route unchanged. | **SOURCE MERGED, STAGING DEPLOYED** |
+| Local session unit tests | Synthetic valid Admin, expected 401/403 and unexpected backend error; all assert no-store, no cookie setting and generic errors. | **PASS — PR HEAD PORTAL CI VERIFY** |
+| Local RBAC matrix | 7 roles × 6 CMS/Newsroom permission sets (42 role/gate decisions). These are post-verification synthetic identity tests, not signed-in real multi-user hosted E2E. | **PASS — PR HEAD PORTAL CI VERIFY** |
+| Unauthenticated hosted API contract | Playwright staging-acceptance includes six GET and four synthetic POST/DELETE requests for user, article, Media, Newsroom and session/overview API, requiring HTTP401/no-store. | **PASS — PR HEAD STAGING ACCEPTANCE** |
+| PR source CI | PR #122 exact-head Portal CI `42073899458` 4/4 PASS and staging acceptance `42073899849` PASS before merge. | **PASS** |
+| Cloudflare Worker deployment | Manual pinned-SHA build succeeded, read back new Worker version `9b5c0202-8362-459e-8b0b-1495bb94d2ef` 100% on staging; production version remains `e7c703f7-fc4c-4313-b14c-0a2c94e0613d`. | **PASS — LIVE API** |
+| Cloudflare configured private gates | Native D1 auth enabled, Media R2 quarantine enabled, D1 and R2 bindings unchanged, managed r2.dev disabled, custom public domains zero. Build trigger HOLD restored. | **PASS — LIVE API** |
+| R2 data preserved after deploy | One QUARANTINED PNG (463656 bytes). Re-read private R2 object and calculate SHA-256 inside Cloudflare tool: D1 SHA and R2 digest **match**; byte lengths match; scanner attestation/derivative remain NULL. No bytes, storage keys or user-derived digest disclosed. | **PASS — LIVE D1/R2 READ-ONLY** |
+| Post-deploy actual authenticated GET 200 no-store | Owner reports CMS Admin login succeeds on their device, but no authenticated session is present in agent browser; new direct Cloudflare Browser Rendering session request was rate limited HTTP429. | **OWNER_CONFIRMED LOGIN / AUTHENTICATED AGENT E2E NOT_RUN** |
+| Per-role hosted permissions | Real Editor, Reviewer, Viewer and News roles still require authorized native sessions for live HTTP403/200 assertions; 42 decisions above are LOCAL only. | **NOT_RUN** |
+| Full Media B3.15 | Privately stored bytes verified, but actual signed-in role-based 201/retry/CSRF, scanner, publication and controlled cleanup not independently tested. | **PARTIAL / SCANNER BLOCKED** |
+| Production | No production deploy or settings change. | **HOLD** |
+
+**Source/behavior limitations:** PR #122 tests verified the public staging Worker before/during release and the synthetic Admin in local CI; successful build + real deployment readback does not substitute for a logged-in browser 200 proof. Run `RUN-MEDIA-20261106-01` contains independent owner-upload D1/R2 proof and the original source risk; this run records the *actual release* and verified preservation of that data. No Media mutation, password access, test-account modification, public storage grant or production change.
