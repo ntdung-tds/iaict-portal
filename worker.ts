@@ -60,6 +60,23 @@ export default {
           headers.delete("Cf-Access-Jwt-Assertion");
           headers.set(NATIVE_VERIFIED_EMAIL_HEADER, email);
         } else {
+          // A browser navigating to the CMS receives the ordinary password
+          // login page. JSON/API clients continue to get a strict HTTP 401.
+          // This runs only AFTER the D1-backed native session check fails.
+          const htmlNavigation = request.method === "GET" &&
+            /^\\/admin(?:\\/|$)/i.test(path) &&
+            request.headers.get("Accept")?.toLowerCase().includes("text/html");
+          if (htmlNavigation) {
+            return new Response(null, {
+              status: 302,
+              headers: {
+                "Location": "/login",
+                "Cache-Control": "no-store, private",
+                "Vary": "Cookie",
+                "Referrer-Policy": "no-referrer",
+              },
+            });
+          }
           return Response.json({ error: "Authentication required" }, {
             status: 401, headers: { "cache-control": "no-store" },
           });
