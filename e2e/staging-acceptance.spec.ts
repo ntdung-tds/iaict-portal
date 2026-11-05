@@ -517,3 +517,37 @@ test("B3.14 regression: forged CMS/Access identity cannot create quarantine uplo
   expect(response.status(), "Forged identity must fail before R2 write").toBe(401);
   console.log("[media-staging-native] POST_FORGED_401_PASS; AUTH_ROLE_R2_NOT_RUN");
 });
+
+
+test("staging native password-only CMS redirects human HTML navigation after real deployment", async ({ page, request }) => {
+  // Actual deployed Worker, not a local mocked login. No credentials sent here.
+  const root = "/admin";
+  const human = await request.get(root, {
+    headers: { Accept: "text/html" }, maxRedirects: 0,
+  });
+  expect(human.status(), "human browser navigation must redirect without a session").toBe(302);
+  expect(human.headers()["location"]).toBe("/login");
+  expect(human.headers()["cache-control"]).toContain("no-store");
+  const apiLike = await request.get(root, {
+    headers: { Accept: "application/json" }, maxRedirects: 0,
+  });
+  expect(apiLike.status(), "non-browser anonymous requests remain denied").toBe(401);
+  for (const width of [320, 390] as const) {
+    await page.setViewportSize({ width, height: 844 });
+    const response = await page.goto(root, { waitUntil: "domcontentloaded" });
+    expect(response?.status(), "final native password login HTML").toBe(200);
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole("heading", { name: "Đăng nhập quản trị" })).toBeVisible();
+    await expect(page.getByLabel("Email")).toBeVisible();
+    await expect(page.getByLabel("Mật khẩu")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Đăng nhập", exact: true })).toBeEnabled();
+    const dimensions = await page.evaluate(() => ({
+      viewport: window.innerWidth, documentWidth: document.documentElement.scrollWidth,
+    }));
+    expect(dimensions.documentWidth, "login overflow at " + width).toBeLessThanOrEqual(dimensions.viewport);
+  }
+  for (const apiPath of ["/api/auth/session", "/api/admin/cms/overview", "/api/admin/cms/media/quarantine"] as const) {
+    const response = await request.get(apiPath, { maxRedirects: 0 });
+    expect(response.status(), apiPath + " must reject anonymous caller").toBe(401);
+  }
+});
