@@ -179,7 +179,9 @@
 
 @media (max-width: 900px) {
   .sidebar, .sidebarCollapsed { width: 68px; }
-  .content, .contentCollapsed { margin-left: 68px; }
+  /* Prevent a transient horizontal overflow during desktop-to-mobile
+     resizing: the content offset must snap to its mobile rail width. */
+  .content, .contentCollapsed { margin-left: 68px; transition: none; }
   .sidebarHeader, .sidebarCollapsed .sidebarHeader { flex-direction: column; align-items: stretch; min-height: 112px; }
   .brand, .sidebarCollapsed .brand {
     flex: 0 0 auto;
