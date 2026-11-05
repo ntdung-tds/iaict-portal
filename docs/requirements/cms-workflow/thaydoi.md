@@ -48,3 +48,12 @@
 Khi thêm/sửa tính năng, bổ sung `CHG-CMS-WORKFLOW-YYYYMMDD-NN` theo [mẫu và quy định](../README.md); **không sửa SRS**. Nếu hồi cứu thay đổi đã thực hiện trước đây, ghi `BACKFILLED` cùng nguồn commit/PR và kiểm thử; không tự đặt PASS.
 
 **Execution follow-up for CHG-CMS-WORKFLOW-20261103-01:** At reviewed source `979a1b41b53ba54ffc99e2586910a803592e3a1a`, [portal-ci 41568024341](https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024341) **4/4 PASS / 585/585 Vitest / 38/38 local Chromium** including new route regression; [live-public staging 41568024151](https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024151) **24/24 Chromium + 24/24 HTTP PASS** on the older deployed Worker. `RUN-CMS-20261103-02`, `CMS-ART-001/002`; CI on evidence-commit head remains pending. No hosted authenticated API E2E. SRS remains FROZEN/CHƯA_CHỐT.
+
+ 
+### CHG-CMS-WORKFLOW-20261105-01 — Menu CMS mở rộng/thu gọn trên mobile và desktop
+
+- **Yêu cầu thực tế:** ảnh chụp từ chủ dự án cho thấy thanh điều hướng CMS bị thu hẹp, chỉ hiện IA/LL/DA/SK/CG, khiến không nhìn thấy chữ chức năng. Đã xác nhận thao tác upload thành công theo phản hồi của chủ dự án; không động đến upload, Media, auth hay database.
+- **Thiết kế mới:** trên desktop rộng trên 900px, menu mặc định hiển thị tên đầy đủ và có nút thu gọn thành thanh biểu tượng; khi thu gọn vẫn có `aria-label` và `title` đầy đủ. Mobile/tablet tới 900px giữ thanh biểu tượng hẹp để nhường không gian nội dung; nút **Mở rộng menu CMS** mở ngăn kéo trên nền phủ tối để hiển thị mọi tên nhóm/chức năng; **Thu gọn menu CMS**, chạm nền, phím Escape, hoặc chọn mục điều hướng sẽ đóng menu. Trên mobile ngăn kéo không chiếm bố cục nội dung/không làm tràn chiều ngang. Có aria-expanded, aria-controls, focus-visible, reduced-motion.
+- **Giữ nguyên:** vai trò Admin/Editor/Reviewer/Viewer và các vai trò News, danh sách và đường dẫn CMS, đăng nhập native, bảo mật API, upload Media, D1/R2/Access, nội dung public. Không thêm thư viện runtime; không thay đổi SRS chuẩn.
+- **QA:** các test local Chromium dùng phiên admin giả lập được đánh dấu `[MOCK]` — kiểm tra 320/390/768 px, mở và thu bằng nút, phím Escape và backdrop, nhãn `Lịch lớp`/`Dự án`, desktop co/giãn và tên dễ tiếp cận. Tất cả test role hiện hành giữ nguyên. Không đánh đồng mock UI với đăng nhập Admin thực tế trên staging. Ghi run trong `docs/qa/IAICT_TEST_RUNS.md` sau khi có CI.
+- **Trạng thái:** SOURCE IMPLEMENTED / CI PENDING / STAGING DEPLOY NOT_RUN / PRODUCTION HOLD / **CHƯA_CHỐT SRS**.
