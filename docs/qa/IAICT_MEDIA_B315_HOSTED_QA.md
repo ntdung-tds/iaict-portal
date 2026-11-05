@@ -65,3 +65,20 @@ Các test trên là **subcheck**, không tự động chứng minh toàn bộ CM
 **Hiện tại:** chuẩn bị source và kiểm tra D1 read-only PASS; live authenticated upload, role E2E và R2 hash **NOT_RUN/BLOCKED** vì chưa có QA session thực; scanner/publish **BLOCKED**; production HOLD.
 
 Tham chiếu: [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39), [QA identities](IAICT_TEST_IDENTITIES.md), [QA Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3).
+
+
+## Readback ngày 06/11/2026 — Một upload thực tế của chủ dự án (read-only)
+
+**Nguồn:** Chủ dự án xác nhận đã upload trên staging và đăng nhập CMS thành công trong phiên trình duyệt của họ. Agent không sở hữu cookie/mật khẩu/phiên người dùng đó, nên không được tự suy diễn E2E Admin/Editor/Viewer PASS.
+
+**Đã kiểm chứng độc lập bằng API Cloudflare được cấp quyền:**
+- Staging D1 hiện có **1 bản ghi** Media quarantine, trạng thái `QUARANTINED`, MIME `image/png`, byte_length **463656** và revision **1**.
+- Bản ghi có `content_sha256` là chuỗi SHA-256 hợp lệ 64 ký tự; `storage_key` nằm trong private prefix `quarantine/v2/cms-main/`; `scanner_attestation` và `derivative_key` đều **NULL**.
+- R2 `iaict-portal-staging-media` được đọc **nội bộ** qua Cloudflare object API; trả về chính xác **463656 byte**. Hash SHA-256 tính trực tiếp từ những byte được trả về **khớp chính xác với trường D1**. Không tải/xuất nội dung ra hội thoại, GitHub hay Drive, không hiển thị filename, object key, raw bytes hoặc digest riêng của tệp cá nhân.
+- Hai sự kiện audit tồn tại: `media.quarantine.reserve` = **1**, `media.quarantine.write` = **1**.
+- Managed public R2 r2.dev **tắt**, custom public domains **0**; không có bằng chứng scanner hoặc phát hành công khai.
+- Bằng chứng phản hồi API của phiên chính chủ HTTP 201, trạng thái Admin/Editor sau đăng nhập, anti-CSRF sau login, test Viewer, dữ liệu tệp tổng hợp 69-byte và SHA đã biết trong case B3.15 **vẫn NOT_RUN**. Trạng thái của `CMS-MEDIA-012` vì vậy vẫn **PARTIAL**, không đóng toàn bộ.
+- Đối chiếu này là **CMS-MEDIA-019 PASS (PRIVATE R2 BYTE INTEGRITY)**, không đồng nghĩa full upload E2E/scanner PASS.
+- Không thay đổi/upload/xóa một đối tượng R2 nào trong lần kiểm tra read-only. Production giữ nguyên.
+
+Chi tiết run: `RUN-MEDIA-20261106-01` trong `docs/qa/IAICT_TEST_RUNS.md`.
