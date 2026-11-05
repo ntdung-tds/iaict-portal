@@ -1420,3 +1420,29 @@ See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [M
 **Security note:** One staging-specific Access Bypass policy is active; Access-level logging and OTP are removed only on staging, while Worker D1 cookie verification must continue to reject unauthorized requests. Rollback Access bypass only by deleting policy 897f8a7a-cf1a-474a-aa16-ccffa6d9f13f. Old Worker version remains available. No production deployment, no D1 migration, no R2 public access, no change to Admin password. Media scanner/publish remains unavailable. IAM other features PAUSED; SRS FROZEN.
 
 **Evidence:** Cloudflare Builds success, deployments readback, actual Chrome DevTools checks; screenshots, cookies, passwords, OTP and media samples were not saved.
+
+
+---
+
+## RUN-CMS-NAV-20261105-01 — Expand/collapse CMS sidebar, real staging deployment
+
+**Date:** 2026-11-05 ICT. **Owner feedback:** screenshot of mobile CMS showed a compact side rail with only labels IA / LL / DA / SK / CG and no readable full menu names. Owner independently reported media upload was OK; this navigation-only run did not upload a file or collect a protected session. **Source:** [PR #120](https://github.com/ntdung-tds/iaict-portal/pull/120) merged commit df9c89105dec81f2556dc1b9ee639b2cbfc91a9d. **PR head:** b8249af7860ccc6ea90c57acd93d32ec92b5ce16.
+
+| Test | Evidence and result | Status |
+|---|---|---|
+| Browser UI, mobile 320/390/768 (synthetic Admin session) | Local Playwright tests expand icon rail into legible Vietnamese names including Lịch lớp and Dự án; collapse with button, Escape, backdrop. Tests verify ARIA expanded state, viewport width and no body overflow. Session API mocked; cannot prove hosted Admin positive E2E. | **PASS — LOCAL_CHROMIUM_MOCK** |
+| Desktop 1440 (synthetic Admin session) | Default full labels, toggle to compact icon rail, accessible label retained, toggle back; no horizontal overflow. | **PASS — LOCAL_CHROMIUM_MOCK** |
+| Existing seven-role CMS menu visibility | Original role-specific tests remained in the CI suite; no authentication/permissions code changed. | **PASS — LOCAL_CHROMIUM_MOCK** |
+| Compression workbench regression, mobile 320 | Initial CI detected transient 5px overflow caused by animated desktop-to-mobile content offset; fixed by disabling content margin animation at mobile breakpoint and repeated full browser CI. | **FAIL earlier revision; PASS after correction** |
+| Reviewed source Portal CI | PR-head run https://github.com/ntdung-tds/iaict-portal/actions/runs/42055691436 **4/4 jobs SUCCESS**, including Browser Visual, Verify, RC ancestry, KDF. | **PASS** |
+| Public staging acceptance before release | https://github.com/ntdung-tds/iaict-portal/actions/runs/42055691392 completed SUCCESS. | **PASS** |
+| Merged source postmerge CI | Portal, staging acceptance and Media AV isolated CI all SUCCESS at merged df9c891 source commit. | **PASS** |
+| One-off pinned staging Worker deployment | Cloudflare Workers Builds run 475f3569-1a79-4390-b8d4-5e54763a9d74, pinned exact merged commit, stopped SUCCESS. Staging deployment 034dac48-1e9a-4f74-aee6-884c7e1f80ed at 100%, Worker version b8da158b-3673-46f1-befa-8f6917e74abb. Previous Worker d8dbc8d2-1d3a-4c25-9421-a905aae88bda available for rollback. Build trigger restored to manual HOLD immediately after request. | **PASS — REAL_STAGING_DEPLOY** |
+| Actual live Cloudflare Chromium after deploy, mobile 390 | Navigating /admin ends at /login with the correct page heading; horizontal widths 390/390. New deployed JS chunk /_next/static/chunks/cms-shell-BNuaS20K.js fetched HTTP 200; contained text for both Mở rộng menu CMS and Đóng menu điều hướng CMS. Health HTTP 200 and anonymous /api/admin/cms/session HTTP 401. | **PASS — LIVE_CHROME_PUBLIC_AND_ASSET** |
+| Real logged-in Admin clicking mobile menu on deployed staging | No owner browser cookie/session available to tool; cannot test protected UI with real Admin identity. Local mocked UI tests are not substituted for real authenticated E2E. | **NOT_RUN** |
+| Media upload and SHA | No new mutation or R2 SHA check performed in this navigation change; owner's upload success was noted but not independently verified in this test run. | **NOT_RUN IN THIS RUN** |
+| Security and production | Native auth flag true, staging Media quarantine flag true, bucket remains private (r2.dev OFF, zero custom domains), no Access/D1/production changes. Production Worker e7c703f7-fc4c-4313-b14c-0a2c94e0613d unchanged. | **PASS — LIVE_CONFIG_READBACK** |
+
+**Scope/rollback:** Only CMS navigation source/CSS plus corresponding local UI and QA cases were changed. No changes to user roles, CMS routes, login, Media upload, R2 data, Access bypass, D1 migrations, scanner or production. Rollback by deploying prior known-good staging Worker version d8dbc8d2-1d3a-4c25-9421-a905aae88bda through authorized pinned-release controls. Source and deployed artifact correspond to PR #120. SRS FROZEN, production HOLD.
+
+**Evidence policy:** no QA screenshots/videos/traces saved to GitHub; user-provided screenshot remains conversation input. Real owner session credentials not accessed.
