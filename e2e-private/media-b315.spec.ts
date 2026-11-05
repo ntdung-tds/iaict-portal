@@ -38,7 +38,7 @@ test.beforeAll(() => {
 });
 
 test.describe.serial("B3.15 real staging quarantine-only acceptance", () => {
-  test("CMS-MEDIA-001 capability is authenticated, role-scoped and non-publishing", async ({ request }) => {
+  test("CMS-MEDIA-001/012 partial capability: authenticated, role-scoped, non-publishing", async ({ request }) => {
     const res = await request.get("/api/admin/cms/media/quarantine", { maxRedirects: 0 });
     expect(res.status()).toBe(uploader ? 200 : 403);
     expect(res.headers()["cache-control"]).toContain("no-store");
@@ -52,7 +52,7 @@ test.describe.serial("B3.15 real staging quarantine-only acceptance", () => {
     expect(gate.maxBytes).toBe(10 * 1024 * 1024);
   });
 
-  test("CMS-MEDIA-001 mobile CMS UI renders and submits a real synthetic PNG", async ({ page }) => {
+  test("CMS-MEDIA-012 partial: mobile CMS UI submits a real synthetic PNG", async ({ page }) => {
     test.skip(!uploader, "Viewer is forbidden from loading the upload UI");
     await page.setViewportSize({ width: 390, height: 844 });
     const response = await page.goto("/admin/media/upload", { waitUntil: "domcontentloaded" });
@@ -73,7 +73,7 @@ test.describe.serial("B3.15 real staging quarantine-only acceptance", () => {
     // Do not copy authenticated HTML, cookies, private object IDs or session headers into logs.
   });
 
-  test("CMS-MEDIA-002 real POST returns 201 QUARANTINED and replay returns same asset", async ({ request }) => {
+  test("CMS-MEDIA-008/012 partial: real POST returns 201 and replay retains same asset", async ({ request }) => {
     test.skip(!uploader, "Viewer cannot create Media");
     const key = randomUUID();
     const h = headers("b315-api-synthetic.png", key);
@@ -96,7 +96,7 @@ test.describe.serial("B3.15 real staging quarantine-only acceptance", () => {
     // Independent D1 row / private R2 bytes and SHA check is a separate operator step.
   });
 
-  test("CMS-MEDIA-003 viewer POST is denied", async ({ request }) => {
+  test("CMS-MEDIA-001 partial: viewer POST is denied", async ({ request }) => {
     test.skip(uploader, "Run with an actual viewer session for negative RBAC");
     const res = await request.post("/api/admin/cms/media/quarantine", {
       headers: headers("b315-viewer-deny.png"), data: png, maxRedirects: 0,
@@ -104,7 +104,7 @@ test.describe.serial("B3.15 real staging quarantine-only acceptance", () => {
     expect(res.status()).toBe(403);
   });
 
-  test("CMS-MEDIA-004 authenticated cross-origin upload is denied", async ({ request }) => {
+  test("CMS-MEDIA-002 partial: authenticated cross-origin upload is denied", async ({ request }) => {
     test.skip(!uploader, "Requires an authorized CMS session for CSRF test");
     const res = await request.post("/api/admin/cms/media/quarantine", {
       headers: headers("b315-origin-deny.png", randomUUID(), "https://example.invalid"),
@@ -113,7 +113,7 @@ test.describe.serial("B3.15 real staging quarantine-only acceptance", () => {
     expect(res.status()).toBe(403);
   });
 
-  test("CMS-MEDIA-005 PNG label with invalid magic bytes is rejected", async ({ request }) => {
+  test("CMS-MEDIA-003 partial: PNG label with invalid magic bytes is rejected", async ({ request }) => {
     test.skip(!uploader, "Requires an authorized CMS session");
     const res = await request.post("/api/admin/cms/media/quarantine", {
       headers: headers("b315-magic-deny.png"),
@@ -122,7 +122,7 @@ test.describe.serial("B3.15 real staging quarantine-only acceptance", () => {
     expect(res.status()).toBe(415);
   });
 
-  test("CMS-MEDIA-006 oversized request is rejected without private publication", async ({ request }) => {
+  test("CMS-MEDIA-004 partial: oversized request is rejected without private publication", async ({ request }) => {
     test.skip(!uploader || process.env.IAICT_MEDIA_B315_OVERSIZE !== "true",
       "10 MiB+1 live traffic is opt-in after operator verifies staging quota");
     const res = await request.post("/api/admin/cms/media/quarantine", {
