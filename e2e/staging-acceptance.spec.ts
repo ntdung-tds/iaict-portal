@@ -175,8 +175,15 @@ test("mobile menu opens and follows a public navigation link", async ({ page }) 
   await page.setViewportSize({ width: 390, height: 844 });
   const response = await page.goto("/", { waitUntil: "domcontentloaded" });
   expect(response?.status()).toBe(200);
+  // SSR displays the menu button before React handlers are hydrated.
+  // Wait for the header's explicit interactive-ready signal to avoid a
+  // no-op click during the HTML-only phase; still verify one real click.
+  await expect(page.locator('header[data-ui="public"]')).toHaveAttribute(
+    "data-interactive", "true",
+  );
   const toggle = page.getByRole("button", { name: "Mở điều hướng" });
   await expect(toggle).toBeVisible();
+  await expect(toggle).toBeEnabled();
   await toggle.click();
   await expect(page.locator("#mobile-navigation")).toBeVisible();
   const target = page.locator('#mobile-navigation a[href="/gioi-thieu"]');
