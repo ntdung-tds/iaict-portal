@@ -1341,3 +1341,30 @@ The 8 new Chromium tests are browser-rendered **with API mocks** and cannot esta
 | Verdict | **PASS — verified read-only D1/Worker baseline only; SOURCE_PREPARATION proposed; authenticated upload E2E NOT_RUN/BLOCKED** |
 
 See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [Media Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39).
+
+
+---
+
+## RUN-MEDIA-20261105-02 — Genuine cloud Chromium + Access/QA readiness preflight (NO authenticated upload)
+
+**Date/timezone:** 2026-11-05, ICT. **Scope:** staging-only live browser, Cloudflare read-only checks and controlled Outlook QA mailbox delivery. **Source:** PCS rev71 / [PR #115](https://github.com/ntdung-tds/iaict-portal/pull/115). No CI mock is misclassified as a live authorized upload.
+
+| Check | Actual observation | Verdict |
+|---|---|---|
+| Public login, real cloud Chromium 390×844 | GET /login HTTP 200; rendered Đăng nhập quản trị, Email/Mật khẩu and active Đăng nhập button; document client width=390, scroll width=390 | **PASS — public UI only** |
+| Protected CMS Media, real cloud Chromium | Visiting /admin/media/upload navigated to real Cloudflare Access staging sign-in; One-Time PIN email flow and Cloudflare account login were offered | **PASS — Access challenge only** |
+| Access app QA policy, read-only | Staging has exact eight-email QA allow policy requiring One-Time PIN IdP; separate account-member policy preserved, no policy changed by this run | **PASS — policy metadata only** |
+| Actual staging D1 QA roles | Eight active role-specific QA aliases (admin ×2, editor, reviewer, viewer, three news roles), matching D1 role mappings; all eight have zero Access Subject bindings and zero native credential rows. Historical eight example.test fixtures are separate and disabled | **PASS — read-only D1 metadata; signed-in behavior NOT_RUN** |
+| QA email delivery | Sent a nonsensitive test mail to the QA Admin plus alias with connected Outlook, then found exact delivered recipient in the mailbox. This is not Cloudflare OTP verification and creates no independent mailbox | **PASS — controlled mail delivery only** |
+| Sign-in form automation | Protected-browser action to submit QA login was blocked by connector safety control; no alternate route, forged identity or session export was attempted | **BLOCKED — real authenticated session unavailable** |
+| Live Admin/Editor POST and Viewer/CSRF negatives | No signed-in role session; no Media upload issued, no private R2 bytes/SHA readback | **NOT_RUN** |
+| Staging R2 publication boundary | Zero custom bucket domains, managed r2.dev disabled | **PASS — read-only private bucket configuration** |
+| Staging D1 media rows | media_r2_quarantine_uploads count = 0 | **PASS — read-only empty baseline, not upload E2E** |
+| Worker deployments | Staging deployment c43e105c-f978-426f-b42c-f515238c2252 / Worker 4ab3ecef-9ebd-485e-afb0-eac55136751d; production deployment a01a3743-ac78-4a19-a990-581fe9235751 unchanged | **PASS — release-boundary readback** |
+| Evidence privacy | No screenshot created; no OTP/password/cookie stored or exported; no customer files used | **NOT_CAPTURED / NONE** |
+
+**Important:** this run is real browser and staging readiness evidence, NOT a pass of canonical CMS-MEDIA-001..012. The eight newly active QA aliases are distinct from eight old disabled fixtures. Correctly configured OTP and delivered test email narrow the prerequisite, but **no authenticated POST, R2 SHA, viewer/CSRF negative E2E or actual authorized upload acceptance** has been performed. Scanner/publication remains BLOCKED Workers Paid Containers or approved equivalent. IAM feature implementation PAUSED, SRS FROZEN, production HOLD.
+
+**Next:** complete OTP on an authorized isolated browser with private session storage; then run [B3.15 manual suite](IAICT_MEDIA_B315_HOSTED_QA.md), verify 201 QUARANTINED and D1/R2 independent bytes digest; append a NEW immutable run with actual results. Never spoof JWT/Access headers or expose real sessions in GitHub/Drive/CI.
+
+**Evidence:** [restricted QA Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3); no new screenshot uploaded.
