@@ -41,38 +41,29 @@ test("staging health and public workflow metadata are healthy", async ({ request
   expect(body.scheduler?.cronUtc).toBe("*/15 * * * *");
 });
 
-test("newsroom admin paths are protected by Cloudflare Access at the edge", async ({ request }) => {
+test("staging CMS routes reject anonymous requests with native Worker gate", async ({ request }) => {
   for (const route of ["/admin/news", "/api/admin/news/settings"] as const) {
     const response = await request.get(route, { maxRedirects: 0 });
-    expect([302, 303, 307, 308], `${route} should redirect to Cloudflare Access`).toContain(response.status());
-    const location = response.headers()["location"] ?? "";
-    expect(location, `${route} should redirect through the Access login flow`).toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+    expect(response.status(), route + " must reject missing native session").toBe(401);
+    expect(response.headers()["cache-control"], route).toContain("no-store");
+    expect(response.headers()["location"] ?? "").not.toMatch(/cloudflareaccess[.]com/i);
   }
 });
 
-test("read-only Access exact-root diagnostics: never serve an unauthenticated success response", async ({ request }) => {
-  // Observe *both* hostnames without authentication or mutation. An HTTP 404
-  // may mean no route exists: it is NOT proof that Access policy protected it.
+test("staging native password gate blocks exact CMS roots, production unchanged", async ({ request }) => {
   for (const { environment, host } of [
     { environment: "staging", host: "https://iaict-portal-staging.iaict-platform.workers.dev" },
     { environment: "production", host: "https://iaict-portal.iaict-platform.workers.dev" },
   ] as const) {
     for (const path of ["/admin", "/api/admin"] as const) {
       const response = await request.get(host + path, { maxRedirects: 0 });
-      const code = response.status();
-      const target = response.headers()["location"] ?? "";
-      const accessRedirect = [302, 303, 307, 308].includes(code) &&
-        new RegExp("cloudflareaccess[.]com|/cdn-cgi/access/login", "i").test(target);
-      console.log(`[access-root-observation] ${environment} ${path}: HTTP ${code}, access_redirect=${accessRedirect}`);
+      const status = response.status();
+      console.log("[cms-native-auth] " + environment + " " + path + ": HTTP " + status);
       if (environment === "staging") {
-        // Staging Access was updated to include both exact roots: a 404 is
-        // deliberately insufficient evidence of actual edge protection.
-        expect(accessRedirect, `staging exact ${path} must redirect to Cloudflare Access`).toBe(true);
+        expect(status, path + " must deny unauthenticated request").toBe(401);
+        expect(response.headers()["cache-control"]).toContain("no-store");
       } else {
-        // Production has not been changed and may still return 404. Record,
-        // but do not confuse it with successful Access login enforcement.
-        expect(code, `production ${path} exposed an unauthenticated success response`)
-          .toBeGreaterThanOrEqual(300);
+        expect(status, "Production anonymous root must remain denied").toBeGreaterThanOrEqual(300);
       }
     }
   }
@@ -207,17 +198,11 @@ test("search accepts typed Vietnamese text and keyboard submission", async ({ pa
   await expect(page.locator('.public-search-results a[href="/du-an/tram-rung"]')).toBeVisible();
 });
 
-test("unauthenticated CMS root, subpaths, and APIs require Cloudflare Access", async ({ request }) => {
-  for (const route of [
-    "/admin",
-    "/admin/news",
-    "/api/admin/cms/overview",
-    "/api/admin/news/settings",
-  ] as const) {
+test("unauthenticated CMS root, subpaths, and APIs require valid native session", async ({ request }) => {
+  for (const route of ["/admin", "/admin/news", "/api/admin/cms/overview", "/api/admin/news/settings"] as const) {
     const response = await request.get(route, { maxRedirects: 0 });
-    expect([302, 303, 307, 308], `${route} should require Access login`).toContain(response.status());
-    const location = response.headers()["location"] ?? "";
-    expect(location, `${route} must redirect to Cloudflare Access`).toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+    expect(response.status(), route + " must deny missing native session").toBe(401);
+    expect(response.headers()["cache-control"]).toContain("no-store");
   }
 });
 
@@ -333,19 +318,19 @@ test("native IAICT login is publicly accessible on staging, mobile-responsive, a
   }
 });
 
-test("native login never exposes credentials via GET and bootstrap stays behind Access", async ({ request }) => {
+test("native login blocks GET and protected password setup denies anonymous users", async ({ request }) => {
   const login = await request.get("/api/auth/login", { maxRedirects: 0 });
   expect(login.status()).toBe(405);
   expect(login.headers()["cache-control"]).toContain("no-store");
   for (const path of ["/admin/security", "/api/admin/cms/auth-setup"] as const) {
     const response = await request.get(path, { maxRedirects: 0 });
-    expect([302, 303, 307, 308]).toContain(response.status());
-    expect(response.headers()["location"] ?? "").toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+    expect(response.status(), path + " must deny missing native session").toBe(401);
+    expect(response.headers()["cache-control"]).toContain("no-store");
   }
 });
 
 
-test("independent native session page on staging stays outside Access while admin remains protected", async ({ page, request }) => {
+test("independent native session page stays public while admin remains session-gated", async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const pageResponse = await page.goto("/account", { waitUntil: "domcontentloaded" });
   expect(pageResponse?.status(), "native session account page should be public but identity-gated by D1").toBe(200);
@@ -365,8 +350,8 @@ test("independent native session page on staging stays outside Access while admi
   }
 
   const adminResponse = await request.get("/api/admin/cms/session", { maxRedirects: 0 });
-  expect([302, 303, 307, 308]).toContain(adminResponse.status());
-  expect(adminResponse.headers()["location"] ?? "").toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+  expect(adminResponse.status()).toBe(401);
+  expect(adminResponse.headers()["cache-control"]).toContain("no-store");
 });
 
 test("live native activation keeps the token out of GET requests and blocks anonymous administration", async ({ page, request }) => {
@@ -379,8 +364,8 @@ test("live native activation keeps the token out of GET requests and blocks anon
   }
   for (const path of ["/api/admin/cms/activation", "/admin/users"]) {
     const response = await request.get(path, { maxRedirects: 0 });
-    expect([302,303,307,308], path + " must remain behind Access").toContain(response.status());
-    expect(response.headers()["location"] ?? "").toMatch(new RegExp("cloudflareaccess[.]com|/cdn-cgi/access/login", "i"));
+    expect(response.status(), path + " must deny anonymous CMS access").toBe(401);
+    expect(response.headers()["cache-control"]).toContain("no-store");
   }
   const invalid = await request.get("/api/auth/session", { maxRedirects: 0 });
   expect(invalid.status()).toBe(401);
@@ -456,19 +441,19 @@ test("actual staging rejects forged cross-site login and malformed activation PO
   expect(activation.headers()["set-cookie"] ?? "").not.toContain("__Host-iaict_session");
 });
 
-test("actual staging Access refuses forged client identity on all protected admin paths", async ({ request }) => {
+test("actual staging Worker rejects forged Access and native identity on admin paths", async ({ request }) => {
   const headers = {
     "Cf-Access-Authenticated-User-Email": "qa-forged@example.invalid",
     "Cf-Access-Jwt-Assertion": "untrusted.fake.jwt",
+    "X-IAICT-Verified-Email": "qa-forged@example.invalid",
+    Cookie: "__Host-iaict_session=" + "a".repeat(64),
   };
   for (const path of [
     "/admin", "/admin/users", "/api/admin/cms/session",
     "/api/admin/cms/users", "/api/admin/news/settings",
   ]) {
     const response = await request.get(path, { headers, maxRedirects: 0 });
-    expect([302, 303, 307, 308], path).toContain(response.status());
-    expect(response.headers()["location"] ?? "", path)
-      .toMatch(/cloudflareaccess\.com|\/cdn-cgi\/access\/login/i);
+    expect(response.status(), path + " must reject forged identity").toBe(401);
     expect(response.headers()["set-cookie"] ?? "").not.toContain("__Host-iaict_session");
   }
 });
@@ -480,30 +465,26 @@ test("actual staging Access refuses forged client identity on all protected admi
 // Never add authentication secrets, Media fixtures, screenshots or trace uploads.
 const mediaQuarantineApi = "/api/admin/cms/media/quarantine";
 const mediaUploadUi = "/admin/media/upload";
-const accessChallenge = (status: number, location: string): boolean =>
-  [302, 303, 307, 308].includes(status) &&
-  (location.includes("cloudflareaccess.com") || location.includes("/cdn-cgi/access/login"));
-
 const safeSyntheticPng = Buffer.from([
   137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82,
   0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0, 144, 119, 83, 222,
 ]);
 
-test("B3.14 anonymous GET Media upload UI redirects to real Cloudflare Access", async ({ request }) => {
+test("B3.14 regression: anonymous GET Media upload UI denied by native Worker", async ({ request }) => {
   const response = await request.get(mediaUploadUi, { maxRedirects: 0 });
-  expect(accessChallenge(response.status(), response.headers()["location"] ?? ""),
-    "Anonymous CMS upload page must be protected at the edge, never 200 or 404").toBe(true);
-  console.log("[media-staging-edge] UI ANON_ACCESS_CHALLENGE_PASS; AUTH_MEDIA_UPLOAD_NOT_RUN");
+  expect(response.status(), "Anonymous Media UI must remain denied").toBe(401);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  console.log("[media-staging-native] UI ANON_401_PASS; AUTH_MEDIA_UPLOAD_NOT_RUN");
 });
 
-test("B3.14 anonymous GET Media capability is protected, not a publicly readable feature flag", async ({ request }) => {
+test("B3.14 regression: anonymous GET Media capability denied by native Worker", async ({ request }) => {
   const response = await request.get(mediaQuarantineApi, { maxRedirects: 0 });
-  expect(accessChallenge(response.status(), response.headers()["location"] ?? ""),
-    "Anonymous Media capability GET must be Access-protected, not 200 or 404").toBe(true);
-  console.log("[media-staging-edge] CAPABILITY_GET_ANON_ACCESS_CHALLENGE_PASS; AUTH_ROLE_NOT_RUN");
+  expect(response.status(), "Anonymous Media capability must remain denied").toBe(401);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  console.log("[media-staging-native] CAPABILITY_ANON_401_PASS; AUTH_ROLE_NOT_RUN");
 });
 
-test("B3.14 anonymous POST synthetic PNG cannot create a Media quarantine upload", async ({ request }) => {
+test("B3.14 regression: anonymous POST synthetic PNG cannot create quarantine upload", async ({ request }) => {
   const response = await request.post(mediaQuarantineApi, {
     maxRedirects: 0,
     headers: {
@@ -514,12 +495,12 @@ test("B3.14 anonymous POST synthetic PNG cannot create a Media quarantine upload
     },
     data: safeSyntheticPng,
   });
-  expect(accessChallenge(response.status(), response.headers()["location"] ?? ""),
-    "Anonymous Media upload POST must challenge at Access; no 201, 404, or fail-open").toBe(true);
-  console.log("[media-staging-edge] POST_ANON_ACCESS_CHALLENGE_PASS; NO_SERVER_STORAGE_READBACK_CLAIM");
+  expect(response.status(), "Anonymous Media POST must fail before storage").toBe(401);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  console.log("[media-staging-native] POST_ANON_401_PASS; R2_BYTES_NOT_RUN");
 });
 
-test("B3.14 forged CMS/Access identity headers cannot bypass Media upload authentication", async ({ request }) => {
+test("B3.14 regression: forged CMS/Access identity cannot create quarantine upload", async ({ request }) => {
   const response = await request.post(mediaQuarantineApi, {
     maxRedirects: 0,
     headers: {
@@ -529,13 +510,10 @@ test("B3.14 forged CMS/Access identity headers cannot bypass Media upload authen
       "idempotency-key": randomUUID(),
       "Cf-Access-Authenticated-User-Email": "qa-forged@example.test",
       "Cf-Access-Jwt-Assertion": "invalid-unsigned-untrusted-token",
-      "x-iaict-native-verified-email": "qa-forged@example.test",
+      "X-IAICT-Verified-Email": "qa-forged@example.test",
     },
     data: safeSyntheticPng,
   });
-  const status = response.status();
-  const protectedAtEdge = accessChallenge(status, response.headers()["location"] ?? "");
-  expect(protectedAtEdge || status === 401 || status === 403,
-    "Forged incoming identity must not be accepted by Access or Worker for Media POST").toBe(true);
-  console.log("[media-staging-edge] POST_FORGED_IDENTITY_DENIED; AUTH_ROLE_AND_R2_NOT_RUN");
+  expect(response.status(), "Forged identity must fail before R2 write").toBe(401);
+  console.log("[media-staging-native] POST_FORGED_401_PASS; AUTH_ROLE_R2_NOT_RUN");
 });
