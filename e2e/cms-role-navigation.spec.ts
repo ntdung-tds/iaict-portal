@@ -66,6 +66,8 @@ for (const width of [320, 390, 768] as const) {
     await expect(course.locator("span").last()).toBeVisible();
     await expect(course.locator("span").last()).toHaveText("Lịch lớp");
     await expect(sidebar.locator('a[href="/admin/content/projects"] span').last()).toHaveText("Dự án");
+    await expect.poll(async () => (await sidebar.boundingBox())?.width ?? 0)
+      .toBeGreaterThan(180);
     const dims = await page.evaluate(() => {
       const aside = document.querySelector("aside[aria-label='Điều hướng CMS']");
       return { asideWidth: aside?.getBoundingClientRect().width ?? 0, viewport: innerWidth, document: document.documentElement.scrollWidth };
@@ -99,11 +101,11 @@ test("CMS desktop navigation can collapse and expand without losing accessible n
   await sidebar.getByRole("button", { name: "Thu gọn menu CMS" }).click();
   await expect(course.locator("span").last()).toBeHidden();
   await expect(course).toHaveAttribute("aria-label", "Lịch lớp");
-  const collapsed = await sidebar.boundingBox();
-  expect(collapsed?.width).toBeLessThan(100);
+  await expect.poll(async () => (await sidebar.boundingBox())?.width ?? 999)
+    .toBeLessThan(100);
   await sidebar.getByRole("button", { name: "Mở rộng menu CMS" }).click();
   await expect(course.locator("span").last()).toBeVisible();
-  const expanded = await sidebar.boundingBox();
-  expect(expanded?.width).toBeGreaterThan(200);
+  await expect.poll(async () => (await sidebar.boundingBox())?.width ?? 0)
+    .toBeGreaterThan(200);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
