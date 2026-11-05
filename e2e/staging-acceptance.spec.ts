@@ -551,3 +551,41 @@ test("staging native password-only CMS redirects human HTML navigation after rea
     expect(response.status(), apiPath + " must reject anonymous caller").toBe(401);
   }
 });
+
+
+test("anonymous cross-module CMS API matrix rejects read and mutation on staging", async ({ request }) => {
+  // Genuine hosted staging Worker, no browser session, no fixture data writes.
+  // Every POST/DELETE must be rejected by the Worker before route handlers
+  // inspect the deliberately invalid synthetic body.
+  const roots = [
+    "/api/admin/cms/session",
+    "/api/admin/cms/users",
+    "/api/admin/cms/articles",
+    "/api/admin/cms/overview",
+    "/api/admin/cms/media/quarantine",
+    "/api/admin/news/settings",
+  ] as const;
+  const origin = "https://iaict-portal-staging.iaict-platform.workers.dev";
+  for (const path of roots) {
+    const response = await request.get(path, {
+      headers: { Accept: "application/json" },
+      maxRedirects: 0,
+    });
+    expect(response.status(), path + " anonymous GET must fail closed").toBe(401);
+    expect(response.headers()["cache-control"], path).toContain("no-store");
+    expect(response.headers()["set-cookie"] ?? "").not.toContain("__Host-iaict_session");
+  }
+  for (const method of ["POST", "DELETE"] as const) {
+    for (const path of ["/api/admin/cms/users", "/api/admin/cms/articles"] as const) {
+      const response = await request.fetch(path, {
+        method, data: JSON.stringify({ action: "qa-auth-denied", id: "synthetic-no-op" }),
+        headers: { "content-type": "application/json", origin, Accept: "application/json" },
+        maxRedirects: 0,
+      });
+      expect(response.status(), method + " " + path + " must fail before mutation").toBe(401);
+      expect(response.headers()["cache-control"]).toContain("no-store");
+      expect(response.headers()["set-cookie"] ?? "").not.toContain("__Host-iaict_session");
+    }
+  }
+  console.log("[cms-staging-matrix] 6 anonymous GET and 4 mutation attempts denied 401; NO authenticated RBAC claim");
+});
