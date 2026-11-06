@@ -1524,3 +1524,23 @@ See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [M
 **Important:** The first Chrome run was already public/anonymous. A separate one-off QA login tool attempt was refused by the tool safety layer; do not retry by forging JWT, cookies, headers or deliberately bypassing the safety layer. No new native password, invitation, session, account grant, upload or deletion was created. To finish positive browser E2E, use a supported interactive browser session with permitted owner/QA sign-in (e.g. ChatGPT Work Cloud Browser) and a separate credential vault; **no passwords/cookies/OTP are to be pasted in GitHub or chat**.
 
 **Existing immutable evidence:** RUN-MEDIA-20261106-01 contains private owner-upload D1/R2 SHA-256 readback PASS; RUN-CMS-20261106-02 records staging source/session privacy CI and actual Worker deploy; this run strictly records **independent actual Chrome** and authenticated E2E blocker. One image already uploaded remains privately quarantined, not published.
+
+
+---
+
+## RUN-CMS-OWNER-20261106-01 — Owner confirmation after staging CMS testing
+
+**Date:** 2026-11-06 ICT. **Environment:** IAICT Portal staging. **Source of evidence:** project owner's explicit conversation response: “Tôi đã test và ok”. The owner sent this after the staging browser and authenticated-E2E discussion. No screenshots, browser trace, role-by-role case list, or protected session export accompanied the confirmation.
+
+| Acceptance | Observation | Status |
+|---|---|---|
+| Owner's staging CMS test | Owner explicitly confirmed they tested and the result was OK. | **OWNER_ACCEPTED — scope not itemized** |
+| Existing self-operated real browser checks | Separate RUN-CMS-BROWSER-20261106-03: public mobile menu, login UI, anonymous CMS API 401 and viewport checks verified in independent Cloudflare Chromium. | **PASS in earlier independently evidenced run** |
+| Existing private Media upload integrity | Separate RUN-MEDIA-20261106-01: private R2 object bytes/length/SHA-256 match D1; upload remains QUARANTINED. | **PASS in earlier independently evidenced run** |
+| Seven distinct hosted role sign-ins and Media HTTP201/200 replay/CSRF negative/Viewer 403 | Owner did not specify these individual cases; the agent did not independently run them under seven real authenticated sessions. | **NOT_RUN as individually evidenced E2E; owner confirmation does not reclassify** |
+| Scanner verdict and public Media publication | No authorized real scanner deployment or clean attestation. | **BLOCKED; publication OFF** |
+| Production deploy | No owner request for release or production acceptance; staging approval is not production approval. | **HOLD** |
+
+**Interpretation:** The user-facing CMS experience tested by the owner is accepted as reported. Do not extrapolate that short confirmation into case-level PASS for all seven roles, authenticated negative scenarios, scanner, R2 publication, or a production launch. No source changes, login, password, R2 mutation or deployment are part of this run. Use this explicit owner sign-off to stop revisiting the same visual acceptance and prioritize outstanding release gates.
+
+**Next:** decide the supported hosted antivirus scanner approach (isolated ClamAV service/paid Cloudflare Containers or equivalent), complete identity-authenticated negative E2E if needed for the release scope, and request separate production go/no-go only after technical gates pass.
