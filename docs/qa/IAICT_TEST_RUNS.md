@@ -1499,3 +1499,28 @@ See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [M
 | Production | No production deploy or settings change. | **HOLD** |
 
 **Source/behavior limitations:** PR #122 tests verified the public staging Worker before/during release and the synthetic Admin in local CI; successful build + real deployment readback does not substitute for a logged-in browser 200 proof. Run `RUN-MEDIA-20261106-01` contains independent owner-upload D1/R2 proof and the original source risk; this run records the *actual release* and verified preservation of that data. No Media mutation, password access, test-account modification, public storage grant or production change.
+
+
+---
+
+## RUN-CMS-BROWSER-20261106-03 — Independent live Chromium by agent (mobile / desktop) and identity boundary
+
+**Date:** 2026-11-06 ICT. **Environment:** Cloudflare Browser Rendering Chrome against the **deployed staging Worker** `9b5c0202-8362-459e-8b0b-1495bb94d2ef`; owner-approved task: run CMS and Media functional acceptance autonomously on agent browser. **Scope verified:** public mobile menu and password login page, anonymous CMS HTTP gates. **No real owner session was transferred. No test credentials or browser cookies supplied to agent.**
+
+| Test | Observed in independent actual Chrome | Status |
+|---|---|---|
+| Public mobile homepage 320px | React header reports `data-interactive=true`; click mobile menu opens `#mobile-navigation`, Escape closes it, `scrollWidth=clientWidth=320`. | **PASS — REAL CHROME** |
+| Public mobile homepage 390px | Same real browser interaction and 390/390 width, no overflow. | **PASS — REAL CHROME** |
+| Public tablet homepage 768px | Same menu expand/Escape collapse, viewport 768/768. | **PASS — REAL CHROME** |
+| Desktop public header 1440px | Responsive viewport 1440/1440 and mobile button not visible to user. A programmatic DOM click was issued in the first probe even though button was hidden by an ancestor; that behavior is **NOT** a user-visible desktop menu interaction test. | **PASS — DESKTOP WIDTH ONLY; DESKTOP MENU INTERACTION NOT_RUN** |
+| Native CMS login mobile 390px | Anonymous `/admin` goes to `/login`; heading Đăng nhập quản trị, visible email/password form, submit enabled, no overflow. No password or OTP used. | **PASS — REAL CHROME ANONYMOUS** |
+| Native CMS protected anonymous gates | Authenticated-only `/api/admin/cms/session`, overview, articles, users, Media capability all returned HTTP **401** and `Cache-Control` containing `no-store`, from the actual browser. | **PASS — REAL CHROME ANONYMOUS** |
+| Live owner Admin login | Owner reports success in their browser, and prior read-only D1 metadata showed 1 valid native Admin session. The agent's independently launched Chrome does **not** inherit that session. | **OWNER_CONFIRMED / AGENT AUTH E2E NOT_RUN** |
+| Provisioned QA role positive E2E | Tried initiating an approved staging QA activation + native login through the authorized Cloudflare tool; the action was blocked by the tool's safety checks **before execution**. No bypass was attempted. Follow-up read-only staging D1 queries confirmed QA plus-alias credential count 0, unconsumed invite count 0, active QA session count 0, unchanged 10 active users and 1 existing private Media row. | **BLOCKED — TOOL SAFETY; NO QA CREDENTIAL/SERVER CHANGE** |
+| Authenticated seven-role CMS permissions, Media upload, CSRF | No legitimate logged-in agent browser QA role available. Older Vitest 42-role/gate tests and public 401 checks cannot substitute for positive hosted role interactions or real R2 uploads. | **NOT_RUN** |
+| Scanner and publication | No functional hosted antivirus engine for quarantine clearance/publication under the approved free-tier configuration. | **BLOCKED — DEPENDENCY** |
+| Production | No production deploy or policy changes. | **HOLD** |
+
+**Important:** The first Chrome run was already public/anonymous. A separate one-off QA login tool attempt was refused by the tool safety layer; do not retry by forging JWT, cookies, headers or deliberately bypassing the safety layer. No new native password, invitation, session, account grant, upload or deletion was created. To finish positive browser E2E, use a supported interactive browser session with permitted owner/QA sign-in (e.g. ChatGPT Work Cloud Browser) and a separate credential vault; **no passwords/cookies/OTP are to be pasted in GitHub or chat**.
+
+**Existing immutable evidence:** RUN-MEDIA-20261106-01 contains private owner-upload D1/R2 SHA-256 readback PASS; RUN-CMS-20261106-02 records staging source/session privacy CI and actual Worker deploy; this run strictly records **independent actual Chrome** and authenticated E2E blocker. One image already uploaded remains privately quarantined, not published.

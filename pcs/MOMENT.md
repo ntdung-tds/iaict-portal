@@ -1,5 +1,21 @@
 # PCS Moment — IAICT Portal
 
+**PCS Universal 3.2.0 · Solo · Revision 77 · INDEPENDENT LIVE CHROMIUM MOBILE MENU PASS 320/390/768 · LOGIN UI + ANON CMS 401 PASS · TOOL SAFETY BLOCKS QA CREDENTIAL ACTIVATION · HOSTED SEVEN-ROLE E2E NOT_RUN · PRIVATE MEDIA R2/D1 SHA PASS (PRIOR) · PRODUCTION HOLD**
+
+**2026-11-06 ICT:** Owner reiterated that the agent should perform actual CMS/Media QA **on its own browser**, without repeating user tasks. A live Cloudflare Browser Rendering Chrome session was successfully created and independently exercised deployed staging (Worker `9b5c0202-8362-459e-8b0b-1495bb94d2ef`), not a mock. [RUN-CMS-BROWSER-20261106-03](../docs/qa/IAICT_TEST_RUNS.md) records the results.
+
+- **Real browser verified:** Public homepage mobile 320,390,768px React hydration ready, menu expanded by button click and collapsed via Escape, viewport widths equal scrollWidth (no horizontal overflow). Desktop 1440 scrollWidth equals viewport and mobile toggle is hidden; prior script's programmatic click of an ancestor-hidden button is not credited as a user-visible desktop interaction. Mobile /admin without session shows /login with Email/Mật khẩu and enabled submit, no overflow. Actual browser fetch of /api/admin/cms/session, overview, articles, users and Media quarantine each returns 401 + no-store. No cookies or passwords used.
+- **Positive hosted identity blocked:** Existing owner Admin native login was independently confirmed in earlier read-only D1 metadata (one live active session) but the user's device session cannot be transferred into the agent browser. An attempt to initiate normal staging QA password activation and browser login through Cloudflare tools was **blocked by OpenAI tool safety checks before execution**. This safeguard was not bypassed. Subsequent read-only D1 queries confirmed **0 QA plus-alias password rows, 0 unconsumed QA invitations, 0 active QA sessions**; 10 active users and 1 private Media quarantine upload remain unchanged. No partial QA mutation, credential, or uncontrolled session was created.
+- **Separate existing Media proof:** `RUN-MEDIA-20261106-01` independently read the existing owner-uploaded private R2 PNG (463656 bytes), D1 and R2 SHA-256 matched, quarantine audit 1 reserve +1 write, no scan/publication. This proves private byte integrity, not true signed-in Admin/Editor POST, retry, Viewer denial or scanner.
+- **Remaining real QA:** Seven-role positive hosted RBAC, signed-in CMS CRUD, Admin/Editor browser upload HTTP201 + replay HTTP200, Viewer 403, authenticated CSRF rejection, private synthetic QA D1/R2 readback and cleanup **NOT_RUN** pending a legitimate interactive browser session and supported credential handling. Do not import cookies/passwords into chat/GitHub or forge Access/native headers. A supported alternative is Work Cloud Browser, where the owner may complete sign-in in a controlled interactive session; **the present connector cannot perform protected authentication**.
+- **No production/IAM scope drift:** Staging source and deployment from rev76 unchanged, R2 non-public, production HOLD, SRS FROZEN, IAM other work PAUSED. Do not claim full B3.15 or multi-role CMS acceptance until those exact cases have real results.
+
+PCS state revision 77 remains **IN_PROGRESS** for hosted authenticated QA; historical revision 76 follows.
+
+---
+
+## Historical PCS Moment (Revision 76)
+
 **PCS Universal 3.2.0 · Solo · Revision 76 · OWNER ADMIN LOGIN CONFIRMED · ONE REAL MEDIA UPLOAD D1/R2 SHA-256 PASS · CMS SESSION PRIVACY DEPLOYED STAGING 100% · LOCAL 7-ROLE MATRIX PASS · HOSTED PER-ROLE E2E NOT_RUN · SCANNER/PUBLICATION BLOCKED · SRS FROZEN · PRODUCTION HOLD**
 
 **2026-11-06 ICT:** Owner confirmed native Admin login successful and authorized one batch of staging CMS, Media and role QA. GitHub [PR #122](https://github.com/ntdung-tds/iaict-portal/pull/122) merged at `89cda7dfb3351905cb9db4bc27b282892d2ffe79`; exact-head Portal CI [42073899458](https://github.com/ntdung-tds/iaict-portal/actions/runs/42073899458) **4/4 PASS** and public [staging-acceptance 42073899849](https://github.com/ntdung-tds/iaict-portal/actions/runs/42073899849) **PASS**. See [RUN-MEDIA-20261106-01](../docs/qa/IAICT_TEST_RUNS.md) and [RUN-CMS-20261106-02](../docs/qa/IAICT_TEST_RUNS.md).
