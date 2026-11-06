@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import Link from "next/link";
 import { MEDIA_POLICY } from "@/lib/media-policy";
 import styles from "./media-quarantine-upload.module.css";
 
@@ -147,6 +148,7 @@ export function MediaQuarantineUpload() {
           <p>{saved.name}</p>
           <p>Mã lưu trữ: <code>{saved.id}</code></p>
           <p><strong>QUARANTINED · Chờ quét</strong> — chưa có đường dẫn công khai; không thể dùng làm ảnh bài viết hoặc website.</p>
+          <p><Link href="/admin/media/library">Xem Media đã tải lên và trạng thái cách ly</Link></p>
         </div>:null}
       </div>
       <aside className={styles.card}>
@@ -157,6 +159,7 @@ export function MediaQuarantineUpload() {
           <li>Chờ dịch vụ antivirus và bộ giải mã an toàn xử lý.</li>
           <li>Chỉ ảnh có bằng chứng quét, được duyệt và xuất bản riêng mới có thể sử dụng.</li>
         </ol>
+        <p><Link href="/admin/media/library">Mở thư viện Media riêng tư</Link></p>
         <div className={styles.note}><strong>Trạng thái scanner:</strong> {gate?.scannerConfigured?"Đã khai báo":"Chưa kết nối"}.
           <p>Việc lưu file vào vùng cách ly không đồng nghĩa file đã an toàn hoặc được duyệt.</p>
         </div>

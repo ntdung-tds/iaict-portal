@@ -596,3 +596,19 @@ test("anonymous cross-module CMS API matrix rejects read and mutation on staging
   }
   console.log("[cms-staging-matrix] 6 anonymous GET and 4 mutation attempts denied 401; NO authenticated RBAC claim");
 });
+
+
+test("new private Media library denies unauthenticated inventory and revocation", async ({ request }) => {
+  const path="/api/admin/cms/media/library";
+  const get=await request.get(path,{headers:{accept:"application/json"},maxRedirects:0});
+  expect(get.status()).toBe(401);
+  expect(get.headers()["cache-control"]).toContain("no-store");
+  const post=await request.post(path,{
+    headers:{origin:"https://iaict-portal-staging.iaict-platform.workers.dev", "content-type":"application/json"},
+    data:JSON.stringify({action:"revoke",id:"00000000-0000-4000-8000-000000000000",revision:1}),
+    maxRedirects:0,
+  });
+  expect(post.status()).toBe(401);
+  expect(post.headers()["cache-control"]).toContain("no-store");
+  console.log("[media-library-staging] no-session GET/POST 401; no authenticated role claim");
+});
