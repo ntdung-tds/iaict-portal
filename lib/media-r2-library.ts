@@ -8,7 +8,6 @@ import { MEDIA_POLICY } from "./media-policy";
 import { MEDIA_STAGING_SCOPE_ID } from "./media-r2-quarantine";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const visibleStates = ["QUARANTINED","REVOKED","PURGE_PENDING","PURGED","FAILED","ORPHAN_PENDING_PURGE","RESERVED"] as const;
 type InventoryRow = {
   id:string; display_filename:string; mime_type:string; byte_length:number; state:string;
   revision:number; created_at:string; updated_at:string; actor_user_id:string;
@@ -80,17 +79,14 @@ export async function revokePrivateMedia(
  if(typeof id!=="string"||!UUID.test(id)||typeof expectedRevision!=="number"||
     !Number.isSafeInteger(expectedRevision)||expectedRevision<1)
    return {ok:false,status:400,code:"INVALID_REVOKE_REQUEST"};
- let state:string|undefined;
  try{
    const row=await db.prepare("SELECT state,revision FROM media_r2_quarantine_uploads WHERE id=? AND scope_id=? LIMIT 1")
       .bind(id,MEDIA_STAGING_SCOPE_ID).first<{state:string;revision:number}>();
    if(!row)return {ok:false,status:404,code:"MEDIA_NOT_FOUND"};
-   state=row.state;
    if(row.state!=="QUARANTINED"||row.revision!==expectedRevision)
      return {ok:false,status:409,code:"MEDIA_STATE_CONFLICT"};
-   // D1 batch executes atomically: if the CAS update lost a race the audit
-   // INSERT SELECT has no REVOKED state at the expected revision and both
-   // statements change 0. Never write a misleading successful audit.
+   // D1 batch executes atomically. SQLite changes() ties the audit insert
+   // to the immediately preceding CAS UPDATE even when another request raced.
    const ops=await db.batch([
      db.prepare(`UPDATE media_r2_quarantine_uploads
        SET state='REVOKED',revision=revision+1,updated_at=datetime('now')
@@ -100,7 +96,7 @@ export async function revokePrivateMedia(
        (id,actor_user_id,action,entity_type,entity_id,metadata_json,created_at)
        SELECT ?,?,'media.quarantine.revoked','media_r2_quarantine',id,?,datetime('now')
        FROM media_r2_quarantine_uploads
-       WHERE id=? AND scope_id=? AND state='REVOKED' AND revision=?`)
+       WHERE id=? AND scope_id=? AND state='REVOKED' AND revision=? AND changes()=1`)
        .bind(crypto.randomUUID(),actor.id,JSON.stringify({policy:MEDIA_POLICY.id,state:"REVOKED"}),
          id,MEDIA_STAGING_SCOPE_ID,expectedRevision+1),
    ]);
