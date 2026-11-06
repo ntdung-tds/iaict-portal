@@ -1,14 +1,20 @@
 import { withPublicPreviewCors } from "./lib/cms-public-cors";
+import { NATIVE_VERIFIED_EMAIL_HEADER, nativeActorEmail, nativeAuthEnabled, sameOriginPost } from "./lib/native-auth";
 import { isProtectedAdminPath, verifyCloudflareAccessRequest } from "./lib/cloudflare-access-jwt";
 import handler from "vinext/server/fetch-handler";
-import { setDatabaseBinding, type D1DatabaseLike } from "./lib/cloudflare-db";
+import { setDatabaseBinding, withDatabaseBinding, type D1DatabaseLike } from "./lib/cloudflare-db";
+import { withPrivateMediaR2Runtime, type MediaR2BucketLike } from "./lib/media-r2-runtime";
+import { cleanupExpiredPrivateMedia } from "./lib/media-r2-cleanup";
 import { runScheduledNewsIngestion } from "./lib/news-scheduler";
 import { resolvePublicRedirect } from "./lib/public-redirects";
 
 type WorkerEnv = {
   DB: D1DatabaseLike;
+  MEDIA_BUCKET?: MediaR2BucketLike;
+  MEDIA_R2_QUARANTINE_ENABLED?: string;
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_POLICY_AUD?: string;
+  IAICT_NATIVE_AUTH_ENABLED?: string;
   [key: string]: unknown;
 };
 
@@ -23,24 +29,76 @@ type ExecutionContextLike = {
 
 export default {
   async fetch(request: Request, env: WorkerEnv, ctx: ExecutionContextLike) {
-    // Verify the assertion before routing. Raw Access headers alone are not identity proof.
-    if (isProtectedAdminPath(new URL(request.url).pathname)) {
+    // Client-supplied internal identity headers are never trusted, even on public routes.
+    const headers = new Headers(request.headers);
+    headers.delete(NATIVE_VERIFIED_EMAIL_HEADER);
+    const path = new URL(request.url).pathname;
+    const nativeEnabled = nativeAuthEnabled(env.IAICT_NATIVE_AUTH_ENABLED);
+    (globalThis as typeof globalThis & { __IAICT_NATIVE_AUTH_ENABLED__?: boolean })
+      .__IAICT_NATIVE_AUTH_ENABLED__ = nativeEnabled;
+    if (isProtectedAdminPath(path)) {
+      let accessValid = false;
       try {
         await verifyCloudflareAccessRequest(request, {
           teamDomain: env.ACCESS_TEAM_DOMAIN,
           audience: env.ACCESS_POLICY_AUD,
         });
+        accessValid = true;
       } catch {
+        // The native cookie is checked against D1 and the user's current active state.
+      }
+      if (!accessValid && nativeEnabled) {
+        let email: string | null = null;
+        try { email = await nativeActorEmail(request, env.DB); } catch { /* fail closed */ }
+        if (email) {
+          if (!["GET", "HEAD", "OPTIONS"].includes(request.method) && !sameOriginPost(request)) {
+            return Response.json({ error: "Invalid request origin" }, {
+              status: 403, headers: { "cache-control": "no-store" },
+            });
+          }
+          headers.delete("Cf-Access-Authenticated-User-Email");
+          headers.delete("Cf-Access-Jwt-Assertion");
+          headers.set(NATIVE_VERIFIED_EMAIL_HEADER, email);
+        } else {
+          // A browser navigating to the CMS receives the ordinary password
+          // login page. JSON/API clients continue to get a strict HTTP 401.
+          // This runs only AFTER the D1-backed native session check fails.
+          const htmlNavigation = request.method === "GET" &&
+            new RegExp("^/admin(?:/|$)", "i").test(path) &&
+            request.headers.get("Accept")?.toLowerCase().includes("text/html");
+          if (htmlNavigation) {
+            return new Response(null, {
+              status: 302,
+              headers: {
+                "Location": "/login",
+                "Cache-Control": "no-store, private",
+                "Vary": "Cookie",
+                "Referrer-Policy": "no-referrer",
+              },
+            });
+          }
+          return Response.json({ error: "Authentication required" }, {
+            status: 401, headers: { "cache-control": "no-store" },
+          });
+        }
+      } else if (!accessValid) {
         return Response.json({ error: "Cloudflare Access authentication required" }, {
-          status: 401,
-          headers: { "cache-control": "no-store" },
+          status: 401, headers: { "cache-control": "no-store" },
         });
       }
     }
-    setDatabaseBinding(env.DB);
-    const redirect = await resolvePublicRedirect(request, env.DB);
-    if (redirect) return redirect;
-    return withPublicPreviewCors(request, await handler.fetch(request, env, ctx));
+    request = new Request(request, { headers });
+    // Isolate D1/R2 by request to prevent concurrent await-context mixups.
+    return withDatabaseBinding(env.DB, () =>
+      withPrivateMediaR2Runtime(
+        env.MEDIA_BUCKET, env.MEDIA_R2_QUARANTINE_ENABLED === "true",
+        async () => {
+          const redirect = await resolvePublicRedirect(request, env.DB);
+          if (redirect) return redirect;
+          return withPublicPreviewCors(request, await handler.fetch(request, env, ctx));
+        },
+      ),
+    );
   },
 
   async scheduled(
@@ -49,6 +107,13 @@ export default {
     ctx: ExecutionContextLike,
   ) {
     setDatabaseBinding(env.DB);
+    if (env.MEDIA_BUCKET && env.MEDIA_R2_QUARANTINE_ENABLED === "true") {
+      // Independently bounded Media janitor; never purge if the staging
+      // feature gate is off. Production is permanently unbound by config.
+      ctx.waitUntil(cleanupExpiredPrivateMedia(env.DB, env.MEDIA_BUCKET)
+        .then(result => console.log("IAICT Media quarantine cleanup", result))
+        .catch(() => console.error("IAICT Media quarantine cleanup failed")));
+    }
     ctx.waitUntil(
       runScheduledNewsIngestion(env.DB, {
         cronExpression: controller.cron,

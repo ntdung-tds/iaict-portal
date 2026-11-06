@@ -1,0 +1,1546 @@
+# IAICT — Immutable Test Run Ledger
+
+**Quy tắc:** chỉ append run record mới; không sửa PASS/FAIL quá khứ để thay cho retest. Test case catalog riêng tại [IAICT_TEST_CASES.csv](./IAICT_TEST_CASES.csv). Trường hợp chưa xác minh không được tự suy ra PASS từ run tổng hợp.
+
+## RUN-IAM-20261031-01 — Baseline IAM P0 release batch 2
+
+| Trường | Thông tin |
+|---|---|
+| Date | 2026-10-31 · UTC+07 |
+| Environment | GitHub CI (local unit/integration/browser) + read-only staging acceptance |
+| Repo/branch | ntdung-tds/iaict-portal / feat/staging-native-login-r2-20261030 |
+| Immutable tested SHA | `2a76deb5642d6f60a89c894fa91c7c30a42953c8` |
+| Staging Worker deployed | `1b8cfe71-88ef-4e21-8937-4f8590daaba4` |
+| Deployment ID | `754b0509-e754-410c-8dff-46015d162a89` |
+| D1 | 24 migrations; `PRAGMA quick_check=ok`; verified after deploy |
+| CI (unit/integration/build/typecheck) | **PASS**: 526/526 Vitest, typecheck, build; 52 test files |
+| CI (Chromium local with API stubs) | **PASS**: browser-visual job |
+| CI staging acceptance | **PASS**: read-only live acceptance **before the new release**, on previous staging Worker |
+| Trigger & rollback | One-shot pinned build SUCCESS; auto-deploy HOLD restored; rollback Worker `bf2a0bfd-0e08-492c-9853-de6b35498b1b` retrievable |
+| Access | 4 staging admin root/subpath policy destinations read back unchanged |
+| Production | Worker `e7c703f7-fc4c-4313-b14c-0a2c94e0613d` unchanged |
+| Browser rendering post-deploy | **BLOCKED** due to Cloudflare Browser Rendering HTTP 429 rate limit; do not mark PASS |
+| Real staging authenticated multi-device QA | **NOT_RUN**; no authorized shared cookies/real-user mutation |
+| Visual evidence | **NOT_CAPTURED** (no screenshot output from CI, per security rules); Drive folder: https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp |
+| PR | https://github.com/ntdung-tds/iaict-portal/pull/36 |
+| CI proof | https://github.com/ntdung-tds/iaict-portal/actions/runs/41186058883 |
+| Staging acceptance proof | https://github.com/ntdung-tds/iaict-portal/actions/runs/41186058888 |
+| Verdict | **PASS for automated CI and pre-deploy read-only acceptance only**; live-authenticated/post-deploy visual acceptance remains pending |
+
+**Caveat:** Suite-level PASS không chứng minh tự động rằng cả 73 test case trong catalog đã chạy, hoặc kiểm thử thủ công trên hai thiết bị đã hoàn tất. Khi chạy case riêng, cần thêm run record với `Case ID / actual / verdict`.
+
+## Template (copy below for every new run)
+
+### RUN-IAM-YYYYMMDD-NN — Title
+
+- Scope / Release / Requirement:
+- Operator + date/timezone:
+- Environment, code SHA, Worker version, D1 migration, browser/device:
+- Test Case IDs, automation refs and prerequisites:
+- Test data provenance: synthetic/test-only; no credentials:
+- Actual observed + expected comparison:
+- Verdict for EACH case: NOT_RUN / PASS / FAIL / BLOCKED / NOT_APPLICABLE:
+- CI run URL, Drive evidence URL (or NOT_CAPTURED):
+- Defect ID/issue URL, impact, severity:
+- Retest parent run ID, rerun SHA and verdict:
+- QA reviewer and release decision:
+
+
+## RUN-IAM-20261031-02 — TOTP primitive RFC 6238 verification (foundation only)
+
+| Field | Observation |
+|---|---|
+| Date/timezone | 2026-10-31, UTC+07; GitHub Actions timestamp in immutable run |
+| Tested source commit | `645a98d50bd132278733f6676ebc7c72aa88cb06` |
+| Test case | `IAM-FUT-007` (pure RFC 6238 TOTP helper only) |
+| Environment | GitHub CI (Node 22/Vitest), not an authenticated production/staging account |
+| Test proof | [GitHub portal-ci run #41192956639](https://github.com/ntdung-tds/iaict-portal/actions/runs/41192956639), `verify`, `browser-visual`, `rc-ancestry` **PASS** |
+| Suite results | 53 Vitest files, **533/533 tests PASS**, 7 additional TOTP primitive tests in `lib/totp.test.ts`; TypeScript/build passed |
+| Covered assertions | RFC 6238 SHA1/SHA256/SHA512 vectors, zero-padding, clock ±1, previously-used counter filter, Base32 secret generation/strict decoding, invalid parameters |
+| Actual verdict `IAM-FUT-007` | **PASS for pure algorithm compatibility and guard tests only** |
+| Full MFA enrollment/login/recovery `IAM-FUT-001` | **NOT_RUN / PLANNED** — not implemented or connected to any login; no encrypted D1 secret, enrollment, CAS replay, rate limit, recovery, step-up or UI |
+| Drive visual evidence | **NO_IMAGE_REQUIRED** for the crypto unit test; CI text log above. [IAM evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) |
+| Staging deployment | **NOT DEPLOYED**; no MFA behavior or Cloudflare Access changes. Last known Worker `1b8cfe71-88ef-4e21-8937-4f8590daaba4` |
+| Production deployment | **NOT DEPLOYED**, unchanged; release gate remains closed |
+| ADR | [ADR-0002 proposed](../adr/0002-iaict-native-mfa-totp-staged.md); no approval claimed |
+| Reviewer acceptance | PENDING independent security review for future MFA stages |
+
+**Known limitation:** A stateless matching time step is **not** atomic replay prevention. Do not treat algorithm-level PASS as production-ready MFA. Follow-up needs encrypted D1 schema, atomic used-step CAS, challenge/session binding, abuse controls and safe recovery.
+
+## RUN-DELIVERY-20261031-01 — Final handoff requirement registered, not executed
+
+- Case: `IAM-REL-008`; status **NOT_RUN / PLANNED**, because IAICT Portal has not completed the project.
+- Requirement: [Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38); [FINAL_HANDOFF folder](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ) reserved and documented.
+- **No final source code archive, checksum manifest, download verification or isolated restore test has been produced yet.** This is a recorded final acceptance obligation, not a completed backup. No PASS.
+
+
+## RUN-IAM-20261031-03 — Eight staging QA identities and real browser rendering
+
+| Item | Actual observation |
+|---|---|
+| Date | 2026-10-31, UTC+07 |
+| Environment | **Real Cloudflare D1 staging** + Cloudflare Browser Rendering **actual browser** (mobile 390×844), no signed-in Access |
+| Worker deployed | Staging `1b8cfe71-88ef-4e21-8937-4f8590daaba4`, unchanged during QA bootstrap |
+| D1 binding | Staging database `aa4a97e7-60c5-4da4-9f0b-d469ece811b4` read back from Worker settings; no production DB write |
+| Original state | 2 pre-existing users, 0 QA fixtures; 7 role codes seeded |
+| Bootstrap action | Create **8 synthetic disabled QA users** (`admin` ×2 plus `editor, reviewer, viewer, news_admin, news_editor, news_reviewer`) through one QA-only D1 batch, not Admin API |
+| D1 readback | **PASS**: 8 user rows + 8 role joins + 8 `qa.fixture.provisioned` audit rows; all `is_active=0`; 0 password credentials; `PRAGMA quick_check=ok` |
+| Existing accounts | 2 existing users untouched; no customer data queried or mutated |
+| Credentials / Access | None generated, no valid Cloudflare Access test identities; full login is **NOT_READY**, not PASS |
+| Actual mobile browser `/login` | **PASS**: real rendered heading `Đăng nhập quản trị`, Email + Mật khẩu inputs, Đăng nhập button at 390×844 |
+| Browser `/account/security` | **BLOCKED** by Browser Rendering HTTP 429 (rate limit), not PASS |
+| Browser `/admin` | **BLOCKED** by Browser Rendering HTTP 429; anonymous Access gate not re-proven by this run |
+| Browser `/api/admin/cms/users` | **BLOCKED** by Browser Rendering HTTP 429; no authenticated API verification |
+| Full seven-role acceptance | **NOT_RUN** — needs controlled IAICT test mailboxes, Access identities, vault-backed credentials and approved activation |
+| Evidence | [Drive restricted QA account registry](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit?usp=drivesdk), [account folder](https://drive.google.com/drive/folders/1q8-9hjgH_Rq9WKhv_rJpA1C3A8jB8lGO), [GitHub Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+| Screenshots | **NOT_CAPTURED** — actual browser accessibility observations only, no screenshot emitted or uploaded |
+| Test IDs | `IAM-AUTH-017` (NOT_RUN); `IAM-USER-017` (NOT_RUN); `IAM-USER-018` (NOT_RUN); login form public browser smoke check PASS (not a signed-in authentication test) |
+| Production | Untouched. Cloudflare Access policy and Build HOLD unchanged |
+| Next step | Controlled test inbox + Access identity + approved password vault; activate users one-by-one, run private real Chromium auth suite, revoke and disable afterward |
+
+**Do not mark every role PASS:** fixtures are intentionally disabled; the D1 bootstrap does NOT exercise the app's Admin create-user API or verified browser sign-in.
+
+
+## RUN-IAM-20261102-01 — Isolated local workerd PBKDF2 boundary observation
+
+| Field | Observed / verified |
+| --- | --- |
+| Date/timezone | 2026-11-02 10:42 ICT (03:42 UTC), GitHub Actions UTC timestamps |
+| Task / plan | PCS `T-IAM-KDF-S2` / checklist `CMS-08 S2`; [bounded test plan](IAICT_KDF_BOUNDARY_PLAN.md) |
+| Repository / observed SHA | `ntdung-tds/iaict-portal` / `82380adafceaa239f24438ee85fa8ef10cc9d343` (CI test code head at runtime, before this report commit) |
+| Environment | **LOCAL_WORKERD** in GitHub-hosted Ubuntu runner; `workerd` npm `1.20261012.1`; `compatibilityDate=2026-10-12`, `nodejs_compat`; loopback-only, no Cloudflare account/bindings |
+| CI run / job | [portal-ci #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088); **kdf-local-workerd** job succeeded; [job log](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088/job/125082350924) |
+| Test runner | `scripts/kdf-workerd/run-local.mjs`, `config.capnp`, `probe.mjs` |
+| Input data | Synthetic fixed bytes only. Never logs password/salt/key bits; no sessions, D1, R2, Access or real accounts |
+| Deployed Worker / D1 / Access / production | **NOT_USED / NOT_MODIFIED** by this experiment; no remote diagnostic Worker deployed |
+| 600000 iterations | **NOT_RUN_RESOURCE_GATE** (deliberate bounded-probe policy) |
+| IAM real signed-in acceptance | **NOT_RUN**, no proof of actual CMS role login |
+| Visual evidence | **NO_IMAGE_REQUIRED** for pure runtime boundary; private [IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), no new image uploaded |
+| Defect / retest | No observed failure for the two bounded iterations. No claim of full KDF performance or live-auth acceptance |
+| Owner / ADR | Architectural decision **PENDING**; SRS **FROZEN**. No parameter or migration changes authorized |
+
+| Case ID | Layer / scope | Expected | Actual observed | Verdict |
+| --- | --- | --- | --- | --- |
+| IAM-AUTH-018 | Isolated local workerd, PBKDF2-HMAC-SHA-256, 100000 iterations | One 256-bit derivation succeeds with synthetic bytes | **SUCCESS**, 256 bits, **11 ms** (single observation) | **PASS — LOCAL_WORKERD ONLY** |
+| IAM-AUTH-019 | Same local process, 100001 iterations | Record real success or rejection, do not assume a fixed 100000 hard limit | **SUCCESS**, 256 bits, **12 ms** (single observation) | **PASS — OBSERVATION COMPLETE** |
+| KDF-S2-P03 | Proposed 600000 probe | Only if extra resource test authorized | Not executed by design | **NOT_RUN** |
+| IAM-FUT-001 | Full native MFA | End-to-end enrollment, secure stored secret, replay block and recovery | Not implemented or exercised | **NOT_RUN** |
+
+**Interpretation:** `100001` succeeds in this precisely versioned **local** workerd. Therefore the previously hypothesized strict 100000-iteration runtime ceiling is **not supported by this measurement**. This does not prove production/staging runtime parity, unconstrained higher iterations, resistance to DoS, or suitability of a KDF upgrade. The current app still accepts exactly `100000` iterations by its own `derivePassword` guard. Keep its parameter unchanged pending an architecture decision. No interpretation of 11/12 ms as a performance benchmark (single sample).
+
+
+
+## RUN-IAM-20261102-02 — AES-256-GCM TOTP seed protection helper (unit only)
+
+| Field | Verified observation |
+|---|---|
+| Date | 2026-11-02 (Asia/Ho_Chi_Minh); GitHub Actions UTC job timestamp |
+| Task / CHG | PCS `T-IAM-MFA-F2`, CMS-08/S3 (isolated substep), `CHG-IAM-ACCESS-20261102-02` |
+| Exact tested SHA | `8355bcdcdc66ce55bede8eeee50a0a8a1b38bf57` (PR #43 initial source+requirements snapshot) |
+| CI evidence | [portal-ci #41386111393](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386111393); verify job PASS |
+| Environment | GitHub Actions Node 22 + Vitest, **UNIT / SYNTHETIC**, not real Worker MFA enrollment or D1 |
+| Unit suite | `lib/mfa-secret-crypto.test.ts`: **6/6 PASS**; aggregate 54 Vitest files / **539/539 PASS** |
+| Security assertions | Nonextractable AES-256 key; 160-bit seed roundtrip; independent randomized IV; owner/factor/key AAD binding; tampered IV/ciphertext/wrong key rejected; malformed input rejected |
+| Tests not performed | Workers runtime AES-GCM parity, Worker secret binding, key rotation, forward-only factor D1 schema, atomic OTP replay, enrollment/verification session, recovery, 7-role real browser QA: **NOT_RUN** |
+| Deployment | **NOT DEPLOYED**; no live password/account/D1/Cloudflare/Access/production changes |
+| Visual evidence | **NO_IMAGE_REQUIRED**; [private IAM QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp); no screenshot created |
+| Approval status | ADR-0002 remains PROPOSED, SRS FROZEN, Owner feature acceptance **NOT GIVEN** |
+
+| Case | Layer / role | Expected | Actual | Verdict | Evidence |
+|---|---|---|---|---|---|
+| `IAM-FUT-008` | Unit / synthetic key, no user | AES-GCM encrypt/decrypt roundtrip and tamper/swap failure | 6 relevant assertions groups PASS, no authentication session | **PASS — UNIT ONLY** | [CI #41386111393](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386111393) |
+| `IAM-FUT-001` | Live MFA / real authorized role | Secure factor enrollment, OTP challenge and replay guard | No integrated enrollment or real role QA | **NOT_RUN** | Issue #37 |
+
+**Scope warning:** The CI on this source SHA predates later documentation/checkpoint edits on the same PR. Reconfirm all CI gates at the PR's final head before merge; never transfer this test verdict to a deployed Worker.
+
+
+## RUN-IAM-20261102-03 — AES-256-GCM exact library on isolated local workerd
+
+| Field | Actual observation |
+| --- | --- |
+| Date/timezone | 2026-11-02 11:32:49 ICT (04:32:49 UTC) |
+| Scope / test | CMS-08/S3 `T-IAM-MFA-F2` / `IAM-FUT-009` (runtime crypto only) |
+| Exact tested SHA | `23c0960dba63905dfcf90fff2309e81b78f6e838` (initial PR #45 head **before** QA report/checkpoint edits) |
+| CI proof | [portal-ci #41389043762](https://github.com/ntdung-tds/iaict-portal/actions/runs/41389043762), `kdf-local-workerd` job [#125096175596](https://github.com/ntdung-tds/iaict-portal/actions/runs/41389043762/job/125096175596) **PASS** |
+| Actual runtime | **LOCAL_WORKERD** npm `1.20261012.1`, compatibility date `2026-10-12`, `nodejs_compat`; loopback-only `127.0.0.1:19388` |
+| Code being tested | The **real** `lib/mfa-secret-crypto.ts` bundled via installed esbuild into an ephemeral workerd module; **not** a manually rewritten AES example |
+| Inputs | Fixed synthetic 160-bit seed and 256-bit AES key, generated solely for CI; no account password or secret binding |
+| Logged output | Sanitized check IDs, `passed=11`, verdict and runtime version. **No key bytes, seed bytes, OTP, ciphertext or session** |
+| Deployment | **NOT DEPLOYED**; no staging/production Worker modification, D1, R2, Cloudflare Access or real credentials |
+| Evidence image | **NO_IMAGE_REQUIRED** for local crypto runner; private [IAM QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Other CI | The workerd job PASS is confirmed at this SHA; verify final PR #45 **portal-ci** plus public-only staging-acceptance independently before merge |
+| Owner / architecture | ADR-0002 PROPOSED; SRS FROZEN; no user or security acceptance for hosted MFA |
+
+| Case ID | Environment / role | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-009` | Isolated local workerd / synthetic | 11 positive/negative WebCrypto checks using exact project helper | **11/11 PASS**, HTTP 200; roundtrip/nonce/key, owner+factor+key AAD, swapped IV/ciphertext, wrong key and malformed IV rejected | **PASS — LOCAL_WORKERD ONLY** | [CI job](https://github.com/ntdung-tds/iaict-portal/actions/runs/41389043762/job/125096175596) |
+| `IAM-FUT-008` | Node/Vitest / synthetic | Independent 6-case crypto unit suite | Previous [RUN-IAM-20261102-02](#run-iam-20261102-02--aes-256-gcm-totp-seed-protection-helper-unit-only) still valid at its pinned SHA | **PASS — PRIOR UNIT ONLY** | [CI #41386111393](https://github.com/ntdung-tds/iaict-portal/actions/runs/41386111393) |
+| `IAM-FUT-001` | Hosted Worker + real approved role | MFA enrollment, atomic replay guard, recovery and audit | Not implemented or exercised | **NOT_RUN** | Issue #37 |
+
+**Interpretation:** The exact AES-256-GCM helper functions on **one tested local workerd version** under the project's compatibility flags. It does **not** establish hosted Cloudflare parity, secret/KMS injection, concurrency/replay resistance, key rotation, D1 factor schema, IAM step-up or authorized E2E acceptance. Keep Cloudflare Access, SRS and production unchanged.
+
+
+## RUN-IAM-20261102-04 — Retest workerd AES-GCM request isolation after PR #45 review
+
+| Field | Observed evidence |
+| --- | --- |
+| Date | 2026-11-02 11:45 ICT (GitHub Actions 04:45 UTC) |
+| Retest parent | `RUN-IAM-20261102-03`, test `IAM-FUT-009` (same case ID, no added feature) |
+| Exact executed source SHA | `702ce448ae1a63a6ab3e768a01104f14d16a183c` (PR #46 preliminary code head) |
+| CI job | [portal-ci #41390187476](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476), [local workerd job #125099646544](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476/job/125099646544) **SUCCESS** |
+| Tested runtime | `workerd` npm `1.20261012.1`, compatibility date `2026-10-12`, `nodejs_compat`, isolated loopback; **NOT HOSTED** |
+| Actual | For each of **two sequential requests on same Worker isolate**, all **11/11** crypto checks PASS. `identical_check_sets_for_two_requests=true`; invalid route and POST returned HTTP 404. Runner output sanitized; no key/seed/OTP/ciphertext logged |
+| Change reviewed | Reset per-request `checks` accumulator in `scripts/mfa-workerd/probe.ts`; fail-closed error names instead of arbitrary exception text; runner verifies repeated and negative-path behavior. **Application crypto helper unchanged** |
+| Deployment | NONE, no real secret, D1, R2, Access, staging Worker or production mutation |
+| QA media | **NO_IMAGE_REQUIRED**; [private IAM evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) not modified |
+| Independent acceptance | MFA real factors, hosted secret bindings, D1 replay CAS, recovery and role E2E still **NOT_RUN**; SRS FROZEN and ADR-0002 PROPOSED |
+
+| Case | Layer and role | Expected | Actual | Verdict | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-009` | Synthetic local workerd, unauthenticated probe | 11 checks per request, independent state for repeat, invalid route and method fail closed | 11/11 on each of 2 requests; 404/404 invalid route and method | **PASS — LOCAL_WORKERD RETEST ONLY** | [CI job #125099646544](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476/job/125099646544) |
+| `IAM-FUT-001` | Hosted Worker, approved real users | MFA enrollment, key binding, OTP replay CAS, recovery, audit | No app integration or authorized role E2E performed | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+
+**Limits:** CI is a synthetic runtime compatibility and harness isolation check, not a hosted Worker, real-login or security acceptance result. Final PR #46 CI and public-only staging acceptance must be checked separately at exact final head. Historical `RUN-IAM-20261102-03` remains intact; this is a new append-only retest record.
+
+
+## RUN-IAM-20261102-06 — Staging 503 fail-closed probe diagnostic enhancement
+
+| Field | Actual result and scope |
+| --- | --- |
+| Date | 2026-11-02 14:00–14:01 ICT (07:00–07:01 UTC) |
+| Case | `IAM-REL-005` (existing case, no new QA ID) and public-only `IAM-REL-004` |
+| Exact tested source SHA | `664f77dc7ce8387ad25c6e43077c4ea817481441` ([PR #48](https://github.com/ntdung-tds/iaict-portal/pull/48) preliminary final-code head before this QA record) |
+| Portal CI | [#41403328517](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328517) **SUCCESS**; staging availability probe **10/10 Node unit tests PASS** (three new checks), full Vitest **539/539 PASS**, QA registry **82 cases**, Moment validator PASS |
+| Public staging CI | [#41403328483](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328483) **SUCCESS**; Chromium **21/21 PASS**, anonymous availability **24/24 GET requests PASS**, `http503=0`, `networkErrors=0` |
+| Changes exercised | On non-200 responses, preserve only syntactically validated CF-Ray ID and enum-classified server/cache/content headers. Never read response body, cookie, credentials or arbitrary headers. Live probe runs after failed Chromium too; **no gate weakening** |
+| Real 503 diagnostic | **NOT_OBSERVED_IN_THIS_RUN**. CF-Ray extraction was verified with a synthetic 503 in unit tests; there is no new real CF-Ray sample in this run |
+| Historical incident | [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains **OPEN**: PR #47 staging attempts 1 and 2 both FAIL with HTTP 503. A successful later sample is not an operational fix |
+| Cloudflare root-cause evidence | Staging observability configuration read-only inspection: `observability=null`, `logpush=false`, zero tail consumers; no matching exception trace available from this inspection. GraphQL analytics quota returned rate-limit error. **ROOT_CAUSE_UNCONFIRMED** |
+| Runtime / deployment | Existing staging Worker remains deployed, diagnostic probe is only a GitHub CI client; no staging deploy, D1, Access, R2 or production modification |
+| QA media | **NO_IMAGE_REQUIRED** (HTTP status + sanitized text CI log). No GitHub screenshot/video/trace artifacts; [restricted QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Scope limit | This test concerns anonymous staging availability and release observability, not MFA/OTP. `IAM-FUT-001` live authenticated MFA remains **NOT_RUN** |
+
+| Test case | Environment | Expected | Observed | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-REL-005` | Node test with synthetic errors | Preserve valid CF-Ray on 503, reject unsafe headers, fail closed | **10/10** Node tests PASS, prior 503→200 still FAIL as designed | **PASS — UNIT ONLY** | [portal-ci #41403328517](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328517) |
+| `IAM-REL-005` | Live staging, public anonymous | 6 cycles × 4 GETs, no errors, fail on any non-200 | **24/24 PASS**, no real 503 sampled; no actual CF-Ray error diagnostic exercised | **PASS — BOUNDED LIVE SAMPLE** | [staging #41403328483](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328483) |
+| `IAM-REL-004` | Staging real Chromium | Public pages and Access boundaries | **21/21 PASS** | **PASS — LIVE PUBLIC ONLY** | [staging #41403328483](https://github.com/ntdung-tds/iaict-portal/actions/runs/41403328483) |
+
+**No root cause established, no reliability/SLO clearance, no permission for any production change or live MFA migration.** The original staging HTTP 503 failures remain in CI history and Issue #30. PR #47 local D1 CAS proof remains bounded; it must be independently verified on a new exact head after any eventual integration.
+
+## RUN-IAM-20261102-05 — Atomic MFA replay-counter CAS on isolated local Miniflare D1
+
+| Field | Observed / verified |
+| --- | --- |
+| Date/timezone | 2026-11-02 12:18 ICT (05:18 UTC) |
+| Scope | CMS-08/S3; `IAM-FUT-010` P0 SECURITY / LOCAL D1 SQL only |
+| Exact executed source SHA | `2bee360c3552e9dcfe60c94e7719b9d8ae7d33a5` (PR #47 initial source and QA case HEAD; later documentation/checkpoint edits NOT implicitly tested) |
+| CI evidence | [portal-ci #41393225236](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236), `kdf-local-workerd` job [#125108910122](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236/job/125108910122) SUCCESS; local D1 runner line `[mfa-d1-cas] OBSERVED` |
+| Environment | **LOCAL_MINIFLARE_D1**, Miniflare v5 adapter + ephemeral SQLite D1 via workerd; generated random synthetic database ID; no persistence root, cleaned by `dispose()`. **No production or staging D1 binding / API / real user** |
+| Setup / semantics | One minimal **test-only** `iam_mfa_factors` SQL table (NOT a deployment migration). Atomic `UPDATE ... WHERE last_accepted_counter IS NULL OR last_accepted_counter < candidate`; require `result.success === true` and D1 `meta.changes===1`. Pure candidate counter inputs; code matching, time window and authentication not exercised |
+| Actual | 15/15 independent assertion groups PASS; **16 parallel same-counter writes**, exactly **1** accepted and 15 rejected. Monotonic counter, replay and older step denied; owner/factor mismatch, pending, disabled and locked factor denied; expired lock/newer step accepted; invalid counters and missing D1 metadata fail closed; independent factor counter |
+| Previous unsuccessful setup runs | [PR CI #41392786419](https://github.com/ntdung-tds/iaict-portal/actions/runs/41392786419), [#41392954526](https://github.com/ntdung-tds/iaict-portal/actions/runs/41392954526), [#41393053532](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393053532) **harness/config FAIL**, not successful D1 tests. Pinned Miniflare 5 rejected old configuration; used its supported `convertV4MiniflareOptions` adapter, retested. All errors preserved in CI history |
+| Other CI gates | Verify typecheck, whole suite, browser and read-only staging on **final PR head** before merge; do not transfer this proof to hosted D1 |
+| Deployment | **NONE**. Not an MFA API, factor migration, server-side code verification, session issuance, Cloudflare binding or Access change |
+| Evidence media | **NO_IMAGE_REQUIRED**; [private IAM QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Approval | ADR-0002 PROPOSED; SRS FROZEN; MFA feature Owner acceptance **NOT GIVEN** |
+
+| Case ID | Test layer / role | Expected | Actual | Verdict | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-010` | Local ephemeral Miniflare D1 / synthetic factor | Same OTP step accepted **at most once** under 16 concurrent CAS writes; no replay/regression/state bypass | Exactly **1/16** `meta.changes=1`; 15 groups PASS incl negative checks; test-only D1 | **PASS — LOCAL_SQL_CAS ONLY** | [CI job](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236/job/125108910122) |
+| `IAM-FUT-001` | Hosted Worker + approved real user | Full MFA enrollment, secure key binding, TOTP code matching, guarded challenge, session, recovery and audit | No live factor or authentication integration | **NOT_RUN** | Issue #37 |
+
+**Boundary:** This is evidence that a **proposed SQL replay-counter CAS** behaves atomically on one local Miniflare/D1 runtime with synthetic factor rows. It does not validate TOTP code matching against the DB, hosted D1 consistency, session issuance, key rotation, real-user concurrency or full MFA. No forward-only migration or production/staging mutation was executed.
+
+
+## RUN-IAM-20261102-07 — MFA integration contract/source review (no MFA runtime test)
+
+| Field | Actual observed |
+| --- | --- |
+| Date | 2026-11-02, Asia/Ho_Chi_Minh |
+| Scope | `CHG-IAM-ACCESS-20261102-06` / ADR-0002 F2/F3 DESIGN_ONLY, proposed [PR #49](https://github.com/ntdung-tds/iaict-portal/pull/49), Issue #37 |
+| Read source | `lib/native-auth.ts`, `app/api/auth/login/route.ts`, `app/api/auth/session/route.ts`, `app/api/account/password/route.ts`, `worker.ts`, `lib/totp.ts`, `lib/mfa-secret-crypto.ts`, `lib/cms-roles.ts` at merged PR #47 baseline `11e3af741ede3e3d0d17c9e6d34034a8bb388876` |
+| Confirmed behavior | `authenticateNativePassword()` immediately inserts a full `iaict_auth_sessions` row after password success and returns token. `POST /api/auth/login` sets `__Host-iaict_session` cookie. Session readers today do **not** require a native MFA assurance claim. |
+| Threat identified | An OTP-only UI added to this login code would not secure privileged native sessions because the full session has already been created. **Do not label existing pre-MFA feature a production bypass until enforcement is added**. |
+| Proposed design | Split primary proof and session mint, opaque expiring one-time pre-MFA challenge, atomic D1 challenge+factor CAS+session commit proof, session-reader assurance guard, key rotation, privileged recovery, Access retained; all **NOT_IMPLEMENTED** |
+| QA registry | **83 cases**, existing `IAM-FUT-001/002/004` manual scenarios refined for current security risks, no invented PASS. `IAM-FUT-010` local Miniflare D1 15/15 PASS belongs to prior pinned [#41405196516](https://github.com/ntdung-tds/iaict-portal/actions/runs/41405196516), **not** a hosted login test |
+| New runtime tests | **NOT_RUN / NOT_APPLICABLE**: document/QA contract review only, no app/D1/Access feature changed. GitHub CI validates documentation and existing regression tests only |
+| Staging browser | Read-only public staging CI to be checked at final PR head; authenticated role+MFA E2E **NOT_RUN** |
+| Evidence media | **NO_IMAGE_REQUIRED**, [private IAM QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Approval | Owner MFA acceptance NOT GIVEN; ADR-0002 PROPOSED; SRS FROZEN; no Cloudflare Worker/version, D1, secret, recovery code or production mutation |
+
+| Case ID | Environment / role | Expected | Actual | Result | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-001` | Hosted staging; approved native IAM account | MFA-required password login issues **only** restricted challenge; OTP+CAS grants full session exactly once | No new route/session gate implemented | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-002` | Hosted staging; authorized privileged user | Recovery code single-use, approved dual-control lost-device recovery, audit and session revocation | Not implemented | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Hosted staging; 7 roles and second Admin | Pending challenge and old session cannot bypass Access/RBAC or server-side MFA assurance | Accounts disabled, not run | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Strict scope:** This QA record describes a source-code and threat-model review, not execution/acceptance of the proposed MFA design. Final CI SHA shall be appended/recorded in the PR once completed; a documentation-only CI pass is not an MFA feature pass.
+
+
+## RUN-IAM-20261102-08 — Isolated first-factor challenge / native session-assurance guard
+
+| Field | Actual result and scope |
+| --- | --- |
+| Time | 2026-11-02 ~15:41 ICT (08:41 UTC) |
+| Case / PR | `IAM-FUT-011`, P0 security / synthetic local unit, [PR #50](https://github.com/ntdung-tds/iaict-portal/pull/50), Issue #37 |
+| Exact source SHA tested | `aee436679d3efb76b13adb755fe5b58b560639ca` (source code/test/log snapshot before later ADR/PCS documentation changes) |
+| CI | [portal-ci #41414835791](https://github.com/ntdung-tds/iaict-portal/actions/runs/41414835791), `verify` job #125176056864 **SUCCESS** |
+| Runtime | Node/Vitest only, no Cloudflare Worker deployment, no remote D1, no MFA/role account |
+| Actual | **16/16 tests PASS** in `lib/native-mfa-preauth.test.ts`; complete Vitest suite **555/555 PASS** (55 test files). QA catalog **84 cases** and requirements gate PASS; SRS frozen unchanged |
+| Verified scenarios | 256-bit random token and digest-only proposed record, 5-min separate Secure/HttpOnly pending cookie, invalid/ambiguous cookie, account/credential mismatch, stale/consumed/locked challenge, attempts exhausted, unknown assurance policy fail-closed, MFA-required rejects password-only and legacy, invalid MFA time denied |
+| Explicit negative proof | `pendingChallengeEligibleForCas()` is deliberately **read-only**; it can return true twice for an unchanged candidate. It does **not** perform D1 CAS/OTP validation or issue a full session. No live session readers use these helpers yet |
+| Known gaps | Real MFA enrollment/recovery/session enforcement, active-account session rotation, protected admin Worker routing, hosted challenge storage, cross-request replay and seven-role authenticated E2E **NOT_RUN**; Owner/security approval NOT GIVEN |
+| QA media | **NO_IMAGE_REQUIRED**, [private IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Deployment | **NONE**, no API/UI route or real database/account/config change, Access and production unchanged |
+
+| Case ID | Test layer / role | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-011` | Node/Vitest, synthetic records | Distinct restricted challenge, no raw token in stored record, strict TTL and server-derived assurance policy | **16/16 PASS** isolated module only | **PASS — ISOLATED_UNIT_ONLY** | [CI #41414835791](https://github.com/ntdung-tds/iaict-portal/actions/runs/41414835791) |
+| `IAM-FUT-001` | Hosted Worker, approved real accounts | Password verification without MFA does not create a full session; OTP CAS/challenge must commit | New module not wired to login, no MFA factors | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Authenticated seven-role staging | Server-side assurance and RBAC checked from D1 for every route | QA users remain disabled; no live role testing | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Important:** a successful unit test of the isolated predicate does not prove the production/staging login route enforces it. Existing `native-auth.ts`, `worker.ts`, login routes and D1 schema are intentionally unchanged. Final PR SHA CI and staging acceptance must be separately verified before merge.
+
+
+## RUN-IAM-20261102-09 — Two independent review passes of isolated MFA preauth guard
+
+| Field | Observed result |
+| --- | --- |
+| Date | 2026-11-02, Asia/Ho_Chi_Minh |
+| Scope | Security review of merged PR #50 and bounded fix in [PR #51](https://github.com/ntdung-tds/iaict-portal/pull/51); existing case `IAM-FUT-011` only |
+| Review pass 1 — static and boundaries | Read `lib/native-mfa-preauth.ts`, tests, `native-auth.ts`, QA, ADR, PCS and original PR #50 diff. The new module remained **unimported by Worker/login**; current password-only session behavior unchanged. Found truthy input coercion for `accountActive`/`hasActiveRole` and type assumptions on token/hash inputs |
+| Review pass 2 — adversarial cases | Add four independent negative Vitest scenarios with `"false"`, `"true"`, numeric 0/1, Boolean wrapper objects, null/undefined account/role flags, non-string token or digest inputs; strict boolean and primitive-string validation now fails closed. Future trusted D1 caller must explicitly normalize 0/1 before invoking predicate |
+| Exact tested source SHA | `828d106029b75b73afb4ccf1c79c1e853c26a2c6` (PR #51 code/QA catalog after correction; document/checkpoint edits later) |
+| Observed CI | [portal-ci #41416918807](https://github.com/ntdung-tds/iaict-portal/actions/runs/41416918807) — `verify` job #125182920590 **SUCCESS**, new module **20/20** test PASS, overall **559/559 Vitest PASS**, QA registry **84** cases PASS, requirements and frozen-SRS gate PASS |
+| Initial verification failure | [CI #41416787752](https://github.com/ntdung-tds/iaict-portal/actions/runs/41416787752) initial `verify` job **FAIL** due to missing QA registry update in the first revision, not a security assertion failure. Existing `IAM-FUT-011` test-case row was revised and test rerun; original failure remains in CI history |
+| Runtime/coverage limits | **LOCAL_NODE_UNIT_ONLY**; helper still not imported in Worker/login/actual session readers, no D1 schema or user MFA enrollment. Positive challenge eligibility remains **READ_ONLY** and is NOT atomic redemption, OTP verification, or full-session issuance |
+| Real MFA security acceptance | `IAM-FUT-001` full login, `IAM-FUT-002` recovery, `IAM-FUT-004` seven-role cross-route and hosted D1 challenge **NOT_RUN** |
+| Deployment | **NONE**; no Cloudflare staging/production Worker, Access, D1, R2, credentials or live user modified |
+| Media | **NO_IMAGE_REQUIRED**, [private IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Approval | SRS FROZEN, ADR-0002 PROPOSED, owner/security activation NOT APPROVED |
+
+| Case | Environment and role | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-011` | Local Node/Vitest, synthetic typed and malformed values | Deny truthy non-boolean account/role flags, reject non-string token/digest, preserve valid strict-boolean semantics | **20/20 PASS** (four additional negative scenarios) | **PASS — ISOLATED UNIT** | [CI verify job](https://github.com/ntdung-tds/iaict-portal/actions/runs/41416918807/job/125182920590) |
+| `IAM-FUT-001` | Real hosted IAM | Verify OTP and atomically consume challenge before privileged session | Not integrated | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+
+**Do not infer live MFA enforcement from a unit test.** Final source SHA CI and anonymous staging acceptance must be verified separately before merging PR #51.
+
+
+## RUN-IAM-20261102-10 — One-time pre-MFA challenge CAS, isolated disposable D1
+
+| Field | Observed / verified |
+| --- | --- |
+| Date (ICT) | 2026-11-02 |
+| Case and risk | `IAM-FUT-012`, P0 security, [PR #53](https://github.com/ntdung-tds/iaict-portal/pull/53), [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| Exact source SHA executed | `15b9b84a072af824eb467f59783f9b73106887a4` (final tested code prior to documentation commits) |
+| CI | [portal-ci #41424145730](https://github.com/ntdung-tds/iaict-portal/actions/runs/41424145730), `kdf-local-workerd` job #125206551257 **SUCCESS**; `[mfa-preauth-d1-cas] OBSERVED` |
+| Environment | **LOCAL_MINIFLARE_D1** / new UUID ephemeral D1 with `synthetic_mfa_users` and `synthetic_mfa_challenges` only; no configured Cloudflare account, real D1 binding, migration, actual Worker route or user |
+| Actual | **26/26 SQL/security assertion groups PASS**. **16** concurrent attempts to consume the *same* challenge; exactly **1** conditional UPDATE changed a row (`success=true` and integer `meta.changes=1`). 15 attempts rejected |
+| Negative behavior | Same-challenge replay, expiry at exact boundary, future/overlong TTL, wrong owner, invalid token hash, wrong credential, credential revision rotated then fingerprint restored, stale revision, account disabled, role revoked, wrong challenge purpose, too many/negative attempts, lock until, already consumed, malformed context, missing D1 metadata all deny. Fresh and independent-user challenges can succeed. Only newly consumed rows counted |
+| Initial setup failure | [CI #41423994454](https://github.com/ntdung-tds/iaict-portal/actions/runs/41423994454) `kdf-local-workerd` **FAIL** at final aggregate fixture assertion: the intentionally pre-consumed fixture was included in the total. Corrected count to `consumed_at_ms >= synthetic now`, retested; **previous FAIL preserved**, not recast as a security pass |
+| Security/transaction limit | This is **only one atomic challenge-row UPDATE** with server-owned synthetic current user account/role and credential revision checked by SQL `EXISTS`. It does **not** verify an OTP/TOTP counter, commit factor and session atomically, create a session, write security audit or prove remote D1 consistency/rollback |
+| Other code / deployment | No change to real `lib/native-auth.ts`, login, Worker, session readers, real D1, Access, secrets, R2, staging or production |
+| Media | **NO_IMAGE_REQUIRED**; [private IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Approval | ADR-0002 PROPOSED, SRS FROZEN, security/Owner policy approval NOT GIVEN |
+
+| Case | Environment and role | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-012` | Local Miniflare D1, synthetic users | At most one successful redemption, server state/credential revision validated in same SQL update, fail closed | **26/26 check groups PASS; 1/16 parallel writes** | **PASS — LOCAL_D1_CAS_ONLY** | [CI #41424145730](https://github.com/ntdung-tds/iaict-portal/actions/runs/41424145730) |
+| `IAM-FUT-001` | Approved real staging IAM accounts | Verified OTP and full session issued exactly once after atomic proof of challenge, factor step and user/session policy | No integration exists | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Authorized seven-role E2E staging | Protected APIs reject pending/legacy sessions and enforce RBAC/Access | Not tested live | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Boundary:** The new test does not import the preauth TypeScript module into a real route; its D1 schema is strictly synthetic. Neither a successful conditional UPDATE nor this PASS grants a native IAM session. Full MFA transaction semantics remain NOT_RUN.
+
+
+## RUN-IAM-20261102-11 — Two-pass security review of pre-MFA challenge revival after restoration
+
+| Field | Observed evidence / strict boundary |
+| --- | --- |
+| Date | 2026-11-02, Asia/Ho_Chi_Minh |
+| Case / PR | Existing P0 `IAM-FUT-012` (no new case), [PR #54](https://github.com/ntdung-tds/iaict-portal/pull/54), Issue #37 |
+| Round 1 — source review | A challenge pre-dating a role revocation or account disable could become eligible again after permissions/account status were restored before its original five-minute expiry, because the synthetic SQL only checked present `is_active`/`has_active_role` bits and the password credential revision |
+| Round 2 — adversarial contract | Synthetic `security_revision` on both account and challenge, validated inside same conditional D1 UPDATE. Test role revoke→regrant and account disable→reactivate with old pre-change challenge **denied** even after restored bit; explicitly seed fresh and independent-user revision fixtures. Strict 64-character token/fingerprint check |
+| Exact source SHA tested | `3c32802b791ec8ac44dfbb76868cd960265318c4` (initial PR #54 head before this QA/PCS documentation; logs from same test code) |
+| CI | [portal-ci #41426633634](https://github.com/ntdung-tds/iaict-portal/actions/runs/41426633634), `kdf-local-workerd` job `125214697790` **SUCCESS**; `[mfa-preauth-d1-cas] OBSERVED` |
+| Actual result | **29/29 synthetic D1 assertion groups PASS**, exactly **1 of 16** concurrent requests to consume the same hashed challenge accepted; 3 added security-state negative groups compared with historical 26/26 |
+| Other tests | Existing `IAM-FUT-010`, `IAM-FUT-011` retain their prior bounded scope; full Vitest, QA registry and public staging gate must be verified against **final PR head** after checkpoint edits |
+| Prior history | `RUN-IAM-20261102-10` 26/26 remains historical evidence for PR #53; this review does not reinterpret that older result. First PR #53 fixture-count FAIL remains preserved in CI history |
+| Important implementation constraint | In a real D1 architecture, any revocation/disable/privilege or MFA policy change must advance an authoritative security epoch **atomically** with the state change or revoke outstanding challenges using an equivalent proven transaction. The new epoch exists **only in synthetic test tables** |
+| Strict security limit | No OTP/TOTP code verification, factor counter+challenge+session+audit transaction, real user/session, D1 migration/binding, Worker/login integration, Cloudflare Access or production modification |
+| QA media | **NO_IMAGE_REQUIRED**, [private IAM evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) |
+| Approval | ADR-0002 PROPOSED, SRS FROZEN, Owner approval NOT GIVEN |
+
+| Case | Environment / role | Expected | Observed | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-012` | Local Miniflare D1, synthetic identities | Old challenge stays invalid after role restored or account reactivated | **29/29 groups PASS, 1/16 concurrent consumes** | **PASS — LOCAL_D1_ONLY** | [CI #41426633634](https://github.com/ntdung-tds/iaict-portal/actions/runs/41426633634) |
+| `IAM-FUT-001` | Real authenticated hosted staging | Password-only session not issued for MFA-required user; full OTP+factor+challenge/session atomicity | Not implemented | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Authenticated 7-role staging | Access/RBAC/assurance remain secure after revoke and regrant | No authorized live fixtures | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**This is a synthetic D1 contract proof, NOT a live MFA feature.** Final PR SHA CI and public staging acceptance are separately required before merge.
+
+
+## RUN-IAM-20261102-12 — Iterative security review loop for synthetic pre-MFA D1 CAS
+
+| Field | Evidence and honest limitation |
+| --- | --- |
+| Date | 2026-11-02, Asia/Ho_Chi_Minh |
+| Scope | Existing `IAM-FUT-012`, P0; [PR #55](https://github.com/ntdung-tds/iaict-portal/pull/55); **85 QA cases unchanged** |
+| Loop 1 — inspect and identify | Merged PR #54 already tested current role/active-bit revoke→restore, but lacked role-scope/permission updates while `has_active_role=1` and factor reset while user status/credentials are unchanged. Synthetic challenge creation also mirrored the security revision in JS, rather than reading authoritative D1 |
+| Loop 1 — minimal fix | Source-only `scripts/mfa-preauth-d1-cas/run-local.mjs`: seed challenge from current D1 `security_revision`, increment epoch on synthetic role-scope and factor reset events, verify old challenge is still denied despite unchanged active flags |
+| Loop 1 — observed CI | PR #55 source SHA `b80fb136097dd5da2e0ccb95f0770d567a00f8a0`, [portal CI #41433990774](https://github.com/ntdung-tds/iaict-portal/actions/runs/41433990774), `kdf-local-workerd` job #125239205340 **SUCCESS**: **31/31** synthetic D1 assertion groups PASS, exactly **1/16** same-challenge CAS writes accepted; unchanged synthetic-only explicit result markers |
+| Loop 2 — independent inspection | Compare SQL conditional update to test matrix: current user/factor epoch equality; credential revision/password rotation; role revocation and restoration; account disable/reactivation; role-scope change while active; factor reset; replay; expiry; wrong owner/token; lockout; missing D1 metadata; fresh independent-user eligibility. All **in-scope listed invariants represented by negative/positive tests**. No further reproducible code defect found in this bounded SQL CAS harness on this inspection |
+| Loop 3 — closure criterion | Re-execute *final exact PR head* full portal CI and independent public staging acceptance after QA/PCS doc updates. Close this review only if all gates PASS and no high-priority in-scope defect remains. If a gate fails, keep PR OPEN and iterate; never classify older red runs as PASS |
+| Past evidence | `RUN-IAM-20261102-11` (29/29 at PR #54) retained unchanged; this run adds 2 scenarios, not 2 test cases |
+| Critical boundaries | This **does not** prove atomic verification of actual OTP + factor counter CAS + challenge consumption + full-session creation + audit; does not exercise hosted D1 or actual revocation handlers. Real hosted `IAM-FUT-001/002/004` **NOT_RUN**, live user security epoch **NOT_IMPLEMENTED** |
+| Media | **NO_IMAGE_REQUIRED**, [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) unchanged |
+| Release | SRS FROZEN, ADR-0002 PROPOSED, owner approval NOT GIVEN. No D1 migration, Worker, login/API, Cloudflare Access, secret or production modification |
+
+| Case | Environment | Expected | Actual | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-012` | Local Miniflare D1 synthetic user/challenge | Scope/factor change invalidates prior token, one 16-way CAS winner | **31/31 groups PASS; 1/16 accepted**, local only | **PASS — LOCAL_D1_CAS_ONLY** | [CI #41433990774](https://github.com/ntdung-tds/iaict-portal/actions/runs/41433990774) |
+| `IAM-FUT-001` | Hosted IAM with approved users | Verified OTP, challenge/factor/session atomic transaction | No integration | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-004` | Authenticated seven-role staging | Session assurance and policy/revocation enforced at every protected endpoint | No authorized E2E fixtures | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Stop rule is scope-bound**, not a claim of absolute absence of all vulnerabilities. PR remains open until exact final SHA CI + staging gates pass.
+
+
+## RUN-IAM-20261102-13 — Synthetic verified OTP + challenge/factor/session/audit transaction on isolated D1
+
+| Field | Observed facts and scope |
+| --- | --- |
+| Date | 2026-11-02 (Asia/Ho_Chi_Minh) |
+| Test/PR | **`IAM-FUT-013`**, P0 Security/AUTO; [PR #57](https://github.com/ntdung-tds/iaict-portal/pull/57); Issue #37 |
+| Source tested (before QA edits) | `f621f1ea9896010b720aecd25b4120cfa1ec6618` |
+| Observed runner | [portal CI #41442058049](https://github.com/ntdung-tds/iaict-portal/actions/runs/41442058049), `kdf-local-workerd` job #125266084414 **SUCCESS**; `[mfa-atomic-d1] OBSERVED` |
+| Test environment | **LOCAL_MINIFLARE_D1** with fresh randomized DB UUID, synthetic random 20-byte HMAC-SHA1 seed created within test, synthetic user/factor/challenge/session/audit/guard tables; no real D1 Worker binding or OTP account |
+| Atomicity mechanism | One `D1.batch()` with challenge conditional UPDATE, immediate `CHECK(observed=1)` using SQLite `changes()`, factor counter conditional UPDATE, second CHECK guard, synthetic MFA-assured session INSERT, audit INSERT. A zero-row CAS forces a *database SQL error* and rollback; checking `meta.changes` after a committed batch alone would be too late |
+| Verified execution | **20/20 synthetic assertion groups PASS**; **16** simultaneous requests for the same challenge with **1 successful complete transaction**; two different challenges using the same factor time-step yielded **1** complete transaction, losing challenge not consumed; **4 committed synthetic MFA sessions and 4 matching success audit entries** |
+| Negative proofs | Wrong/malformed TOTP, same-challenge replay, two-challenge same-step replay, 0-row CAS rollback, session UNIQUE failure, late audit UNIQUE failure, expiry, security/credential revision changed between OTP check and batch, account disable and factor disable/secret-version rotation between verification and batch. Snapshots demonstrate no partial challenge/factor/session/audit state on rejected attempts |
+| Independent design review | Compared the SQL and injection cases against ADR-0002: challenge user+credential/security revision validated in DB, factor owner/status/secret version and monotonic counter checked on D1, session/audit issued only if batch succeeds; audit failure tested after session insertion and rolls back earlier writes. **No additional reproducible in-scope defect** in this synthetic multi-entity proof on this pass. This is *not* a claim that live MFA is verified |
+| Limits | Test uses a **standalone synthetic Node HMAC-SHA1 verifier** (0-step window), **not** the running TypeScript TOTP module or hardware-bound secret; no real login session token, key encryption, API CSRF/throttle, recovery, hosted D1 transaction, Worker deployment or real 7-role E2E. Does NOT prove remote execution or live key lifecycle |
+| Other tests | `IAM-FUT-010/011/012` remain local-only historical; full CI and public staging gate to be verified on **final PR SHA** before merge |
+| Evidence media | **NO_IMAGE_REQUIRED**; [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) |
+| Approval | ADR-0002 PROPOSED, SRS FROZEN, Owner MFA/security approval NOT GIVEN |
+
+| Case ID | Environment / role | Expected | Observed | Status | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| `IAM-FUT-013` | Local Miniflare D1 synthetic user/factor/session | Verified synthetic OTP + challenge and factor CAS yield one session and audit atomically or no writes | **20/20 groups PASS**, 1/16 same-challenge and 1/2 different challenge same step accepted; 4 synthetic sessions and 4 success audit | **PASS — SYNTHETIC_ATOMIC_D1_ONLY** | [CI #41442058049](https://github.com/ntdung-tds/iaict-portal/actions/runs/41442058049) |
+| `IAM-FUT-001` | Hosted approved IAM users | Full MFA login route and server-recognized MFA session with live factor/OTP | No actual route integration | **NOT_RUN** | [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+| `IAM-FUT-002/004` | Authenticated hosted recovery/7 roles | Safe recovery, session revocation and per-route MFA enforcement | Identities/feature not available for acceptance | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+**Bounded result:** The local D1 batch rollback and guard pattern is supported by this test. Production transaction design must still use actual typed TOTP helpers, vetted secret custody, a real schema and hosted tests with Owner/security acceptance; avoid treating 20/20 local PASS as real MFA completion.
+
+
+## RUN-IAM-20261102-14 — Real TOTP helper parity inside isolated synthetic D1 batch
+
+| Field | Verified evidence and boundary |
+| --- | --- |
+| Date / owner | 2026-11-02 (Asia/Ho_Chi_Minh); PCS Solo Lead; Owner security acceptance NOT GIVEN |
+| PR / case | [PR #59](https://github.com/ntdung-tds/iaict-portal/pull/59), existing P0 `IAM-FUT-013`, **86 QA cases unchanged**; `CHG-IAM-ACCESS-20261102-13` |
+| Baseline | [Merged PR #58](https://github.com/ntdung-tds/iaict-portal/pull/58) left `IAM-FUT-013` at **20/20** synthetic Node-HMAC-based local D1 proof. This historical result is retained unchanged |
+| Review 1 / change | The previous verifier reproduced HMAC independently, never calling `lib/totp.ts`. Bundle actual repository `lib/totp.ts` with esbuild into local Node WebCrypto and use its `matchTotpCounter()` as OTP candidate; cross-check generation against independent Node HMAC and RFC 6238 SHA-1 8-digit known vector |
+| Review 2 / correction | Fixed rare randomized negative-case flake: fixed wrong OTP might match a valid ±1-step code; choose wrong input absent from all three admissible codes. Add deterministic out-of-window RFC rejection. No SQL CAS or backend auth source modified |
+| Exact tested code/checkpoint SHA | `5e13f97da067f12c3d21de460092ecd37aa8298d`; [portal-ci #41456996101](https://github.com/ntdung-tds/iaict-portal/actions/runs/41456996101) **SUCCESS, 4/4 jobs**; local workerd job `kdf-local-workerd` **27/27 groups PASS**; QA registry **86**, full **559/559 Vitest** |
+| Actual local result | **27/27**: actual generator/matcher RFC and independent-HMAC parity, exact/adjacent/replay/malformed/out-of-window; existing atomic D1 challenge+factor guarded CAS, rollback after session/audit failures and synthetic audit matching. **1/16** concurrent same challenge accepted; **1/2** distinct challenges using same TOTP step accepted; **4 synthetic session + 4 audit success records** |
+| Public staging check | [staging-acceptance #41456996063](https://github.com/ntdung-tds/iaict-portal/actions/runs/41456996063) **SUCCESS**: 21/21 public Chromium, 24/24 anonymous GET, 0 observed HTTP 503/5xx/network errors **in this sample only**; intermittent [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains OPEN |
+| Merge gate | Exact final PR HEAD must pass portal-ci (4 jobs) and public read-only staging again after this documentation commit; do **not** reuse earlier SHA status as proof of a later SHA |
+| Explicit NOT_RUN | **Real MFA enrollment/sign-in/recovery/7-role authenticated E2E** (`IAM-FUT-001/002/004`), live session assurance and pre-MFA route enforcement, hosted D1, production encrypted secret/KMS, real security epoch, D1 migration, key rotation |
+| Operational constraints | Node local module + disposable synthetic Miniflare D1 only. No changes to `lib/totp.ts`, Worker/auth routes, user credentials, actual tables, Cloudflare Access, R2 or staging/production deploy. SRS **FROZEN**, ADR-0002 **PROPOSED**, owner/security approval **NOT GIVEN** |
+| Evidence media | **NO_IMAGE_REQUIRED**; [private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp). No private images/logs to GitHub |
+
+**Conclusion:** The actual TOTP helper now participates in the *isolated* D1 batch harness and passed the bounded security regression. This does NOT implement MFA in IAICT Portal or approve a live migration, account enrollment or Access cutover. The next action is to review authoritative IAM schema/epoch/assurance and recovery under a separate approved scope.
+
+
+### RUN-IAM-20261102-14 — post-merge readback (documentation-only handoff)
+
+- [PR #59](https://github.com/ntdung-tds/iaict-portal/pull/59) **MERGED** as `bdd0d2e353079496bc32a249a128b2fd95db3ed9`. Exact final PR HEAD `17eabc0fa896eea531aa186160f607f6ee66ea21`: [portal-ci #41457724289](https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724289) **SUCCESS all four jobs**, **27/27 local IAM-FUT-013**, **559/559 Vitest**, QA 86; [public staging #41457724115](https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724115) **SUCCESS 21/21 Chromium + 24/24 anonymous GET**, 0 HTTP503/5xx/network errors **in sample only**.
+- Post-merge active branch source and PCS **revision 21** read back; Google QA [v2.0](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) updated/read back. This handoff proposes PCS revision 22 to replace stale “verify/merge PR59” next action; it **does not** add a new test run or increase scope of the preceding evidence.
+- **Persistent restrictions:** actual MFA/hosted D1/Worker/key/recovery/7-role E2E NOT_RUN, ADR PROPOSED, SRS FROZEN, Owner security sign-off NOT GIVEN. No remote mutations, Access changes or production deploy.
+
+## RUN-IAM-20261103-01 — actual IAM migration baseline + disposable D1 security epoch
+
+| Case / hạng mục | Environment & role | Expected | Actual observed | Verdict | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| IAM-FUT-014 — local epoch CAS | Random **ephemeral Miniflare D1**, synthetic user/role; exact unmodified migration source 0001/0022/0023/0024 | Final password session issuance checks current policy/epoch/credential; no stale challenge or session can revive; failure rolls back | **43/43 assertion groups PASS**. Tested wrong-policy mid-verification, stale epochs, role revoke/regrant, deactivate/reactivate, credential/factor rotation/disable, legacy NULL-assurance, challenge one-use, audit collision rollback, FK integrity. No hosted D1 | **PASS LOCAL_ONLY** | [CI #41516228656](https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228656) · source SHA `6a41f698906801f7c2a59ccf283d19794809fd9f` |
+| Real local Chromium regression | Local web server, mocked CMS APIs where specified, no authenticated staging role | Existing UI regression passes | **30/30 Chromium PASS** (browser-visual job) | **PASS LOCAL_CHROMIUM_MOCK** | [CI #41516228656](https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228656) |
+| Public staging Chromium acceptance | **Real staging**, anonymous/read-only Chromium, no authenticated CMS role, not deploying the PR's code | 21 existing public paths/flows behave safely | **21/21 Chromium PASS** | **PASS LIVE_STAGING_ANONYMOUS** | [staging #41516228434](https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228434) |
+| Public staging HTTP availability | Real staging, anonymous/read-only | 24 checks; report transient 503 if any | **24/24 PASS; zero observed 503/5xx/network errors in THIS sample** | **PASS SAMPLE_ONLY** | [staging #41516228434](https://github.com/ntdung-tds/iaict-portal/actions/runs/41516228434) |
+| Authorized 7-role, real MFA and hosted D1 | Live Worker/credentials and actual MFA path | Genuine authorized role browser and encrypted factor integration | **NOT_RUN**; no real MFA implementation, no live schema or vault/key binding | **NOT_RUN** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) · [Issue #37](https://github.com/ntdung-tds/iaict-portal/issues/37) |
+
+- **Recorded:** 2026-11-03 ICT; PR [#67](https://github.com/ntdung-tds/iaict-portal/pull/67), tested code SHA `6a41f698906801f7c2a59ccf283d19794809fd9f`, catalog **87 cases**, CI **4/4 jobs SUCCESS** (typecheck/build and D1 tests), public staging read-only workflow **SUCCESS**. Real Chromium is mandatory where applicable; this new D1-only test exposes no new live UI, so browser gates are regressions against existing deployed staging, **not evidence of code deployment**.
+- **Review/fix history retained:** first source SHA `9b9a788c` FAILED migration D1 `exec` multiline parser; after split source SHA `743ec9d3` FAILED synthetic MFA session reader due double hash of returned token; both fixed at observed SHA `6a41f698906801f7c2a59ccf283d19794809fd9f`. Do not misclassify earlier failures as app defects. The four migration files remained unchanged; no live D1 touched.
+- **Screenshots:** `NO_IMAGE_REQUIRED` for D1 and automated public regression; private [QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp). No secrets, session files, screenshots, trace/video uploaded to GitHub.
+- **Boundaries:** SRS FROZEN, ADR-0002 PROPOSED. New case proof does **not** verify actual password PBKDF2, TOTP, real MFA challenge/session readers, encrypted factors, hosted D1, or seven-role authenticated browser tests. Owner standing permission to create test accounts is recorded in PR #66; no real accounts provisioned in this run. Existing intermittent public 503 Issue #30 remains open.
+- **Merge rule:** source SHA above proves code before this evidence commit. Re-run exact-final-head PR CI and staging before merging; never transfer a prior SHA's green gates as proof of a changed HEAD.
+
+
+## RUN-IAM-20261103-02 — Browser role-navigation regression and authenticated QA preflight
+
+| Test scope | Target | Observed result | Verdict | Evidence |
+|---|---|---|---|---|
+| IAM-USER-019 | Local Chromium 390px, seven simulated roles and forbidden session; CMS session explicitly mocked | **8 newly added UI tests PASS**, included in 38/38 total Chromium checks at source SHA `eb395141aaa052d5136797e3876b240b710a6bcf` | **PASS LOCAL_CHROMIUM_MOCK ONLY** | [Portal CI #41521921878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41521921878) |
+| IAM-USER-020 | Real staging Chromium with valid authorized per-role Cloudflare Access browser state | New `page.goto` UI assertion written; **no valid private per-role Access session available**, so authenticated execution did not occur | **NOT_RUN / BLOCKED** | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+| Account provisioning preflight | Restricted Drive QA registry | Eight synthetic staging D1 fixture entries documented as **DISABLED**, no passwords, Access subject or valid session. No new user created or activated in this run; account registry read is historical status, not fresh hosted D1 verification | **BLOCKED** | [Restricted QA identities](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit) |
+| External prerequisites | Connected Cloudflare management, email and credential vault | Cloudflare Access application-management reads blocked by tool safety; no connected approved encrypted password vault; no controlled dedicated QA mailbox connector usable yet. Owner's standing staging-only permission already granted in PR #66 | **BLOCKED**, not missing authorization | [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) |
+
+The 8 new Chromium tests are browser-rendered **with API mocks** and cannot establish authenticated RBAC in deployed staging. The existing anonymous staging Chromium acceptance is an independent layer. No password, JWT, cookie, screenshot, API secret, D1 mutation, Worker deployment or production change was made. The role/browser tool is prepared for genuine Access sessions but must not be run on CI or substitute synthetic fixture addresses for real identities. No QA image required; [private evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+**Review history:** QA verifier rejected the initial MANUAL test's automated reference; corrected to `—`. Requirements verifier rejected source changes without `thaydoi.md`; added `CHG-IAM-ACCESS-20261103-02`. Final-head CI/staging gate must be recorded after this ledger commit before merge.
+
+## RUN-IAM-20261103-03 — live staging QA identity and Access preflight (read-only plus empty Secrets Store setup)
+
+| Item | Scope / expected | Observed 2026-11-03 | Verdict |
+| --- | --- | --- | --- |
+| QA staging D1 fixtures | Registered eight test roles | **8 rows**, **0 active**, **0 v2 password credentials**, **0 Access subjects**; 10 total CMS users; aggregate-only live D1 reads | **PASS AUDIT / NOT LOGIN-READY** |
+| Protected staging Access | Check current login gate without bypass | **1 staging Access app**, allow policy **Cloudflare account members**; **1** current Access user. No policy modified | **PASS READ-ONLY** |
+| QA mailbox availability | Deliverable project-owned identities distinct per role | Cloudflare account **0 DNS zones, 0 Email Routing destinations**. No new controlled test inbox provisioned | **BLOCKED** |
+| Encrypted secret infrastructure | Secure persistent place for future QA secret entries | Created Cloudflare Secrets Store `iaict_staging_qa_credentials`; readback **1 store present**, **0 secrets**. Account-level encrypted service exists, but no password entries and no validated retrieval/automation lifecycle | **PASS EMPTY STORE ONLY** |
+| IAM-USER-020 and authenticated role matrix | Eight legitimate Access/private Chromium sessions, 7 roles and second Admin | No new user activated, no native password created, no signed-in browser run; no identity policy change | **BLOCKED / NOT_RUN** |
+
+- **Execution:** connected Cloudflare management API; only *read* hosted staging D1 aggregates and Access/email/zone config; the **single write** created one *empty encrypted account-level Secrets Store* for later QA credential use. No Worker/D1 account writes, no Cloudflare account membership invites, no Access policy edits, no new login session, no production changes.
+- **Security guard:** prior access-tool-read failure from 2026-11-03 resolved; do not keep it as current blocker. Cloudflare Access account-member-only rule means **adding D1 users alone cannot grant Access**. Do not invite personal Cloudflare account members to bypass onboarding. Creating a secret store does **not** establish an approved vault operating process or prove a secret has been saved. Owner's staging-only QA account creation permission remains in force via PR #66. Test case catalog stays **89**; prior `RUN-IAM-20261103-02` observations preserved.
+- **Evidence:** API aggregate counts and configuration metadata only; no screenshot required. Private [QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp). GitHub CI/public Chromium is regression proof only, not authenticated browser E2E.
+
+## RUN-IAM-20261103-04 — native-auth.ts with original IAM migrations and disposable local D1
+
+| Test case / layer | Environment | Expected and observed | Verdict / limitation | Evidence |
+| --- | --- | --- | --- | --- |
+| IAM-AUTH-020 — actual native auth functions | Random ephemeral local Miniflare D1 populated from original committed `0001/0022/0023/0024` migrations; Vitest Node WebCrypto; 8 synthetic `example.test` role identities | **7 integration tests reported PASS in the portal-ci unit-test step** at source SHA `d380dfd451ff74e34da82c64cdd92f0f63a65721`: seeded eight roles; generated random in-process PBKDF2 credentials and validated real hashed sessions; prevented spoofed headers and malformed cookies; rotated password and revoked prior sessions; disabled and roleless account denial; 5-failure lockout; token-specific revocation | **PASS LOCAL_INTEGRATION_ONLY**, no Cloudflare Access/JWT, no hosted D1, no browser session, no real MFA | [Portal CI #41528349945](https://github.com/ntdung-tds/iaict-portal/actions/runs/41528349945) · `lib/native-auth.real-d1.test.ts` |
+| Authorized staging 7 roles + Admin2 | Cloudflare Access + independent controlled QA mailboxes + private Chromium | Cloudflare Access account has **one Cloudflare IdP and no OTP provider**; staged QA D1 8 placeholders still disabled as of [RUN-IAM-20261103-03](./IAICT_TEST_RUNS.md). One connected personal Outlook.com mailbox can accept `+tag` subaddresses per Microsoft documentation, but that is **one shared inbox**, not 8 controlled independent test mailboxes; not used for staging account identities | **BLOCKED / NOT_RUN** | [Cloudflare OTP requirements](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) · [Microsoft Outlook.com plus addressing](https://support.microsoft.com/en-us/outlook/send-email-from-a-different-address-in-outlook-com) |
+
+- Source SHA `d380dfd451ff74e34da82c64cdd92f0f63a65721` is the **pre-evidence documentation commit**; exact final PR HEAD must pass portal CI and real public staging Chromium after these QA/PCS changes. Browser checks do NOT validate real signed-in roles in the absence of legitimate Access credentials.
+- Local synthetic secrets are generated in memory, never printed, stored in GitHub/Drive/Cloudflare or reused across sessions. No production, Access policy, hosted D1, account membership or staging Worker modifications. No screenshot required for local SQL/backend tests.
+- **Remaining test gap:** direct out-of-band role regrant/reactivate might revive previously minted native sessions unless handled by normal Admin API session revocation; live Worker endpoints and actual Access policy never tested here. Do not overstate the independent SQL-epoch proof as live MFA. SRS FROZEN, ADR-0002 PROPOSED. Evidence folder [restricted QA](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+- **Cloudflare Secrets Store suitability correction (API schema checked 2026-11-03):** `secrets[].value` is **write-only**, and Cloudflare's management API never returns the stored value. The previously created `iaict_staging_qa_credentials` store is still **empty (0 secrets)**; **do not use it as a recoverable password manager** for agents/Playwright. It can only back services through authorized bindings and a separately designed secure credential lifecycle. Connect a dedicated managed password vault or isolated authorized QA browser workstation instead. Never claim credentials are retained for future browser use merely because a secret was successfully written.
+
+
+## RUN-IAM-20261103-05 — full feasible staging QA: real native negative login and Cloudflare Access boundary
+
+**Date:** 2026-11-03 (ICT). **Authorized target:** deployed `iaict-portal-staging` ONLY. **PR:** [#75](https://github.com/ntdung-tds/iaict-portal/pull/75). **Tested source before this evidence commit:** `04ca5de8bcac99d490d2370f4a520b5265dcb8e0`.
+
+| Layer / registered cases | What ACTUALLY ran | Measured | Verdict |
+| --- | --- | --- | --- |
+| `IAM-AUTH-021` real Chromium negative sign-in | Actual staging `/login` DOM filled with one randomized absent `example.test` address and an unusable synthetic password, submitted through UI to real POST `/api/auth/login` | **401**, native login error alert, no `__Host-iaict_session` cookie, no successful redirect, anonymous `/api/auth/session` **401** | **PASS REAL_STAGING_NEGATIVE** |
+| `IAM-AUTH-022` real same-origin and activation guard | Real deployed staging API receives forged foreign Origin (no valid account); syntactically invalid activation token | Login request **403**; activation **400**; no native cookie. No invitation or credential issued | **PASS REAL_STAGING_NEGATIVE** |
+| `IAM-ACC-007` real protected edge anti-spoofing | Five staging `/admin` and `/api/admin` routes receive forged client CF identity headers without a legitimate Access session | All five redirected to Cloudflare Access login and no native session cookie | **PASS REAL_STAGING_NEGATIVE** |
+| Full public staging/browser suite | Real Playwright Chromium against deployed staging, unmocked; includes above 3 tests | **24/24 PASS** | **PASS PUBLIC + NEGATIVE AUTH** |
+| Public staging availability | Repeated read-only probes against 24 public HTTP routes | **24/24 PASS**, 0 observed 503, 0 5xx, 0 transport errors in THIS sample | **PASS SAMPLE**, intermittent Issue #30 remains OPEN |
+| Local isolated and build gates | Portal CI: Vitest real native-auth D1 integration plus other unit/security, local Chromium, workerd KDF, typecheck, build | **566/566 Vitest**, **38/38 local Chromium (some mocked)**, **4/4 portal CI jobs** | **PASS LOCAL / CI**, not protected login acceptance |
+| Staging hosted D1 readback after live Chromium | Read-only Cloudflare D1 `PRAGMA quick_check`, foreign key check and aggregate counts | **quick_check=ok**, **0 FK violations**; 10 total CMS accounts, 8 QA fixtures of which **0 active**, **0 QA passwords** and **0 QA Access subjects**; 1 credential overall in a non-QA account (not touched); 0 active native sessions. Login attempt counter table had 3 cumulative rows, cannot attribute all to this run. | **PASS INTEGRITY / QA ACCOUNT UNCHANGED** |
+| Worker, Access and secret scope | Cloudflare read-only staging/production deployment inventory + Access policy and Secrets Store | Staging latest deployment `754b0509-e754-410c-8dff-46015d162a89`; production readback `a01a3743-ac78-4a19-a990-581fe9235751`. Staging Access still account-member-only / Cloudflare IdP; account-level QA Secrets Store **empty, write-only values** | **NO RELEASE / NO POLICY CHANGE** |
+| Live authorized `IAM-USER-020`, 7 roles + second Admin | Actual signed-in Access and native CMS sessions and positive/negative permission/IDOR matrix | **NOT_RUN**: existing eight `example.test` QA users are disabled and no controlled independent QA mailboxes, approved reusable credential vault or valid Access browser state. Test credentials **not** created | **BLOCKED**, **NOT ACCEPTED** |
+
+- **Evidence:** [portal-ci #41533428400](https://github.com/ntdung-tds/iaict-portal/actions/runs/41533428400) (all four PASS; 566 Vitest; 38 local Chromium); [public staging #41533428059](https://github.com/ntdung-tds/iaict-portal/actions/runs/41533428059) (24 Chromium and 24 HTTP probes PASS). QA media not captured, because this is a programmatic security test; only store future screenshots in the [restricted IAM evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+- **Security/side-effect boundary:** one randomized absent synthetic email submitted to live staging login can generate a D1 failed-login counter. No real account activation, password write, Access membership, roles, invitations, MFA, Worker deploy, migration, production mutation or secret/PII export. Automated reports have screenshot/video/trace OFF. No genuine 7-role positive login performed. Native login rejection is not proof that a real authenticated user can access CMS.
+- **Post-evidence gate:** because this record/PCS are new changes, final PR head must independently pass CI plus Chromium again, then merge. Never backfill an unobserved real role PASS.
+
+
+## RUN-IAM-20261103-06 — actual Worker/native-cookie RBAC on disposable D1; downstream HTTP dispatcher MOCKED
+
+| Field | Verified outcome |
+|---|---|
+| Date, scope and case | 2026-11-03; [PR #76](https://github.com/ntdung-tds/iaict-portal/pull/76); `IAM-ACC-008`; code SHA `3dcad1ff72038c6fc6d39ea98c38887ff4d1815b` **before this evidence/PCS commit** |
+| Real implementation under test | Actual `worker.ts` ingress (native cookie verification, internal-header stripping, Origin guard), `lib/native-auth.ts` PBKDF2 credential and D1 session logic, `lib/newsroom-auth.ts` RBAC SQL, `lib/cms-roles.ts`, original unmodified `0001_core.sql`, `0022_iaict_native_auth.sql`, `0023_iaict_auth_pbkdf2_workers.sql`, `0024_iaict_activation_invites.sql` |
+| Test fixture and mocked part | Eight independent randomly passworded synthetic `example.test` accounts in **disposable local Miniflare D1**. **Only** `vinext/server/fetch-handler` dispatcher is mocked for seven `/api/admin/_qa/*` synthetic routes. No deployed CMS endpoints or real Cloudflare Access are involved |
+| Positive/negative role coverage | **8 roles × 7 independent permission gates = 56 allow/deny decisions**, including second Admin; actual native cookie and D1 role query on each Worker request |
+| Additional negative coverage | Missing/forged cookies, client-forged internal identity header, native feature disabled, cross-origin/absent Origin on POST, role deletion and inactive user refusal |
+| New integration tests | **12/12 PASS** in [portal-ci #41536511330](https://github.com/ntdung-tds/iaict-portal/actions/runs/41536511330); actual `lib/native-worker.real-d1.roles.test.ts` 12 tests |
+| Entire source/CI at tested SHA | **578/578 Vitest PASS**, **38/38 local Chromium PASS** (some mocked), **4/4 portal CI jobs SUCCESS** |
+| Real public staging regression | [staging-acceptance #41536511374](https://github.com/ntdung-tds/iaict-portal/actions/runs/41536511374) **24/24 real Chromium PASS** and **24/24 HTTP PASS**, 0 observed HTTP503/5xx/network errors in sample. New `IAM-ACC-008` is *local*, not among these 24 real-staging tests |
+| Hosted D1 status after tests | Read-only staging D1 `quick_check=ok`, 8 legacy QA rows still disabled with zero native credentials and zero Access subjects. No hosted D1 or Cloudflare policy touched by this PR |
+| Real authenticated 8-role Access acceptance | **BLOCKED / NOT_RUN**: no independent controlled QA inboxes, valid per-role Access identities/browser state or approved recoverable credential manager |
+| Media and security | No password, browser cookie, Access JWT or screenshot persisted; no production/staging Worker deployment. Media folder [restricted IAM Drive QA](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) — no image required for local API assertions |
+
+**Verdict:** **PASS LOCAL_WORKER_INGRESS_REAL_D1_WITH_MOCK_HTTP_DISPATCH**. Does **not** prove real positive Cloudflare Access enrollment, actual hosted Admin API actions, or true signed-in role-browser E2E. The source SHA above was observed green; this documentation revision must receive its own exact-head CI and public staging Chromium checks before merge. SRS remains FROZEN; no live MFA implementation.
+
+## RUN-IAM-20261103-07 — Real CMS role mutation API and native-session non-resurrection (isolated D1)
+
+| Item | What was executed / observed | Verdict |
+| --- | --- | --- |
+| New `IAM-USER-021` integration test | Actual `worker.ts` ingress, `app/api/admin/cms/users/route.ts` GET/POST, `native-auth.ts` session validation, `requireNewsroomActor` role lookup and real isolated Miniflare D1 from committed migrations. Only the vinext HTTP dispatcher maps the actual route in the test; this is **NOT** hosted CMS or live Access sign-in | **PASS LOCAL_ACTUAL_ADMIN_ROUTE_REAL_D1** |
+| Admin authorization | Native Admin can read actual user list; Editor cannot read user-management data (403); forged cross-Origin mutation request rejected (403) | **PASS** |
+| Role reduction and session revocation | Admin updates Editor→Viewer using actual CAS D1 batch, old Editor session immediately returns 401 and is deleted; new Viewer session can read but cannot edit CMS | **PASS** |
+| Stale optimistic update | Replay of original `updatedAt` is rejected **409** without revoking the newer Viewer session | **PASS** |
+| Role regrant | Admin updates Viewer→Editor using fresh CAS version; earlier Editor and Viewer sessions remain invalid (401). Newly minted Editor session receives edit permission; D1 foreign keys remain valid | **PASS** |
+| First CI round (before fixture fix) | [Portal CI #41539239411](https://github.com/ntdung-tds/iaict-portal/actions/runs/41539239411) failed 1/580 due to test fixture omitting the original CMS migration `0019_v17_full_cms.sql` and its `cms_revisions` table. This was **missing local test schema**, not a proven product defect. No application security code was changed | **FIXTURE DEFECT FOUND→CORRECTED** |
+| Fixed-source CI round | [Portal CI #41539487495](https://github.com/ntdung-tds/iaict-portal/actions/runs/41539487495) **4/4 jobs SUCCESS**; `lib/native-worker.real-d1.roles.test.ts` **14/14 PASS**, total Vitest **580/580**, local Chromium regression **38/38** | **PASS FIXED SOURCE** |
+| Real public staging | [Staging acceptance #41539487478](https://github.com/ntdung-tds/iaict-portal/actions/runs/41539487478) runs 24 real Chromium tests including 3 negative sign-in/Access tests plus 24 public HTTP probes; report status only after run completion, no assumption that test passed before observed | **PENDING WHEN LOG FIRST WRITTEN** |
+| Positive live role browser | 8 disabled `example.test` staging QA fixtures remain without controlled independent inboxes or valid Access state. Existing Cloudflare Secrets Store is empty and write-only, not a recoverable password manager | **BLOCKED / NOT_RUN** |
+
+- Code SHA `049346fe3f6528dd2b2fd0082619bfe18471fac9` is the **post-fix pre-report HEAD**; evidence/PCS changes require another exact-head CI and real public staging Chromium run before merge. [PR #77](https://github.com/ntdung-tds/iaict-portal/pull/77). Registered QA case `IAM-USER-021`, catalog **95**.
+- This is a real code+SQL Admin API test in local isolated Miniflare, with mocked vinext request dispatch ONLY. No actual hosted admin account, session, password, role, activation, Access policy, or production mutation. Test passwords generated only in process and never stored/logged. No screenshot required; [private IAM QA evidence folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp).
+
+## RUN-IAM-20261103-08 — real CMS deactivate/re-enable and session revoke (isolated D1)
+
+| Check | Verification boundary / observed state |
+| --- | --- |
+| Scope | [PR #78](https://github.com/ntdung-tds/iaict-portal/pull/78), `IAM-USER-022` and `IAM-USER-023`; actual `worker.ts` ingress, `lib/native-auth.ts` session lookup, actual CMS Users DELETE/POST API, original migrations in temporary Miniflare D1. **Only vinext HTTP dispatch is mocked**. No hosted CMS endpoint or real Cloudflare Access login. |
+| Identity and data | 8 synthetic `example.test` roles + Admin2; randomly generated passwords remain in process; no staging/production D1 or Cloudflare Access changes. |
+| IAM-USER-022 | Admin deactivates News Editor via DELETE; old session invalid and password login denied. Admin reactivates by POST with fresh CAS version; old token stays invalid, fresh token receives News Editor role only; stale DELETE returns 409 and must not revoke new session. |
+| IAM-USER-023 | Editor must not revoke sessions, foreign-Origin Admin POST must fail, actual Admin `revokeSessions` must revoke Admin2 native token. Admin2 can obtain a **new** token with original role; old token stays invalid. |
+| Initial CI gate | [Portal CI #41549451897](https://github.com/ntdung-tds/iaict-portal/actions/runs/41549451897) initially FAILED `verify:qa` because code changed before the two case definitions were committed; **not yet evidence of a product failure or successful new integration tests**. Registered both QA cases before retry. |
+| Execution and exact-HEAD result | **PASS** for pre-evidence documentation HEAD `64851453512ead5871000299b6824e2b4a97e00f`: [Portal CI #41549847143](https://github.com/ntdung-tds/iaict-portal/actions/runs/41549847143) **4/4 jobs SUCCESS**, **582/582 Vitest** including **16/16** actual Worker/D1 integration tests and **38/38 local Chromium**. [Public staging #41549847028](https://github.com/ntdung-tds/iaict-portal/actions/runs/41549847028) **24/24 actual Chromium PASS** and **24/24 public HTTP PASS**, zero observed HTTP503/5xx/network errors. The new actual CMS DELETE/POST tests were **local** only; hosted role-positive acceptance NOT_RUN. This evidence commit requires new exact-HEAD gates before merge. |
+| Positive Access-authenticated 8-role browser | **BLOCKED / NOT_RUN** due missing controlled independent QA mailboxes, Access identities and recoverable vault. |
+| Screenshots and media | No local API screenshot needed. All future actual browser QA captures must go only in [restricted IAM QA Drive folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), never GitHub. |
+
+**Result boundary:** LOCAL_ACTUAL_ADMIN_ROUTE_REAL_D1 with MOCK_HTTP_DISPATCH; must not be counted as actual hosted Access/API browser acceptance. SRS **FROZEN**; production untouched.
+
+
+## RUN-CMS-20261103-01 — CMS article malformed JSON and protected cache boundary
+
+| Field | Result |
+| --- | --- |
+| Scope | `CMS-ART-001`, `CMS-ART-002`; first non-IAM hardening slice after Owner paused IAM |
+| Source | [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79) · [CMS article route](../../app/api/admin/cms/articles/route.ts) · [local test](../../lib/cms-articles-atomic.test.ts) |
+| Environment | Original CMS migration sources in disposable Node SQLite; real CMS route handlers, **mocked authorization actor**; no Cloudflare Access session, hosted D1, Worker deploy or credential mutation |
+| Planned assertions | Invalid JSON/null/scalar/array/typed ID rejected with HTTP 400 and zero D1 writes; non-JSON media type refused; authenticated CMS GET/POST/DELETE responses explicitly no-store |
+| Current status | **NOT_RUN ON FINAL PR SHA** — introduced source/test; await exact-head GitHub CI; do not infer PASS from committing code |
+| Hosted CMS E2E | **NOT_RUN** (Owner IAM PAUSED, no new authenticated-browser session) |
+| Screenshots | NOT_CAPTURED — isolated API assertions have no visual artifacts |
+| Evidence | [Private QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp); update outcome with immutable SHA and run IDs only after actual workflow |
+
+
+## RUN-CMS-20261103-02 — Verified CMS API input/cache regression + deployed public staging smoke
+
+| Field | Observed evidence |
+| --- | --- |
+| Date / exact source | 2026-11-03 · `979a1b41b53ba54ffc99e2586910a803592e3a1a` (complete CMS code+QA+PCS source head before append-only evidence record) |
+| PR / issue | [PR #80](https://github.com/ntdung-tds/iaict-portal/pull/80), [Issue #79](https://github.com/ntdung-tds/iaict-portal/issues/79) |
+| Cases and test layer | `CMS-ART-001`, `CMS-ART-002`: **PASS_LOCAL_SQLITE_MOCK_ACTOR** in real `app/api/admin/cms/articles/route.ts`; malformed input 400, zero audit/content writes, private response no-store |
+| Portal CI | [run 41568024341](https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024341): **4/4 jobs PASS**, 57 Vitest files / **585/585 tests PASS** (3 new CMS route assertions), **38/38 local Chromium PASS**. QA registry **99**; frozen SRS, requirements, checklist and release-safety validators PASS |
+| Real public staging acceptance | [run 41568024151](https://github.com/ntdung-tds/iaict-portal/actions/runs/41568024151): **24/24 live Chromium PASS**, **24/24 HTTP PASS**, HTTP 503=0, 5xx=0, networkErrors=0 observed |
+| Scope limitation | Real public staging runs against previously deployed Worker `1b8cfe71-88ef-4e21-8937-4f8590daaba4`, **NOT the PR #80 code**. No Cloudflare Access authenticated CMS browser E2E; no production/staging deployment of new CMS code. |
+| Historical precursor | `RUN-CMS-20261103-01` was planning/NOT_RUN recorded before actual execution. This second immutable run captures real CI outcome, without rewriting the precursor |
+| Media evidence | NO_IMAGE_REQUIRED for local API; real public test screenshots/traces not stored to GitHub. [Private Drive folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) available for sanitized visual artifacts when applicable |
+| Evidence-commit status | **NOT_RUN** until exact final documentation head is retested in GitHub CI |
+
+
+## RUN-CMS-20261103-03 — Newsroom source-to-public atomic SQLite lifecycle
+
+| Field | Value |
+| --- | --- |
+| Issue / scope | [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) · `CMS-NEWS-001/002/003/004` |
+| Environment | Actual `app/api/admin/news/ingest/route.ts`, `lib/news-repository.ts`, `lib/news-source-adapters.ts`, `app/api/admin/cms/articles/route.ts` and `lib/public-news.ts`, with disposable **original Core + V16/V17 migration SQLite** |
+| Mock boundaries | **Only the authenticated actor and outbound RSS HTTP fixture are mocked**. No genuine Cloudflare Access login, remote D1, real external feed request or deployed Worker execution |
+| Checks | RSS ingest and duplicate, manual approval CAS, stale publication/refusal, single article + provenance + audit, public visible then hidden after CMS archive, malformed JSON/Content-Type/role, upstream feed 503 failed run |
+| Source SHA, CI | **PENDING** before first PR run; bind to exact immutable tested SHA, update through a separate append-only result record |
+| Result | **NOT_RUN** pending actual CI. Do not infer PASS from created source and test file |
+| Hosted browser acceptance | **NOT_RUN** for signed-in CMS/Newsroom; real public staging tests may run in GitHub Actions against previously deployed Worker, which is not the PR code |
+| Evidence | QA data synthetic; no screenshot, cookies or secrets. Restricted [Drive QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) if a future sanitized visual reproduction requires it |
+| Risk / rollback | Affected source: `app/api/admin/news/ingest/route.ts`, tests and documentation only; no staging D1 mutation or production deployment; SRS FROZEN; Owner IAM PAUSED |
+
+
+## RUN-CMS-20261103-04 — Reproducible Newsroom test-fixture failure (original PR #82 head)
+
+| Field | Observed outcome |
+| --- | --- |
+| Date | 2026-11-03 |
+| Source SHA | `2a8c2576372ae41a54ca3e6fe3e38f495c720174` |
+| CI | [portal-ci #41575273050](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575273050): **FAIL verify / 588 passed, 1 failed (589 total)**; other jobs not evidence of this specific lifecycle case |
+| Test case | `CMS-NEWS-001`: second RSS ingestion unexpectedly returned HTTP 500 instead of 200; `CMS-NEWS-002/003/004` passed at this tested SHA |
+| Root cause | **TEST FIXTURE**, not proven product regression: `fetch` spy returned the same already-consumed `Response` on two calls (`mockResolvedValue(new Response(...))`). `fetchNewsSourceCandidates` reads response text each time; a consumed body is not reusable. |
+| Fix / retest | Change RSS spy to `mockImplementation(async () => new Response(...))` so every request has a fresh independent response; committed at `32d849113d2953997ada4dc9bfa584741b0e8935`. Follow-up new run `RUN-CMS-20261103-05`. |
+| Risk | No hosted Cloudflare Access/D1/Worker, RSS network or production write performed. No screenshot or credentials. |
+
+## RUN-CMS-20261103-05 — Corrected Newsroom original-migration SQLite + live public staging (verified source SHA)
+
+| Field | Observed outcome |
+| --- | --- |
+| Date and exact source SHA | 2026-11-03 · `32d849113d2953997ada4dc9bfa584741b0e8935` |
+| Scope | [PR #82](https://github.com/ntdung-tds/iaict-portal/pull/82), [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81), `CMS-NEWS-001/002/003/004` |
+| Real source execution (local) | **PASS_LOCAL_ORIGINAL_MIGRATION_SQLITE** — actual Newsroom API and RSS parser, actual Core+V16+V17 SQLite migration schema, real review CAS/claims, CMS article archival and published-site DB queries. **Mock boundaries:** authorization actor and upstream RSS HTTP only |
+| Corrected portal CI | [run 41575415530](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415530) **4/4 jobs PASS**, **589/589 Vitest**, **38/38 local Chromium**. QA registry **103 cases**, frozen SRS, PCS checklist, requirements and release gates PASS |
+| Actual deployed public staging | [run 41575415524](https://github.com/ntdung-tds/iaict-portal/actions/runs/41575415524) **24/24 real Chromium PASS**, **24/24 HTTP probes PASS**, observed 503=0, 5xx=0, network errors=0 |
+| Deployment/auth distinction | Staging Chromium/HTTP exercised **previously deployed Worker**, **not** PR #82 Newsroom ingest code. Genuine Access-authenticated CMS/Newsroom browser lifecycle **NOT_RUN** (IAM Owner PAUSED). Real remote RSS fetch was **mocked** in local integration test. |
+| Evidence | [Private Drive QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp), no screenshots required for database/API assertions; no credentials, cookies or PII committed |
+| Documentation-head gate | **NOT_RUN yet** at time this immutable record was written; exact post-evidence source SHA CI must pass before merge |
+
+
+## RUN-CMS-20261103-06 — Second independent Newsroom adapter security review (pending CI)
+
+| Field | Result / boundary |
+| --- | --- |
+| Date | 2026-11-03 |
+| Reviewed baseline | Post-merge [PR #82](https://github.com/ntdung-tds/iaict-portal/pull/82) source SHA `1bf71d4dccc3cb43454202b104b217bd61990bad` |
+| Findings | Unchecked automatic source-fetch 3xx redirect destinations; full `Response.text()` memory allocation before actual-byte cap check on streaming/chunked feed |
+| Fix proposed | `redirect: manual` + HTTPS/source-host allowlist/URL userinfo rejection + bounded 3-hop handling; `ReadableStream.getReader` with 1.5/2.5 MB cap and cancellation on overrun |
+| New cases | `CMS-NEWS-005` redirects, `CMS-NEWS-006` streamed body size; deterministic injected upstream HTTP, no external fetch or real identity |
+| Execution | **NOT_RUN ON FINAL PR SHA** — source and tests committed, CI required before PASS; record actual SHA separately on next evidence run |
+| Authentication / deployment | IAM PAUSED; real Access-authenticated Newsroom workflow NOT_RUN. No staging or production Cloudflare Worker deployment or D1 mutation performed |
+| Evidence | Test source `lib/news-source-adapters.test.ts`; restricted Drive QA root https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp; no screenshot or private data required |
+| Previous baseline | [Portal CI #41576292919](https://github.com/ntdung-tds/iaict-portal/actions/runs/41576292919) 589/589 Vitest and [public staging #41576292871](https://github.com/ntdung-tds/iaict-portal/actions/runs/41576292871) 24/24 Chromium + 24/24 HTTP PASS; those outcomes **do not cover these new two edge cases** |
+
+
+## RUN-CMS-20261103-07 — Actual first green CI of independent Newsroom security fix
+
+| Field | Observed evidence |
+| --- | --- |
+| Reviewed source SHA | `043b270b68aa1290bdb52bb6e7a44259cddc59fb` (first complete source + QA/PCS checkpoint before this evidence entry) |
+| PR / issue | [PR #83](https://github.com/ntdung-tds/iaict-portal/pull/83), [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81), `CHG-TIN-TUC-20261103-02` |
+| Cases | `CMS-NEWS-005/006` **PASS_LOCAL_INJECTED_HTTP**. Real `fetchNewsSourceCandidates` logic checked with injected `fetch` returning controlled redirects, ReadableStream and RSS. Disallowed URL never fetched; valid same-host relative redirect parsed; redirect loop bounded; >1.5MB chunked response cancelled and declared excessive Content-Length rejected. |
+| Exact source CI | [portal-ci #41584604136](https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604136) **4/4 jobs PASS**, **594/594 Vitest**, **38/38 local Chromium**. QA registry **105 cases**, frozen SRS and Checklist Moment guard PASS. |
+| Actual public staging | [staging #41584604067](https://github.com/ntdung-tds/iaict-portal/actions/runs/41584604067) **24/24 Chromium PASS**, **24/24 repeated HTTP probes PASS**, 503=0, 5xx=0, network errors=0 observed. |
+| Environmental boundaries | This staged **public** browser suite exercises the existing Cloudflare Worker version from 2026-10-31. It is **not** a hosted run of the new redirect/stream fix. HTTP source RSS, authorized CMS browser and access session still **NOT_RUN**. No live D1/Cloudflare Access change. |
+| QA media | No screenshot needed for deterministic HTTP adapter tests; no cookies, private user data or images committed. Restricted [Drive folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) retained. |
+| Final documentation-head CI | **NOT_RUN when record written**; must verify final PR-head SHA again, then merge and test postmerge. |
+
+
+## RUN-CMS-20261103-08 — Two independent Newsroom adapter review passes (pre-CI record)
+
+| Field | Scope and pending result |
+| --- | --- |
+| Reviewed baseline | Merged PR #83, development SHA `c86ff18adfef49b5454cc71b2649aa81ae840bd1` |
+| Pass 1 — findings | Source and candidate allowlisted URLs accepted nondefault HTTPS ports and credential-bearing candidate links. Malformed numeric XML entities (out-of-range/surrogate/invalid controls) could throw and abort ingestion. |
+| Pass 2 — findings | Waiting on source stream cancellation could indefinitely stall redirect/oversize paths. Declared oversized responses and invalid redirect bodies needed prompt resource cancellation even when rejecting. |
+| Fix | `lib/news-source-adapters.ts`: enforce default HTTPS port, no URL userinfo, XML 1.0 valid character ranges with U+FFFD replacement, and fire-and-forget cancellation with rejection handling while keeping max redirect/byte limits and fetch abort guard. |
+| Case IDs | `CMS-NEWS-007`, `CMS-NEWS-008`, `CMS-NEWS-009`; source tests in `lib/news-source-adapters.test.ts`; total **108** registered test cases. |
+| Test boundary | Full real Newsroom source parser/fetch adapter with injected deterministic `fetch`, controlled `Response` and `ReadableStream`; **no live network, no hosted D1/Access/session, no external RSS**. |
+| Execution state | **NOT_RUN on final PR SHA**. The code/test commits exist; actual CI results must be appended as a new immutable Run after execution. No PASS claim at this point. |
+| Safety | Owner IAM PAUSED; production, SRS and staged Worker unchanged; no screenshot/cookie/secret artifacts; restricted Drive root https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp |
+
+## RUN-CMS-20261103-09 — Verified original-source double-review of Newsroom adapter
+
+| Field | Actual observed evidence |
+| --- | --- |
+| Review source | PR #84 source SHA `297ba4fbcf5cfdf262e0f8593c86320be37ed068`, following 2 independent audit passes on merged PR #83 |
+| Case IDs | `CMS-NEWS-007` custom HTTPS port and candidate URL userinfo; `CMS-NEWS-008` invalid XML numeric character references with fallback U+FFFD; `CMS-NEWS-009` stalled redirect stream cancellation and declared over-limit body cancellation. |
+| Environment and scope | **PASS_LOCAL_INJECTED_HTTP** in actual `lib/news-source-adapters.ts` with deterministic `Response` and `ReadableStream` fixtures, no actual external RSS, Access session or hosted Worker. Existing Core+V16+V17 Newsroom SQLite lifecycle regression also passed via standard test suite (actor/upstream mock). |
+| Portal CI | [run 41609011114](https://github.com/ntdung-tds/iaict-portal/actions/runs/41609011114): **4/4 jobs PASS**, **600/600 Vitest**, **38/38 local Chromium**. Registry **108 cases**, frozen SRS and PCS/checklist guards PASS. |
+| Public staging | [run 41609010947](https://github.com/ntdung-tds/iaict-portal/actions/runs/41609010947): **24/24 Chromium PASS**, **24/24 repeated HTTP probes PASS**, observed HTTP 503=0, 5xx=0, network errors=0. |
+| Limitations | Public staging tests run **previously deployed Worker**, not PR #84 code. Real-origin RSS redirect/timeout behavior and authenticated Newsroom CMS browser E2E **NOT_RUN**. IAM Owner PAUSED; production/staging deployments and hosted D1/Access untouched. |
+| Earlier record | `RUN-CMS-20261103-08` recorded source-before-CI NOT_RUN; this append-only run reflects actual observed source SHA. |
+| Final documentation commit | **NOT_RUN at record capture**; exact final SHA CI and public staging must be rerun before merge. |
+
+## RUN-CMS-20261103-10 — Bounded iterative Newsroom HTML source review (pre-CI)
+
+| Field | Scope and current status |
+| --- | --- |
+| Reviewed baseline | Merged [PR #84](https://github.com/ntdung-tds/iaict-portal/pull/84) SHA `4714a72562f3d46755170248650cc7aac3806bd9`; [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) |
+| Loop rule | Find → reproduce on baseline → fix only the affected source/test → run full CI → independent re-review → repeat on any new reproducible defect. Stop when zero new reproducible issues **in scoped HTML source parser + Newsroom integration paths** and all exact-head gates pass; don't claim global zero defects. |
+| Iteration 1 — observed | Original HTML link expression matched `data-href` and `title` text containing `href`, sometimes overriding the actual link and causing unsupported article candidates. Pure expression reproduction confirmed; full CI **NOT_RUN yet**. |
+| Iteration 1 — change | Parse genuine quoted anchor attributes and require true `href`; keep source HTTPS/host/port credential validation. `CMS-NEWS-010/011`. |
+| Iteration 2 — observed | HTML comments, script, style and template regions containing synthetic `<a>` sequences were interpreted as actual source article links; local reproduction confirmed. |
+| Iteration 2 — change | Suppress non-visible/non-navigational HTML regions before extraction, including incomplete comments; retain legitimate visible anchors. `CMS-NEWS-012/013`. |
+| Local test boundaries | Real source `parseHtmlNewsCandidates` and `fetchNewsSourceCandidates` with synthetic HTML and injected HTTP, no external feed/network. Newsroom original-migration SQLite lifecycle regression continues to run with mocked actor/upstream. |
+| Catalog | **112 cases** (prior 108 + four new CMS-NEWS-010..013), no changes to historical IAM cases; IAM PAUSED. |
+| Current verdict | **NOT_RUN on final PR SHA**. Source and tests committed; no PASS inferred. Append actual test run evidence with immutable SHA after GitHub CI and public staging browser results. |
+| Hosted scope | Actual Worker staging with new source code, real source HTML over Internet and authenticated Newsroom CMS browser: **NOT_RUN**. Staging/production Worker versions and SRS baseline unchanged. |
+
+
+## RUN-CMS-20261103-11 — Iterative Newsroom review discovered failure and third-pass correction
+
+| Field | Observed outcome |
+| --- | --- |
+| First complete PR head | `7ca215f1da49912ffc22357228dbf84f2934ca06`, [PR #85](https://github.com/ntdung-tds/iaict-portal/pull/85) |
+| Initial portal CI | [#41614538770](https://github.com/ntdung-tds/iaict-portal/actions/runs/41614538770): **FAIL verify**, `[qa-registry] FAIL line 113: invalid layer`; test catalog case `CMS-NEWS-013` used unsupported layer `Regression`, so the primary verify job stopped before full Vitest. |
+| Initial public staging | [#41614538535](https://github.com/ntdung-tds/iaict-portal/actions/runs/41614538535) **workflow SUCCESS**. This checks an earlier deployed Worker, not new Newsroom HTML parser. |
+| Fix 1 | Changed `CMS-NEWS-013` from `Regression` to supported `Integration`. Test case ID and scope preserved; no application behavior change from this fix. |
+| Independent review 3 | The first `stripNonArticleHtml` pass used a single non-greedy regex for `<template>` sections. **Reproduced** that nested templates could leave a hidden outer-template `<a href>` exposed after the inner closing tag. |
+| Fix 2 | Replace template removal with linear tag-depth scanning; keep link filtering inside the entire outer template, including nested and unclosed templates. Add two direct parser regressions and extend `CMS-NEWS-012` definition (same case ID, no duplicate case records). |
+| Current result | **NOT_RUN on amended source/docs SHA**. Do not label the original 4/4 portal CI or 600+ Vitest PASS. Append separate actual outcome after complete retest. |
+| Boundaries | Original website staging public only; synthetic Newsroom source HTML and upstream HTTP. No live authenticated admin, hosted D1/Access or production deployment. IAM remains owner-paused, SRS frozen. |
+
+
+## RUN-CMS-20261103-12 — Review loop source gate PASS after QA-label fix and nested-template re-review
+
+| Field | Observed evidence |
+| --- | --- |
+| Verified source commit | `5116f6e79cb9a0257ef041cbad8cbe28f17a3ee6`; [PR #85](https://github.com/ntdung-tds/iaict-portal/pull/85), [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) |
+| Earlier failure preserved | `RUN-CMS-20261103-11` initial `verify` FAIL due unsupported QA layer `Regression`; corrected the case to `Integration`, preserving case ID `CMS-NEWS-013`. Separately fixed nested-template hidden-link leak and added two focused regression tests. |
+| Test scope | **PASS_LOCAL_SOURCE_FIXTURE**. Real `parseHtmlNewsCandidates` and `fetchNewsSourceCandidates` with synthetic HTML/HTTP. Cases `CMS-NEWS-010..013` assert genuine href and reject fake `data-href`/title, hidden comments/scripts/styles/templates, nested/unclosed templates. Original Core/V16/V17 SQLite Newsroom integration (mocked actor and RSS HTTP) also runs in global Vitest. |
+| Exact source CI | [portal-ci #41615306414](https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306414): **4/4 jobs PASS**, **609/609 Vitest**, **25/25 source-adapter tests**, **38/38 local Chromium**. QA validator **112 cases**, SRS freeze and PCS/checklist/requirements gates PASS. |
+| Real public staging | [staging #41615306400](https://github.com/ntdung-tds/iaict-portal/actions/runs/41615306400): **24/24 Chromium PASS**, **24/24 repeated HTTP probes PASS**, observed 503=0, 5xx=0, networkErrors=0. |
+| Independent post-fix source re-review | Read back patched parser and 25 adapter tests at immutable SHA. No additional reproducible defect detected in explicitly scoped HTML source extraction cases after third iteration; no broader zero-bug claim or full DOM parser certification. |
+| Explicit exclusions | Public staging still tests **previous deployed Worker**, not this PR code. Real external-origin HTML fetch and authenticated Newsroom browser E2E remain **NOT_RUN**; IAM PAUSED; no staging/production deployment, hosted D1/Access, SRS sync or private screenshots. |
+| Final documentation HEAD and merge | **PENDING** at capture; rerun exact final-documentation SHA CI and public staging acceptance before merge, then verify postmerge SHA. |
+
+
+
+## RUN-CMS-20261103-13 — PR #85 exact postmerge test evidence (observed)
+
+| Field | Evidence |
+| --- | --- |
+| SHA and PR | `bd2ee459fd7303a7c5e7366d89732717c922c693` after [PR #85](https://github.com/ntdung-tds/iaict-portal/pull/85) MERGED, [Issue #81](https://github.com/ntdung-tds/iaict-portal/issues/81) OPEN |
+| Final premerge gates | `bf301cf3eece274176a6448ba26e858fa78d31b9`: [portal CI #41616168711](https://github.com/ntdung-tds/iaict-portal/actions/runs/41616168711) PASS and [public staging #41616168612](https://github.com/ntdung-tds/iaict-portal/actions/runs/41616168612) PASS |
+| Postmerge portal CI | [#41616598225](https://github.com/ntdung-tds/iaict-portal/actions/runs/41616598225) **4/4 jobs PASS**: verify, kdf-local-workerd, browser-visual, rc-ancestry. Living Master QA reports 609/609 Vitest and 38/38 local Chromium |
+| Postmerge real public staging | [#41616598219](https://github.com/ntdung-tds/iaict-portal/actions/runs/41616598219): live-acceptance PASS, 24/24 public Chromium + 24/24 HTTP per QA Master; tests **previously deployed Worker**, not new parser code |
+| QA sync check | [Master QA v2.12](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) read and verified: 112-case snapshot, `CMS-NEWS-013`, postmerge SHA/CI. GitHub CSV 112 canonical case definitions, not 112 passed runs |
+| Disposition | **PASS for scoped code/fixture CI plus public smoke only**; `T-NEWSROOM-REVIEW-LOOP` closed at source level. Previous FAIL `RUN-CMS-20261103-11` preserved; no global zero-bug claim |
+| NOT_RUN | External RSS/HTML, real signed-in Newsroom browser, new Worker deployment/hosted D1. IAM PAUSED. Production and SRS untouched |
+| Screenshots | NO_IMAGE_REQUIRED for fixture; private [Drive QA folder](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) only |
+
+
+## RUN-MEDIA-20261103-01 — First Media/R2 threat-model and QA-gap checkpoint (NOT_RUN)
+
+| Field | Observed state and explicit limit |
+| --- | --- |
+| Baseline development SHA | `844f7ddf37d2314eed55f1fe3f766e6610684226`; [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39) |
+| Scope | Source/config documentation audit + planned QA definitions, **no runtime upload implementation or execution** |
+| Existing configuration | `cloudflare.config.ts` staging-only `MEDIA_BUCKET` points to isolated `iaict-portal-staging-media`; `app/api/admin` does not expose a dedicated media upload path in inspected tree |
+| New test definitions | `CMS-MEDIA-001..012`, all **PLANNED**, `MANUAL`, **NOT_RUN**, not PASS |
+| Functional/API/R2/Browser E2E | **NOT_RUN / NOT_IMPLEMENTED** (scan, upload, metadata, private read, deletion); IAM still owner-PAUSED |
+| CI for this documentation PR | **NOT_RUN when recorded**; later SHA-specific automated repository CI is a documentation gate, not evidence of media API acceptance |
+| Change / plan | `CHG-MEDIA-R2-20261103-01`; [Media threat model](../requirements/media-r2/MEDIA_R2_THREAT_MODEL_2026-11-03.md) |
+| Screenshots and artifacts | NO_IMAGE_REQUIRED; future private [Drive media QA root](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
+| Controls | No Worker deploy, hosted R2/D1 mutation, Access/credential change, production change, or SRS approval implied |
+| Google Master readback | [v2.13](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) verified header **124** and all 12 distinct `CMS-MEDIA-001..012` PLANNED/MANUAL/NOT_RUN after document sync; no media execution PASS implied |
+| Live R2 metadata only | **PASS_READ_ONLY_BUCKET_METADATA** (Cloudflare GET only, 2026-11-03): bucket `iaict-portal-staging-media` exists APAC, `r2.dev` disabled, 0 custom domains, 1 enabled default multipart-abort lifecycle rule; no evidence of app object retention. CORS query unverified. **No object listing/read/write/delete**. Master Google QA v2.13 updated/read back; all media functional test cases remain **NOT_RUN**. |
+
+## RUN-MEDIA-20261103-02 — B3.2 pure upload preflight code (initial, before CI)
+
+| Field | Evidence / scope |
+| --- | --- |
+| Baseline | development `4b96dd1ce89de662f8ba57dd5db76268675dbd05`, [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39) |
+| Code | `lib/media-upload-contract.ts` isolated helper, `lib/media-upload-contract.test.ts` |
+| New cases | `CMS-MEDIA-013/014/015` AUTO READY; 127 total catalog |
+| Local exploratory execution | Standalone Node/TypeScript smoke: 9/9 test groups PASS using a locally constructed test shim. This is not canonical GitHub CI evidence |
+| CI / Chromium / public staging | **NOT_RUN at capture**, exact PR-head QA evidence to be added after actual workflows complete |
+| Hosted media upload / R2 scan / login | **NOT_IMPLEMENTED / NOT_RUN**; 12 earlier `CMS-MEDIA-001..012` remain PLANNED |
+| Product policy | Required explicit policy, test MIME and size are fixtures, **no Owner-approved runtime settings** |
+| SRS / production / secrets | Untouched; IAM PAUSED, no Worker deployed, no R2/D1 mutations, no screenshot generated |
+| Drive | https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3 |
+
+## RUN-MEDIA-20261103-03 — B3.2 exact source CI and public staging smoke PASS
+
+| Field | Actual observed result |
+| --- | --- |
+| Exact tested source SHA | `139ea0b1aee543fbe328dab7c4ebbded10ba905c`, [PR #88](https://github.com/ntdung-tds/iaict-portal/pull/88), Issue #39 |
+| Canonical Portal CI | [#41629737599](https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737599) **4/4 jobs PASS** (verify, browser-visual, rc-ancestry, local workerd KDF); new `lib/media-upload-contract.test.ts` belongs to full Vitest verification. 9 local test definitions; no independent count from CI logs claimed |
+| Public real staging | [#41629737613](https://github.com/ntdung-tds/iaict-portal/actions/runs/41629737613) live-acceptance job **PASS**. Tests previously deployed public Worker; **not** newly written Media preflight or upload |
+| QA cases | `CMS-MEDIA-013/014/015` **PASS_LOCAL_CODE_CI** (pure function scope only); `CMS-MEDIA-001..012` **PLANNED/NOT_RUN** (backend, scan, RBAC, real R2) |
+| Master Doc sync | [QA v2.14](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) **readback VERIFIED** header 127 cases (97 IAM + 30 CMS); 15 unique CMS-MEDIA cases including 3 AUTO/READY, 12 PLANNED; title updated |
+| Not proved | No full image decoder or scanner, no stream memory cap, no D1/R2 objects, no real authenticated CMS browser, no MIME/size production approval, no Worker deployment |
+| Follow-up | Final **documentation HEAD CI/staging still PENDING** at capture; rerun on exact final PR SHA, merge only if green and independently verify postmerge |
+| QA media | NO_IMAGE_REQUIRED for unit suite; [private Drive evidence](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) only. IAM PAUSED; SRS/production unchanged |
+
+
+## RUN-MEDIA-20261103-05 — Media preflight dynamic-policy TOCTOU test-first reproduction
+
+| Field | Evidence / status |
+| --- | --- |
+| Source baseline | `74792c91e6e2e9a77bea02e95dddabec3941dfe9`, merged PR #88, PCS canonical rev51 |
+| Defect | Pure helper re-reads policy size/MIME getters after nominal validation; a changing getter can bypass initially validated policy. Throwing getter propagates an exception. No hosted Media/API implication |
+| Test-first SHA | `02d5c7f930e1c7c7e82ccfdfae3353b180e16755`: 3 new negative regression test definitions under existing `CMS-MEDIA-015` |
+| Initial CI | **PENDING** (test-first PR gate not complete at record creation); do not claim test-failure CI until observed |
+| Synthetic local proof | Dynamic maxBytes getter: first read 1 and later 100 permits 6-byte candidate; dynamic MIME getter: validated image/png then later image/jpeg allows claimed JPEG. This is confined to adversarial configuration getters |
+| Fix strategy | Copy validated fields once into immutable primitives/local Set and return structured `POLICY_NOT_CONFIGURED` for failing getters. Preserve previous PASS after separate rerun `RUN-MEDIA-20261103-06` |
+| Security scope | `CMS-MEDIA-015` only; existing 127-case catalog unchanged, Media 001..012 PLANNED/NOT_RUN, no real R2 or Worker upload |
+| Evidence | No screenshots needed; [QA private Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) reserved for real browser |
+
+
+## RUN-MEDIA-20261103-06 — Three bounded review-loop cycles: FAIL → FIX → PASS_LOCAL_FIXTURE
+
+| Stage | Exact SHA and observed result |
+| --- | --- |
+| Baseline | PR #88 merged at `74792c91e6e2e9a77bea02e95dddabec3941dfe9`, original postmerge CI [#41630834586](https://github.com/ntdung-tds/iaict-portal/actions/runs/41630834586) PASS |
+| RED #1 policy getter | Test-first SHA `ed0afd1110165ca95e0e79032a103f7a2fb7fe3e`, [portal CI #41633762844](https://github.com/ntdung-tds/iaict-portal/actions/runs/41633762844): **FAIL Unit tests** |
+| GREEN #1 | Fix `f9dab556f59720458774af67046df4f4623981f8`, [portal CI #41633986765](https://github.com/ntdung-tds/iaict-portal/actions/runs/41633986765) PASS: policy snapshot once |
+| RED #2 input getter | Test-first SHA `7dc4bc5edfc230503afc468f032055a84ca9232b`, [portal CI #41634251463](https://github.com/ntdung-tds/iaict-portal/actions/runs/41634251463): **FAIL Unit tests** |
+| GREEN #2 | Fix `09599e899641142ce819344b2bc776c28b9b394c`, [portal CI #41634397290](https://github.com/ntdung-tds/iaict-portal/actions/runs/41634397290) PASS: single candidate snapshot and safe invalid-input rejection |
+| RED #3 typed-array size | Test-first SHA `9838c230c1d62d104d246e42b66ad461103fe4eb`, [portal CI #41634825650](https://github.com/ntdung-tds/iaict-portal/actions/runs/41634825650): **FAIL Unit tests** |
+| GREEN #3 | Fix SHA `7b85189dbd11d119677aaef3dae7a8661e34ff13`, [portal CI #41635067760](https://github.com/ntdung-tds/iaict-portal/actions/runs/41635067760) **4/4 PASS**, [public staging #41635067742](https://github.com/ntdung-tds/iaict-portal/actions/runs/41635067742) **PASS**: intrinsic typed-array length, not overrideable subclass properties |
+| Case registry | Existing `CMS-MEDIA-015` refined to include accessor/size spoofing; **127** total (15 Media); [Google Master QA v2.15](https://docs.google.com/document/d/1oTjOmD6zDgC46AsUrPcieVvhjRYHapEY8GBNlWwQxL8/edit) readback verified |
+| Scoped independent review | No further reproducible issue observed after three fixes in these source fixture paths; **not** a guarantee of global zero bugs |
+| Explicit exclusions | Live upload API, malware scanner, real R2/D1 read/write, CMS account browser, streaming body cap, IAM/Access and production changes remain **NOT_RUN/NOT_IMPLEMENTED**; `CMS-MEDIA-001..012` PLANNED |
+| Last documentation SHA | **PENDING exact CI** when recorded; rerun both workflows after final docs and PCS checkpoint, then postmerge |
+
+
+
+## RUN-MEDIA-20261103-07 — PR #89 postmerge CI, public staging and Worker deployment readback
+
+| Field | Observed evidence and boundary |
+| --- | --- |
+| Merge | [PR #89](https://github.com/ntdung-tds/iaict-portal/pull/89) MERGED on 2026-11-03, development SHA `9dc3bfc88c84d1548c3de907f9bdb8b28314aa2a`; source review fixes in `RUN-MEDIA-20261103-06` |
+| Postmerge Portal CI | [#41636778451](https://github.com/ntdung-tds/iaict-portal/actions/runs/41636778451): **PASS 4/4** jobs `verify`, `kdf-local-workerd`, `browser-visual`, `rc-ancestry` |
+| Public staging smoke | [#41636778629](https://github.com/ntdung-tds/iaict-portal/actions/runs/41636778629): **PASS 1/1** `live-acceptance` against *previously deployed* staging Worker; NOT Media upload E2E |
+| Cloudflare read-only deployments | staging `iaict-portal-staging`: deployment `754b0509-e754-410c-8dff-46015d162a89`, version `1b8cfe71-88ef-4e21-8937-4f8590daaba4` (100%, deployed 2026-10-31); production `iaict-portal` version `e7c703f7-fc4c-4313-b14c-0a2c94e0613d` (100%, deployed 2026-10-15). GET only, no deploy/modify |
+| Exact scope | B3.2 isolated preflight helper and regression + CI PASS after merge. Existing 127 QA case definitions (15 Media); 3 pure-helper cases `013..015` source CI PASS; `001..012` remain PLANNED / NOT_RUN |
+| Still NOT_RUN | Authorized CMS media browser, real API upload, hosted R2/D1 mutations, size/stream enforcement, scanning/quarantine, image decode, full RBAC/security acceptance. No new staging Worker deployment |
+| Next decision | B3.3 format/size, scanner/quarantine, private object ownership and lifecycle, approval before hosted implementation. IAM owner-PAUSED; SRS FROZEN; production HOLD |
+| QA media | NO_IMAGE_REQUIRED for this GitHub CI and Worker metadata check; future browser evidence ONLY in private [Drive QA folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
+
+
+
+## RUN-MEDIA-20261103-08 — B3.3 grouped Media lifecycle fixture FAIL → FIX → RETEST (source only)
+
+| Field | Exact evidence and limitations |
+| --- | --- |
+| Source scope | [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39), [PR #91](https://github.com/ntdung-tds/iaict-portal/pull/91), `CHG-MEDIA-R2-20261103-04`: proposed policy decisions + **pure unwired** lifecycle graph/CAS revision pair and negative fixtures. No hosted API |
+| Initial RED SHA | `7202f84c6cb36c96be93f223efc0a6f925a7d3e2`, [Portal CI #41672527992](https://github.com/ntdung-tds/iaict-portal/actions/runs/41672527992): verify **FAIL**, Vitest **631 PASS / 2 FAIL** (633 total). Defect 1: revoked Proxy made Array.isArray throw outside try. Defect 2: test-helper default parameter coerced explicit undefined revision to zero (fixture bug, not product security bypass). |
+| Fixes | `375fd429a9963645aa08894ca929981a5098148e` moves Array.isArray under catch; `12dd8c1cd83bff603d0fbca090c37119d0228ee0` corrects explicit undefined test fixture. Historical RED source run retained and separately retested GREEN |
+| Retest fixed code SHA | `12dd8c1cd83bff603d0fbca090c37119d0228ee0`: [Portal CI #41672877119](https://github.com/ntdung-tds/iaict-portal/actions/runs/41672877119) **4/4 PASS**, 60 Vitest files / **633/633 PASS**, local Chromium job PASS. This verifies only pure unconnected B3.3 helper on that immutable source SHA; final docs-HEAD and postmerge checks remain separate |
+| Public staging Chromium | [Staging acceptance #41672877117](https://github.com/ntdung-tds/iaict-portal/actions/runs/41672877117) **PASS** for public/browser smoke on *previous Worker deployment*; not evidence that B3.3 media code is running on staging. Postmerge readback separately required |
+| Real CMS Media | `CMS-MEDIA-001..012` remain **PLANNED/NOT_RUN**. No scanner, actual D1 CAS, R2 write, permitted MIME-size policy, real role login or upload E2E |
+| Registry and synchronization | **127** canonical case definitions unchanged / **15** Media; Google Master QA v2.15 previously readback; no case content changes |
+| CI governance regression | On docs HEAD `63a29e5b8197f87cdfb6122406b70f84a054f633`, [CI #41673147492](https://github.com/ntdung-tds/iaict-portal/actions/runs/41673147492) verify FAIL **INVALID_MOMENT_ID**; revised live/snapshot ID separator in commits `d5e599f9` and `0ff68b55`. Original documentation failure preserved; exact final HEAD CI still required |
+| Owner/environment | All MED-DEC-01..07 **PROPOSED / NOT APPROVED**. IAM PAUSED, SRS FROZEN, no Worker deploy, staging/production/D1/R2/Access mutation or screenshots. QA media private [Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3), **NOT_CAPTURED / NO_IMAGE_REQUIRED** |
+
+
+
+## RUN-MEDIA-20261103-09 — B3.3 merge readback and independent postmerge gates
+
+| Field | Evidence and strict scope |
+| --- | --- |
+| PR/merged SHA | [PR #91](https://github.com/ntdung-tds/iaict-portal/pull/91) MERGED to development at `79e401e00b7f7426ba4cc9d1047734d21a7a007a` |
+| Final premerge gate | `9961978df0696da2e1fc6e582aab91fe86aa1dff`: [portal-ci #41673789698](https://github.com/ntdung-tds/iaict-portal/actions/runs/41673789698) **4/4 PASS**, [public staging #41673789867](https://github.com/ntdung-tds/iaict-portal/actions/runs/41673789867) **PASS** |
+| Postmerge source CI | [portal-ci #41674297770](https://github.com/ntdung-tds/iaict-portal/actions/runs/41674297770) **4/4 PASS** on exact merge SHA, including verify, local workerd, browser-visual, ancestry |
+| Postmerge public staging | [staging-acceptance #41674297780](https://github.com/ntdung-tds/iaict-portal/actions/runs/41674297780) **PASS 1/1**, both real public Chromium and repeated public HTTP availability probe succeeded; public old deployed Worker smoke only, never B3.3 helper live E2E |
+| QA/regressions | Original `RUN-MEDIA-20261103-08` preserves red→fix→green source CI (633/633). **127 canonical cases / 15 Media**, no new case IDs; `CMS-MEDIA-001..012` hosted scanner/API/D1/R2 and authorized browser remain **PLANNED/NOT_RUN** |
+| Operational changes | No new Worker deployment, D1 migration, hosted R2 object read/write/delete, IAM/Access, SRS, production or handover. All seven MED-DEC decisions remain PROPOSED. No screenshot required |
+
+
+
+## RUN-MEDIA-20261104-01 — B3.4 bounded async stream source-only RED → FIX → RETEST
+
+| Field | Actual evidence / strict boundary |
+| --- | --- |
+| Workstream | [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39), [PR #93](https://github.com/ntdung-tds/iaict-portal/pull/93), `CHG-MEDIA-R2-20261104-01`; pure unconnected `lib/media-stream-contract.ts` + `lib/media-stream-contract.test.ts` |
+| Initial RED | Source SHA `a61e668efdeeaa6493dc799f591633b325b51c52`, [Portal CI #41723161906](https://github.com/ntdung-tds/iaict-portal/actions/runs/41723161906) verify **FAIL**: **645 PASS / 2 FAIL** of 647 Vitest. Case 1: intrinsic `byteLength` also accepts `Uint16Array` but stream contract requires byte chunks. Case 2: local fixture helper's default parameter replaced an explicit undefined policy; test harness mismatch, not a live security bypass. |
+| First repairs | Source `c8d232ab4944558cf76f96b1b7474a73ec18fa6c` rejects all non-`Uint8Array` chunks before intrinsic length read. Fixture SHA `bc5bcad89c9c663bd32c627e49154ec3cfd977a4` passes explicit undefined directly to function under test. Original RED preserved; corrected SHA `bc5bcad8` [portal CI #41723362864](https://github.com/ntdung-tds/iaict-portal/actions/runs/41723362864) **4/4 PASS and 647/647 Vitest**, [public staging #41723362918](https://github.com/ntdung-tds/iaict-portal/actions/runs/41723362918) **PASS old Worker** |
+| Independent source review RED | Test-first SHA `836578ab986fcc70bf11fa3675af6c7bb5cae75e`, [Portal CI #41723921545](https://github.com/ntdung-tds/iaict-portal/actions/runs/41723921545) **FAIL 647/650**: changing `item.value` getter allowed length/header mismatch; changing iterator `.next` getter swapped method between validation and consumption; non-boolean `done` was treated as truthy. Confirmed all three reproducers in live CI, separate from initial 2 failures. |
+| Independent review fix | Source SHA `0cfdf1abfd10ad8808ec85948fd46825343cccdb` snapshots iterator next, done and each chunk once, rejects malformed done markers; [portal CI #41724127069](https://github.com/ntdung-tds/iaict-portal/actions/runs/41724127069) **4/4 PASS, 650/650 Vitest**. Public staging at this source SHA separately checked; final docs HEAD still requires own CI |
+| Actual source test coverage | **17** local synthetic Vitest assertions cover maxBytes/maxChunks, split/chunked over limit, zero chunk loops, invalid policy/input, Proxy/getters, native typed array length, async iterator cancellation and malicious iterator accessors. No HTTP/R2 service or scanner invoked |
+| Public staging first attempt — **FAIL** | [staging acceptance #41724126823](https://github.com/ntdung-tds/iaict-portal/actions/runs/41724126823), source SHA `0cfdf1abfd10ad8808ec85948fd46825343cccdb`: Chromium **23 PASS / 1 FLAKY** (initial HTTP 503 at `/san-pham-nen-tang` 320px; retry of that browser case passed), then repeated HTTP probe **21/24 PASS and 3/24 HTTP 503** on `/` and `/tin-tuc`. Workflow concluded **FAIL**; repeated 200 responses did not erase failure. [Ops Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) still OPEN; fail isolated to *old deployed Worker*, unrelated to unwired B3.4 code. |
+| Public staging failed-job rerun | Same [run #41724126823](https://github.com/ntdung-tds/iaict-portal/actions/runs/41724126823) retry of the failed job **PASS**: 24/24 real public Chromium and 24/24 repeated HTTP probes returned 200, 0 observed 503. **Original FAIL 3/24 remains valid and is NOT erased by retry**; [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) updated and remains OPEN. Cloudflare GET-only readback: staging Worker `1b8cfe71-88ef-4e21-8937-4f8590daaba4` since 2026-10-31; production `e7c703f7-fc4c-4313-b14c-0a2c94e0613d` since 2026-10-15, neither changed. No B3.4 hosted upload E2E. |
+| Existing QA baseline | **127 cases** / **15 Media**; no new/edited canonical case. `CMS-MEDIA-001..012` (including `CMS-MEDIA-004` hosted stream enforcement) **PLANNED/NOT_RUN**; Google Master v2.15 remains unchanged |
+| Mutation / approvals | **NONE** to Worker, R2/D1, Access, IAM, production or SRS. All `MED-DEC-01..07` still PROPOSED; owner release/policy approval NOT_GIVEN. No screenshot required; future private QA evidence only in [Drive folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
+
+
+
+## RUN-MEDIA-20261104-02 — B3.4 exact merged SHA and postmerge source/runtime boundaries
+
+| Field | Evidence and explicit limitations |
+| --- | --- |
+| Merge | [PR #93](https://github.com/ntdung-tds/iaict-portal/pull/93) MERGED into development at SHA `3ad07ef3c34bf7a1e7a95a4fccc5164d5c629fdb`; prior PR exact docs head `4dd7d5d6fa2e77f3d86e5f1fa35e0ae1a2be0bc4` |
+| Final premerge CI | [Portal CI #41725367275](https://github.com/ntdung-tds/iaict-portal/actions/runs/41725367275) **4/4 PASS**, [real public staging #41725367238](https://github.com/ntdung-tds/iaict-portal/actions/runs/41725367238) **PASS** on previous deployed Worker; no hosted Media B3.4 upload |
+| Postmerge Portal CI | [#41725885901](https://github.com/ntdung-tds/iaict-portal/actions/runs/41725885901) **4/4 PASS** at exact merge SHA |
+| Postmerge public staging | [#41725885741](https://github.com/ntdung-tds/iaict-portal/actions/runs/41725885741) **PASS 1/1** (real public Chromium + availability probe on old deployed Worker), targets previously deployed Worker; cannot validate unwired B3.4 helper |
+| Original failure history | [RUN-MEDIA-20261104-01](../qa/IAICT_TEST_RUNS.md) preserves 2 RED→GREEN rounds: initial 645/647, independent review 647/650, final source [650/650 PASS](https://github.com/ntdung-tds/iaict-portal/actions/runs/41724127069). Old Worker staging [#41724126823](https://github.com/ntdung-tds/iaict-portal/actions/runs/41724126823) first failed 3/24 HTTP 503 with 1 flaky Chromium, rerun 24/24 browser + 24/24 HTTP PASS. [Operations #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains OPEN |
+| QA coverage | 127 canonical case definitions (15 Media) unchanged. `CMS-MEDIA-001..012` remain **PLANNED / NOT_RUN**. B3.4 pure stream inspector does not impose a live MIME/size/chunk policy, scanner, verified ownership or D1/R2 storage transaction |
+| Boundary | No Worker deployment, staging/prod R2 writes, hosted D1 changes, Access IAM mutations, SRS edits or source Drive handover. MED-DEC-01..07 still PROPOSED. QA screenshots NO_IMAGE_REQUIRED; future restricted Drive [folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) |
+
+
+
+## RUN-MEDIA-20261104-03 — Delegated policy v1 and private admission RED → FIX → GREEN (source only)
+
+| Field | Evidence and strict scope |
+| --- | --- |
+| Owner authorization | User statement **2026-11-04** delegates reasonable Media R2 policy selection to AI Technical Lead. [ADR-MEDIA-20261104-01](../adr/ADR-MEDIA-20261104-01.md) ACCEPTED_FOR_STAGING_IMPLEMENTATION, `CHG-MEDIA-R2-20261104-02`; **not** chốt SRS, production approval or scanner availability |
+| Scope | [PR #95](https://github.com/ntdung-tds/iaict-portal/pull/95) adds versioned `MEDIA_POLICY`, scoped CMS role/state guards, source-only `planPrivateMediaAdmission` that generates quarantine-only opaque keys after preflight. **No new HTTP route, Worker import, D1 migration/row, R2 object write, scanner, derivative or publish API.** |
+| Initial RED CI | Commit `94f784d954a3bc4ac752af6d79ff048aaba7d21e`, [Portal CI #41730471532](https://github.com/ntdung-tds/iaict-portal/actions/runs/41730471532) verify **FAIL**: **661 passed / 2 failed** of 663. (1) allowed MIME array not deeply frozen, (2) malicious role Proxy getter threw outside guarded snapshot. Both security regressions repaired in `ed9edad2e82d847e448d4b21abb08450d49afa8e`. |
+| First GREEN | Source SHA `ed9edad2e82d847e448d4b21abb08450d49afa8e`, [Portal CI #41730696244](https://github.com/ntdung-tds/iaict-portal/actions/runs/41730696244) **4/4 PASS**, library case contracts fixed |
+| Independent gate RED | Source `006fb6b294ee93d6e226c2601d5ac35212274ad9`, [Portal CI #41731001162](https://github.com/ntdung-tds/iaict-portal/actions/runs/41731001162) verify **FAIL**: **662 passed / 2 failed** of 664. Confirmed scanner-unconfigured publish/review/serve decisions could be marked allowed and forged trusted flags could indicate a public object. Fail-closed fix `91c59eabb89622d26c8ef5aa0b71d18fa05171a8`, tests updated `052da31cb56b5a50152a2c2e9894060d254eceab`. |
+| Final source GREEN | Source SHA `052da31cb56b5a50152a2c2e9894060d254eceab`, [Portal CI #41731336930](https://github.com/ntdung-tds/iaict-portal/actions/runs/41731336930) verify **PASS**, **63 Vitest files / 672 of 672 PASS** including 8 private admission unit tests; separate browser/other jobs must still be checked before merge |
+| Final checkpoint governance regression | PR docs source SHA `2b8e5eb4a0c3538cfcaf3f3ca1d645e6f5ff3d39`, [CI #41732162070](https://github.com/ntdung-tds/iaict-portal/actions/runs/41732162070) verify **FAIL SNAPSHOT_NOT_MARKED_IMMUTABLE** due snapshot heading not matching verifier; corrected only heading in `7dc8c8bdbe384a6911085a454669767459977bbe`. This documentation red remains in history; final SHA CI pending. |
+| R2 and scanner | `MEDIA_POLICY.scan.serviceConfigured=false`, so even synthetic claims with trusted flags **cannot** allow review, publish or byte-serving. An approved **architecture choice** of isolated ClamAV-compatible scanning is **not an operating scanner**. `CMS-MEDIA-001..012` hosted tests remain **PLANNED/NOT_RUN**; no D1/R2/real-role browser acceptance |
+| Public staging | GitHub workflow for PR #95 tests **previous deployed Worker** only. Do not equate with actual B3.5 behavior; [Ops Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) intermittent 503 remains OPEN. |
+| QA registry / evidence | **127 unchanged canonical cases (15 Media)**, Google QA Master v2.15 unchanged; these new source fixtures are supplementary, not new canonical IDs. No screenshot required for source tests; any later authenticated media photos only in private [Drive QA](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3). |
+| Safety | No IAM/Access changes, staging/production deployment, live D1/R2 mutation, SRS baseline edit, credentials or source handover. Owner has selected MED-DEC policy **for staged implementation**, not final live feature acceptance. |
+
+
+
+## RUN-MEDIA-20261104-04 — B3.5 policy PR #95 exact postmerge evidence
+
+| Field | Exact evidence and acceptance boundary |
+| --- | --- |
+| Approved technical decision | [ADR-MEDIA-20261104-01](../adr/ADR-MEDIA-20261104-01.md) is **ACCEPTED FOR STAGING IMPLEMENTATION** by user delegation 2026-11-04; **not** production release or SRS baseline acceptance |
+| PR | [#95](https://github.com/ntdung-tds/iaict-portal/pull/95) **MERGED** at `0e6e6c1359aa54630ce88126216dcf8282d58ea9` |
+| Final premerge HEAD | `337709b07ff5d5d51df9ccaa3803b9f9c3150804`, [portal CI #41732758712](https://github.com/ntdung-tds/iaict-portal/actions/runs/41732758712) **4/4 PASS**, [public staging #41732758427](https://github.com/ntdung-tds/iaict-portal/actions/runs/41732758427) **PASS** against older deployed staging Worker |
+| Exact postmerge | [Portal CI #41733320486](https://github.com/ntdung-tds/iaict-portal/actions/runs/41733320486) **4/4 PASS**, [public staging #41733320046](https://github.com/ntdung-tds/iaict-portal/actions/runs/41733320046) **PASS**, both at exact merge SHA; public Chromium did **not** exercise new Media code (no Worker deploy) |
+| Test-first trace | [RUN-MEDIA-20261104-03](#run-media-20261104-03--delegated-policy-v1-and-private-admission-red--fix--green-source-only) preserves source RED 661/663 → GREEN, independent RED 662/664 → GREEN **672/672 Vitest** and late documentation validation regression; full source policy + private plan only |
+| Real scanner | **NOT CONFIGURED**, `MEDIA_POLICY.scan.serviceConfigured=false`; review/publish/serve denied even with synthetic flags. ClamAV-compatible is a selected architecture/provider class, not an active service |
+| Canonical QA status | **127 cases / 15 Media** unchanged. `CMS-MEDIA-001..012` hosted R2/D1 upload/security/real-role E2E **PLANNED/NOT_RUN**. Google QA Master v2.15 unchanged; no new test case IDs |
+| Environment and rollback | No Worker deployed, no D1 schema/data mutation, no R2 object operations, no Access/IAM/production changes, SRS FROZEN. Rollback source via revert of PR #95, not Cloudflare rollback. [OPS Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) intermittent old staging 503 remains OPEN. Media screenshots NO_IMAGE_REQUIRED. |
+
+
+
+## RUN-MEDIA-20261104-05 — B3.6 owner-requested image/file compression: scoped source and test history
+
+| Item | Test evidence and release boundary |
+| --- | --- |
+| Owner requirement | User explicitly requested “Nhớ thêm nén ảnh, nén tệp nhé” on 2026-11-04. [ADR-MEDIA-20261104-02-COMPRESSION](../adr/ADR-MEDIA-20261104-02-COMPRESSION.md), `CHG-MEDIA-R2-20261104-03`, [PR #97](https://github.com/ntdung-tds/iaict-portal/pull/97) |
+| Source implementation | `lib/media-image-optimization.ts` plans **image derivative encoder settings ONLY** (not actual image output); `lib/media-text-compression.ts` **actually gzip compresses a synthetic local UTF-8 text/csv/json buffer** using bounded CompressionStream and no upload route. Neither module is imported by Worker/R2/D1/IAM or allowed to bypass scan |
+| Scope | 1920px max display, 480px max thumbnail, no upscaling, JPEG 82%, WebP 80%, PNG lossless; requires trusted full decode + EXIF strip, scanner still missing. Gzip text ≤5 MiB, only keep if ≥5% savings; explicit UTF-8/size/MIME failures, skip larger encoding. ZIP batch download noted as **FUTURE/NOT_IMPLEMENTED**, non-image upload **NOT_ALLOWED** |
+| First actual RED | Initial [CI #41738993427](https://github.com/ntdung-tds/iaict-portal/actions/runs/41738993427) verify FAIL before Vitest due strict TypeScript `CompressionStream` input type mismatch, `ReadableStream<Uint8Array>` vs `BufferSource`; corrected to BufferSource stream `305a2ed9`, `e3794e6f` |
+| Second actual RED | [CI #41739162192](https://github.com/ntdung-tds/iaict-portal/actions/runs/41739162192) verify FAIL TypeScript `Uint8Array<ArrayBufferLike>` cannot be enqueued as `BufferSource`, solved by explicitly preserving newly copied `Uint8Array<ArrayBuffer>` type at `99e7ec2f`. **Both failures preserved**; do not call local test PASS until exact final CI completes |
+| Final scope / CI | [CI #41739314575](https://github.com/ntdung-tds/iaict-portal/actions/runs/41739314575) **verify PASS; 65 Vitest files / 685 of 685 tests PASS** at source SHA `99e7ec2fb3d8ab041bd9634e94829d6faafa8980`; other jobs may still be running; staging public [#41739314580](https://github.com/ntdung-tds/iaict-portal/actions/runs/41739314580) **PENDING**, tests old deployed Worker only. Real image decode, re-encode, scan, R2 compression readback, authenticated upload and browser interactions are **NOT_RUN** |
+| Canonical QA / security | Existing **127 test definitions, 15 CMS-MEDIA** unchanged, Google QA Master v2.15 untouched. Hosted `CMS-MEDIA-001..012` remain PLANNED/NOT_RUN. Scanner service `serviceConfigured=false` (hard stop), no D1/R2/Cloudflare IAM/staging/production mutations, frozen SRS preserved. Screenshot not applicable for source-only tests; future evidence only restricted QA Drive. |
+| Ops dependency | [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains open for earlier public staging intermittent 503 and network errors. Unit/pass or public smoke on old deployed Worker is not Media B3.6 live acceptance. |
+
+
+
+## RUN-MEDIA-20261104-06 — B3.7 combined local Media compression tools
+
+| Field | Exact evidence / limits |
+| --- | --- |
+| Owner | 2026-11-04 "Hãy gộp các task trong phần này lại và hoàn thành nó" follows approved image/file compression requirement. [PR #98](https://github.com/ntdung-tds/iaict-portal/pull/98), `CHG-MEDIA-R2-20261104-04` |
+| Scope | **Real local-browser** image JPEG/PNG/WebP derivatives; **real ZIP32** archive from user-selected local files with CRC32/DEFLATE/STORE, safe UTF-8 names and bounded bytes/count; prior real gzip text/csv/json surfaced via responsive CMS UI `/admin/tools/compression`. No uploads to server/R2, no production Worker |
+| Tests | Vitest `lib/media-local-zip.test.ts` verifies local file records, central directory, CRC metadata and inflateRaw round-trip plus overflow/traversal/duplicate/proxy. `lib/media-local-image.test.ts` validates type/magic, animation flags, size and hostile inputs. `e2e/media-local-compression.spec.ts` exercises real Chromium generated PNG, ZIP and gzip downloads and 320px viewport, once local browser workflow picks it up |
+| Initial RED | [portal-ci #41742244914](https://github.com/ntdung-tds/iaict-portal/actions/runs/41742244914) **FAIL** at first PR SHA `f93e1c3e5e08b08bf14d3ecbfc7d4267cf8b027c`; `verify:qa` guard correctly blocked new QA-sensitive `components/admin/cms-shell.tsx` change with missing test-run/plan record. This entry fixes the governance failure, preserving RED history |
+| Second actual RED | [Portal CI #41742405838](https://github.com/ntdung-tds/iaict-portal/actions/runs/41742405838) **verify FAIL**: 693/696 Vitest passed, 3 failed — Node `inflateRawSync` test expected Buffer vs Uint8Array, and revoked item Proxy threw on `Array.isArray`. Source fixed at `b244457f` and test normalized Node Buffer at `73c55639`; negative revoked input-array test added |
+| Source GREEN | Source SHA `73c55639a94e6c3fced461b27fe4c24fa161f195`, [Portal CI #41742599412](https://github.com/ntdung-tds/iaict-portal/actions/runs/41742599412) **4/4 PASS, 67 Vitest files / 696 of 696 PASS**. This proves ZIP32 DEFLATE/STORE and local image guard at source level; live browser binary download tests not yet covered by this workflow SHA |
+| Browser coverage fix | Existing CI browser-visual job originally ran a fixed six-file Playwright list; PR #98 now explicitly adds `e2e/media-local-compression.spec.ts` to `.github/workflows/ci.yml`. CMS session on local Chromium is **MOCK**, image/ZIP/gzip bytes and downloads are real. Do not claim browser PASS until exact workflow finishes |
+| Local browser initial RED | [Portal CI #41742732723](https://github.com/ntdung-tds/iaict-portal/actions/runs/41742732723): **browser-visual FAIL**, 38 PASS / 3 new Media compression Playwright **TIMEOUT 30s** each. Identity shell mock explicitly labeled in tests `f8b37bd4`; another [CI #41742812277](https://github.com/ntdung-tds/iaict-portal/actions/runs/41742812277) still 38 PASS/3 timeout. To distinguish page navigation from compression failure, tests now use `domcontentloaded` + 15s timeout + explicit HTTP status at `dea00733`; investigation/retest ongoing. No false browser PASS |
+| Browser retest RED | [Portal CI #41743288621](https://github.com/ntdung-tds/iaict-portal/actions/runs/41743288621) browser-visual **FAIL** 38 pass/3 Media timeouts even with DOM-ready navigation; [CI #41743781927](https://github.com/ntdung-tds/iaict-portal/actions/runs/41743781927) confirmed all three pages **HTTP 200**, but no compression-result marker, so the actual failure was selecting file before client handlers hydrated. Not an image/ZIP/gzip byte failure. |
+| Browser GREEN | Source commit `38ad91890d5881eeacd6766ed6843e2064d34ec1` waits for role-scoped CMS nav after mocked session `useEffect` before triggering file selectors. [Portal CI #41744316041](https://github.com/ntdung-tds/iaict-portal/actions/runs/41744316041) **4/4 PASS**, **41/41 real local Chromium tests PASS** (3 new Media), including downloaded PNG magic bytes, ZIP local header, gzip gunzip round-trip and 320px horizontal-overflow check. Test setup **MOCKS CMS shell session only**, *real* browser compression/file downloads; no live Access login or deployed Media API. |
+| Final boundaries | Final docs-head exact PR SHA CI and public staging **PENDING**. Public smoke still targets old deployed Worker. No scanner, D1/R2 writes/reads, R2 media upload, publishing, or authenticated hosted Media browser test; `CMS-MEDIA-001..012` remain **NOT_RUN** and 127 canonical QA definitions unchanged. All original failure runs retained. |
+| Security/release | Existing scanner not configured, no backend full decode/AV/D1 R2 quota/upload/permission integration, hosted CMS-MEDIA-001..012 **NOT_RUN**. Local tool handles selected files on-device only; `MEDIA_POLICY.scan.serviceConfigured=false` still denies CMS publication/serving. IAM PAUSED, SRS FROZEN, production HOLD. No screenshots to GitHub; private QA Drive only |
+
+
+
+## RUN-MEDIA-20261104-07 — B3.7 exact merge and postmerge acceptance: real LOCAL compression, not R2
+
+| Field | Evidence / precise acceptance scope |
+| --- | --- |
+| Development merge | [PR #98](https://github.com/ntdung-tds/iaict-portal/pull/98) **MERGED** into `feat/staging-native-login-r2-20261030` at exact SHA `f91c0b4fe20139d6fa2ffb45324f13ff0dea23c6`. Change `CHG-MEDIA-R2-20261104-04` and [ADR-MEDIA-20261104-02-COMPRESSION](../adr/ADR-MEDIA-20261104-02-COMPRESSION.md) |
+| Final PR HEAD | `53d5fbbe5ecfafe0c21024377312fa64043a2e91`, [Portal CI #41744861762](https://github.com/ntdung-tds/iaict-portal/actions/runs/41744861762) **4/4 PASS** including **41/41 REAL LOCAL Chromium** and **696/696 Vitest**; [public staging #41744861538](https://github.com/ntdung-tds/iaict-portal/actions/runs/41744861538) **PASS on older deployed Worker** |
+| Exact postmerge | [Portal CI #41745293756](https://github.com/ntdung-tds/iaict-portal/actions/runs/41745293756) **4/4 PASS** and [public staging #41745293772](https://github.com/ntdung-tds/iaict-portal/actions/runs/41745293772) **PASS** at exact merge SHA. Public smoke **did NOT** execute new local compression UI, since no Worker deployment occurred |
+| What worked | Real local canvas image PNG output/download (JPEG/PNG/WebP encoder uses browser), real ZIP32 downloaded bytes and CRC32/DEFLATE archive source test, downloaded gzip roundtrip, responsive 320px local viewport, guarded filename and payload limits. Playwright CMS shell session **MOCK ONLY**, actual file bytes, browser codec and file downloads **REAL** |
+| Failures retained | [RUN-MEDIA-20261104-06](#run-media-20261104-06--b37-combined-local-media-compression-tools) preserves first QA guard RED, ZIP 693/696 RED and four rounds of local Chromium 38/41 with timeouts, fixed by awaiting React hydration |
+| Not tested / not deployed | **NOT_RUN/BLOCKED:** new UI on deployed Worker; genuine Access logged-in user file workflows; server-side image trust/metadata stripping/ClamAV scanner, D1/R2 upload/storage, quotas, actual R2 ZIP of CMS assets, hosted `CMS-MEDIA-001..012`. Local tool never uploads file bytes to server. **No production/Cloudflare Access/IAM changes**; SRS FROZEN; scanner flag false |
+| QA registry/evidence | **127 canonical definitions / 15 Media** unchanged, Master Google v2.15 unchanged. No screenshots/video artifacts on GitHub (none needed for unit/source). If future real browser imagery is needed, restricted [QA Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) only. [Ops #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains OPEN |
+
+
+## RUN-MEDIA-20261104-08 — B3.8 guarded D1/R2 private quarantine source integration
+
+| Field | Status / immutable reference |
+| --- | --- |
+| Owner instruction | 2026-11-04 “Hoàn thành phần này” after PR98/99. Scope: complete Media R2 server side where feasible; staged release gates remain mandatory. [PR #100](https://github.com/ntdung-tds/iaict-portal/pull/100) |
+| Source implemented | `0025_media_r2_quarantine.sql` forward-only D1 ledger; `lib/media-r2-quarantine.ts` role-gated, cross-origin-denied, bounded streamed JPEG/PNG/WebP signature + SHA256, atomic quota/idempotency and R2 private put compensation; `lib/media-r2-cleanup.ts` D1 CAS purge retry; `app/api/admin/cms/media/quarantine/route.ts` verifies actor via existing D1 CMS roles. `MEDIA_R2_QUARANTINE_ENABLED=false` in config. **No scanner, server image reencode, public reading or hosted upload enabled** |
+| Test strategy | `lib/media-r2-quarantine.test.ts` uses actual disposable Miniflare D1 with unmodified `0001_core.sql` and new migration `0025`; synthetic memory R2 adapter. Tests reserve/audit, exact R2 private key, MIME/Origin/role denial, idempotency conflict, strict upload caps, R2 failure compensation and TTL purge CAS. Not a real Cloudflare hosted upload |
+| RED #1 | [Portal CI #41750506047](https://github.com/ntdung-tds/iaict-portal/actions/runs/41750506047) **FAIL**: RC integrity rejected new unreviewed 0025 migration; typecheck test reader maxChunks literal inferred as `4096`. Fixed with explicit numeric test contract `6f81ea61`, and SHA-pinned migration `c8320af6` in `scripts/verify-rc-integrity.mjs` (no weakening old 0022–24 checks). |
+| RED #2 | [Portal CI #41750695532](https://github.com/ntdung-tds/iaict-portal/actions/runs/41750695532) **FAIL**: first Miniflare D1 suite 8 skipped due comment-only terminal SQL migration chunk. Loader fixed at `929172bb`, preserving migration bytes. |
+| Source GREEN #1 | [Portal CI #41750872626](https://github.com/ntdung-tds/iaict-portal/actions/runs/41750872626) **4/4 PASS; 704/704 Vitest, 68 files**, 8 new private D1 + mock R2 regression tests. No hosted R2 touched. |
+| RED #3 / expanded local R2 | [Portal CI #41751376723](https://github.com/ntdung-tds/iaict-portal/actions/runs/41751376723) **FAIL** TS mismatch for Miniflare `getR2Bucket` type; source test adapter corrected at `37f99941`, regex test corrected `55d866e6`. |
+| Source GREEN #2 | [Portal CI #41751506068](https://github.com/ntdung-tds/iaict-portal/actions/runs/41751506068) **4/4 PASS, 706/706 Vitest, 68 files**; 10 B3.8 tests include actual isolated Miniflare R2 bytes readback and atomic two-in-flight quota denial, alongside synthetic failure injection. |
+| LOCAL WORKER + D1/R2 RBAC GREEN | Exact source SHA `765cd6a33cf63385fefca5354f762783e7a53437`, [Portal CI #41752012968](https://github.com/ntdung-tds/iaict-portal/actions/runs/41752012968) **4/4 PASS, 707/707 Vitest, 68 files**: added a test to existing native Worker/D1 suite with 8 synthetic role sessions (admin/admin2/editor can upload to private quarantine; reviewer/viewer/news_* denied, forged internal header, wrong Origin and disabled flag rejected). `vinext` HTTP dispatch **MOCK ONLY**, Worker ingress, native D1 session, role SQL and disposable Miniflare D1/R2 are actual local code. **NOT a hosted Access browser test**. |
+| Final PR docs-head/public | Exact final PR head CI and public staging acceptance (old Worker) **PENDING**. No hosted 0025 migration, no scanner attestation, no trusted decoder, no actual logged-in staging roles. All earlier RED attempts remain recorded and are NOT retroactively PASS. |
+| Security / release gates | Scanning service **NOT CONFIGURED** (`MEDIA_POLICY.scan.serviceConfigured=false`), service attestation and trusted image decoding are absent; D1 migration **NOT APPLIED on hosted staging**, no R2 writes/deploy; genuine Access/CMS account E2E blocked. `CMS-MEDIA-001..012` hosted **NOT_RUN**, 127 canonical QA case IDs unchanged, Google QA Master unchanged, production HOLD and IAM owner-PAUSED, SRS FROZEN |
+| Evidence | No screenshots for local source tests. Hosted browser and R2/D1 audit proof later to restricted QA Drive only; [Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39) stays OPEN |
+
+
+## RUN-MEDIA-20261104-09 — B3.8 exact final-head and postmerge source acceptance
+
+| Field | Actual observed result |
+|---|---|
+| Timezone / scope | 2026-11-04, ICT; documentation after source-only [PR #100](https://github.com/ntdung-tds/iaict-portal/pull/100) merge. NO hosted release |
+| Final PR HEAD | `b94b04e5c133abba655f8c15151b7fc22b76af91`; [Portal CI #41752365334](https://github.com/ntdung-tds/iaict-portal/actions/runs/41752365334) **PASS 4/4 jobs**; [staging-acceptance #41752365211](https://github.com/ntdung-tds/iaict-portal/actions/runs/41752365211) **PASS old deployed Worker only** |
+| Exact merged development SHA | `ef3d095661342546b2ed8d144315e8ed807f6cee`; [Portal CI #41762720634](https://github.com/ntdung-tds/iaict-portal/actions/runs/41762720634) **PASS 4/4 jobs**; [staging-acceptance #41762720839](https://github.com/ntdung-tds/iaict-portal/actions/runs/41762720839) **PASS old deployed Worker only** |
+| Local D1/R2/roles | `RUN-MEDIA-20261104-08` and CI contain real disposable Miniflare D1/R2, synthetic memory R2 fault injection, native Worker/D1 role matrix with mocked vinext dispatch. This is NOT Cloudflare-hosted upload and NOT genuine Access browser session |
+| Security observation | New source gate `MEDIA_R2_QUARANTINE_ENABLED=false`; scanner `serviceConfigured=false`, no image trust scan/decoder/metadata strip, public byte GET or promotion; 0025 migration NOT applied to staging D1; 0 new confirmed hosted R2 writes |
+| Cloudflare Worker readback | Staging deployment `754b0509-e754-410c-8dff-46015d162a89`; production `a01a3743-ac78-4a19-a990-581fe9235751`; both unchanged at inspection. No deploy from merge |
+| Separate Preview discrepancy | Cloudflare Preview build `9d5802a1-88f1-4f21-8198-09230bf4cbdd` FAIL at `npx wrangler preview` vs `.cloudflare/output`; Cloudflare recommends `cf previews deploy`. Existing [Issue #32](https://github.com/ntdung-tds/iaict-portal/issues/32), not silently green and not changed while production HOLD |
+| Hosted case verdict | `CMS-MEDIA-001..012` **NOT_RUN/BLOCKED**; scanner/decoder/hosted migration/R2/real-role browser **NOT_RUN**. 127 canonical QA test definitions, Google Master v2.15 unchanged |
+| Evidence | GitHub CI URLs for safe text logs; no screenshot or credentials on GitHub, no new Drive visual proof. QA Drive restricted folder remains the sole allowed future visual destination |
+| Release disposition | **PASS only for source/isolated local + old-Worker public smoke**; staged Media API + production **NO-GO**; IAM PAUSED, SRS FROZEN, Owner production approval NOT GIVEN; Issue #39 OPEN |
+
+
+## RUN-MEDIA-20261104-10 — B3.9 request-scoped D1/R2 and quota abuse remediation
+
+| Field | Actual / status |
+|---|---|
+| Scope | B3.9 source-only security hardening; 2026-11-04 ICT, PR (in review) against `feat/staging-native-login-r2-20261030` |
+| Code | `lib/cloudflare-db.ts`, `lib/media-r2-runtime.ts`, `worker.ts`, `lib/media-r2-quarantine.ts` |
+| Tests | `lib/media-r2-request-scope.test.ts` (concurrent contexts); `lib/media-r2-quarantine.test.ts` (failed hourly reservation and PURGE_PENDING stored bytes, actual disposable local Miniflare D1) |
+| First source test / CI | **NOT_RUN / PENDING** at record creation; append exact reviewed SHA and observed PASS/FAIL later, never assume green |
+| Browser | Local Chromium/public staging regression **PENDING**; new backend route not deployed. Authenticated hosted CMS-MEDIA-001..012 **NOT_RUN** |
+| Gate | Scanner false, trusted server decode absent, 0025 hosted NOT_APPLIED, no hosted R2 write, production HOLD, IAM PAUSED, frozen SRS |
+| Evidence | CI text links after execution. No screenshot or secret in GitHub. Private QA Drive only for future authenticated visual evidence |
+| Disposition | SOURCE_IN_REVIEW / no hosted Media release |
+
+
+## RUN-MEDIA-20261104-11 — B3.9 source review, staging 503 recurrence and actual merge
+
+| Field | Actual observed evidence |
+|---|---|
+| Scope/date | 2026-11-04 ICT; B3.9 request-scoped Media R2/DB and failure/pending quotas, SOURCE ONLY |
+| Exact PR final head | `ed40a02f279c316101c0743ae77efcf84fe16bb2` · [PR #102](https://github.com/ntdung-tds/iaict-portal/pull/102) |
+| GitHub Portal CI | [#41766771294](https://github.com/ntdung-tds/iaict-portal/actions/runs/41766771294) **PASS 4/4**, **713/713 Vitest** (69 test files), **41/41 real LOCAL Chromium** (CMS session MOCK) |
+| Actual public staging attempt 1 | [#41766771258, attempt 1](https://github.com/ntdung-tds/iaict-portal/actions/runs/41766771258) **FAIL**: 24/24 hosted public Chromium PASS, 22/24 repeated GET HTTP PASS; 2 real 503 on /tin-tuc, / (CF-Ray `a55082d889e9b6cc-ORD`, `a55082e25b10a3db-ORD`) |
+| Public attempt 2 | Same run, attempt 2 **PASS**: 24/24 public Chromium and 24/24 HTTP probe, zero 503. Earlier FAIL is NOT erased or recategorized; [OPS #30](https://github.com/ntdung-tds/iaict-portal/issues/30) remains OPEN |
+| Source integration | PR #102 **MERGED** at `074b49dbe6d930dfd28c0c83c5506fff8a39d631`. Exact postmerge [Portal #41767441954](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441954) and [public old Worker #41767441923](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441923) were PENDING at record creation |
+| Scope of tests | Actual isolated Miniflare D1 quotas, concurrent Node AsyncLocalStorage contexts, real LOCAL browser rendering and actual public OLD staging Worker. No genuine hosted CMS authenticated Media upload. |
+| Deployment & acceptance | NO Worker/D1 0025/Media R2/Access/production change. Scanner false, backend decoder absent, CMS-MEDIA-001..012 NOT_RUN, 127 QA cases unchanged. Production HOLD, IAM PAUSED, SRS FROZEN |
+| Drive evidence | No screenshot captured; no GitHub photo/video/credentials. Use private QA Drive if future live authenticated screenshot evidence is generated |
+| Verdict | **PASS source/CI/LOCAL browser**; **FAIL first staging HTTP sweep / PASS rerun**, old Worker only; hosted Media E2E **BLOCKED/NOT_RUN**, production **NO-GO** |
+
+
+## RUN-MEDIA-20261104-12 — B3.9 exact merged SHA postmerge gates
+
+| Field | Actual evidence |
+|---|---|
+| Merge | PR #102 `074b49dbe6d930dfd28c0c83c5506fff8a39d631` |
+| Source CI | [Portal #41767441954](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441954) **PASS** all required jobs, same merged source code |
+| Public staging | [staging-acceptance #41767441923](https://github.com/ntdung-tds/iaict-portal/actions/runs/41767441923) **PASS on deployed OLD Worker**; not postdeployment Media testing |
+| Historic FAILURE | Premerge [#41766771258 attempt 1](https://github.com/ntdung-tds/iaict-portal/actions/runs/41766771258): 2 intermittent HTTP 503 **FAIL**; attempt 2 PASS. Both remain in [OPS #30](https://github.com/ntdung-tds/iaict-portal/issues/30), no claim root cause fixed |
+| Scope | No upload Worker deployment, no hosted 0025/R2 write, scanner/decoder absent, no authenticated CMS Media browser; CMS-MEDIA-001..012 NOT_RUN |
+| Decision | **SOURCE MERGED ACCEPTED**; **hosted Media + production HOLD**, IAM PAUSED, SRS FROZEN. No screenshot/test credentials attached. |
+
+
+## RUN-MEDIA-20261104-13 — B3.10 grouped scanner/attestation source acceptance
+
+| Field | Status and evidence |
+|---|---|
+| Scope | Isolated one-shot ClamAV/Pillow decoder and signed receipt, strict 0026 private D1 schema, R2 hash readback/CAS and derivative cleanup, **no hosted Media deployment** |
+| Exact HEAD / PR | **PENDING** at initial record; see forthcoming B3.10 PR |
+| Source unit | B3.10 HMAC forged/expired/mismatch negative cases; Miniflare D1+R2 actual synthetic byte readback, replay/cleanup; **PENDING CI** |
+| Real image processing | Python Pillow 13.0.0 on real fixture PNG/JPEG/WebP, full decode + metadata removal; ClamAV `zINSTREAM` protocol tested with **synthetic local AV socket only**, no actual malware verdict. **PENDING CI** |
+| Local Chromium | **PENDING CI**, CMS session mock; no hosted CMS login |
+| Public staging | **PENDING CI** on **old deployed Worker**, not B3.10 |
+| Actual external scanner | **NOT_CONFIGURED / NOT_RUN** (no deployed ClamAV, trusted job runner or HMAC secret). `MEDIA_POLICY.scan.serviceConfigured=false` |
+| Hosted D1/R2/browser | Migrations 0025/0026 **NOT_APPLIED**, no hosted R2 writes/readbacks, CMS-MEDIA-001..012 genuine authenticated **NOT_RUN**. Production HOLD, IAM PAUSED, SRS FROZEN |
+| Decision | SOURCE_IN_REVIEW; old staging 503 [Issue #30](https://github.com/ntdung-tds/iaict-portal/issues/30) retains past FAIL history; current run must not mask defects |
+| Drive | No screenshots produced, GitHub no images/secrets, future visuals private QA Drive only |
+
+
+## RUN-MEDIA-20261104-14 — B3.10 grouped final-head source PASS, real scanner hosted BLOCKED
+
+| Field | Observed outcome |
+|---|---|
+| Scope/date | 2026-11-04 ICT · B3.10 isolated ClamAV/Pillow signer, TS receipt verifier, forward-only 0026 private evidence, real disposable R2 readback + D1 CAS/audit/derivative purge |
+| Exact PR/final head | [PR #104](https://github.com/ntdung-tds/iaict-portal/pull/104) reviewed `4696ab9a89836991a7ff2551a16b5cf75047af01`, MERGED source `76bed3eecab94cf1c3f5bf4174d132291d5e96b4` |
+| Source CI | [Portal CI #41771159409](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771159409) **4/4 PASS**, **724/724 Vitest** (71 files), typecheck/build/migration digest graph PASS |
+| Image + ClamAV proof | **7/7 Python tests PASS** using real Pillow 13.0.0 JPEG/PNG/WebP decoder and metadata stripping; ClamAV zINSTREAM protocol confirmed against **FAKE LOCAL AV UNIX socket**, not a real ClamAV malware scan; WebP static vs animated regression included |
+| Cross-runtime receipt | Independently Python-generated HMAC signature verified by TypeScript PASS, replay/expiry/policy/hash/nonce/source revision negatives PASS |
+| D1/R2 local | Real disposable Miniflare D1 + R2 byte readback for source/derivative, private SCAN_PASSED_PRIVATE CAS/audit and eventual purge both objects PASS. No hosted D1/R2 mutation |
+| Local Chromium | **41/41 PASS** via GitHub CI, CMS identity mocked; not hosted role E2E |
+| Hosted public old Worker | [staging #41771159404](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771159404) **24/24 Chromium PASS, 24/24 repeated HTTP PASS**, no new 503 in this run. This validates OLD deployed Worker only |
+| RED→fix→retest history | [Source #41770544134](https://github.com/ntdung-tds/iaict-portal/actions/runs/41770544134) **FAIL** (3 TS typing errors); [#41770664892](https://github.com/ntdung-tds/iaict-portal/actions/runs/41770664892) **FAIL** (Pillow WebP loop/animation misclassification). Both fixes then 724/724 & 7/7 PASS on reviewed head. RED history retained |
+| Source postmerge | [Portal #41771522866](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522866) **PASS 4/4**. [old-Worker staging #41771522878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522878) **IN_PROGRESS at initial record** |
+| Hosted scanner / Media acceptance | **BLOCKED / NOT_RUN:** real isolated ClamAV daemon, job runner/auth/HMAC secret, staged D1 0025/0026, true CMS roles/Access 001..012, R2 remote bytes, scanner failover and malware fixture acceptance. Media scan flag FALSE, quarantine Worker gate FALSE |
+| Operational / SRS | No staging/production Worker deploy, no cloud D1/R2 write, no public media GET, no final Drive source handoff; IAM PAUSED, SRS FROZEN, production HOLD. Original staging 503 Issue #30 OPEN, preview #32 OPEN |
+| Evidence | CI logs are text only; no QA photos/videos or credentials on GitHub. Any later visual QA evidence goes private QA Drive |
+| Disposition | **SOURCE MERGED PASS ONLY**; genuine external scanner & Media hosted acceptance **NOT_RUN**, production **NO-GO** |
+
+
+## RUN-MEDIA-20261104-15 — B3.10 exact merged SHA postmerge verification
+
+| Field | Observed result |
+|---|---|
+| Source commit | PR #104 MERGED `76bed3eecab94cf1c3f5bf4174d132291d5e96b4` |
+| GitHub Portal CI | [#41771522866](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522866) **PASS 4/4** at exact source merge SHA |
+| Real PUBLIC staging | [#41771522878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41771522878) **PASS 24/24 Chromium and 24/24 repeated HTTP (0 503)**. Tested **OLD deployed Worker**, not B3.10 Media backend |
+| Prior failures | Source premerge failures #41770544134 (typecheck), #41770664892 (WebP), and existing unrelated OPS staging intermittent 503 [#30](https://github.com/ntdung-tds/iaict-portal/issues/30) remain recorded; successful reruns do not delete history |
+| Hosted media | No real isolated ClamAV, private runner, HMAC provisioning, D1 0025/0026 hosted migration or CMS-MEDIA-001..012 authenticated browser. **NOT_RUN / BLOCKED**, not PASS. Production HOLD, IAM PAUSED, SRS FROZEN |
+| Evidence & release | CI textual evidence only. No screenshots in GitHub, production Worker untouched, source-only merge acceptance |
+
+
+## RUN-MEDIA-20261104-16 — Actual Cloudflare staging D1 0025–0026 rollout, no Worker deploy
+
+| Field | Actual evidence |
+|---|---|
+| Target | `iaict-portal-staging-db` only, **not production**; owner-approved B3.11. No hosted Media user tests, images or object writes. |
+| Preflight | `d1_migrations` latest `0024_iaict_activation_invites.sql`, no `media_r2_quarantine_uploads` or `media_r2_scan_evidence`, `admin_users` existed. |
+| Recovery marker | Cloudflare D1 Time Travel **before** `0000088c-00000000-00005119-76aa9aed51901ec93f3e3c545bc7b1fd`. Retention-limited point-in-time recovery, **not an independent SQL export**, no automatic restore. |
+| Forward-only migration 0025 | **PASS/APPLIED** exact Git blob `c8320af6c2cc559a016858195ede064d3caa15b0`. Created private quarantine table + 3 indexes, recorded `d1_migrations` only after table readback. |
+| Forward-only migration 0026 | **PASS/APPLIED** exact Git blob `9688defdc38831f5caf7e88a07740bbe907ccf96`. Created private scan evidence table + 1 index, recorded migration only after table readback. |
+| Actual hosted readback | **PASS** both journal rows, both tables, four indexes, `COUNT(*)=0` in each Media table, `PRAGMA foreign_key_check` zero rows. |
+| Integrity check | `PRAGMA integrity_check` **NOT_RUN/UNSUPPORTED**: Cloudflare D1 API returned `SQLITE_AUTH`; not falsely marked PASS. |
+| After bookmark | `0000088c-00000012-00005119-41470e9c6ac51928d3c27fcb5c2ecbe8`. |
+| Media functionality | **BLOCKED/NOT_RUN**: no real hosted ClamAV, container API HTTP 401, job runner, HMAC secret, hosted R2 object scan or CMS-MEDIA-001..012 real role E2E. Upload policy false; Worker unchanged; production HOLD, IAM PAUSED, SRS FROZEN. |
+| Recovery limitation | Cloudflare Time Travel may overwrite unrelated newer staging writes on restore, and may expire. Do not claim full independently exported database backup. |
+| Source requirements | [B3.11 staging gate](../requirements/media-r2/MEDIA_R2_B3_11_STAGING_RELEASE_GATE_2026-11-04.md), CHG-MEDIA-R2-20261104-08; no QA images persisted to GitHub. |
+
+## RUN-MEDIA-20261104-17 — Genuine ClamAV engine CI acceptance (pending result at initial record)
+
+| Field | Status |
+|---|---|
+| Intent | REAL ClamAV signature daemon in disposable Docker with EICAR harmless signature FOUND, actual `scan_clamd` reject, safe PNG→WebP and double-scanned source/derivative, source SHA reject. No hosted staging user data. |
+| Source | `services/media-scan/real_clamd_acceptance.py`, [dedicated workflow](../../.github/workflows/media-av-real-engine-ci.yml) with loopback-bound 33199 + protected UNIX socket relay. |
+| Evidence | **PENDING CI** (only report PASS once dedicated real ClamAV job completes); B3.10's simulated UNIX socket 7/7 Python was not a genuine engine. |
+| Hosted blocker | Cloudflare Containers API **401 unauthorized**, no provisioned private scanner/job runner/HMAC binding, no real CMS access roles upload; **HOSTED BLOCKED / NOT_RUN**. |
+| Releases | No staging Worker upload flag enabled, no production modifications, SRS FROZEN and IAM PAUSED. |
+
+
+## RUN-MEDIA-20261104-18 — Real ClamAV premerge acceptance and source postmerge readback
+
+| Field | Exact evidence |
+|---|---|
+| B3.11 source | [PR #106](https://github.com/ntdung-tds/iaict-portal/pull/106) exact reviewed head `50e1928dcb69e16d1876338d839213ee06f72dfd`, merged `c6c5d3e4a0ada4d170c652334b75e8fb15c73cec`. |
+| Real engine | [media-av-real-engine-ci #41775549025](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549025) **PASS 1/1 job, 3/3 actual ClamAV engine tests** (official Docker: EICAR harmless test pattern **FOUND**, `scan_clamd` rejection, original+metadata-free WebP scanned, signed clean receipt, bad SHA rejects); NO real user bytes. Not a live Container service. |
+| Portal PR CI | [#41775549028](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549028) **PASS 4/4**, **724/724 TS tests** (71 files), **7/7 Python Pillow mock-socket**, **41/41 local Chromium** with mocked CMS. |
+| Staging OLD Worker public | [#41775549127](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775549127): **PASS 24/24 real public Chromium and 24/24 repeated HTTP, zero new 503**; this does NOT validate staged scanner or backend Media. |
+| Exact source postmerge | [Portal CI #41775911286](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911286) **4/4 PASS**, [real ClamAV #41775911322](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911322) **PASS**. [Old-Worker staging #41775911292](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911292) **IN_PROGRESS at initial capture**, follow-up evidence append-only. |
+| Actual Cloudflare staging D1 | See [RUN-MEDIA-20261104-16](#run-media-20261104-16--actual-cloudflare-staging-d1-00250026-rollout-no-worker-deploy): 0025+0026 applied, both tables & 4 indexes present, no data/foreign-key violations, PITR pre-migration marker; D1 integrity pragma unsupported. |
+| Host unavailable | Cloudflare Containers applications API **HTTP 401**; no real hosted AV service, private job runner, R2 bridge or HMAC secrets. **CMS-MEDIA-001..012 real authorized hosted E2E NOT_RUN**. Neither staging nor production Worker changed. |
+| Decision | **SOURCE CI + D1 SCHEMA ACCEPTED**, **HOSTED MEDIA NOT ACCEPTED**; upload scanner gates remain OFF, production HOLD, IAM PAUSED, SRS FROZEN. No QA images or secrets in GitHub. |
+
+
+## RUN-MEDIA-20261104-19 — B3.11 exact merged SHA postmerge CI and old Worker public staging
+
+| Field | Verified evidence |
+|---|---|
+| Exact source merge | [PR #106](https://github.com/ntdung-tds/iaict-portal/pull/106) `c6c5d3e4a0ada4d170c652334b75e8fb15c73cec`. |
+| Postmerge Portal CI | [#41775911286](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911286) **PASS 4/4 jobs** (source verification / test / local Chromium / release guards). |
+| Postmerge genuine antivirus | [#41775911322](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911322) **PASS 3/3 real ClamAV engine tests**, including EICAR harmless signature and clean image decoder pipeline in disposable Docker CI. |
+| Public OLD staging Worker | [#41775911292](https://github.com/ntdung-tds/iaict-portal/actions/runs/41775911292): **PASS 24/24 real public Chromium and 24/24 repeated HTTP; 0 new HTTP 503**. The Worker has NOT been redeployed and Media upload is OFF; no hosted Media functionality acceptance. |
+| Actual staging D1 | `0025`/`0026` **APPLIED and read back**; see [RUN-MEDIA-20261104-16](#run-media-20261104-16--actual-cloudflare-staging-d1-00250026-rollout-no-worker-deploy), with retained Time Travel bookmark and integrity pragma UNSUPPORTED. |
+| External blockers | Cloudflare Containers API **HTTP 401**, hosted scanner not deployed; trusted runner, HMAC secret, real R2 object scan and CMS-MEDIA-001..012 real authorized browser NOT_RUN. SRS FROZEN, IAM PAUSED, production HOLD. |
+| Prior failures | Historical CI RED attempts from B3.10 and intermittent OPS 503 [#30](https://github.com/ntdung-tds/iaict-portal/issues/30) remain documented and OPEN; new PASS does not delete them. |
+
+
+## RUN-MEDIA-20261104-20 — B3.12 real ClamAV to private R2/D1 integration, pending at creation
+
+| Field | Evidence |
+|---|---|
+| Scope | Full synthetic clean PNG → REAL ClamAV original scan → Pillow metadata-free WebP → REAL ClamAV derivative scan → Python HMAC receipt → TS independently verifies HMAC and R2 byte hashes → disposable Miniflare D1 scan CAS/audit → purge both private objects. |
+| Source | `services/media-scan/real_clamd_acceptance.py` fixture emitter, `lib/media-r2-real-av-bridge.test.ts`, dedicated `.github/workflows/media-av-real-engine-ci.yml`. |
+| Acceptance | **PENDING dedicated real AV CI at initial record**. Do not call a complete pass until the exact source SHA job outputs 3/3 Python REAL AV plus integration cases PASS, including negative tampered derivative/replay. |
+| Negative cases | EICAR harmless FOUND, source SHA invalid, derivative R2 byte tamper without D1 proof, reused receipt/revision replay rejected, private retention purge both bytes. |
+| Default Portal Vitest | Specialized integration tests are **SKIPPED** without the mandatory CI fixture; SKIPPED is not PASS. Existing 724 tests baseline must continue passing. |
+| Hosted scope | **NOT_RUN**: actual ClamAV service on Cloudflare, trusted private runner, HMAC secrets, hosted R2 source/derivative writes, Worker staging media upload, CMS-MEDIA-001..012 authenticated role browser. Containers HTTP 401. |
+| Safety | Source-only PR/CI with **synthetic fixtures**, local /tmp exclusive 0600, never CI-upload artifacts or real user bytes. No staging/production Worker release, IAM PAUSED, SRS FROZEN, production HOLD. |
+| Defect history | Preserve any RED test attempts and fixes in append-only run ledger. |
+
+
+## RUN-MEDIA-20261104-21 — B3.12 REAL engine→Python HMAC→private D1/R2 CI, PASS after test discovery fix
+
+| Field | Verified outcome |
+|---|---|
+| Exact source PR | [PR #108](https://github.com/ntdung-tds/iaict-portal/pull/108) corrected head at log creation (see final PR SHA); no Worker deploy |
+| REAL antivirus | [media-av-real-engine-ci #41780626240](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780626240) **PASS: 3/3 genuine ClamAV daemon acceptance Python tests + 5/5 TypeScript full-bridge Miniflare D1/R2 tests** against the same synthetic PNG/WebP bytes, independently signed Python HMAC |
+| Integrated negative tests | Deliberately tampered derivative R2 bytes → **no D1 proof**; repair → private `SCAN_PASSED_PRIVATE` and audit; replay → rejected without revision mutation; retention → original and derivative both deleted; EICAR harmless sample → FOUND by real ClamAV |
+| Initial RED, retained | [CI #41780387128](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780387128) **FAIL**: new Vitest integration file initially under `services/`, excluded from canonical Vitest `lib/**/*.test.ts` discovery. Actual real ClamAV 3/3 Python PASS, but integration **NOT_RUN**; fixed by moving file to `lib/media-r2-real-av-bridge.test.ts` and aligning workflow. Do not erase RED |
+| Portal source CI | [#41780626319](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780626319) **4/4 jobs PASS**, **724/724 unit tests PASS** (71 files), plus **5 intentionally SKIPPED** (1 file) that require an actual real-AV fixture; **7/7 Python Pillow mock-AV tests PASS**, **41/41 local Chromium** |
+| Public staging OLD deployed Worker | [#41780626060](https://github.com/ntdung-tds/iaict-portal/actions/runs/41780626060): **24/24 real public Chromium PASS, 24/24 HTTP PASS, 0 new 503**, not a new-Worker/Media acceptance |
+| Important distinction | Real ClamAV/Pillow and private D1/R2 integration is **PASS only inside disposable GitHub CI and Miniflare**. Hosted ClamAV service, private runner/HMAC/R2 connection and CMS-MEDIA-001..012 authorized real user browser remain **BLOCKED/NOT_RUN**; Cloudflare Containers API still 401 |
+| Host/data boundaries | No production, no staged Worker deployment, no hosted Media R2 mutations, upload/scanner flags OFF, no CI screenshot/artifact or user data; IAM owner-PAUSED, SRS FROZEN, production HOLD |
+
+
+## RUN-MEDIA-20261104-22 — B3.12 exact merged source postmerge CI, no hosted Media deploy
+
+| Field | Verified result |
+|---|---|
+| Exact merged source | PR #108 `b24682db20573fef2b8e5c46b75b31874cbdece2`. |
+| Portal CI | [#41781401748](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401748) **PASS 4/4 jobs**. Normal source CI and local Chromium only, no authenticated hosted upload. |
+| Genuine AV + full D1/R2 bridge | [#41781401775](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401775) **PASS**: 3/3 genuine ClamAV Python tests and 5/5 actual Python receipt→TypeScript verifier→disposable Miniflare private R2 SHA/D1 CAS/replay/purge integration cases on synthetic files. |
+| Public old Worker | [#41781401796](https://github.com/ntdung-tds/iaict-portal/actions/runs/41781401796) **PASS 24/24 real public Chromium + 24/24 repeated HTTP**, 0 new 503. Old deployed Worker does not include new Media code. |
+| Historical error | Initial bridge #41780387128 **FAIL test not discovered**, fixed and rerun #41780626240 PASS. Existing OPS staging intermittent 503 Issue #30 remains OPEN, new PASS does not erase past FAILs. |
+| Operational truth | Hosted ClamAV service **BLOCKED** Containers API HTTP 401. No production or staging Worker deployment, no hosted R2 scans/job runner/HMAC keys, true CMS-MEDIA-001..012 real role E2E NOT_RUN, scanner/upload flags remain OFF. IAM PAUSED, SRS FROZEN, production HOLD. |
+
+
+## RUN-MEDIA-20261104-23 — B3.13 private quarantine upload staging release source
+
+| Field | Initial status / evidence |
+|---|---|
+| Owner goal | Mở chức năng **upload Media** trên staging mà không giả danh scanner hosted hoàn thành; private quarantine-only với admin/editor, no-public URL |
+| New UI | `/admin/media/upload`, responsive 320px, role-aware CMS navigation, restricted JPEG/PNG/WebP up to 10 MiB, retry with same idempotency UUID; status QUARANTINED requiresScan and no public usage. **PENDING CI** |
+| Server | Existing POST `/api/admin/cms/media/quarantine` with Origin check, magic byte, quota/idempotency, private R2 and D1/audit; added authenticated no-store GET capability (quarantine gate/scanner state, no keys/data). **PENDING CI** |
+| Staging release | Config requires explicit env `IAICT_STAGING_MEDIA_QUARANTINE_ENABLED=true` on **staging only**; manual `deploy-staging` exact reviewed commit SHA and live Worker version; preflight remote D1 **26 migrations** and rollback. Production hard OFF. **NOT_DEPLOYED at creation** |
+| Live Cloudflare preflight readback | 26 D1 migrations, 3 active staging admin users, Access app full 4 root+wildcard destinations, old staging Worker version `1b8cfe71-88ef-4e21-8937-4f8590daaba4` retrievable, Time Travel bookmark available, R2 bucket present. **PASS READ-ONLY** |
+| Cloudflare Containers | **BLOCKED HTTP 401**, provider response explicitly says Containers requires **Workers Paid plan**; no hosted antivirus service, no billing action. This does **not** preclude private quarantine uploads but forbids publication/use of unscanned media. |
+| True hosted browser upload | **NOT_RUN** until new staging Worker release and real admin/editor browser + R2/D1 readback |
+| Security invariant | NO GET file bytes or publication, scannerConfigured=false, no production, IAM PAUSED, SRS FROZEN. Original OPS 503 #30 and Preview #32 OPEN. |
+| Release guidance | [B3.13 staged runbook](../requirements/media-r2/MEDIA_R2_B3_13_QUARANTINE_ONLY_STAGING_RELEASE_2026-11-04.md), CHG-MEDIA-R2-20261104-10. QA visual evidence restricted Drive only. |
+
+
+## RUN-MEDIA-20261104-24 — B3.13 reviewed source/quarantine-only UI source CI and release guards
+
+| Field | Verified outcome |
+|---|---|
+| Source branch | `feat/media-b313-private-quarantine-upload-staging-20261104` [PR #110](https://github.com/ntdung-tds/iaict-portal/pull/110). Latest source head at capture `ebd9dfdacd40f3b6f01e6e8c7aadc2bb294564ef`. |
+| First RED (preserve) | [Portal CI #41791860597](https://github.com/ntdung-tds/iaict-portal/actions/runs/41791860597) **FAIL**: strict TS error in UI response union `result.code` after non-narrowed `!response.ok`; corrected by explicitly narrowing `result.ok===false`. Do not rewrite this history as PASS. |
+| Second source CI | [#41792054502](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792054502) **4/4 PASS**, 724/724 ordinary Vitest (+5 dedicated real-AV bridge SKIPPED without fixture), 41/41 old local Chromium; new 5 UI tests not yet included at that commit, so separately required. |
+| Final UI-included source CI | [Portal #41792348297](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792348297) **PASS 4/4**, **724/724 unit** + 5 special real-AV fixture cases SKIPPED as designed, **46/46 local Chromium** (41 prior plus **5/5 quarantine upload UI**). Tests exercise role-limited menu, disabled gate no POST, editor receives QUARANTINED/NULL public URL, viewer denied, safe retry idempotency, 320px UI and oversize rejection. CMS/API are MOCKED in Chromium, **not hosted upload**. |
+| Public staging OLD Worker | [#41792348182](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792348182) **PASS 24/24 Chromium and 24/24 HTTP** (zero new 503), but tested previous deployed staging Worker; not new quarantine upload. |
+| Live Cloudflare prerequisites | Staging D1 has **26 migrations** including 0025–0026, **3 active admins**, Access protects four roots/wildcards, R2 private staging bucket, exact existing Worker rollback version and Time Travel bookmark available. Read-only preflight PASS. |
+| Actual release | **NOT_RUN / NOT_DEPLOYED** until manual pinned release branch and `deploy-staging` workflow with expected old Worker version + reviewed release SHA and environment secrets. Initial source branch CI PASS is not hosted upload acceptance. |
+| Scanner/production | Containers API HTTP 401 explicitly requires **Workers Paid plan**; hosted scanner/publish **BLOCKED**, source policy scanConfigured=false; production upload gate always OFF. IAM owner-PAUSED, SRS FROZEN, production HOLD. |
+
+
+## RUN-MEDIA-20261104-25 — B3.13 postmerge source CI and exact release candidate (NOT deployed)
+
+| Field | Observed evidence |
+|---|---|
+| Actual reviewed source | [PR #110](https://github.com/ntdung-tds/iaict-portal/pull/110) MERGED `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81` into development; `release/staging-media-quarantine-20261104` created at **exactly same SHA**. Branch creation does not deploy a Worker. |
+| Source premerge QA | [Portal #41792842622](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792842622) **4/4 PASS**, **724/724 ordinary unit**, **46/46 local Chromium** (includes 5 MEDIA upload UI cases with MOCK CMS session/API), [OLD staging #41792842621](https://github.com/ntdung-tds/iaict-portal/actions/runs/41792842621) **24/24 real public Chromium +24/24 HTTP PASS**, 0 new 503. |
+| Source exact postmerge | [Portal #41793305764](https://github.com/ntdung-tds/iaict-portal/actions/runs/41793305764) **PASS 4/4**, [real ClamAV #41793306193](https://github.com/ntdung-tds/iaict-portal/actions/runs/41793306193) **PASS CI-only**, [OLD staging #41793305878](https://github.com/ntdung-tds/iaict-portal/actions/runs/41793305878) **24/24 Chromium +24/24 HTTP PASS**. No new Worker deployment. |
+| RED preserved | Initial [#41791860597](https://github.com/ntdung-tds/iaict-portal/actions/runs/41791860597) TS union type FAIL, fixed. First source browser 41 tests omitted 5 new UI tests, then source CI selected all and 46 PASS. Historical staging intermittent 503 #30 OPEN. |
+| Cloudflare staging readback | 26 D1 migrations, 3 active admins (no identities), Access 4 required roots/wildcards, private R2 bucket, previous Worker version recoverable and D1 Time Travel bookmark accessible. **PASS read-only prerequisites**. |
+| Upload hosted | **NOT_RUN**, manual `deploy-staging` workflow_dispatch not available through current connected GitHub tool; staging GitHub secrets not verified, release branch READY. No hosted R2/D1 Media upload or browser session success claim. |
+| Actual Worker state | Staging Worker deployment `754b0509-e754-410c-8dff-46015d162a89`, version `1b8cfe71-88ef-4e21-8937-4f8590daaba4` unchanged at initial checkpoint. Production Worker unchanged. |
+| Full image usage | Cloudflare Containers HTTP401 explicitly requires Workers Paid plan; actual hosted AV/derivative approval/public Media **BLOCKED** and no auto billing action. Media scanner policy false, production gate OFF, IAM PAUSED, SRS FROZEN. |
+| Final verdict | **SOURCE_READY + RELEASE_BRANCH_CREATED / STAGING_PRIVATE_UPLOAD_NOT_DEPLOYED / HOSTED_UPLOAD_E2E_NOT_RUN / PUBLICATION_NO_GO**. Images/screenshots Drive-only, GitHub no media evidence uploaded. |
+
+## RUN-MEDIA-20261104-26 — Hosted PRIVATE quarantine upload staging DEPLOYED; real CMS authenticated E2E NOT_RUN
+
+| Field | Observed result |
+|---|---|
+| Exact release source | `release/staging-media-quarantine-20261104` immutable SHA `1ed8038c4886c8218b4f9d94c8d94dac9f7f7e81` from PR #110. |
+| Deployment workflow | [deploy-staging #41815504208 attempt4](https://github.com/ntdung-tds/iaict-portal/actions/runs/41815504208) **PASS** all necessary steps: credentials/pinned release, npm verify, D1/Access/rollback preflight, build, deploy, binding readback, health, 24/24 public Chromium. 724/724 ordinary units PASS + 5 real AV bridge tests intentionally skipped without dedicated fixture. |
+| Historical RED preserved | Same workflow attempt1 **FAIL** GitHub environment secrets blank; attempt3 **FAIL** Access app GET HTTP403 due insufficient token permission; owner corrected and retried successfully. Do not overwrite failed attempts. |
+| Cloudflare LIVE readback | STAGING deployment `c43e105c-f978-426f-b42c-f515238c2252`, version `4ab3ecef-9ebd-485e-afb0-eac55136751d`, 100%, `DB=aa4a97e7-60c5-4da4-9f0b-d469ece811b4`, `MEDIA_BUCKET=iaict-portal-staging-media`, `MEDIA_R2_QUARANTINE_ENABLED=true`, `IAICT_NATIVE_AUTH_ENABLED=true`. |
+| Public staged browser | **24/24 PASS** against newly deployed staging Worker in manual workflow (not authenticated Media). Health PASS. |
+| LIVE D1 independent counts | `SELECT state,COUNT(*) ... GROUP BY state` returned no rows, `media_r2_scan_evidence` count 0 at readback. **Not proof a hosted upload occurred**. |
+| Authenticated Admin/Editor upload | **NOT_RUN**: no controlled QA Access+CMS login/session available. Requires browser POST image/png synthetic fixture, expected `201 QUARANTINED`, `requiresScan:true`, `publicUrl:null`, independent private R2 SHA & D1 CAS/audit readback. |
+| Viewer/CSRF/oversize/mime/idempotency | **NOT_RUN HOSTED**. Local tests may exist; do not substitute for real authorized hosted user. |
+| Antivirus/publish | **BLOCKED**: Cloudflare Containers Workers Paid requirement, no hosted AV service nor signed private R2 derivative. Public media serving OFF; no publication acceptance. |
+| Production and IAM | Production Worker unchanged deployment `a01a3743-ac78-4a19-a990-581fe9235751`. IAM PAUSED, SRS FROZEN, production HOLD. No customer media, credentials or screenshots placed on GitHub. |
+
+## RUN-MEDIA-20261104-27 — B3.14 live anonymous Media edge regression, initial pending source CI
+
+| Field | Evidence / test semantics |
+|---|---|
+| Date / environment | 2026-11-04 UTC+7; actual deployed staging Worker `4ab3ecef-9ebd-485e-afb0-eac55136751d`. Only anonymous unauthenticated staging Media paths. |
+| Cases | CMS-MEDIA-016 (UI edge GET), CMS-MEDIA-017 (capability GET + synthetic PNG POST), CMS-MEDIA-018 (forged headers POST). |
+| Source automation | `e2e/staging-acceptance.spec.ts` (+4 live Playwright cases), CI auto-runs `staging-acceptance` on PR, no QA image or session artifacts in GitHub. |
+| Before PR run | **NOT_RUN / PENDING CI**; do not claim PASS before checked jobs and observed source head run logs. |
+| Authenticated Admin/Editor POST 201 and R2 bytes | **NOT_RUN**: no controlled authenticated session; no acceptance for CMS-MEDIA-001..012. D1 media count zero in read-only inspection before writing these cases. |
+| Security scope | These edge tests check ONLY Cloudflare Access no-login denial, *not* authenticated CSRF checks, viewer roles, upload validation/size after login, HMAC scan, nor R2 object readback. |
+| Production | No Worker deployment, no secrets or credentials in repo, production remains HOLD; IAM PAUSED, SRS FROZEN. |
+
+## RUN-MEDIA-20261104-28 — B3.14 real staging anonymous edge gate negatives PASS, exact corrected source
+
+| Field | Verified evidence |
+|---|---|
+| Source head | `24fea7f307faddbc808b474e2f3c6aee485ec938` on `test/media-b314-live-edge-negative-20261104` after fixing syntax in Access redirect assertion. |
+| Portal source CI | [#41847866827](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847866827) **4/4 jobs PASS**; QA catalog now **130 cases**, 51 suites, impact guard PASS. |
+| Actual live staging browser | [#41847866607](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847866607) **28/28 Chromium PASS** (24 existing + 4 new B3.14 Media anonymous Access negative cases) and **24/24 repeated public HTTP PASS**, 0 HTTP503, 0 HTTP5xx. |
+| Specific proof | `UI ANON_ACCESS_CHALLENGE_PASS`; `CAPABILITY_GET_ANON_ACCESS_CHALLENGE_PASS`; `POST_ANON_ACCESS_CHALLENGE_PASS`; `POST_FORGED_IDENTITY_DENIED`. Edge accepts neither anonymous image POST nor spoofed verified identity; these requests must not be counted as authenticated role testing. |
+| Historical RED (unmodified) | Initial [Portal CI #41847513261](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847513261) **FAIL** TypeScript TS1127/1134 due malformed regex literal in new test, and initial [public acceptance #41847513210](https://github.com/ntdung-tds/iaict-portal/actions/runs/41847513210) **FAIL** at Playwright parse (no tests discovered); corrected in SHA `24fea7f`, retested all 28/28. The historical attempts remain FAIL. |
+| Live Cloudflare after tests | **Staging Worker unchanged** deployment `c43e105c-f978-426f-b42c-f515238c2252`, version `4ab3ecef-9ebd-485e-afb0-eac55136751d`, gate still true. Live D1 `media_r2_quarantine_uploads` still **zero rows** at independent readback, so no anonymous test created a private upload. |
+| Still NOT_RUN | Authorized real Admin/Editor session GET capability, clean synthetic real POST 201, hosted R2 byte and SHA readback, authenticated viewer/CSRF/oversize/invalid MIME/idempotency; all remain **NOT_RUN**, not implicit PASS. |
+| Independent scanner/publication | Hosted isolated ClamAV **BLOCKED (Workers Paid Containers)**; all raw media private, publishing OFF, production Worker unchanged, IAM PAUSED and SRS FROZEN. |
+
+## RUN-MEDIA-20261104-29 — B3.14 source PR merged; PCS rev70 checkpoint (postmerge CI not yet included)
+
+| Field | Evidence |
+|---|---|
+| Source | [PR #113](https://github.com/ntdung-tds/iaict-portal/pull/113) **MERGED** dev `34ee2bc5c9fac6704e0747d432d540a0f6247e31` from exact reviewed head `0656bff79a50f62aba36cdb3355049ed0d554d7e`. |
+| Last reviewed source CI | [Portal #41848546547](https://github.com/ntdung-tds/iaict-portal/actions/runs/41848546547) **4/4 PASS**, [hosted public/edge #41848546687](https://github.com/ntdung-tds/iaict-portal/actions/runs/41848546687) **28/28 Chromium and 24/24 HTTP PASS**, 0 HTTP503, four B3.14 Access denied cases explicitly logged. |
+| Original RED→FIX | Initial TypeScript malformed regex failure #41847513261 + Playwright parse fail #41847513210; fixed source hash `24fea7f`, final reviewed head passed. |
+| Live Cloudflare independent checks | Staging Worker `4ab3ecef-9ebd-485e-afb0-eac55136751d`, deployment `c43e105c-f978-426f-b42c-f515238c2252`; production `e7c703f7-fc4c-4313-b14c-0a2c94e0613d`, deployment `a01a3743-ac78-4a19-a990-581fe9235751`, both unchanged; staging D1 Media upload rows zero after four anonymous negatives. |
+| Identity and E2E | **NO AUTHENTICATED UPLOAD TEST**: 201 PNG POST, D1 metadata+audit, R2 byte SHA, Editor/Viewer role + authenticated CSRF + quota/idempotency negatives remain NOT_RUN; CMS-MEDIA-001..012 not fully closed. |
+| Next / decisions | B3.15 genuine controlled QA login before privileged staged upload; isolated ClamAV hosted runner blocked Workers Paid plan, publication disabled, IAM PAUSED, SRS FROZEN, production HOLD. No QA images or login secrets in GitHub. |
+
+
+---
+
+## RUN-MEDIA-20261105-01 — B3.15 setup and independent D1 baseline (NO authenticated POST)
+
+| Field | Actual observation |
+|---|---|
+| Date/timezone | 2026-11-05, ICT |
+| Scope | B3.15 private authenticated Media E2E runner and read-only Cloudflare verification, not hosted upload acceptance |
+| Repository/branch | ntdung-tds/iaict-portal / test/media-b315-hosted-qa-harness-20261105 (proposal branch) |
+| Canonical PCS at start | revision 70, development branch feat/staging-native-login-r2-20261030 |
+| Staging deployment | c43e105c-f978-426f-b42c-f515238c2252, Worker version 4ab3ecef-9ebd-485e-afb0-eac55136751d (Cloudflare read-only GET) |
+| Production deployment | a01a3743-ac78-4a19-a990-581fe9235751 unchanged (read-only GET) |
+| D1 read-only proof | Staging DB aa4a97e7-60c5-4da4-9f0b-d469ece811b4, SELECT COUNT(*) AS n FROM media_r2_quarantine_uploads -> **0** |
+| Test changes | Isolated Playwright config + spec and CI static safety verification; QA runbook; no Worker code or real D1/R2 mutation |
+| Source CI / browser | **NOT_RUN at this checkpoint**; check exact PR head after opening PR, record future result in a **new** run (never rewrite this result) |
+| Live Admin/Editor/Viewer session | **BLOCKED/NOT_RUN**: no valid controlled QA Access + native CMS storageState / retrievable vault |
+| Real Media POST / D1-R2 byte-SHA proof | **NOT_RUN**. No image uploaded, scanned, published or downloaded in this run |
+| ClamAV hosted | **BLOCKED**: Workers Paid Containers or a separately authorized isolated scanner host is required |
+| Test cases | CMS-MEDIA-001/002/003/004/008/012 **NOT_RUN** live; any future passing subcheck is not an automatic full-case PASS |
+| IAM / SRS / production | IAM implementation PAUSED; SRS FROZEN; production HOLD; no deployment, policy or credentials changed |
+| QA evidence | No screenshots, session or customer data captured; [Drive private QA folder](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3) reserved for eventual redacted evidence only |
+| Verdict | **PASS — verified read-only D1/Worker baseline only; SOURCE_PREPARATION proposed; authenticated upload E2E NOT_RUN/BLOCKED** |
+
+See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [Media Issue #39](https://github.com/ntdung-tds/iaict-portal/issues/39).
+
+
+---
+
+## RUN-MEDIA-20261105-02 — Genuine cloud Chromium + Access/QA readiness preflight (NO authenticated upload)
+
+**Date/timezone:** 2026-11-05, ICT. **Scope:** staging-only live browser, Cloudflare read-only checks and controlled Outlook QA mailbox delivery. **Source:** PCS rev71 / [PR #115](https://github.com/ntdung-tds/iaict-portal/pull/115). No CI mock is misclassified as a live authorized upload.
+
+| Check | Actual observation | Verdict |
+|---|---|---|
+| Public login, real cloud Chromium 390×844 | GET /login HTTP 200; rendered Đăng nhập quản trị, Email/Mật khẩu and active Đăng nhập button; document client width=390, scroll width=390 | **PASS — public UI only** |
+| Protected CMS Media, real cloud Chromium | Visiting /admin/media/upload navigated to real Cloudflare Access staging sign-in; One-Time PIN email flow and Cloudflare account login were offered | **PASS — Access challenge only** |
+| Access app QA policy, read-only | Staging has exact eight-email QA allow policy requiring One-Time PIN IdP; separate account-member policy preserved, no policy changed by this run | **PASS — policy metadata only** |
+| Actual staging D1 QA roles | Eight active role-specific QA aliases (admin ×2, editor, reviewer, viewer, three news roles), matching D1 role mappings; all eight have zero Access Subject bindings and zero native credential rows. Historical eight example.test fixtures are separate and disabled | **PASS — read-only D1 metadata; signed-in behavior NOT_RUN** |
+| QA email delivery | Sent a nonsensitive test mail to the QA Admin plus alias with connected Outlook, then found exact delivered recipient in the mailbox. This is not Cloudflare OTP verification and creates no independent mailbox | **PASS — controlled mail delivery only** |
+| Sign-in form automation | Protected-browser action to submit QA login was blocked by connector safety control; no alternate route, forged identity or session export was attempted | **BLOCKED — real authenticated session unavailable** |
+| Live Admin/Editor POST and Viewer/CSRF negatives | No signed-in role session; no Media upload issued, no private R2 bytes/SHA readback | **NOT_RUN** |
+| Staging R2 publication boundary | Zero custom bucket domains, managed r2.dev disabled | **PASS — read-only private bucket configuration** |
+| Staging D1 media rows | media_r2_quarantine_uploads count = 0 | **PASS — read-only empty baseline, not upload E2E** |
+| Worker deployments | Staging deployment c43e105c-f978-426f-b42c-f515238c2252 / Worker 4ab3ecef-9ebd-485e-afb0-eac55136751d; production deployment a01a3743-ac78-4a19-a990-581fe9235751 unchanged | **PASS — release-boundary readback** |
+| Evidence privacy | No screenshot created; no OTP/password/cookie stored or exported; no customer files used | **NOT_CAPTURED / NONE** |
+
+**Important:** this run is real browser and staging readiness evidence, NOT a pass of canonical CMS-MEDIA-001..012. The eight newly active QA aliases are distinct from eight old disabled fixtures. Correctly configured OTP and delivered test email narrow the prerequisite, but **no authenticated POST, R2 SHA, viewer/CSRF negative E2E or actual authorized upload acceptance** has been performed. Scanner/publication remains BLOCKED Workers Paid Containers or approved equivalent. IAM feature implementation PAUSED, SRS FROZEN, production HOLD.
+
+**Next:** complete OTP on an authorized isolated browser with private session storage; then run [B3.15 manual suite](IAICT_MEDIA_B315_HOSTED_QA.md), verify 201 QUARANTINED and D1/R2 independent bytes digest; append a NEW immutable run with actual results. Never spoof JWT/Access headers or expose real sessions in GitHub/Drive/CI.
+
+**Evidence:** [restricted QA Drive](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3); no new screenshot uploaded.
+
+
+---
+
+## RUN-CMS-AUTH-20261105-01 — Owner-requested staging native password sign-in, no OTP for CMS
+
+**Date:** 2026-11-05 (ICT). **Environment:** staging only. **Method:** live Cloudflare account Access/Worker/D1 readback, actual Cloudflare Browser Rendering Chrome DevTools browser with unauthenticated HTTP requests (same origin), independent existing-source review. **User request:** ordinary email/password login without repeated Cloudflare Access email codes. **Production:** unchanged.
+
+| Test / control | Actual observation | Status |
+|---|---|---|
+| Existing Admin row | Active CMS administrator and a native password v2 credential are present. **Password was neither read nor replaced.** | **PASS — D1 metadata only** |
+| Current staging auth feature gate | Worker setting IAICT_NATIVE_AUTH_ENABLED=true; entry Worker validates D1-backed native session and strips incoming client-identity header. | **PASS — live config + source review** |
+| Why OTP appeared | Staging Access app covered exact /admin, /api/admin roots and wildcard children. Its normal Allow policies used Cloudflare Account Login / OTP. | **PASS — root-cause configuration** |
+| Staging-only Access cutover | One reversible **Bypass Everyone** policy created in the existing staging Access app, ID 897f8a7a-cf1a-474a-aa16-ccffa6d9f13f, preserving old policies for rollback. Access no longer prompts email code on CMS routes; **this disables Access-layer controls/logs for that app and relies on the Worker native gate**. | **APPLIED — authorized staging policy change** |
+| Public login GET via real Chromium | /login HTTP 200, original CMS password form rendered; /api/auth/session HTTP 401 without native cookie. | **PASS** |
+| Anonymous GET /admin, /admin/news, /admin/media/upload | All HTTP 401 from staging host, not Cloudflare Access login, before application content. | **PASS — anonymous denial** |
+| Anonymous GET /api/admin, /api/admin/cms/overview, /api/admin/cms/media/quarantine, /api/admin/news/settings | All HTTP 401 from staging Worker. | **PASS — anonymous API denial** |
+| User password login, session mint, authorized Admin dashboard | Current legitimate Admin password was not available to the test operator. No password submission/OTP challenge or session impersonation performed. | **NOT_RUN — owner to verify in own browser** |
+| Signed-in Viewer/Editor authorization and Media upload bytes/SHA | No real authenticated Media mutation performed. | **NOT_RUN — not inferred from anonymous checks** |
+| Direct /admin browser auto-redirect to /login | Current Worker returns 401 JSON for anonymous /admin; improved navigation and direct dashboard landing are **committed to source but not deployed**. Use /login as entry until staging Worker is separately deployed and tested. | **PENDING STAGING DEPLOY** |
+| Cloudflare production Access, D1, Worker | No production configuration, deployment or credentials changed by this cutover. | **HOLD** |
+
+**Security/rollback:** No Access OTP is required by staging CMS after this change, but the application is **not public**: the Worker must enforce the D1-backed session on every admin route. Revocation/invalid cookie must return 401 and CSRF/role checks remain mandatory. Cloudflare Access Bypass removes its own access controls and request logging; this is a **staging-only tradeoff**, not approval for production. On any 2xx unauthorized or unexpected identity exposure, immediately DELETE only staging Access app policy `897f8a7a-cf1a-474a-aa16-ccffa6d9f13f`, restoring the prior Allow/OTP behavior. Do not delete other staging Access policies. Do not deploy production.
+
+**Source/CI follow-up:** new staging tests require anonymous 401 instead of historical Cloudflare Access redirects, and source UI improvements send unauthenticated human navigation to /login and successful password login directly to /admin. These source changes require their own reviewed staging Worker deploy before claiming live UI redirect. The historical B3.14 Access-edge test run remains immutable, valid only for the old configuration. **Actual positive login + Media E2E remain NOT_RUN.**
+
+**No secrets:** No password, OTP, cookie, personal media or screenshot stored in this QA run or public repository.
+
+
+---
+
+## RUN-CMS-AUTH-20261105-02 — Actual staging Worker deployment and native-password Chrome QA
+
+**2026-11-05 ICT. Scope:** User-approved staging-only deployment. **Pinned release commit:** b00f7e56fd3d161d958920a51a105be1afdba89c (PR #118 merged, all postmerge CI PASS). **Cloudflare manual build ID:** 40d6fc87-6dd6-43ac-b62b-addaaef895ce, completed with SUCCESS. GitHub build trigger returned to original HOLD immediately after submitting the one-off pinned build (no automatic production/staging follow-on).
+
+| Check | Actual observation | Result |
+|---|---|---|
+| Worker release | Deployed staging version d8dbc8d2-1d3a-4c25-9421-a905aae88bda at 100%; deployment a1d2e8a1-791a-4c26-9885-476f71c58267; previous version 4ab3ecef-9ebd-485e-afb0-eac55136751d retrievable for rollback | **PASS** |
+| Actual Chrome /admin mobile navigation | Cloud Chromium navigated /admin to final /login HTTP 200 HTML, rather than Cloudflare Access OTP | **PASS** |
+| Native form/hydration | Email, Mật khẩu, Đăng nhập controls appeared; after JS hydration Đăng nhập button enabled; 390px viewport and scrollWidth 390px | **PASS** |
+| Public health and login GET | /api/health 200; /api/auth/login GET 405 | **PASS** |
+| Anonymous /api/auth/session | HTTP 401, no-store/private | **PASS** |
+| Anonymous /admin, /admin/news, /admin/media/upload, /api/admin, /api/admin/cms/overview, /api/admin/cms/media/quarantine, /api/admin/news/settings with JSON Accept | All HTTP 401, no-store, no Access OTP redirect | **PASS** |
+| Native Worker environment | IAICT_NATIVE_AUTH_ENABLED=true; DB bound to staging D1 aa4a97e7-60c5-4da4-9f0b-d469ece811b4 | **PASS** |
+| Private R2 quarantine | MEDIA_R2_QUARANTINE_ENABLED=true, bucket iaict-portal-staging-media, managed r2.dev OFF, custom domains 0, D1 quarantine rows 0 | **PASS configuration, not upload E2E** |
+| Production Worker | Production version e7c703f7-fc4c-4313-b14c-0a2c94e0613d unchanged | **PASS** |
+| Real Admin password login, authorized Dashboard and Media upload/R2 SHA | Real secret/session unavailable to agent; no impersonation, no password reset or customer file used | **NOT_RUN** |
+| New full live Playwright post-deploy regression | Explicit HTML302 redirect, native form hydration, mobile 320/390 and API401 test added to separate documentation+QA PR; exact-head workflow pending | **PENDING** |
+
+**Security note:** One staging-specific Access Bypass policy is active; Access-level logging and OTP are removed only on staging, while Worker D1 cookie verification must continue to reject unauthorized requests. Rollback Access bypass only by deleting policy 897f8a7a-cf1a-474a-aa16-ccffa6d9f13f. Old Worker version remains available. No production deployment, no D1 migration, no R2 public access, no change to Admin password. Media scanner/publish remains unavailable. IAM other features PAUSED; SRS FROZEN.
+
+**Evidence:** Cloudflare Builds success, deployments readback, actual Chrome DevTools checks; screenshots, cookies, passwords, OTP and media samples were not saved.
+
+
+---
+
+## RUN-CMS-NAV-20261105-01 — Expand/collapse CMS sidebar, real staging deployment
+
+**Date:** 2026-11-05 ICT. **Owner feedback:** screenshot of mobile CMS showed a compact side rail with only labels IA / LL / DA / SK / CG and no readable full menu names. Owner independently reported media upload was OK; this navigation-only run did not upload a file or collect a protected session. **Source:** [PR #120](https://github.com/ntdung-tds/iaict-portal/pull/120) merged commit df9c89105dec81f2556dc1b9ee639b2cbfc91a9d. **PR head:** b8249af7860ccc6ea90c57acd93d32ec92b5ce16.
+
+| Test | Evidence and result | Status |
+|---|---|---|
+| Browser UI, mobile 320/390/768 (synthetic Admin session) | Local Playwright tests expand icon rail into legible Vietnamese names including Lịch lớp and Dự án; collapse with button, Escape, backdrop. Tests verify ARIA expanded state, viewport width and no body overflow. Session API mocked; cannot prove hosted Admin positive E2E. | **PASS — LOCAL_CHROMIUM_MOCK** |
+| Desktop 1440 (synthetic Admin session) | Default full labels, toggle to compact icon rail, accessible label retained, toggle back; no horizontal overflow. | **PASS — LOCAL_CHROMIUM_MOCK** |
+| Existing seven-role CMS menu visibility | Original role-specific tests remained in the CI suite; no authentication/permissions code changed. | **PASS — LOCAL_CHROMIUM_MOCK** |
+| Compression workbench regression, mobile 320 | Initial CI detected transient 5px overflow caused by animated desktop-to-mobile content offset; fixed by disabling content margin animation at mobile breakpoint and repeated full browser CI. | **FAIL earlier revision; PASS after correction** |
+| Reviewed source Portal CI | PR-head run https://github.com/ntdung-tds/iaict-portal/actions/runs/42055691436 **4/4 jobs SUCCESS**, including Browser Visual, Verify, RC ancestry, KDF. | **PASS** |
+| Public staging acceptance before release | https://github.com/ntdung-tds/iaict-portal/actions/runs/42055691392 completed SUCCESS. | **PASS** |
+| Merged source postmerge CI | Portal, staging acceptance and Media AV isolated CI all SUCCESS at merged df9c891 source commit. | **PASS** |
+| One-off pinned staging Worker deployment | Cloudflare Workers Builds run 475f3569-1a79-4390-b8d4-5e54763a9d74, pinned exact merged commit, stopped SUCCESS. Staging deployment 034dac48-1e9a-4f74-aee6-884c7e1f80ed at 100%, Worker version b8da158b-3673-46f1-befa-8f6917e74abb. Previous Worker d8dbc8d2-1d3a-4c25-9421-a905aae88bda available for rollback. Build trigger restored to manual HOLD immediately after request. | **PASS — REAL_STAGING_DEPLOY** |
+| Actual live Cloudflare Chromium after deploy, mobile 390 | Navigating /admin ends at /login with the correct page heading; horizontal widths 390/390. New deployed JS chunk /_next/static/chunks/cms-shell-BNuaS20K.js fetched HTTP 200; contained text for both Mở rộng menu CMS and Đóng menu điều hướng CMS. Health HTTP 200 and anonymous /api/admin/cms/session HTTP 401. | **PASS — LIVE_CHROME_PUBLIC_AND_ASSET** |
+| Real logged-in Admin clicking mobile menu on deployed staging | No owner browser cookie/session available to tool; cannot test protected UI with real Admin identity. Local mocked UI tests are not substituted for real authenticated E2E. | **NOT_RUN** |
+| Media upload and SHA | No new mutation or R2 SHA check performed in this navigation change; owner's upload success was noted but not independently verified in this test run. | **NOT_RUN IN THIS RUN** |
+| Security and production | Native auth flag true, staging Media quarantine flag true, bucket remains private (r2.dev OFF, zero custom domains), no Access/D1/production changes. Production Worker e7c703f7-fc4c-4313-b14c-0a2c94e0613d unchanged. | **PASS — LIVE_CONFIG_READBACK** |
+
+**Scope/rollback:** Only CMS navigation source/CSS plus corresponding local UI and QA cases were changed. No changes to user roles, CMS routes, login, Media upload, R2 data, Access bypass, D1 migrations, scanner or production. Rollback by deploying prior known-good staging Worker version d8dbc8d2-1d3a-4c25-9421-a905aae88bda through authorized pinned-release controls. Source and deployed artifact correspond to PR #120. SRS FROZEN, production HOLD.
+
+**Evidence policy:** no QA screenshots/videos/traces saved to GitHub; user-provided screenshot remains conversation input. Real owner session credentials not accessed.
+
+
+---
+
+## RUN-MEDIA-20261106-01 — Private R2/D1 integrity after owner upload + CMS auth/RBAC hardening
+
+**Date:** 2026-11-06 ICT. **Environment:** Cloudflare staging only. **User statement:** Admin CMS login successful and previous Media upload succeeded on their own browser. The test operator did not receive their browser session, password, OTP, or cookie. **Method:** authorized Cloudflare read-only D1 SQL + private R2 GET inside tool execution; compute SHA-256 inside trusted runtime; output only aggregate metadata and boolean comparisons; review repository source and add local/browser regression tests. No production activity, no private object mutations, no customer file bytes exposed.
+
+| Test | Verified result | Status |
+|---|---|---|
+| Owner login | Owner says their existing Admin CMS account successfully logged in. Agent did not independently reproduce authenticated browser session. | **OWNER_CONFIRMED / AGENT_AUTH_E2E_NOT_RUN** |
+| D1 quarantine row baseline | Exactly **1** staging Media upload, state QUARANTINED, MIME image/png, byte_length **463656**, revision 1, valid 64-char content_sha256, private storage prefix. | **PASS — LIVE D1** |
+| R2 actual bytes readback | Private R2 object GET returned **463656 bytes**. Independent SHA-256 over those bytes **matched D1 content_sha256**; lengths also match. Internal object key, user filename and digest are not logged or exposed. | **PASS — LIVE PRIVATE R2** |
+| Quarantine audit chain | media.quarantine.reserve = **1**, media.quarantine.write = **1** in D1 audit_logs for the quarantine object. | **PASS — LIVE D1** |
+| Scanner/derivative/publication boundary | scanner_attestation NULL, derivative_key NULL, R2 managed r2.dev public access OFF, zero custom public domains. Publication not authorized. | **PASS — PRIVATE-ONLY SAFETY; SCANNER BLOCKED** |
+| Staging role assignment metadata | Active user count **10**; active assigned roles: admin 3, editor 1, reviewer 1, viewer 2, news_admin 1, news_editor 1, news_reviewer 1. Counts do not prove actual sign-in or role-effective permissions. | **PASS — D1 METADATA ONLY** |
+| Actual Chrome hosted login/role test | User's legitimate authenticated session is not available to tool browser. Cloudflare Browser Rendering returned HTTP429 during attempt to start a new anonymous session, without a completed new Chrome audit. | **NOT_RUN THIS ROUND — RATE-LIMIT / AUTH SESSION** |
+| Source review: private CMS session GET | The route returned actor email/roles without explicit no-store headers on success and could reveal raw unexpected database error messages on failure. | **FAIL FOUND IN SOURCE; FIX COMMITTED TO REVIEW BRANCH, NOT LIVE YET** |
+| Remediation: no-store and generic session 503 | Source now sets Cache-Control private/no-store, nosniff on 200/401/403/503; internal errors use stable CMS_SESSION_UNAVAILABLE without SQL details. | **SOURCE IMPLEMENTED — CI / DEPLOY PENDING** |
+| CMS seven-role authorization | Added local verified-identity-boundary matrix for 7 roles × CMS/Newsroom read/edit/admin/review = **42 decisions**. | **TESTS ADDED — CI PENDING; REAL HOSTED ROLE E2E NOT_RUN** |
+| Staging no-session API matrix | Added CI Playwright test for six CMS/News/Media GET routes and four synthetic POST/DELETE admin mutations; each must return 401/no-store with no session issuance, before route writes. | **TESTS ADDED — CI PENDING** |
+| Media authenticated multi-role B3.15 suite | Real signed-in Admin/Editor/Viewer role requests, CSRF rejection, 201/200 idempotency retry and synthetic 69-byte PNG are still not independently exercised. | **NOT_RUN** |
+| Production | No production deploy or modification. | **HOLD** |
+
+**Case linkage:** CMS-MEDIA-019 partial readback **PASS**; CMS-MEDIA-012 full release/role/cleanup **NOT_RUN/PARTIAL**; CMS-MEDIA-016/017/018 expectations updated from old Access OTP redirect to native Worker HTTP401; CMS-UI-003/004 newly added tests pending CI.
+
+**Important:** A positive D1/R2 SHA match establishes private byte integrity only; it does NOT establish clean antivirus verdict, permitted publication, actual Admin/Viewer authorization on the hosted CMS, or customer acceptance of every module. No R2 key, file contents, digest from the user's image, password or session stored in evidence.
+
+**Source branch:** fix/cms-session-privacy-media-r2-qa-20261106; reviewed CI and staging deploy must be verified before upgrading SOURCE_IMPLEMENTED to PASS_DEPLOYED. Rollback to existing staging Worker version b8da158b-3673-46f1-befa-8f6917e74abb if needed. PCS next revision must record verified final state and remaining blockers.
+
+
+---
+
+## RUN-CMS-20261106-02 — CMS session privacy staged release and R2 integrity preservation
+
+**Date:** 2026-11-06 ICT. **Source:** PR #122 merged to development branch at `89cda7dfb3351905cb9db4bc27b282892d2ffe79`. **Staging-only Cloudflare Build:** `11014ed8-766d-402c-8ea3-c89f8a08796e` — stopped / SUCCESS; exact-source SHA pinned, no D1 migration, Worker deployment `d517a11a-f48b-4db7-a930-538278063ce5`, version `9b5c0202-8362-459e-8b0b-1495bb94d2ef` receiving 100% of staging traffic. Previous version `b8da158b-3673-46f1-befa-8f6917e74abb` available as rollback. Build trigger returned to exact manual HOLD immediately after dispatch.
+
+| Gate | Actual evidence | Status |
+|---|---|---|
+| Source review / security fix | GET /api/admin/cms/session now sends private/no-store/max-age=0 and nosniff for 200/401/403/503; unexpected D1 exception becomes CMS_SESSION_UNAVAILABLE rather than raw internal error. Auth semantics, role data, UI, database, media route unchanged. | **SOURCE MERGED, STAGING DEPLOYED** |
+| Local session unit tests | Synthetic valid Admin, expected 401/403 and unexpected backend error; all assert no-store, no cookie setting and generic errors. | **PASS — PR HEAD PORTAL CI VERIFY** |
+| Local RBAC matrix | 7 roles × 6 CMS/Newsroom permission sets (42 role/gate decisions). These are post-verification synthetic identity tests, not signed-in real multi-user hosted E2E. | **PASS — PR HEAD PORTAL CI VERIFY** |
+| Unauthenticated hosted API contract | Playwright staging-acceptance includes six GET and four synthetic POST/DELETE requests for user, article, Media, Newsroom and session/overview API, requiring HTTP401/no-store. | **PASS — PR HEAD STAGING ACCEPTANCE** |
+| PR source CI | PR #122 exact-head Portal CI `42073899458` 4/4 PASS and staging acceptance `42073899849` PASS before merge. | **PASS** |
+| Cloudflare Worker deployment | Manual pinned-SHA build succeeded, read back new Worker version `9b5c0202-8362-459e-8b0b-1495bb94d2ef` 100% on staging; production version remains `e7c703f7-fc4c-4313-b14c-0a2c94e0613d`. | **PASS — LIVE API** |
+| Cloudflare configured private gates | Native D1 auth enabled, Media R2 quarantine enabled, D1 and R2 bindings unchanged, managed r2.dev disabled, custom public domains zero. Build trigger HOLD restored. | **PASS — LIVE API** |
+| R2 data preserved after deploy | One QUARANTINED PNG (463656 bytes). Re-read private R2 object and calculate SHA-256 inside Cloudflare tool: D1 SHA and R2 digest **match**; byte lengths match; scanner attestation/derivative remain NULL. No bytes, storage keys or user-derived digest disclosed. | **PASS — LIVE D1/R2 READ-ONLY** |
+| Post-deploy actual authenticated GET 200 no-store | Owner reports CMS Admin login succeeds on their device, but no authenticated session is present in agent browser; new direct Cloudflare Browser Rendering session request was rate limited HTTP429. | **OWNER_CONFIRMED LOGIN / AUTHENTICATED AGENT E2E NOT_RUN** |
+| Per-role hosted permissions | Real Editor, Reviewer, Viewer and News roles still require authorized native sessions for live HTTP403/200 assertions; 42 decisions above are LOCAL only. | **NOT_RUN** |
+| Full Media B3.15 | Privately stored bytes verified, but actual signed-in role-based 201/retry/CSRF, scanner, publication and controlled cleanup not independently tested. | **PARTIAL / SCANNER BLOCKED** |
+| Production | No production deploy or settings change. | **HOLD** |
+
+**Source/behavior limitations:** PR #122 tests verified the public staging Worker before/during release and the synthetic Admin in local CI; successful build + real deployment readback does not substitute for a logged-in browser 200 proof. Run `RUN-MEDIA-20261106-01` contains independent owner-upload D1/R2 proof and the original source risk; this run records the *actual release* and verified preservation of that data. No Media mutation, password access, test-account modification, public storage grant or production change.
+
+
+---
+
+## RUN-CMS-BROWSER-20261106-03 — Independent live Chromium by agent (mobile / desktop) and identity boundary
+
+**Date:** 2026-11-06 ICT. **Environment:** Cloudflare Browser Rendering Chrome against the **deployed staging Worker** `9b5c0202-8362-459e-8b0b-1495bb94d2ef`; owner-approved task: run CMS and Media functional acceptance autonomously on agent browser. **Scope verified:** public mobile menu and password login page, anonymous CMS HTTP gates. **No real owner session was transferred. No test credentials or browser cookies supplied to agent.**
+
+| Test | Observed in independent actual Chrome | Status |
+|---|---|---|
+| Public mobile homepage 320px | React header reports `data-interactive=true`; click mobile menu opens `#mobile-navigation`, Escape closes it, `scrollWidth=clientWidth=320`. | **PASS — REAL CHROME** |
+| Public mobile homepage 390px | Same real browser interaction and 390/390 width, no overflow. | **PASS — REAL CHROME** |
+| Public tablet homepage 768px | Same menu expand/Escape collapse, viewport 768/768. | **PASS — REAL CHROME** |
+| Desktop public header 1440px | Responsive viewport 1440/1440 and mobile button not visible to user. A programmatic DOM click was issued in the first probe even though button was hidden by an ancestor; that behavior is **NOT** a user-visible desktop menu interaction test. | **PASS — DESKTOP WIDTH ONLY; DESKTOP MENU INTERACTION NOT_RUN** |
+| Native CMS login mobile 390px | Anonymous `/admin` goes to `/login`; heading Đăng nhập quản trị, visible email/password form, submit enabled, no overflow. No password or OTP used. | **PASS — REAL CHROME ANONYMOUS** |
+| Native CMS protected anonymous gates | Authenticated-only `/api/admin/cms/session`, overview, articles, users, Media capability all returned HTTP **401** and `Cache-Control` containing `no-store`, from the actual browser. | **PASS — REAL CHROME ANONYMOUS** |
+| Live owner Admin login | Owner reports success in their browser, and prior read-only D1 metadata showed 1 valid native Admin session. The agent's independently launched Chrome does **not** inherit that session. | **OWNER_CONFIRMED / AGENT AUTH E2E NOT_RUN** |
+| Provisioned QA role positive E2E | Tried initiating an approved staging QA activation + native login through the authorized Cloudflare tool; the action was blocked by the tool's safety checks **before execution**. No bypass was attempted. Follow-up read-only staging D1 queries confirmed QA plus-alias credential count 0, unconsumed invite count 0, active QA session count 0, unchanged 10 active users and 1 existing private Media row. | **BLOCKED — TOOL SAFETY; NO QA CREDENTIAL/SERVER CHANGE** |
+| Authenticated seven-role CMS permissions, Media upload, CSRF | No legitimate logged-in agent browser QA role available. Older Vitest 42-role/gate tests and public 401 checks cannot substitute for positive hosted role interactions or real R2 uploads. | **NOT_RUN** |
+| Scanner and publication | No functional hosted antivirus engine for quarantine clearance/publication under the approved free-tier configuration. | **BLOCKED — DEPENDENCY** |
+| Production | No production deploy or policy changes. | **HOLD** |
+
+**Important:** The first Chrome run was already public/anonymous. A separate one-off QA login tool attempt was refused by the tool safety layer; do not retry by forging JWT, cookies, headers or deliberately bypassing the safety layer. No new native password, invitation, session, account grant, upload or deletion was created. To finish positive browser E2E, use a supported interactive browser session with permitted owner/QA sign-in (e.g. ChatGPT Work Cloud Browser) and a separate credential vault; **no passwords/cookies/OTP are to be pasted in GitHub or chat**.
+
+**Existing immutable evidence:** RUN-MEDIA-20261106-01 contains private owner-upload D1/R2 SHA-256 readback PASS; RUN-CMS-20261106-02 records staging source/session privacy CI and actual Worker deploy; this run strictly records **independent actual Chrome** and authenticated E2E blocker. One image already uploaded remains privately quarantined, not published.
+
+
+---
+
+## RUN-CMS-OWNER-20261106-01 — Owner confirmation after staging CMS testing
+
+**Date:** 2026-11-06 ICT. **Environment:** IAICT Portal staging. **Source of evidence:** project owner's explicit conversation response: “Tôi đã test và ok”. The owner sent this after the staging browser and authenticated-E2E discussion. No screenshots, browser trace, role-by-role case list, or protected session export accompanied the confirmation.
+
+| Acceptance | Observation | Status |
+|---|---|---|
+| Owner's staging CMS test | Owner explicitly confirmed they tested and the result was OK. | **OWNER_ACCEPTED — scope not itemized** |
+| Existing self-operated real browser checks | Separate RUN-CMS-BROWSER-20261106-03: public mobile menu, login UI, anonymous CMS API 401 and viewport checks verified in independent Cloudflare Chromium. | **PASS in earlier independently evidenced run** |
+| Existing private Media upload integrity | Separate RUN-MEDIA-20261106-01: private R2 object bytes/length/SHA-256 match D1; upload remains QUARANTINED. | **PASS in earlier independently evidenced run** |
+| Seven distinct hosted role sign-ins and Media HTTP201/200 replay/CSRF negative/Viewer 403 | Owner did not specify these individual cases; the agent did not independently run them under seven real authenticated sessions. | **NOT_RUN as individually evidenced E2E; owner confirmation does not reclassify** |
+| Scanner verdict and public Media publication | No authorized real scanner deployment or clean attestation. | **BLOCKED; publication OFF** |
+| Production deploy | No owner request for release or production acceptance; staging approval is not production approval. | **HOLD** |
+
+**Interpretation:** The user-facing CMS experience tested by the owner is accepted as reported. Do not extrapolate that short confirmation into case-level PASS for all seven roles, authenticated negative scenarios, scanner, R2 publication, or a production launch. No source changes, login, password, R2 mutation or deployment are part of this run. Use this explicit owner sign-off to stop revisiting the same visual acceptance and prioritize outstanding release gates.
+
+**Next:** decide the supported hosted antivirus scanner approach (isolated ClamAV service/paid Cloudflare Containers or equivalent), complete identity-authenticated negative E2E if needed for the release scope, and request separate production go/no-go only after technical gates pass.

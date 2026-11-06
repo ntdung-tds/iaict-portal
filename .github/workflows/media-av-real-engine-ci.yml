@@ -1,0 +1,89 @@
+name: media-av-real-engine-ci
+
+# Opt-in heavy CI on Media scanner code; no secrets and no staging/production writes.
+# Real ClamAV with current signatures validates the harmless EICAR test string.
+on:
+  pull_request:
+    paths:
+      - "services/media-scan/**"
+      - "lib/media-r2-real-av-bridge.test.ts"
+      - "lib/media-r2-scan-evidence.ts"
+      - "lib/media-scan-attestation.ts"
+      - "lib/media-r2-cleanup.ts"
+      - "cloudflare/migrations/0025_media_r2_quarantine.sql"
+      - "cloudflare/migrations/0026_media_r2_scan_evidence.sql"
+      - ".github/workflows/media-av-real-engine-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-clamav:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v6.0.0
+        with:
+          python-version: "3.12"
+      - name: Install isolated Python fixture dependencies and UNIX socket relay
+        run: |
+          python -m pip install --no-cache-dir -r services/media-scan/requirements.txt
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq socat
+      - name: Start official real ClamAV in a non-public CI-only container
+        run: |
+          docker pull clamav/clamav:stable
+          docker run --detach --name iaict-clamd-ci --memory=5g --cpus=2 \
+            --publish 127.0.0.1:33199:3310 clamav/clamav:stable
+      - name: Wait for real ClamAV signatures and create private UNIX socket relay
+        run: |
+          python - <<'PY'
+          import socket,time
+          deadline=time.monotonic()+240
+          while time.monotonic()<deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1",33199),timeout=3) as s:
+                      s.sendall(b"zPING\x00")
+                      if s.recv(64).strip(b"\x00\n\r")==b"PONG":
+                          print("REAL_CLAMD_PONG")
+                          break
+              except OSError:
+                  pass
+              time.sleep(3)
+          else:
+              raise SystemExit("REAL_CLAMD_NOT_READY_WITHIN_240S")
+          PY
+          umask 077
+          socat UNIX-LISTEN:/tmp/iaict-ci-av.sock,fork,mode=0600 TCP:127.0.0.1:33199 &
+          for i in {1..30}; do
+            test -S /tmp/iaict-ci-av.sock && break
+            sleep 1
+          done
+          test -S /tmp/iaict-ci-av.sock
+      - name: Set up Node for isolated D1/R2 signed bridge
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: REAL AV acceptance — clean PNG/WebP and EICAR FOUND verdict
+        env:
+          IAICT_REAL_CLAMD_SOCKET: /tmp/iaict-ci-av.sock
+          PYTHONPATH: services/media-scan
+          IAICT_B312_REAL_AV_BRIDGE_FIXTURE: /tmp/iaict-b312-real-av-fixture.json
+        run: python services/media-scan/real_clamd_acceptance.py
+      - name: Verify REAL scanner's original and derivative in isolated Miniflare D1/R2
+        env:
+          IAICT_B312_REAL_AV_BRIDGE_FIXTURE: /tmp/iaict-b312-real-av-fixture.json
+        run: |
+          test -f "$IAICT_B312_REAL_AV_BRIDGE_FIXTURE"
+          npm ci --no-audit --no-fund
+          npx vitest run lib/media-r2-real-av-bridge.test.ts
+      - name: Remove synthetic local image fixture (no GitHub artifact upload)
+        if: always()
+        run: rm -f /tmp/iaict-b312-real-av-fixture.json
+      - name: Clean ephemeral AV container (no artifact, no uploaded images)
+        if: always()
+        run: docker rm --force iaict-clamd-ci || true

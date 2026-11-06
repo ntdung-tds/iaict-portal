@@ -26,6 +26,10 @@ validateApprovedStagingCommit({
   approvedSha, checkedOutSha,
   workflowSha: process.env.GITHUB_SHA,
   ref: process.env.GITHUB_REF,
+  // Exact two supported operator release refs only; never accept a PR ref.
+  allowedRef: process.env.IAICT_STAGING_MEDIA_QUARANTINE_ENABLED === "true"
+    ? "refs/heads/release/staging-media-quarantine-20261104"
+    : "refs/heads/release/staging-v17-hardened-20261029",
 });
 console.log("[staging-preflight] Immutable approved release SHA matches workflow and checkout.");
 const token = process.env.CLOUDFLARE_API_TOKEN;
@@ -47,8 +51,43 @@ assert(binding?.database_name === "iaict-portal-staging-db", "Staging D1 name mi
 
 const local = readdirSync("cloudflare/migrations")
   .filter((name) => /^\d{4}_.+\.sql$/.test(name)).sort();
-assert(local.length === 21, `Expected 21 local migrations, got ${local.length}.`);
-assert(local.at(-1) === "0021_v17_admin_role_normalization.sql", "Unexpected migration end.");
+// Forward-only native-auth schema 0022 is now applied to staging. Do not
+// weaken the original release migration identity or permit unreviewed DDL.
+assert(local.length === 26, `Expected 26 reviewed staging migrations, got ${local.length}.`);
+assert(local[0] === "0001_core.sql" &&
+       local[20] === "0021_v17_admin_role_normalization.sql" &&
+       local[21] === "0022_iaict_native_auth.sql" &&
+       local[22] === "0023_iaict_auth_pbkdf2_workers.sql" &&
+       local[23] === "0024_iaict_activation_invites.sql" &&
+       local[24] === "0025_media_r2_quarantine.sql" &&
+       local[25] === "0026_media_r2_scan_evidence.sql",
+       "Unexpected migration identity after native-auth extension.");
+const reviewedNativeMigrationSha = "cf40971d0f1029adac0a2ea9a9e7545b998dc6e8";
+const nativeMigrationSha = execFileSync("git",
+  ["hash-object", "cloudflare/migrations/0022_iaict_native_auth.sql"],
+  { encoding: "utf8" }).trim();
+assert(nativeMigrationSha === reviewedNativeMigrationSha,
+  "Native-auth migration 0022 differs from exact reviewed immutable blob.");
+const workersMigrationSha = execFileSync("git",
+  ["hash-object", "cloudflare/migrations/0023_iaict_auth_pbkdf2_workers.sql"],
+  { encoding: "utf8" }).trim();
+assert(workersMigrationSha === "18c4908ac3bc3d49b5a703fd2d6b4fa1d921d804",
+  "Workers PBKDF2 migration 0023 differs from exact reviewed immutable blob.");
+const activationMigrationSha = execFileSync("git",
+  ["hash-object", "cloudflare/migrations/0024_iaict_activation_invites.sql"],
+  { encoding: "utf8" }).trim();
+assert(activationMigrationSha === "8c85804c7e99688ada086dec44b120ccc9b71e96",
+  "Activation migration 0024 differs from exact reviewed immutable blob.");
+const mediaQuarantineMigrationSha = execFileSync("git",
+  ["hash-object", "cloudflare/migrations/0025_media_r2_quarantine.sql"],
+  { encoding: "utf8" }).trim();
+assert(mediaQuarantineMigrationSha === "c8320af6c2cc559a016858195ede064d3caa15b0",
+  "Quarantine migration 0025 differs from the reviewed immutable blob; no staging release.");
+const mediaEvidenceMigrationSha = execFileSync("git",
+  ["hash-object", "cloudflare/migrations/0026_media_r2_scan_evidence.sql"],
+  { encoding: "utf8" }).trim();
+assert(mediaEvidenceMigrationSha === "9688defdc38831f5caf7e88a07740bbe907ccf96",
+  "Private scan evidence 0026 differs from the reviewed immutable blob; no staging release.");
 
 async function cf(method, path, body) {
   const response = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
@@ -113,6 +152,23 @@ const access = auditAccessApplication({
 assert(access.ok,
   `Access staging app has incomplete destinations/policy: ${access.problems.join(", ")}; missing ${access.missing.join(", ")}. No deployment.`);
 console.log("[staging-preflight] Cloudflare Access staging roots, descendants and AUD verified.");
+// Owner-authorized staging-only password login transition: Bypass runs before
+// Allow, so Access no longer issues an OTP. The Worker must instead enforce
+// its revocable, role-scoped D1 native session. Never allow an unknown Bypass.
+const nativeBypassId = "897f8a7a-cf1a-474a-aa16-ccffa6d9f13f";
+const accessPolicies = await cf("GET", `${root}/access/apps/${stagingAccessAppId}/policies`);
+const bypass = accessPolicies.filter(policy => policy.decision === "bypass");
+assert(bypass.length === 1 && bypass[0].id === nativeBypassId &&
+       bypass[0].include?.some(rule => rule?.everyone && typeof rule.everyone === "object"),
+       "ACCESS_NATIVE_BYPASS_POLICY_MISMATCH: refuse unexpected Access bypass on staging.");
+assert(workerConfig.includes('IAICT_NATIVE_AUTH_ENABLED: bindings.text(isStaging ? "true" : "false")'),
+  "Staging-only native auth setting missing from Worker source.");
+const liveSettings = await cf("GET", `${root}/workers/scripts/${worker}/settings`);
+assert(liveSettings.bindings?.some(b => b.name === "IAICT_NATIVE_AUTH_ENABLED" &&
+       b.type === "plain_text" && b.text === "true"),
+       "ACCESS_NATIVE_GATE_NOT_ENABLED: staging Worker must enforce D1 sessions before cutover.");
+console.log("[staging-preflight] Staging bypass is exact and native D1 session gate is ON; no OTP dependency.");
+
 
 console.log(`[staging-preflight] PASS: account, pinned staging Worker, D1 ID, ${remote.length} matching migrations.`);
 

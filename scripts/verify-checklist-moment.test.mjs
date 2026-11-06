@@ -1,0 +1,13 @@
+import {test} from "node:test";
+import {strict as assert} from "node:assert";
+import {validateContent} from "./verify-checklist-moment.mjs";
+const id="MOMENT-IAICT-20261031-1946-ICT",name="2026-10-31T19-46-ICT.md";
+const cms=Array.from({length:10},(_,i)=>"| CMS-"+String(i+1).padStart(2,"0")+" | ["+(i<5?"x":" ")+"] | "+(i<5?"DONE":i===5?"IN_PROGRESS":i<8?"BLOCKED":"NOT_STARTED")+" | scope | next |").join("\n");
+const iam=Array.from({length:20},(_,i)=>"| IAM-"+String(i+1).padStart(2,"0")+" | Feature | NOT_STARTED | next |").join("\n");
+const live="**Moment ID:** \x60"+id+"\x60\n**Progress:** **5/10 DONE**\n## A. CMS/CRM-1 — 10 scoped checklist items\n"+cms+"\n## B. IAM v1.2 backlog crosswalk — 20 items\n"+iam+"\n## C. QA and release boundary\nNOT_RUN BLOCKED bàn giao SRS PROJECT_PLAN.md PROJECT_PROGRESS.md";
+const progress="| CMS/CRM-1 scoped | **5/10** |";
+const snapshot=live+"\nIMMUTABLE SNAPSHOT";
+test("accepts structurally consistent moment",()=>assert.deepEqual(validateContent(live,progress,name,snapshot),[]));
+test("detects wrong progress count",()=>assert.ok(validateContent(live.replace("5/10 DONE","6/10 DONE"),progress,name,snapshot).includes("CMS_PROGRESS_COUNT_MISMATCH")));
+test("detects mismatch with immutable history",()=>assert.ok(validateContent(live,progress,name,snapshot.replace(id,"MOMENT-IAICT-20261031-1947-ICT")).includes("MOMENT_MISMATCH")));
+test("rejects checked but in-progress",()=>assert.ok(validateContent(live.replace("| CMS-06 | [ ]","| CMS-06 | [x]"),progress,name,snapshot).includes("CMS_CHECKBOX_STATE_MISMATCH")));

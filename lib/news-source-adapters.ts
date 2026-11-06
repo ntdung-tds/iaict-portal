@@ -57,15 +57,24 @@ const COMMON_ENTITIES: Record<string, string> = {
   quot: '"',
 };
 
+/** XML numeric references must resolve to valid Unicode scalar values. */
+function validXmlCodePoint(value: number) {
+  // XML 1.0 Char production: TAB / LF / CR, valid BMP text, or supplementary scalar.
+  return Number.isInteger(value) && (value === 0x9 || value === 0xa || value === 0xd
+    || (value >= 0x20 && value <= 0xd7ff)
+    || (value >= 0xe000 && value <= 0xfffd)
+    || (value >= 0x10000 && value <= 0x10ffff));
+}
+
 function decodeEntities(value: string) {
   return value.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, entity: string) => {
     if (entity.startsWith("#x") || entity.startsWith("#X")) {
       const codePoint = Number.parseInt(entity.slice(2), 16);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+      return validXmlCodePoint(codePoint) ? String.fromCodePoint(codePoint) : "\uFFFD";
     }
     if (entity.startsWith("#")) {
       const codePoint = Number.parseInt(entity.slice(1), 10);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+      return validXmlCodePoint(codePoint) ? String.fromCodePoint(codePoint) : "\uFFFD";
     }
     return COMMON_ENTITIES[entity.toLowerCase()] ?? match;
   });
@@ -97,7 +106,8 @@ function normalizeDate(value: string | null) {
 function isAllowedUrl(value: string, definition: NewsSourceAdapterDefinition) {
   try {
     const url = new URL(value, definition.entryUrl);
-    return url.protocol === "https:" && definition.allowedHosts.includes(url.hostname.toLowerCase());
+    return url.protocol === "https:" && !url.port && !url.username && !url.password
+      && definition.allowedHosts.includes(url.hostname.toLowerCase());
   } catch {
     return false;
   }
@@ -171,7 +181,18 @@ export function parseRssNewsCandidates(
   return uniqueCandidates(candidates, definition.maxItems);
 }
 
-const HTML_LINK_RE = /<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+// Keep quoted attributes intact, including a literal ">" inside their value.
+const HTML_ANCHOR_RE = /<a\b((?:"[^"]*"|'[^']*'|[^'">])*)>([\s\S]*?)<\/a>/gi;
+// Only the actual `href` attribute counts, never data-href or title text.
+const HTML_ATTRIBUTE_RE = /([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+
+function getAnchorHref(attributes: string) {
+  for (const match of attributes.matchAll(HTML_ATTRIBUTE_RE)) {
+    if (match[1].toLowerCase() === "href") return match[2] ?? match[3];
+  }
+  return null;
+}
+
 const NON_ARTICLE_LABELS = new Set([
   "trang chủ",
   "xem thêm",
@@ -182,6 +203,32 @@ const NON_ARTICLE_LABELS = new Set([
   "english",
 ]);
 
+// Do not discover articles from comments, inline scripts, styles or hidden
+// template fragments; those anchor strings are not navigational page links.
+// This is a bounded source-page extractor, not a general HTML renderer.
+function stripNonArticleHtml(html: string) {
+  const withoutScriptsAndComments = html
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ");
+
+  // Templates may be nested. A single regex ending at the first closing tag
+  // can accidentally expose links still hidden inside an outer template.
+  const templateTagRe = /<\/?template\b[^>]*>/gi;
+  let visible = "";
+  let lastIndex = 0;
+  let depth = 0;
+  for (const match of withoutScriptsAndComments.matchAll(templateTagRe)) {
+    const index = match.index ?? 0;
+    if (depth === 0) visible += withoutScriptsAndComments.slice(lastIndex, index);
+    if (match[0].startsWith("</")) depth = Math.max(0, depth - 1);
+    else depth += 1;
+    lastIndex = index + match[0].length;
+  }
+  // Unclosed templates fail closed; no partially hidden source link escapes.
+  if (depth === 0) visible += withoutScriptsAndComments.slice(lastIndex);
+  return visible;
+}
+
 export function parseHtmlNewsCandidates(
   sourceId: string,
   html: string,
@@ -189,8 +236,10 @@ export function parseHtmlNewsCandidates(
 ) {
   const candidates: NewsDiscoveryCandidate[] = [];
 
-  for (const match of html.matchAll(HTML_LINK_RE)) {
-    const href = decodeEntities(match[1]).trim();
+  for (const match of stripNonArticleHtml(html).matchAll(HTML_ANCHOR_RE)) {
+    const rawHref = getAnchorHref(match[1]);
+    if (!rawHref) continue;
+    const href = decodeEntities(rawHref).trim();
     const title = stripMarkup(match[2]);
     if (title.length < 24 || NON_ARTICLE_LABELS.has(title.toLocaleLowerCase("vi"))) continue;
     if (!isAllowedUrl(href, definition)) continue;
@@ -223,42 +272,104 @@ export function parseNewsSourcePayload(
     : parseHtmlNewsCandidates(sourceId, payload, definition);
 }
 
+const MAX_SOURCE_REDIRECTS = 3;
+const SOURCE_REDIRECT_CODES = new Set([301, 302, 303, 307, 308]);
+
+function checkAllowedFeedUrl(value: string, definition: NewsSourceAdapterDefinition) {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error("News source redirect target is not approved");
+  }
+  if (url.protocol !== "https:" || url.port || !definition.allowedHosts.includes(url.hostname.toLowerCase())
+    || url.username || url.password) {
+    throw new Error("News source redirect target is not approved");
+  }
+  url.hash = "";
+  return url.toString();
+}
+
+async function readBoundedFeed(response: Response, maxBytes: number) {
+  const lengthHeader = response.headers.get("content-length");
+  if (lengthHeader !== null && /^\d+$/.test(lengthHeader.trim()) && Number(lengthHeader) > maxBytes) {
+    void response.body?.cancel().catch(() => {});
+    throw new Error("Source response exceeds " + maxBytes + " bytes");
+  }
+  if (!response.body) return "";
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let byteCount = 0;
+  let text = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      byteCount += value.byteLength;
+      if (byteCount > maxBytes) {
+        // An untrusted stream's cancellation may never resolve; fail closed immediately.
+        void reader.cancel().catch(() => {});
+        throw new Error("Source response exceeds " + maxBytes + " bytes");
+      }
+      text += decoder.decode(value, { stream: true });
+    }
+    return text + decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export async function fetchNewsSourceCandidates(
   source: Pick<NewsSourceDefinition, "id">,
   fetchImpl: typeof fetch = fetch,
 ): Promise<NewsSourceFetchResult> {
   const definition = getNewsSourceAdapter(source.id);
-  if (!definition) throw new Error(`No adapter configured for source ${source.id}`);
+  if (!definition) throw new Error("No adapter configured for source " + source.id);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), definition.timeoutMs);
 
   try {
-    const response = await fetchImpl(definition.entryUrl, {
-      method: "GET",
-      redirect: "follow",
-      cache: "no-store",
-      signal: controller.signal,
-      headers: {
-        Accept: definition.kind === "rss"
-          ? "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8"
-          : "text/html,application/xhtml+xml;q=0.9",
-        "User-Agent": USER_AGENT,
-      },
-    });
+    let url = checkAllowedFeedUrl(definition.entryUrl, definition);
+    let response: Response | undefined;
+    for (let hop = 0; hop <= MAX_SOURCE_REDIRECTS; hop++) {
+      const current = await fetchImpl(url, {
+        method: "GET",
+        // A trusted upstream can redirect to an unapproved or private origin.
+        redirect: "manual",
+        cache: "no-store",
+        signal: controller.signal,
+        headers: {
+          Accept: definition.kind === "rss"
+            ? "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8"
+            : "text/html,application/xhtml+xml;q=0.9",
+          "User-Agent": USER_AGENT,
+        },
+      });
 
-    if (!response.ok) throw new Error(`Source fetch failed with HTTP ${response.status}`);
-
-    const declaredLength = Number(response.headers.get("content-length") ?? "0");
-    if (declaredLength > definition.maxResponseBytes) {
-      throw new Error(`Source response exceeds ${definition.maxResponseBytes} bytes`);
+      if (!SOURCE_REDIRECT_CODES.has(current.status)) {
+        response = current;
+        break;
+      }
+      // Redirect bodies are unused; cancel even on invalid targets, without
+      // waiting for a potentially stalled remote stream's cancel promise.
+      void current.body?.cancel().catch(() => {});
+      if (hop === MAX_SOURCE_REDIRECTS) throw new Error("News source exceeded redirect limit");
+      const location = current.headers.get("location");
+      if (!location) throw new Error("News source redirect missing Location");
+      try {
+        url = checkAllowedFeedUrl(new URL(location, url).toString(), definition);
+      } catch {
+        throw new Error("News source redirect target is not approved");
+      }
     }
 
-    const payload = await response.text();
-    const actualBytes = new TextEncoder().encode(payload).byteLength;
-    if (actualBytes > definition.maxResponseBytes) {
-      throw new Error(`Source response exceeds ${definition.maxResponseBytes} bytes`);
-    }
+    if (!response) throw new Error("News source exceeded redirect limit");
+    if (!response.ok) throw new Error("Source fetch failed with HTTP " + response.status);
+
+    // response.text() allocates the whole stream before the max is checked.
+    const payload = await readBoundedFeed(response, definition.maxResponseBytes);
 
     return {
       sourceId: source.id,

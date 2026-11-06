@@ -1,7 +1,8 @@
 /**
  * Read-only static release safety policy, run on EVERY pull request.
- * The runner may generate screenshots, but GitHub must not retain QA media.
- * Authenticated direct-to-Drive PNG uploads need separately approved CI credentials.
+ * The public staging acceptance runner must not capture QA screenshots, videos
+ * or traces. Manual visual evidence belongs only in the dedicated private
+ * Google Drive folder; CI must not persist QA media in GitHub.
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -21,6 +22,18 @@ for (const name of workflows) {
   if (/uses:\s*actions\/upload-artifact@/i.test(source)) {
     fail(`${file}: QA artifact upload to GitHub is prohibited`);
   }
+}
+
+// No visual QA media may be created on the public staging CI runner.
+const stagingPlaywright = read("playwright.staging.config.ts");
+for (const required of ['screenshot: "off"', 'trace: "off"', 'video: "off"', 'reporter: "list"']) {
+  if (!stagingPlaywright.includes(required)) {
+    fail("Public staging CI must disable capture/report storage: " + required);
+  }
+}
+const stagingTests = read("e2e/staging-acceptance.spec.ts");
+if (["page.screenshot(", "page.video(", "context.tracing."].some(call => stagingTests.includes(call))) {
+  fail("Staging acceptance must not create screenshots, videos or traces");
 }
 
 const manualWorkflows = [
@@ -94,6 +107,16 @@ if (!pathAudit.includes("application.destinations") ||
   fail("Access audit must inspect current destinations and reject public bypass overrides");
 }
 
+// Staging-only native password cutover must remain explicitly pinned to the
+// one reviewed bypass policy and the live D1-backed native session gate.
+for (const guard of ["ACCESS_NATIVE_BYPASS_POLICY_MISMATCH", "ACCESS_NATIVE_GATE_NOT_ENABLED"]) {
+  if (!preflight.includes(guard)) fail("Staging release must reject unknown Access bypass or missing native gate: " + guard);
+}
+if (!read("worker.ts").includes("nativeActorEmail(request, env.DB)") ||
+    !read("worker.ts").includes("isProtectedAdminPath(path)")) {
+  fail("Worker must deny anonymous CMS/API paths using D1 session before any admin handler");
+}
+
 // The CMS release must never rely only on synthetic JWTs: public key
 // readiness, active D1 administrators and the exact Access roots are gates.
 if (!preflight.includes("active_admins") ||
@@ -111,6 +134,30 @@ if (!read(join(workflowsDir, "ci.yml")).includes("verify-access-jwks-readiness.m
 }
 if (!read(join(workflowsDir, "ci.yml")).includes("npm run verify:staging-rollback")) {
   fail("Every PR must run approved-SHA and rollback regression tests independently");
+}
+
+
+// B3.13: quarantined bytes may be accepted by staging admin/editor before
+// an external scanner is available, but can never be read or published.
+// Production gate must stay OFF regardless of environment variables.
+const mediaConfig = read("cloudflare.config.ts");
+if (!mediaConfig.includes('isStaging && process.env.IAICT_STAGING_MEDIA_QUARANTINE_ENABLED === "true"') ||
+    !mediaConfig.includes("MEDIA_R2_QUARANTINE_ENABLED: bindings.text(")) {
+  fail("Private Media staging-only gate missing or production could turn ON");
+}
+const mediaReleaseWorkflow = read(join(workflowsDir, "deploy-staging.yml"));
+for (const required of [
+  "refs/heads/release/staging-media-quarantine-20261104",
+  "IAICT_STAGING_MEDIA_QUARANTINE_ENABLED",
+  "STAGING_MEDIA_BINDINGS_NOT_SAFE",
+]) {
+  if (!mediaReleaseWorkflow.includes(required)) fail("Media staging release guard missing: " + required);
+}
+const mediaPolicySource = read("lib/media-policy.ts");
+if (!mediaPolicySource.includes("serviceConfigured: false") ||
+    !mediaPolicySource.includes("directR2PublicAccess: false") ||
+    !mediaPolicySource.includes("serveOriginal: false")) {
+  fail("Media scanner/public byte gate must remain fail-closed until real hosted AV");
 }
 
 if (issues.length) {

@@ -5,13 +5,18 @@
 const UUID = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i;
 const SHA = /^[a-f\d]{40}$/i;
 const RELEASE_REF = "refs/heads/release/staging-v17-hardened-20261029";
+const MEDIA_RELEASE_REF = "refs/heads/release/staging-media-quarantine-20261104";
 
-export function validateApprovedStagingCommit({ approvedSha, checkedOutSha, workflowSha, ref }) {
+export function validateApprovedStagingCommit({
+  approvedSha, checkedOutSha, workflowSha, ref, allowedRef = RELEASE_REF,
+}) {
   if (!SHA.test(approvedSha ?? "") || !SHA.test(checkedOutSha ?? "") ||
       !SHA.test(workflowSha ?? "")) {
     throw new Error("RELEASE_COMMIT_SHA_REQUIRED");
   }
-  if (ref !== RELEASE_REF) throw new Error("RELEASE_BRANCH_MISMATCH");
+  if (![RELEASE_REF, MEDIA_RELEASE_REF].includes(allowedRef) || ref !== allowedRef) {
+    throw new Error("RELEASE_BRANCH_MISMATCH");
+  }
   if (approvedSha !== checkedOutSha || approvedSha !== workflowSha) {
     throw new Error("RELEASE_COMMIT_NOT_APPROVED");
   }

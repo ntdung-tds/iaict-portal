@@ -1,5 +1,19 @@
 # IAICT Portal
 
+> **Lưu ý trạng thái:** Phần M0/đặc tả cũ dưới đây phản ánh baseline lịch sử. Staging đã có các phiên bản IAM/CMS mới hơn; **luôn xác minh GitHub PR/CI và Cloudflare Worker hiện tại** trước khi làm việc hoặc phát hành. Không coi M0 PENDING dưới đây là trạng thái runtime tháng 10/2026.
+
+## Quản lý dự án và AI agent — cập nhật 31/10/2026
+
+- [**Project Master trên Google Drive**](https://drive.google.com/drive/folders/11kM9LwI0K0dXrSept6FU4UzKaIBn_eKQ) và [READ FIRST](https://docs.google.com/document/d/1shehSFXogJqx7hhsIgYigU21IccifWx9ntybVUt3Rnk/edit?usp=drivesdk).
+- [Project registry](docs/project/DRIVE_REGISTRY.md), [Operating Model / RACI](docs/project/OPERATING_MODEL.md), [Project Charter DRAFT](docs/project/PROJECT_CHARTER_DRAFT.md), [Risk Register](docs/project/RISK_REGISTER.md).
+- **AI Agents:** [AGENTS.md](AGENTS.md) và [portable Skill](.agents/skills/iaict-project-management/SKILL.md) (có hướng dẫn cho Copilot, Claude và Gemini).
+- [QA staging role identities & real-browser matrix](docs/qa/IAICT_TEST_IDENTITIES.md) — 8 safe, disabled fixtures; full Access/role E2E requires controlled test identities.
+- [Test Management](docs/qa/IAICT_TEST_MANAGEMENT.md), [78 test cases](docs/qa/IAICT_TEST_CASES.csv), [test-run ledger](docs/qa/IAICT_TEST_RUNS.md). Hình ảnh/ảnh lỗi chỉ tại [Drive QA](https://drive.google.com/drive/folders/1dVZjHE_0spjolHtWPvfKOydnbHZJwIT3), không phải GitHub.
+- **Deferred full-source handoff — ONLY on explicit owner command “bàn giao”:** [GitHub Issue #38](https://github.com/ntdung-tds/iaict-portal/issues/38) — copy **complete source code** and docs to private [Drive FINAL_HANDOFF](https://drive.google.com/drive/folders/1FPhc8qDloCwxSRxTq-X6i3t5b8DYkPaQ), verify SHA256 and restore before project closure. Currently **PENDING**.
+- Production `iaict-portal` **chỉ thay đổi sau phê duyệt rõ ràng**. Staging `iaict-portal-staging` phải qua CI, acceptance, D1/Access/rollback readback; giữ build HOLD.
+
+---
+
 Cổng thông tin điện tử IAICT triển khai theo đặc tả **v3.4.3.11 FINAL HANDOFF — FROZEN — M0 REQUIRED**.
 
 ## Trạng thái hiện tại

@@ -1,0 +1,261 @@
+# IAM, người dùng, phiên đăng nhập, RBAC — thaydoi.md
+
+**Module:** `iam-access` | **Status:** OPEN_CHANGE_LOG | **SRS integration:** PENDING USER SIGN-OFF
+
+**Nguồn tham chiếu:** Đề cương chi tiết IAICT 2026, §10.1, §13; ND06, ND07. Chỉ là tham chiếu về yêu cầu; chưa tự coi là SRS đã được duyệt.
+
+**Đối chiếu code hiện có (cần kiểm tra theo commit, không mặc nhiên nghiệm thu):** `app/admin/users/page.tsx`, `app/login/page.tsx`, `docs/adr/0002-iaict-native-mfa-totp-staged.md`.
+
+## Nhật ký thay đổi
+
+| CHG ID | Ngày | Mô tả ngắn | Trạng thái | PR/Commit | Test/Run | Quyết định đưa vào SRS |
+|---|---|---|---|---|---|---|
+| CHG-IAM-ACCESS-20261031-01 | 2026-10-31 | Khởi tạo nhật ký theo phân hệ để tập hợp thay đổi; cần đối chiếu lịch sử implementation trước khi nhập các thay đổi cũ | RECORDED — DOCUMENTATION ONLY | PR #36 | NOT_RUN — không có thay đổi runtime | CHƯA_CHỐT |
+
+| CHG-IAM-ACCESS-20261031-02 | 2026-10-31 | Hồi cứu: thư viện TOTP và bộ test RFC 6238, chỉ ở mức thuật toán, **chưa có luồng MFA hoàn chỉnh** | BACKFILLED / UNIT_TESTED_ONLY | [PR #36](https://github.com/ntdung-tds/iaict-portal/pull/36), SHA `645a98d50bd132278733f6676ebc7c72aa88cb06` | IAM-FUT-007, RUN-IAM-20261031-02 (53 test files / 533 unit tests suite, không phải MFA live) | CHƯA_CHỐT |
+| CHG-IAM-ACCESS-20261031-03 | 2026-10-31 | Hồi cứu: 8 QA identity staging theo vai trò, tất cả disabled, không password/Access; đăng nhập thật theo vai trò chưa thực hiện | BACKFILLED / D1_FIXTURE_ONLY | [PR #36](https://github.com/ntdung-tds/iaict-portal/pull/36), [Issue #34](https://github.com/ntdung-tds/iaict-portal/issues/34) | IAM-AUTH-017, IAM-USER-017, RUN-IAM-20261031-03; 7-role live NOT_RUN | CHƯA_CHỐT |
+
+| CHG-IAM-ACCESS-20261031-04 | 2026-10-31 | Hồi cứu phiên tự quản lý, revoke invitation, lọc mật khẩu yếu | BACKFILLED / CI_TESTED / LIVE_AUTH_PENDING | PR #36 / `2a76deb5` | IAM-SESS-004/008, IAM-INV-006/007/008/011; RUN-IAM-20261031-01 | CHƯA_CHỐT |
+| CHG-IAM-ACCESS-20261031-05 | 2026-10-31 | Hồi cứu optimistic concurrency khi sửa user/role: HTTP 428/409, atomic rollback | BACKFILLED / CI_TESTED / LIVE_ROLE_NOT_RUN | PR #36 / `16e08bc2` | IAM-USER-005/006/007/017/018; RUN-IAM-20261031-03 | CHƯA_CHỐT |
+
+## Thay đổi chi tiết
+
+### CHG-IAM-ACCESS-20261031-01 — Khởi tạo sổ theo dõi phân hệ
+- **Trạng thái:** RECORDED — DOCUMENTATION ONLY, không phải bằng chứng feature đã được triển khai hay chủ dự án đã phê duyệt.
+- **Trước:** chưa có sổ `thaydoi.md` riêng trong repository cho phân hệ này.
+- **Sau:** sử dụng file này làm bản ghi thay đổi liên tục, tách khỏi `docs/requirements/SRS.md`.
+- **Phạm vi:** quản trị tài liệu, không thay đổi API, D1, UI, quyền, bảo mật hay production.
+- **Nguồn:** yêu cầu trực tiếp của chủ dự án ngày 31/10/2026; đề cương (§10.1, §13; ND06, ND07).
+- **Quyết định/SRS:** CHƯA_CHỐT; không cập nhật SRS cho tới khi có yêu cầu chốt.
+- **Test:** NOT_RUN/NO_RUNTIME_CHANGE; chỉ xác minh cấu trúc file, link và CI tài liệu ở PR.
+
+### CHG-IAM-ACCESS-20261031-02 — Hồi cứu TOTP foundation (chưa chốt)
+- **Trước:** chưa có primitive RFC 6238 TOTP trong mã nguồn theo đợt này.
+- **Sau:** `lib/totp.ts` và `lib/totp.test.ts` trong nhánh phát triển; không tạo database/schema, không bật MFA, không sửa Cloudflare Access.
+- **Lý do:** chuẩn bị kiểm thử thuật toán trước khi làm enrollment, encryption, throttle, CAS replay và recovery.
+- **Ảnh hưởng:** code unit/security; không đổi chức năng đăng nhập được triển khai trên Worker.
+- **Bằng chứng:** `RUN-IAM-20261031-02`, CI [#41192956639](https://github.com/ntdung-tds/iaict-portal/actions/runs/41192956639). Kiểm thử live MFA **NOT_RUN**.
+- **SRS:** PENDING_OWNER_CHOT; không tự coi đã được duyệt.
+
+### CHG-IAM-ACCESS-20261031-03 — Hồi cứu QA fixture theo vai trò (chưa chốt)
+- **Trước:** staging D1 chưa có bộ tài khoản QA tách vai trò.
+- **Sau:** 8 user fixtures trong staging D1, 8 role links và audit; tất cả khóa (`is_active=0`), không password, không Cloudflare Access identity.
+- **Lý do:** chuẩn bị kiểm thử 7 vai trò và hai Admin tranh chấp; không được coi đây là test thành công của API onboarding hoặc đăng nhập thật.
+- **Bằng chứng:** `RUN-IAM-20261031-03`, [QA identities on Drive](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit); live role E2E vẫn **NOT_RUN**.
+- **SRS:** PENDING_OWNER_CHOT; không sửa SRS.
+
+### CHG-IAM-ACCESS-20261031-04 — Hồi cứu quản lý phiên, thu hồi invitation, mật khẩu yếu
+- **Nguồn:** [PR #36](https://github.com/ntdung-tds/iaict-portal/pull/36); source SHA `2a76deb5642d6f60a89c894fa91c7c30a42953c8`, staging deployment `754b0509-e754-410c-8dff-46015d162a89`.
+- **Trước → Sau:** không có thao tác tự thu hồi các phiên native khác; chưa có Admin revoke activation invitation đang chờ. Nay `GET/POST /api/account/sessions` đếm phiên còn hoạt động và `revokeOthers` mà không trả token; revoke invitation nguyên tử + audit; kiểm tra mật khẩu mới chặn tập nhỏ mật khẩu dễ đoán, giữ tối thiểu **8 ký tự**.
+- **Tác động:** `/account/security`, session/invite API, D1 sessions, audit; same-origin checks; không sửa Cloudflare Access hay production.
+- **Traceability:** `IAM-SESS-004/008`, `IAM-INV-006/007/008/011`; [RUN-IAM-20261031-01](../../qa/IAICT_TEST_RUNS.md) và [CI #41186058883](https://github.com/ntdung-tds/iaict-portal/actions/runs/41186058883), suite **526/526 PASS**. [Staging acceptance #41186058888](https://github.com/ntdung-tds/iaict-portal/actions/runs/41186058888) là **pre-deploy PASS trên Worker cũ**, không phải kiểm thử chức năng này live sau deploy. Không quy đổi suite PASS thành từng case PASS.
+- **Giới hạn:** real-auth multi-device NOT_RUN, browser post-deploy BLOCKED HTTP 429. [Drive IAM QA](https://drive.google.com/drive/folders/1Jq2bazYVZsyHlaU9Mr6jhaKlHj1MAjSp) — ảnh NOT_CAPTURED. **SRS:** CHƯA_CHỐT; rollback staging `bf2a0bfd-0e08-492c-9853-de6b35498b1b` nếu triển khai quy trình khôi phục.
+
+### CHG-IAM-ACCESS-20261031-05 — Hồi cứu xung đột ghi sửa người dùng
+- **Nguồn:** [PR #36](https://github.com/ntdung-tds/iaict-portal/pull/36), SHA `16e08bc20b06c4cb7b7b2cc54857bade322d333a`.
+- **Trước → Sau:** sửa/deactivate user dễ bị ghi đè hoặc sai lệch ở các lần sửa đồng thời. Bản code mới dùng `updatedAt` guard, thiếu precondition trả **428**, stale edit trả **409**; transaction D1 thực hiện đồng bộ user/roles/audit/session/invitation và bảo vệ bản nháp UI khi gặp conflict.
+- **Tác động:** Admin UI và API quản lý users, roles, session revoke, audit; không tạo D1 migration mới ở đợt optimistic concurrency.
+- **Traceability:** `IAM-USER-005/006/007` được nhắm tới trong integration; `IAM-USER-017/018` yêu cầu live role/browser, hiện **NOT_RUN** ở [RUN-IAM-20261031-03](../../qa/IAICT_TEST_RUNS.md). Không coi CI của mã hiện hành là bằng chứng thực nghiệm 2-admin trên staging.
+- **Giới hạn / bằng chứng:** 8 QA fixtures trên staging vẫn disabled, [private role registry](https://docs.google.com/document/d/1OV8F7b1GtF2gV84eEQ8AphsdHQTEmGJuF8kwf3SxnBA/edit); live Access RBAC/IDOR pending. **SRS:** CHƯA_CHỐT; không deploy hay mở Access bằng ghi nhận hồi cứu này.
+
+## Các thay đổi tiếp theo
+
+Khi thêm/sửa tính năng, bổ sung `CHG-IAM-ACCESS-YYYYMMDD-NN` theo [mẫu và quy định](../README.md); **không sửa SRS**. Nếu hồi cứu thay đổi đã thực hiện trước đây, ghi `BACKFILLED` cùng nguồn commit/PR và kiểm thử; không tự đặt PASS.
+
+### CHG-IAM-ACCESS-20261102-01 — Thực nghiệm KDF local workerd (QA only)
+- **Trạng thái:** TEST_EVIDENCE_ONLY / CHƯA_CHỐT; 2026-11-02.
+- **Trước:** 100000 được giả định là hard cap; local workerd boundary NOT_RUN.
+- **Sau:** bổ sung 2 QA case `IAM-AUTH-018/019`, `scripts/kdf-workerd/` và [RUN-IAM-20261102-01](../../qa/IAICT_TEST_RUNS.md) thực nghiệm tại SHA `82380adafceaa239f24438ee85fa8ef10cc9d343`: 100000 và 100001 đều thành công, source app giữ nguyên.
+- **Traceability:** [PR #42](https://github.com/ntdung-tds/iaict-portal/pull/42), [CI #41384536088](https://github.com/ntdung-tds/iaict-portal/actions/runs/41384536088), isolated local workerd PASS. Các job khác phải kiểm tra trên final SHA.
+- **Ảnh hưởng:** chỉ QA/CI/tài liệu; không sửa UI/API/D1/R2/Access/Worker deployed/production. 600000 và live-auth E2E NOT_RUN. Không có ảnh (NO_IMAGE_REQUIRED).
+- **SRS:** FROZEN, chưa duyệt; ADR-0002 vẫn PROPOSED, không tự đổi KDF.
+
+### CHG-IAM-ACCESS-20261102-02 — Thử nghiệm thư viện mã hóa MFA F2
+- **Trạng thái:** PROPOSED / CHƯA_CHỐT, ngày 2026-11-02.
+- **Trước:** chưa có lớp lưu trữ mã hóa yếu tố TOTP.
+- **Sau:** thư viện AES-GCM độc lập `lib/mfa-secret-crypto.ts`, kèm kiểm thử `lib/mfa-secret-crypto.test.ts` và QA case `IAM-FUT-008`; không tích hợp vào API hoặc cơ sở dữ liệu.
+- **Tác động:** thư viện và kiểm thử nội bộ; không sửa giao diện, D1, Access, staging hay production.
+- **Đối chiếu:** Issue #37, ADR-0002 PROPOSED. CI/Run: PENDING tại thời điểm ghi; không tuyên bố chức năng MFA đã hoàn thành.
+- **SRS:** CHƯA_CHỐT. Không sửa SRS hiện hành.
+
+### CHG-IAM-ACCESS-20261102-03 — Local workerd AES-GCM runtime compatibility (QA-only)
+- **Trạng thái:** PENDING_CI / CHƯA_CHỐT, 02/11/2026; task CMS-08/S3 (`T-IAM-MFA-F2`), Issue #37.
+- **Trước:** `IAM-FUT-008` có Node/Vitest AES-256-GCM unit PASS nhưng chưa có bằng chứng chạy cùng thư viện trong Workers runtime.
+- **Sau:** `scripts/mfa-workerd/` sử dụng esbuild có sẵn để bundle **đúng `lib/mfa-secret-crypto.ts`** vào workerd local `127.0.0.1:19388`; một bước trong GitHub PR job đã có chạy 11 kiểm tra với dữ liệu tổng hợp, chỉ xuất tên kiểm tra + verdict; `IAM-FUT-009` trong QA CSV. `probe.bundle.mjs` tạo tạm rồi xóa. Chỉ cập nhật PASS sau CI thật.
+- **Ảnh hưởng:** CI + test + tài liệu; không đổi thư viện encryption đang dùng, route, Cloudflare bindings, tài khoản, D1, Access, staging hoặc production; không có secrets.
+- **QA:** `IAM-FUT-009` READY; chưa phải MFA enrollment/login E2E (`IAM-FUT-001` vẫn NOT_RUN). Evidence local CI log, ảnh NO_IMAGE_REQUIRED.
+- **Kiến trúc:** ADR-0002 tiếp tục PROPOSED; thiết kế vòng đời khóa, factor D1, CAS replay và recovery cần review trước bất kỳ tích hợp thực tế.
+- **SRS:** FROZEN / CHƯA_CHỐT.
+
+
+### CHG-IAM-ACCESS-20261102-04 — Review PR #45: độc lập trạng thái workerd crypto probe
+- **Trạng thái:** QA_ONLY / CHƯA_CHỐT, 02/11/2026. [PR #46](https://github.com/ntdung-tds/iaict-portal/pull/46).
+- **Trước:** `IAM-FUT-009` 11/11 PASS tại SHA `23c0960d` nhưng biến `checks` nằm ở phạm vi module, có thể dùng lại giữa các HTTP request trên cùng Worker isolate; lỗi ngoại lệ được cắt chuỗi thay vì cho phép tên lỗi an toàn.
+- **Sau:** gom kết quả theo từng request, trả mã lỗi cho phép; cùng workerd local gửi hai request liên tiếp và thử path/method không hợp lệ. Không sửa `lib/mfa-secret-crypto.ts`, key, dữ liệu hay luồng MFA.
+- **Kiểm thử:** `RUN-IAM-20261102-04` / `IAM-FUT-009`, [CI #41390187476](https://github.com/ntdung-tds/iaict-portal/actions/runs/41390187476), source SHA `702ce448ae1a63a6ab3e768a01104f14d16a183c`: 11/11 mỗi lượt (2 lượt), HTTP 404 cho path/method sai, **LOCAL_WORKERD PASS**. Final PR head gate xác minh riêng.
+- **Giới hạn:** Không có Worker deployed, D1, Access, secret binding, MFA E2E hoặc production thay đổi. ADR-0002 PROPOSED, SRS FROZEN, hình QA NO_IMAGE_REQUIRED.
+
+
+### CHG-IAM-ACCESS-20261102-05 — Chứng minh CAS chống dùng lại OTP trên D1 cô lập (chưa tích hợp MFA)
+- **Ngày / trạng thái:** 02/11/2026, QA_ONLY / CHƯA_CHỐT; PR [#47](https://github.com/ntdung-tds/iaict-portal/pull/47); Issue #37; ADR-0002 PROPOSED.
+- **Trước:** nguyên tắc D1 atomic `last_accepted_counter` chỉ nằm ở ADR, chưa có kết quả thực thi với D1 mô phỏng; MFA enrollment/session/replay thật NOT_RUN.
+- **Sau:** thêm duy nhất bộ test `scripts/mfa-d1-cas/run-local.mjs`, chạy với Miniflare v5 `convertV4MiniflareOptions` và D1 SQLite **in-memory/ephemeral**. Tạo schema factor **chỉ trong test**; không thêm migration thật hoặc API. `IAM-FUT-010` và `RUN-IAM-20261102-05` ghi lại 15 nhóm kiểm tra, 16 yêu cầu đồng thời cùng counter chỉ 1 thành công trên D1 cục bộ.
+- **Bằng chứng đúng SHA:** `2bee360c3552e9dcfe60c94e7719b9d8ae7d33a5`; [CI #41393225236](https://github.com/ntdung-tds/iaict-portal/actions/runs/41393225236), job `kdf-local-workerd` PASS. Các lần thử đầu thất bại do cấu hình Miniflare 5 được giữ trong lịch sử CI, không được gọi PASS.
+- **Ảnh hưởng thực tế:** chỉ mã test/CI/QA/ADR/PCS. Không đổi UI/API, TOTP, session, D1 staging/production, Cloudflare Worker, Access, R2, khóa thật hay người dùng. D1 remote, mã OTP thật, recovery và E2E **NOT_RUN**.
+- **SRS:** FROZEN / chưa có lệnh “chốt”. Không tự coi thiết kế D1 là yêu cầu hoặc schema được duyệt.
+
+
+### CHG-IAM-ACCESS-20261102-06 — Thiết kế hợp đồng tích hợp MFA với phiên đăng nhập thực tế (CHƯA_CHỐT)
+
+- **Nguồn quyết định:** yêu cầu tiếp tục CMS-08/S3; Issue [#37](https://github.com/ntdung-tds/iaict-portal/issues/37); [ADR-0002](../../adr/0002-iaict-native-mfa-totp-staged.md) PROPOSED; [PR #49](https://github.com/ntdung-tds/iaict-portal/pull/49) (đề xuất, không triển khai).
+- **Trước (đọc trực tiếp mã):** `lib/native-auth.ts` cấp full `iaict_auth_sessions` sau mật khẩu; `app/api/auth/login/route.ts` trả cookie `__Host-iaict_session` khi thành công; `nativeActorEmail()`, `nativeSessionPrincipal()`, `app/api/auth/session/route.ts` không phân biệt MFA assurance. Không có MFA native tích hợp. **Đây là rủi ro bypass nếu chỉ thêm UI OTP**, không phải tuyên bố lỗi production hiện đang bật MFA.
+- **Sau (CHỈ THIẾT KẾ):** hợp đồng first-factor → pre-MFA challenge giới hạn (TTL/one-time/bind credential) → xác minh OTP + D1 CAS + challenge consume + session/audit nguyên tử → full-session nhận diện `auth_level` tại tất cả middleware đọc phiên. Key binding riêng môi trường, recovery độc lập, revoke session trên reset, migration forward-only/rollback và pilot theo vai trò với Cloudflare Access giữ nguyên.
+- **API/UI:** chỉ vẽ luồng dự kiến; **không thêm endpoint, cookie, header, frontend, công tắc enforce hoặc redirect** trong PR này.
+- **D1/secret/security:** nêu logical schema `iam_mfa_factors`, `iam_mfa_challenges`, `iam_mfa_recovery_codes` và nâng assurance của session ở mức proposal; **không tạo migration, không provision key, không cập nhật binding/Access/Worker, không sửa D1 thật**.
+- **QA:** cập nhật phạm vi dự kiến cho các case `IAM-FUT-001`, `IAM-FUT-002`, `IAM-FUT-004`; `IAM-FUT-010` local CAS PASS vẫn chỉ giới hạn test; **các luồng MFA đăng nhập/recovery/7-role hosted NOT_RUN**. Danh mục giữ **83 case**. Kết quả CI cho chính PR sẽ ghi sau khi chạy, tuyệt đối không coi CI tài liệu là E2E.
+- **Trạng thái:** `T-IAM-MFA-F2` IN_PROGRESS / QA PARTIAL, Owner MFA security acceptance NOT GIVEN. **SRS FROZEN**; chủ dự án quyết định lúc hoàn tất có đồng bộ SRS hay không.
+
+
+### CHG-IAM-ACCESS-20261102-07 — Isolated pre-MFA challenge and session assurance
+
+- Date/status: 2026-11-02; ISOLATED FOUNDATION / NOT APPROVED. PR #50, Issue #37; ADR-0002 PROPOSED.
+- Before: Native login grants a full D1 session immediately on successful password. The application has no native MFA assurance checks.
+- After: Add standalone, unimported `lib/native-mfa-preauth.ts` and Vitest. The module generates a 256-bit random challenge token, returns a separate SHA-256 record digest, supplies a distinct Secure/HttpOnly five-minute pending cookie, checks challenge candidate eligibility against user, credential fingerprint, expiry, attempts and disabled state, and models a fail-closed server session assurance predicate.
+- Boundaries: The eligibility function is READ ONLY, not challenge redemption. It neither matches an OTP nor issues or authorizes any session. Existing login/API/Worker/session readers are unchanged. No live D1 schema, migration, factor, key binding, user or Cloudflare setting modified. Real MFA E2E remains NOT_RUN.
+- QA: New P0 security case IAM-FUT-011, synthetic local Vitest. Registry 84 cases. Record actual exact-SHA results separately, never claim hosted MFA.
+- SRS remains FROZEN pending an explicit owner decision; implementation and Access cutover require separate security approval.
+
+
+### CHG-IAM-ACCESS-20261102-08 — Double review of isolated MFA challenge guard
+
+- Date/status: 2026-11-02, REVIEW_CORRECTION / LOCAL_ONLY; proposed PR #51. The original module was introduced by merged PR #50, `IAM-FUT-011`.
+- Review pass 1 (static security/boundary): check source against D1 and native session semantics. Existing login and Worker do **not** import the isolated module. A future reader must not accept unvalidated account/role booleans; TypeScript does not validate D1/JSON runtime data.
+- Review pass 2 (adversarial data): correct `pendingChallengeEligibleForCas` and `nativeSessionMeetsAssurance` to require `accountActive === true` and `hasActiveRole === true`; reject truthy `"false"`, numeric `1`, Boolean objects and malformed data. Require primitive strings before token/digest regexp and constant-time hash comparison, preventing implicit object coercion or exceptions.
+- Compatibility requirement: D1 SQLite active/role numbers must be explicitly normalized to strict booleans by the **future trusted server-side caller**. Current module remains unimported by login/session/Worker; no migration, no live auth behavior change, no alternate authentication path or MFA activation.
+- QA: Extend existing `IAM-FUT-011` by four negative test scenarios, no new test case, total registry **84**. The prior 16/16 PASS stays historical; new count and exact SHA require new CI evidence, and full hosted MFA remains NOT_RUN.
+- SRS FROZEN, ADR-0002 PROPOSED, Owner MFA security approval NOT GIVEN. No remote D1, Access, production, or staging Worker updates.
+
+
+### CHG-IAM-ACCESS-20261102-09 — Atomic first-factor challenge CAS, disposable local D1 only
+- **Date/status:** 2026-11-02, QA_ONLY / CHƯA_CHỐT. [PR #53](https://github.com/ntdung-tds/iaict-portal/pull/53); Issue #37; ADR-0002 PROPOSED.
+- **Before:** `IAM-FUT-011` tests a read-only pre-MFA candidate in Node; `IAM-FUT-010` tests local factor replay counter CAS. Neither proves that a first-factor challenge can be consumed once with account/credential changes checked in D1.
+- **After:** add **test-only** `scripts/mfa-preauth-d1-cas/run-local.mjs` with two disposable synthetic tables and one conditional `UPDATE` of challenge's consumed timestamp/revision, requiring `success === true` and `meta.changes === 1`. SQL checks current server-owned user record: active account, current role, credential fingerprint **and monotonic revision**, plus challenge owner, purpose, expiry, TTL, failed attempts and lockout. New QA case `IAM-FUT-012` P0, increasing registry **84 → 85** cases.
+- **Security boundary:** A successful challenge CAS is only a **storage primitive**; it does not validate a real OTP, update factor counter, issue session, write audit, implement transaction across all three, or protect an actual login route. Never claim that this is hosted D1 parity or MFA enrollment/acceptance.
+- **API/UI/D1:** no changes to existing login/session/Worker/API/UI, no forward migration, no hosted D1 binding, no real credential/secret, no staging or production deployment, no Access/R2 change.
+- **QA and trace:** append-only `RUN-IAM-20261102-10` after actual CI evidence; test historical failures and exact SHAs remain separate. SRS **FROZEN**, Owner/security approval **NOT GIVEN**, ADR-0002 **PROPOSED**.
+
+
+### CHG-IAM-ACCESS-20261102-10 — Two-pass review: prevent pre-MFA challenge revival after access restoration
+- **Date/scope:** 2026-11-02; QA_ONLY, synthetic Miniflare D1 only; Issue #37; PR #54 (proposed). ADR-0002 still PROPOSED and SRS FROZEN.
+- **Pass 1 source finding:** PR #53's single-row CAS checked current `is_active` and `has_active_role` as binary state but the synthetic SQL did not bind a challenge to a monotonic **account/authorization security revision**. If a role was removed then restored, or the account disabled then reactivated within TTL, the old pending challenge could become redeemable again. It remains a **future implementation threat**, not evidence of a live MFA exploit (no login route imports these synthetic scripts).
+- **Pass 2 correction:** add `security_revision` to **synthetic user and challenge test tables**; require equality inside the same conditional `UPDATE`. Revocation and disable update the synthetic security revision, so restoring the role/active bit does not revive old challenges. Credential fingerprint/revision checks stay in place. Only the new independently minted challenge at the current security revision can pass. Tighten primitive token/fingerprint exact length and retain per-user revision isolation.
+- **QA:** extend existing `IAM-FUT-012`; do **not** create a duplicate case (85-case registry unchanged). Record exact CI after it runs; preserve any original initial failures. Test is storage-only, not real OTP verification, multi-table factor/session transaction, remote D1, or rollout.
+- **Implementation dependency:** any future real backend MUST persist/increment a trusted monotonic security revision (or reliably revoke challenge rows atomically) on account disabling, role removal, privilege/policy changes and security resets. This test's synthetic revision does not create a production security control.
+- **No runtime mutation:** no actual D1 migration, Worker, native-auth/session/API, Access, KMS, R2 or production changes. Owner security approval NOT GIVEN.
+
+
+### CHG-IAM-ACCESS-20261102-11 — Iterative review loop for local pre-MFA challenge CAS
+
+- **Scope/date:** 2026-11-02, local test-only, **NOT APPROVED**; existing P0 `IAM-FUT-012`, no new QA case (85 registered). Preserve SRS FROZEN and ADR-0002 PROPOSED.
+- **Loop protocol (bounded by demonstrable evidence, not claimed universal proof):** inspect exact merged source and prior test evidence → identify a reproducible in-scope defect/coverage gap → add a negative case that would fail without the invariant → apply smallest synthetic test correction → run local D1 and full CI → independent review of the resulting diff and failure evidence → repeat if further in-scope findings remain. Exit only after all documented high-priority cases pass, no new in-scope actionable finding in two distinct review methods, CI/staging gates at final SHA PASS, and real-MFA gaps stay explicitly NOT_RUN. An unresolved security finding means **do not merge**.
+- **Finding round 1:** after PR #54 security-revision coverage, role scope/privilege changes and MFA factor reset can occur while `is_active=1` and `has_active_role=1`; challenge issuance must use the revision from authoritative D1, not a mirrored JS counter that could hide a missed write.
+- **Correction:** in disposable local D1 harness only, query the user's current `security_revision` for synthetic challenge issuance and assert epoch increments/old challenge invalidation on role-scope change and factor reset. No real IAM event handler, schema migration or session enforcement. A future *real* backend must atomically increment authoritative epoch for each security-relevant transition and reject stale challenges.
+- **Next review rounds:** repeat test and diff analysis, explicitly examine replay/expiry/error handling and independent-user isolation, then document actual CI and closure status in an append-only QA RUN. Do not claim no security risk outside the isolated D1 challenge CAS.
+- **Do not implement/live test:** verified OTP, cross-table factor counter+challenge+session transaction, hosted DB, Access, production/staging Worker or user account modification. Owner/security approval NOT GIVEN.
+
+
+### CHG-IAM-ACCESS-20261102-12 — Synthetic atomic verified-OTP MFA transaction contract
+
+- 2026-11-02, **QA_ONLY / NOT_APPROVED**. New isolated `IAM-FUT-013` P0 case, case registry 85→86, Issue #37; ADR-0002 remains PROPOSED, SRS FROZEN.
+- Previous `IAM-FUT-010/012` only proved *separate* factor replay or challenge CAS. They did not prevent full-session issuance after a zero-row CAS, a separate factor replay loss, or late audit failure.
+- New `scripts/mfa-atomic-d1/run-local.mjs` constructs a **fresh disposable local D1** with synthetic user/factor/challenge/session/audit tables, verifies *synthetic* HMAC-SHA1 TOTP before mutation, then uses one `D1.batch()` transaction to perform challenge CAS, SQL CHECK guard on `changes()=1`, factor counter CAS, second SQL CHECK guard, synthetic MFA-assured session insert and audit insert.
+- Mandatory negative checks: same challenge 16-way race, two distinct challenges same OTP counter, wrong code, expiry, account/security/credential changes between OTP read and batch, factor disable/rotation, UNIQUE collision at session or audit step. A failed CHECK/UNIQUE must abort and roll back the earlier CAS writes. A post-batch JavaScript `meta.changes` check alone would be unsafe because a session might already be committed.
+- **Not implementation:** this is an isolated transaction design proof using synthetic secret and sessions, **not the production OTP module, migration, key binding, authenticated Worker/API, or hosted D1**. No live user, Access, Cloudflare Worker, production or R2 mutation. Validation of actual multi-factor/7-role E2E remains NOT_RUN.
+- Record actual result under append-only `RUN-IAM-20261102-13` after observing CI and preserve failures/corrections. Host-key provider, schema, security policy and recovery still need Owner/security decision.
+
+
+### CHG-IAM-ACCESS-20261102-13 — Actual TOTP helper parity within local synthetic atomic D1 harness
+
+- **Scope/status:** 2026-11-02, QA_ONLY / CHƯA_CHỐT; existing P0 `IAM-FUT-013` (86 total QA cases unchanged). Follow-up to merged PR #58, Issue #37. ADR-0002 PROPOSED; SRS FROZEN; Owner MFA/security approval NOT GIVEN.
+- **Before:** local `scripts/mfa-atomic-d1/run-local.mjs` independently generated **and matched** the OTP via synthetic Node HMAC-SHA1, so earlier 20/20 D1 checks did not run the actual `lib/totp.ts` matcher.
+- **After:** bundle the exact checked-in `lib/totp.ts` through esbuild, dynamically load its exports in isolated Node (no Worker deployment), verify its generator against a published RFC 6238 SHA-1 vector and an independent Node HMAC oracle, and use **`matchTotpCounter()`** with ±1-step tolerance and D1-read `last_accepted_step` to derive the candidate before the **unchanged** atomic challenge CAS → guard → factor CAS → guard → synthetic session/audit batch. The in-batch factor CAS, not an earlier read, remains the authoritative replay barrier. Add seven local-only checks (including a deterministic RFC out-of-window denial), retaining existing negative/rollback/concurrency probes.
+- **Evidence status:** initially PENDING exact-head CI and public-only staging checks. Append a separate QA run after obtaining actual evidence; no historical result is reclassified.
+- **Boundaries:** real helper running in **Node local test**, not hosted Workers; factor/user/session tables, factor secret and records remain synthetic, no real encrypted-key binding, no real security epoch, no MFA policy enforcement, no account or authenticated 7-role E2E. No changes to `lib/totp.ts`, login/session routes, `worker.ts`, schema/migrations, Access, R2, credentials or production. Never infer permission to deploy MFA from this scoped test.
+
+- **Review loop 2 finding/fix:** Fixed-value "wrong OTP" could rarely equal one of three valid random ±1-window codes, making an otherwise correct negative test flaky. Compute a candidate that is **provably absent** from all three valid window values, and add a deterministic out-of-window RFC denial case. Re-run exact-head quality gates; this is a test-only reliability correction, not a production authentication defect.
+
+### CHG-IAM-ACCESS-20261102-14 — Real IAM schema / security-epoch / assurance review
+- **Status:** 2026-11-02, DESIGN_ONLY / CHƯA_CHỐT, Issue #37, ADR-0002 PROPOSED, SRS FROZEN. No executed migration, test run, Worker or key changes.
+- **Before:** actual `lib/totp.ts` parity was verified in PR #59 (27/27 local assertions), but the next step had no consolidated source-of-truth mapping between real IAM tables, auth/session readers, mutation flows, epoch and rollback.
+- **After:** add [CMS-08 real IAM integration gap and decision review](../../iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md). Map current source and proposals, atomic invalidation on role/account/password/factor changes, fail-closed assurance, staged migration/rollback, open decisions and future NOT_RUN tests.
+- **Evidence:** source inspection against merged PR #60 base `caab71d0fd54edabacf5a59296440b7d88aea2e3`; prior CI [#41457724289](https://github.com/ntdung-tds/iaict-portal/actions/runs/41457724289) is historical PR #59 evidence only. New doc PR HEAD requires its own CI/public-only staging gate. **No new QA run claimed.**
+
+- **Second-pass configuration risk:** Verified [`worker.ts`](../../../worker.ts) uses **Access OR native session** when native auth is enabled. Access presence does not guarantee that native fallback is disabled; **actual deployed flag NOT VERIFIED**. Require a controlled JWT/native-cookie/policy matrix before live MFA, but do not claim a currently exploited bypass.
+ 
+- **Post-merge iterative review, 2026-11-02 (CHG-IAM-ACCESS-20261102-14 continuation, DESIGN_ONLY):** Corrected revision 24 "PROPOSED" drift, progress QA inventory 82→86 current overview, and relocated latest progress entry to the chronological table; retained immutable historical evidence. Identified missing **policy/epoch CAS at PASSWORD_ONLY session issuance** during PBKDF2→INSERT race; added prospective in-transaction fail-closed requirement and adversarial test matrix for Access/native alternate auth paths to [MFA real-schema review](../../iam/MFA_REAL_SCHEMA_SECURITY_REVIEW_2026-11-02.md). No code, migration, real test or authorization changed; SRS remains FROZEN, ADR PROPOSED.
+
+### CHG-IAM-ACCESS-20261103-01 — Real IAM-baseline local D1 security epoch proof
+- **Status:** QA-only synthetic proof proposed for exact-head CI; new case IAM-FUT-014 READY, no live IAM MFA implementation/owner approval.
+- **Before:** synthetic D1 pre-auth/OTP proof and source-mapped design review but no local proof applying *actual committed* migrations 0001/0022/0023/0024 before testing proposed security-state constraints.
+- **After:** add disposable local Miniflare D1 test importing the four real unmodified migrations, then *test-only* epoch/policy/factor/challenge/session extension; prove policy flip after password pre-verification, authenticated-session assurance/legacy denial, role revoke/regrant, disable/reactivate, password/factor rotation, challenge replay and audit failure rollback. Run with the existing local workerd CI job. Real TOTP has separate existing local proof (IAM-FUT-013); no claim it is integrated here.
+- **Scope guard:** test-only code and QA/CI docs; no SQL migration committed, no deployment or live D1, no Worker/login/API updates, no secrets, no Access cutover, no production. SRS FROZEN; ADR PROPOSED. Actual CI/Chromium evidence to be recorded only after observed exact-head results.
+
+
+- **Actual bounded evidence on code SHA `6a41f698906801f7c2a59ccf283d19794809fd9f`:** QA [RUN-IAM-20261103-01](../../qa/IAICT_TEST_RUNS.md), 43/43 Miniflare D1 assertions PASS; CI #41516228656 all four jobs PASS including 30/30 local Chromium; public staging #41516228434 21/21 Chromium + 24/24 GET PASS. Two harness bugs corrected before this run. Case IAM-FUT-014 READY, 87-case registry. This is NOT implemented live MFA or hosted D1; final documentation SHA needs separate CI/staging.
+
+
+### CHG-IAM-ACCESS-20261103-02 — Chromium role navigation regression
+- **Scope:** QA-only browser tests. Seven synthetic roles plus forbidden-session UI on local Chromium, with the CMS session API explicitly stubbed (MOCK); add dedicated actual-browser `page.goto` staging assertions for authorized per-role Access sessions (NOT_RUN until legitimate credentials/Access/vault).
+- **Change:** New `e2e/cms-role-navigation.spec.ts`, additions to `e2e/staging-authenticated.spec.ts`, CI `browser-visual` inclusion and QA cases `IAM-USER-019` (AUTO/MOCK) and `IAM-USER-020` (MANUAL/REAL_AUTH). No new API mocks claimed as real backend acceptance.
+- **Owner authorization:** PR #66 permits creation of reusable staging test accounts; prior restricted registry contains 8 disabled `example.test` fixture rows, not logins. Real 8-user staging acceptance requires legitimate identity, Access and secure vault; keep `NOT_RUN` status until actually observed.
+- **Runtime limits:** no Worker login code, D1 migration, real identity, Access policy, secrets, production or staging deployment changed. SRS remains **FROZEN**, ADR-0002 **PROPOSED**. Link run evidence after exact-head CI completes.
+
+
+### CHG-IAM-ACCESS-20261103-03 — Actual native authentication functions on disposable D1
+- **What:** Add `lib/native-auth.real-d1.test.ts` to `vitest run`; execute actual `lib/native-auth.ts` PBKDF2, password setup and rotation, real D1-backed session issue/read/revocation and 5-failure lockout, using eight ephemeral synthetic accounts matching the 7-role + second-Admin matrix.
+- **Baseline:** Apply exact committed IAM migration sources `0001/0022/0023/0024` unmodified to a random in-memory Miniflare D1. Distinct from previous `IAM-FUT-014` test-only SQL epoch/policy proof or a mocked UI/API. Random test-only passwords stay in process memory and are never exported. Case `IAM-AUTH-020`, QA catalog **90**; status READY until actual CI evidence.
+- **Safety:** Never touches Cloudflare hosted staging D1, Access policies, source secrets, credentials, production or real users. Real identity/OTP enrollment and authenticated Cloudflare Access Chromium are explicitly **NOT_RUN**. Out-of-band database role revoke/regrant cannot substitute proper audited app authorization; do not claim all session-epoch risks solved. SRS **FROZEN**, ADR-0002 **PROPOSED**.
+
+
+### CHG-IAM-ACCESS-20261103-05 — deployed staging actual negative security verification
+- **Implementation:** 3 new `e2e/staging-acceptance.spec.ts` Playwright cases against **the deployed staging Worker**, without API mocks: actual Chromium native login form with random nonexistent `example.test` email (expect 401, no session cookie); forged Origin/login (403), invalid-format activation (400); client-forged Cloudflare identity headers across five protected routes (Access redirect). New cases `IAM-AUTH-021/022`, `IAM-ACC-007` increase catalog to **93**. Real positive multi-role E2E still **NOT_RUN**.
+- **Allowable side effect:** one synthetic failed-login counter may be created in hosted staging D1 by the deliberate negative sign-in. No persistent QA account, password/role, invitation, Cloudflare Access policy or production mutation. No credential printed or stored. Screenshots/videos/traces disabled.
+- **Proof requirements:** actual CI Chromium on public staging, HTTP probe and real D1 baseline / post-audit `quick_check` and foreign-key integrity, plus CI/full suite at exact PR SHA. Mock-only local UI tests remain separately labeled. SRS **FROZEN**; no live MFA.
+
+### CHG-IAM-ACCESS-20261103-06 — actual Worker-ingress native-cookie RBAC, local disposable D1
+- **Scope:** Add `lib/native-worker.real-d1.roles.test.ts` to Vitest, exercising actual `worker.ts` native identity ingress, real `native-auth.ts` PBKDF2 credential/session issue, `requireNewsroomActor` live SQL, and the original committed D1 migrations `0001/0022/0023/0024`. Validate **56 role-by-gate permission decisions** across seven canonical roles plus a second Admin; add negative impersonation, absent cookie, native-feature-disabled, cross-origin POST, user deactivation and removed-role behavior.
+- **Test boundary:** vinext's downstream HTTP *dispatcher is mocked* to route test-only `/api/admin/_qa/*` endpoints to the actual RBAC library. Thus this is **LOCAL_WORKER_INGRESS_REAL_D1**, not real Cloudflare Access positive sign-in, not an actual hosted CMS endpoint, and not deployed Chromium. Does not modify application/runtime source or actual QA users.
+- **Trace:** new case `IAM-ACC-008`, catalog **94**; run evidence only after exact HEAD portal CI. No secret in repo/CI/Drive. SRS **FROZEN**, production untouched.
+
+
+### CHG-IAM-ACCESS-20261103-07 — Test real CMS user API session-revocation on remove/regrant
+- **Scope:** Extend `lib/native-worker.real-d1.roles.test.ts` with actual `app/api/admin/cms/users/route.ts` GET/POST dispatched after native Worker ingress (only `vinext/server/fetch-handler` dispatch is mocked). Exercise real D1 atomic user-role update, optimistic version guard, native-session deletion and authorization on change `editor→viewer→editor`.
+- **Security assertions:** Original token denied after first update, newer viewer token has reduced permission, stale update rejected 409 without revoking new session, regrant revokes viewer token; neither old token resurrects; admin-only GET and foreign Origin fail as designed. Synthetic passwords only in process memory, original migrations in ephemeral D1, no staging/production changes.
+- **Trace:** `IAM-USER-021`, QA catalog **95**; actual hosted Access and successful eight-role browser acceptance continue **NOT_RUN/BLOCKED**. SRS remains **FROZEN**, no runtime API modification unless reproducible defect is demonstrated.
+
+### CHG-IAM-ACCESS-20261103-08 — CMS deactivate/reactivate and session termination regression
+- **Scope:** Expand actual native Worker ingress + real CMS Users DELETE/POST against original-schema disposable D1. Only downstream vinext HTTP routing is mocked; this is not a live Access-authenticated account or hosted route.
+- **Security:** Assert disabled user's old session and password refused; reactivation does not resurrect old token; stale CAS conflict has no session side effect. Assert only Admin can perform `revokeSessions`, foreign Origin is denied, old Admin2 cookie permanently revoked while a fresh login retains correct role.
+- **Tests and trace:** `IAM-USER-022`, `IAM-USER-023`; catalog **97**; `RUN-IAM-20261103-08`; [PR #78](https://github.com/ntdung-tds/iaict-portal/pull/78). Initial source-only CI rejected missing QA registry; corrected before complete test evidence. SRS **FROZEN**, no live credentials, Access policy, D1 or production mutation.
+
+
+
+### CHG-IAM-ACCESS-20261105-01 — Đăng nhập CMS staging bằng mật khẩu, không yêu cầu mã Cloudflare Access mỗi lần
+
+- **Yêu cầu Chủ dự án:** người dùng quản trị truy cập CMS với email/mật khẩu IAICT đơn giản, tối thiểu 8 ký tự; không tiếp tục buộc “Send code” qua Cloudflare Access cho đường dẫn CMS staging. Phạm vi phê duyệt là staging, không triển khai production.
+- **Hiện trạng xác minh:** staging Worker đã bật `IAICT_NATIVE_AUTH_ENABLED=true` và D1 đã có credential v2 cho Admin hiện hữu; không đọc, không đặt lại mật khẩu. Cloudflare Access đang bảo vệ bốn đường `/admin`, `/admin/*`, `/api/admin`, `/api/admin/*`, nên người dùng bị yêu cầu OTP trước khi vào được CMS.
+- **Điều chỉnh áp dụng ngay trên staging:** một chính sách Bypass của Access dành cho đúng ứng dụng staging, ID `897f8a7a-cf1a-474a-aa16-ccffa6d9f13f`, vẫn giữ hai chính sách Allow cũ để khôi phục khi cần. Toàn bộ đường quản trị tiếp tục có Worker xác minh cookie phiên native từ D1 và vai trò; yêu cầu không xác thực trả 401. Bypass không có nhật ký Access-level, là thay đổi bảo vệ biên có chủ đích **chỉ staging**, tuyệt đối không được hiểu thành cho phép truy cập CMS công khai.
+- **Kiểm thử thực tế:** Chrome thật gọi `/login` 200; tám đường trang quản trị/API, gồm Media và News, trả 401 khi không có phiên; không còn Cloudflare Access OTP trên staging. Kiểm thử nhập mật khẩu Admin thật, đăng nhập thành công, phân quyền sau đăng nhập, upload Media và SHA của R2 đều **NOT_RUN**; không báo PASS thay thế. Lưu run `RUN-CMS-AUTH-20261105-01` theo QA ledger.
+- **Mã nguồn chuẩn bị (chưa deploy):** điều hướng `/admin` chưa đăng nhập đến `/login` khi duyệt trang HTML, đăng nhập thành công vào CMS trực tiếp, có link tài khoản/đăng xuất; test/CI kiểm tra denial 401 và chống giả mạo header/cookie; preflight khớp ID policy Bypass và cờ native thực tế. Staging Worker hiện tại vẫn trả JSON 401 khi mở /admin trực tiếp mà chưa đăng nhập; phải dùng `/login` cho đến lúc triển khai mã mới.
+- **Khôi phục:** xóa **duy nhất** policy Bypass này để kích hoạt lại OTP, không xóa các chính sách cũ. Nếu xuất hiện một truy cập 2xx không xác thực, phải khôi phục ngay. Không tác động tài khoản, mật khẩu, D1 dữ liệu nghiệp vụ hay production.
+- **Trạng thái:** STAGING POLICY APPLIED / ANONYMOUS GATE PASS / POSITIVE LOGIN NOT_RUN / CODE PENDING REVIEW + STAGING DEPLOY / **CHƯA_CHỐT SRS**, IAM khác PAUSED.
+
+
+### CHG-IAM-ACCESS-20261105-02 — Staging native password Worker deployed, actual Chrome regression
+
+- **Owner approval:** deploy changes recorded in CHG-IAM-ACCESS-20261105-01 on staging immediately, not production.
+- **Reviewed source:** PR #118 / commit b00f7e56fd3d161d958920a51a105be1afdba89c; predeployment CI Portal, staging public acceptance and isolated AV all PASS.
+- **Real Cloudflare action:** one-off manual Workers Builds invocation, run 40d6fc87-6dd6-43ac-b62b-addaaef895ce, exact pinned commit, staging target with private Media quarantine flag retained. Build/deploy SUCCESS. New staging Worker version d8dbc8d2-1d3a-4c25-9421-a905aae88bda, deployment a1d2e8a1-791a-4c26-9885-476f71c58267 100%. Build trigger restored to HOLD directly after submission. Old Worker version remains available; no D1 migration or production change.
+- **Live browser acceptance:** anonymous mobile /admin now navigates to /login HTTP 200 without Cloudflare code, native login controls display and button enables after hydration; no overflow at 390px. Eight anonymous CMS/API paths still 401, native session absent 401 and health 200. D1/R2 settings unchanged: staging native=true, Media private quarantine=true, R2 domain disabled, zero public custom domains. See RUN-CMS-AUTH-20261105-02.
+- **Regression source-only:** add Playwright assertion of human HTML302 to /login, API JSON401 and hydrated form at 320/390px in staging acceptance suite; do not add any OTP, password or cookie to public automation.
+- **Not claimed:** live successful Admin sign-in and Media authenticated upload SHA remain NOT_RUN without real owner session. No production approval, no SRS baseline edit. **CHƯA_CHỐT**, IAM otherwise PAUSED.

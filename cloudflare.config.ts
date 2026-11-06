@@ -19,6 +19,15 @@ export default defineConfig({
     env: {
       ASSETS: bindings.assets(),
       DB: bindings.d1({ name: isStaging ? "iaict-portal-staging-db" : "iaict-portal-db" }),
+      IAICT_NATIVE_AUTH_ENABLED: bindings.text(isStaging ? "true" : "false"),
+      MEDIA_BUCKET: isStaging ? bindings.r2({ name: "iaict-portal-staging-media" }) : undefined,
+      // Never infer upload readiness from a deployed source revision. The staging
+      // operator must explicitly opt into PRIVATE quarantine-only upload; this
+      // does not enable scanner, read, review, public serving, or production.
+      MEDIA_R2_QUARANTINE_ENABLED: bindings.text(
+        isStaging && process.env.IAICT_STAGING_MEDIA_QUARANTINE_ENABLED === "true"
+          ? "true" : "false",
+      ),
       // These audience tags identify Access apps; each deployment uses its own.
       ACCESS_TEAM_DOMAIN: bindings.text("https://lucky-sun-c4ca.cloudflareaccess.com"),
       ACCESS_POLICY_AUD: bindings.text(

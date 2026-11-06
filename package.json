@@ -21,12 +21,16 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "verify": "npm run verify:migrations && npm run verify:release-safety && npm run verify:access-paths && npm run verify:auth-acceptance-safety && npm run verify:staging-rollback && npm run check:vinext && npm run typecheck && npm run test && npm run build",
+    "verify": "npm run verify:migrations && npm run verify:qa && npm run verify:requirements && npm run verify:agent-skill && npm run verify:checklist-moment && npm run verify:release-safety && npm run verify:access-paths && npm run verify:auth-acceptance-safety && npm run verify:staging-rollback && npm run check:vinext && npm run typecheck && npm run test && npm run build",
     "migrate:staging": "node scripts/apply-staging-migrations.mjs",
     "migrate:production": "node scripts/apply-production-migrations.mjs",
     "prepare:cf-output": "node scripts/prepare-cloudflare-build-output.mjs",
     "deploy:staging": "npm run migrate:staging && npm run prepare:cf-output && IAICT_DEPLOY_TARGET=staging vinext-cloudflare deploy --env staging --skip-build",
-    "deploy:production": "npm run migrate:production && npm run prepare:cf-output && IAICT_DEPLOY_TARGET=production vinext-cloudflare deploy --env production --skip-build"
+    "deploy:production": "npm run migrate:production && npm run prepare:cf-output && IAICT_DEPLOY_TARGET=production vinext-cloudflare deploy --env production --skip-build",
+    "verify:qa": "node scripts/verify-qa-registry.mjs && node --test scripts/verify-qa-registry.test.mjs",
+    "verify:agent-skill": "node scripts/verify-agent-skill.mjs && node --test scripts/verify-agent-skill.test.mjs",
+    "verify:requirements": "node scripts/verify-requirements.mjs && node --test scripts/verify-requirements.test.mjs",
+    "verify:checklist-moment": "node scripts/verify-checklist-moment.mjs && node --test scripts/verify-checklist-moment.test.mjs"
   },
   "dependencies": {
     "@vinext/cloudflare": "latest",

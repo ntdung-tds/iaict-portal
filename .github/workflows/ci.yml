@@ -14,6 +14,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
@@ -21,6 +24,14 @@ jobs:
         run: node --test scripts/staging-availability-probe.test.mjs
       - name: Verify canonical migrations
         run: node scripts/verify-migrations.mjs
+      - name: Verify QA catalog, case links and PR change impact
+        run: npm run verify:qa
+      - name: Validate current Checklist Moment, project progress, and immutable snapshot
+        run: npm run verify:checklist-moment
+      - name: Verify multi-agent instructions and portable Skill
+        run: npm run verify:agent-skill
+      - name: Verify SRS freeze and per-component change records
+        run: npm run verify:requirements
       - name: Reject unsafe staging release and GitHub QA uploads
         run: npm run verify:release-safety
       - name: Verify immutable approved SHA and Worker/D1 rollback negative cases
@@ -50,10 +61,19 @@ jobs:
         run: npm run typecheck
       - name: Unit tests
         run: npm run test
+      - name: B3.10 isolated scanner tests (real Pillow, synthetic ClamAV UNIX socket)
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir -r services/media-scan/requirements.txt
+          PYTHONPATH=services/media-scan python -m unittest discover -s services/media-scan -p 'test_*.py' -v
       - name: Production build
         run: npm run build
       - name: Validate Cloudflare Build Output
         run: npx cf deploy --dry-run --prebuilt --mode production
+      - name: Validate staging R2 binding and native auth build without deploying
+        run: |
+          IAICT_DEPLOY_TARGET=staging npm run build:staging
+          npm run prepare:cf-output
+          IAICT_DEPLOY_TARGET=staging npx cf deploy --dry-run --prebuilt --mode staging
 
   browser-visual:
     runs-on: ubuntu-latest
@@ -68,7 +88,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Check browser-rendered contrast and SEO locally
-        run: npx playwright test e2e/public-visual-seo.spec.ts e2e/cms-users-atomic.spec.ts e2e/cms-content-concurrency.spec.ts e2e/cms-articles-concurrency.spec.ts e2e/cms-news-review.spec.ts --workers=1
+        run: npx playwright test e2e/public-visual-seo.spec.ts e2e/cms-role-navigation.spec.ts e2e/cms-users-atomic.spec.ts e2e/cms-content-concurrency.spec.ts e2e/cms-articles-concurrency.spec.ts e2e/cms-news-review.spec.ts e2e/media-local-compression.spec.ts e2e/media-quarantine-upload.spec.ts --workers=1
       # Test screenshots, videos, traces and HTML reports remain ephemeral on CI.
       # Do NOT upload QA assets to GitHub; retain only explicit individual PNGs in
       # the dedicated private Google Drive QA folder after authorized transfer.
@@ -92,3 +112,32 @@ jobs:
         run: node scripts/verify-rc-integrity.mjs
       - name: Independently validate release triggers and QA media rules
         run: node scripts/verify-release-safety.mjs
+
+  kdf-local-workerd:
+    # Standalone local workerd only. No Cloudflare credentials, deploy or bindings.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Install dependencies including locked local workerd
+        run: npm ci --no-audit --no-fund
+      - name: Probe isolated 100000 and 100001 PBKDF2 boundary (no deploy)
+        run: node scripts/kdf-workerd/run-local.mjs
+      - name: Test exact AES-GCM MFA helper on isolated local workerd (no deploy)
+        run: node scripts/mfa-workerd/run-local.mjs
+      - name: Test replay-safe MFA step CAS against isolated Miniflare D1 (no deploy)
+        run: node scripts/mfa-d1-cas/run-local.mjs
+      - name: Test atomic pre-MFA challenge consumption against isolated Miniflare D1 (no deploy)
+        run: node scripts/mfa-preauth-d1-cas/run-local.mjs
+      - name: Test synthetic verified OTP and multi-table MFA batch rollback (no deploy)
+        run: node scripts/mfa-atomic-d1/run-local.mjs
+      - name: Prove epoch and policy CAS against real IAM migrations in disposable D1 (no deploy)
+        run: node scripts/iam-real-schema-d1/run-local.mjs

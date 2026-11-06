@@ -27,6 +27,9 @@ jobs:
       - name: Run live staging acceptance
         run: npx playwright test --config playwright.staging.config.ts
       - name: Probe repeated staging availability without hiding a transient 503
+        # Collect independent public-route evidence even if live Chromium saw 503.
+        # Never suppress a failed Chromium step or a failed probe.
+        if: ${{ !cancelled() }}
         run: node scripts/staging-availability-probe.mjs
       # Test screenshots, videos, traces and HTML reports remain ephemeral on CI.
       # Do NOT upload QA assets to GitHub; retain only explicit individual PNGs in
