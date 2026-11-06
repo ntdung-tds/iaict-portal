@@ -1,5 +1,20 @@
 # PCS Moment — IAICT Portal
 
+**PCS Universal 3.2.0 · Solo · Revision 78 · OWNER CMS STAGING TEST OK / ACCEPTED · INDEPENDENT PUBLIC CHROME PASS · PRIVATE MEDIA SHA PASS · 7-ROLE HOSTED SPECIFIC E2E NOT_RUN · AV SCANNER/PUBLICATION BLOCKED · SRS FROZEN · PRODUCTION HOLD**
+
+**2026-11-06 ICT:** The owner explicitly said **“Tôi đã test và ok”** after the prior staging CMS and agent-browser QA discussions. This is a valid **owner-reported acceptance of what the owner tested**, but no test-case-by-test-case evidence was attached; do not invent successful sign-ins for all seven distinct roles or HTTP201/200/403/CSRF negative scenarios. The owner should not be asked to repeat the same accepted UI testing. [RUN-CMS-OWNER-20261106-01](../docs/qa/IAICT_TEST_RUNS.md) is the append-only acceptance record.
+
+- **Independent technical QA already available:** The agent previously exercised real Cloudflare Chromium at mobile 320,390,768px for the public menu open/Escape close/no overflow, mobile native login screen and no-session CMS API 401/no-store: [RUN-CMS-BROWSER-20261106-03](../docs/qa/IAICT_TEST_RUNS.md). One owner-uploaded PNG remains privately QUARANTINED; independent private R2 bytes/size/SHA-256 match D1 with audit reserve/write, no public R2 domain: [RUN-MEDIA-20261106-01](../docs/qa/IAICT_TEST_RUNS.md). These were separately supported results, not extra inferences from the owner's statement.
+- **Owner acceptance:** Staging CMS user testing confirmed OK as reported. No Cloudflare Workers, GitHub runtime code, user credential, media object, D1 schema or production environment was changed to log this acknowledgement.
+- **Release gates still open:** Real authenticated, separately recorded Admin/Editor/Reviewer/Viewer and Newsroom role suite, Media upload success/replay/CSRF/Viewer forbidden checks remain NOT_RUN at case level unless evidence is provided through a legitimate browser. No bypass of tools' authentication safety restrictions. Hosted isolated antivirus scanner has not been provisioned and provides no scan attestation; publication remains forbidden. Cloudflare production remains HOLD.
+- **Next product priority:** Avoid cosmetic redesign. Make the Media AV hosting/architecture decision and build/test the scanner only after approved infrastructure is available (paid Cloudflare Containers or an approved isolated service), or preserve private quarantine as the supported interim behavior. Keep user-accepted staging CMS UI; decide production go/no-go separately after the applicable release gates.
+
+**PCS:** revision 78 becomes canonical only after this docs-only PR passes CI, merges and GitHub state readback. Previous revision 77 follows.
+
+---
+
+## Historical PCS Moment (Revision 77)
+
 **PCS Universal 3.2.0 · Solo · Revision 77 · INDEPENDENT LIVE CHROMIUM MOBILE MENU PASS 320/390/768 · LOGIN UI + ANON CMS 401 PASS · TOOL SAFETY BLOCKS QA CREDENTIAL ACTIVATION · HOSTED SEVEN-ROLE E2E NOT_RUN · PRIVATE MEDIA R2/D1 SHA PASS (PRIOR) · PRODUCTION HOLD**
 
 **2026-11-06 ICT:** Owner reiterated that the agent should perform actual CMS/Media QA **on its own browser**, without repeating user tasks. A live Cloudflare Browser Rendering Chrome session was successfully created and independently exercised deployed staging (Worker `9b5c0202-8362-459e-8b0b-1495bb94d2ef`), not a mock. [RUN-CMS-BROWSER-20261106-03](../docs/qa/IAICT_TEST_RUNS.md) records the results.
