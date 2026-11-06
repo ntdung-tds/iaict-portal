@@ -1544,3 +1544,29 @@ See [B3.15 staged acceptance instructions](IAICT_MEDIA_B315_HOSTED_QA.md) and [M
 **Interpretation:** The user-facing CMS experience tested by the owner is accepted as reported. Do not extrapolate that short confirmation into case-level PASS for all seven roles, authenticated negative scenarios, scanner, R2 publication, or a production launch. No source changes, login, password, R2 mutation or deployment are part of this run. Use this explicit owner sign-off to stop revisiting the same visual acceptance and prioritize outstanding release gates.
 
 **Next:** decide the supported hosted antivirus scanner approach (isolated ClamAV service/paid Cloudflare Containers or equivalent), complete identity-authenticated negative E2E if needed for the release scope, and request separate production go/no-go only after technical gates pass.
+
+
+---
+
+## RUN-MEDIA-20261106-04 — Private Media library and audited revoke deployment (staging only)
+
+**Date:** 2026-11-06 ICT. **Owner instruction:** complete Media functions in one consolidated staging pass. **Source:** PR #126 squash-merged at `3cdc2f1ffc409d0798a6e399c53fad1b454a5135`. **Release:** one-off pinned-SHA Cloudflare Build `79c82147-8fe3-4554-9679-f06effc20428` completed `stopped/success`; staging deployment `d8f0e338-5825-4e87-899e-c1ea69719061`, Worker version `2ec96e89-7258-4f5d-bc73-b391af9a586c`, **100%** traffic. Previous staging version `9b5c0202-8362-459e-8b0b-1495bb94d2ef` retained as rollback candidate. Workers Builds trigger returned to HOLD immediately after one-off submission.
+
+| Scope / test | Evidence | Status |
+|---|---|---|
+| Private R2 inventory UI | New `/admin/media/library` page on desktop/mobile, navigation entry, status/pagination, link to Media upload and local compression. Private upload success now links to inventory. | **SOURCE DEPLOYED**, **LOCAL_CHROMIUM_MOCK_UI_PASS** |
+| Private inventory RBAC | Admin/Reviewer read scoped D1 metadata, Editor only their own; Viewer and Newsroom-only roles denied. No R2 object key, source bytes, SHA, idempotency key or public URL in GET responses. | **PASS — DISPOSABLE MINIFLARE D1/UNIT** |
+| Admin revocation | Explicit browser confirmation; POST same-origin and admin role; UUID + expected revision, CAS transition QUARANTINED→REVOKED and atomic audit tied to SQLite changes(). Replay/stale version or non-admin denied; no synchronous R2 delete. Existing scheduled Media janitor handles 24h revoked retention. | **PASS — DISPOSABLE MINIFLARE D1/UNIT + LOCAL MOCK UI** |
+| Local real Chromium UI | Synthetic Admin API tests at 390 and 1440 px display inventory, execute confirmed mock revocation exactly once, update UI status and avoid mobile overflow. Viewer/Newsroom nav link absent. This uses **mock identity/API**, not real authenticated staging. | **PASS — PORTAL CI BROWSER VISUAL** |
+| Source PR CI | PR #126 exact-head Portal CI `42183654989` **4/4 PASS**, live staging-acceptance `42183654991` **PASS**. Postmerge `portal-ci` `42184162875`, `media-av-real-engine-ci` `42184162874`, `staging-acceptance` `42184162907` all **SUCCESS**. | **PASS** |
+| Real ClamAV CI | ClamAV/Pillow + HMAC/receipt local isolated engine test passed in GitHub Actions, **not** a hosted running scanner on Cloudflare staging. | **PASS — ISOLATED CI ONLY** |
+| Worker deployment + safety readback | Cloudflare Build success, staging v2ec96e89 at 100%; native D1 authentication and Media private quarantine both true, R2 custom domains 0 and managed public r2.dev false. No D1 migration. Build trigger restored HOLD. | **PASS — LIVE CLOUDFLARE API** |
+| Actual anonymous Chrome to new Media management page | `/admin/media/library` redirects to `/login` HTTP200, and Chrome same-origin GET and POST `/api/admin/cms/media/library` **both HTTP401 no-store** with no cookie; no unauthorized revocation. | **PASS — LIVE CLOUDFLARE CHROMIUM** |
+| Existing owner Media object readback after deploy | Staging D1 still has **1** PNG `QUARANTINED`, revision 1, 463656 bytes. Restricted private R2 GET returned 463656 bytes; independent SHA-256 of those bytes matched D1 exactly; scanner and derivative null. No object key, filename, content or user's digest disclosed. | **PASS — LIVE D1/R2 READ-ONLY** |
+| Actual authenticated Admin inventory + revoke | Owner has a legitimate session but it is unavailable in agent Chrome. No real Admin revocation executed on owner asset, no real Viewer/Editor role E2E. | **NOT_RUN — protected hosted auth unavailable** |
+| Hosted scanner / public delivery | ClamAV isolated-hosting runtime not provisioned; Cloudflare Containers not included in user's current Workers Free plan, no approved external scanner or cost. Never publish unscanned assets. | **BLOCKED — INFRASTRUCTURE** |
+| Production | Original production Worker `e7c703f7-fc4c-4313-b14c-0a2c94e0613d` unchanged, no production Media route enabled by this release. | **HOLD** |
+
+**Release interpretation:** Private upload, local compression, metadata inventory and revocation user flows are implemented; no current proof of a complete public-publishing Media lifecycle because secure hosted AV and authenticated per-role acceptance are still pending. The system is **fail-closed**: unscanned content is private, not previewed and not publicly served. Do not mark Media as universally COMPLETE in PCS until those gates are actually satisfied.
+
+**QA data integrity:** No real file or password was created, revoked, deleted, or exposed in this test run. Only read-only D1/R2 validation on one existing user object. Staging rollback candidate version `9b5c0202-8362-459e-8b0b-1495bb94d2ef`; production remained unchanged.
